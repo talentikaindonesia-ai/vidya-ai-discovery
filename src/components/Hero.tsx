@@ -29,8 +29,13 @@ const Hero = () => {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
-              <Button variant="hero" size="hero" className="group">
-                Mulai Eksplorasi
+              <Button 
+                variant="hero" 
+                size="hero" 
+                className="group"
+                onClick={() => window.location.href = '/assessment'}
+              >
+                Mulai Tes Sekarang
                 <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
               </Button>
               <Button variant="soft" size="hero">
