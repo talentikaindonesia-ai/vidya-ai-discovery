@@ -9,8 +9,8 @@ const Header = () => {
     { label: "Beranda", href: "#home" },
     { label: "Fitur", href: "#features" },
     { label: "Cara Kerja", href: "#how-it-works" },
-    { label: "Tentang", href: "#about" },
-    { label: "Kontak", href: "#contact" }
+    { label: "Harga", href: "#pricing" },
+    { label: "Testimoni", href: "#testimonials" }
   ];
 
   return (
