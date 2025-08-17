@@ -6,10 +6,12 @@ import {
   User, 
   LogOut,
   Calendar,
-  Settings
+  Settings,
+  Shield
 } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 interface DashboardSidebarProps {
   activeSection: string;
@@ -18,6 +20,8 @@ interface DashboardSidebarProps {
 }
 
 export const DashboardSidebar = ({ activeSection, setActiveSection, onSignOut }: DashboardSidebarProps) => {
+  const navigate = useNavigate();
+  
   const menuItems = [
     { id: "overview", label: "Dashboard", icon: Home },
     { id: "courses", label: "Kursus Saya", icon: BookOpen },
@@ -57,7 +61,15 @@ export const DashboardSidebar = ({ activeSection, setActiveSection, onSignOut }:
           ))}
         </SidebarMenu>
         
-        <div className="p-3 border-t border-border">
+        <div className="p-3 border-t border-border space-y-2">
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate("/admin")}
+            className="w-full justify-start gap-3 text-primary hover:text-primary hover:bg-primary/10"
+          >
+            <Shield className="h-4 w-4" />
+            <span>Admin CMS</span>
+          </Button>
           <Button 
             variant="ghost" 
             onClick={onSignOut}

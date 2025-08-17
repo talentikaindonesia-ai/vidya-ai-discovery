@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +20,7 @@ import {
 } from "lucide-react";
 
 const Assessment = () => {
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);
   const [showResults, setShowResults] = useState(false);
   const [answers, setAnswers] = useState<number[]>([]);
@@ -335,7 +337,16 @@ const Assessment = () => {
             </TabsContent>
           </Tabs>
 
-          <div className="text-center mt-8">
+          <div className="text-center mt-8 space-y-4">
+            <div className="bg-primary/10 border border-primary/20 rounded-lg p-6 max-w-md mx-auto">
+              <h3 className="text-lg font-semibold mb-2">Siap Memulai Perjalanan Belajarmu?</h3>
+              <p className="text-muted-foreground mb-4">
+                Daftar sekarang untuk mengakses pembelajaran yang dipersonalisasi sesuai minat dan bakatmu!
+              </p>
+              <Button onClick={() => navigate("/auth")} className="w-full mb-2">
+                Mulai Belajar Sekarang
+              </Button>
+            </div>
             <Button onClick={() => {setShowResults(false); setCurrentStep(0); setAnswers([])}} variant="outline">
               Tes Ulang
             </Button>
