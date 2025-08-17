@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -15,6 +16,9 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [accountType, setAccountType] = useState("individual");
+  const [organizationName, setOrganizationName] = useState("");
+  const [organizationType, setOrganizationType] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
@@ -42,6 +46,9 @@ const Auth = () => {
           emailRedirectTo: `${window.location.origin}/dashboard`,
           data: {
             full_name: fullName,
+            account_type: accountType,
+            organization_name: organizationName,
+            organization_type: organizationType,
           }
         }
       });
@@ -78,6 +85,26 @@ const Auth = () => {
       setError(error.message);
       toast.error("Login gagal: " + error.message);
     } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`,
+        },
+      });
+
+      if (error) throw error;
+    } catch (error: any) {
+      setError(error.message);
+      toast.error("Gagal login dengan Google: " + error.message);
       setIsLoading(false);
     }
   };
@@ -128,6 +155,19 @@ const Auth = () => {
                   {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Masuk
                 </Button>
+                <div className="text-center">
+                  <div className="text-sm text-muted-foreground mb-2">Atau</div>
+                  <Button 
+                    type="button"
+                    variant="outline" 
+                    onClick={handleGoogleSignIn} 
+                    disabled={isLoading} 
+                    className="w-full"
+                  >
+                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Masuk dengan Google
+                  </Button>
+                </div>
               </form>
             </TabsContent>
             
@@ -144,6 +184,46 @@ const Auth = () => {
                     required
                   />
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="accountType">Tipe Akun</Label>
+                  <Select value={accountType} onValueChange={setAccountType}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="individual">Individual</SelectItem>
+                      <SelectItem value="school">Sekolah</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {accountType === "school" && (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="organizationName">Nama Institusi</Label>
+                      <Input
+                        id="organizationName"
+                        type="text"
+                        placeholder="Nama sekolah/institusi"
+                        value={organizationName}
+                        onChange={(e) => setOrganizationName(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="organizationType">Jenis Institusi</Label>
+                      <Select value={organizationType} onValueChange={setOrganizationType}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="school">Sekolah</SelectItem>
+                          <SelectItem value="institution">Institusi</SelectItem>
+                          <SelectItem value="company">Perusahaan</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </>
+                )}
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <Input
@@ -171,6 +251,19 @@ const Auth = () => {
                   {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Daftar
                 </Button>
+                <div className="text-center">
+                  <div className="text-sm text-muted-foreground mb-2">Atau</div>
+                  <Button 
+                    type="button"
+                    variant="outline" 
+                    onClick={handleGoogleSignIn} 
+                    disabled={isLoading} 
+                    className="w-full"
+                  >
+                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Masuk dengan Google
+                  </Button>
+                </div>
               </form>
             </TabsContent>
           </Tabs>

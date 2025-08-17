@@ -17,9 +17,10 @@ interface DashboardSidebarProps {
   activeSection: string;
   setActiveSection: (section: string) => void;
   onSignOut: () => void;
+  userRole?: string | null;
 }
 
-export const DashboardSidebar = ({ activeSection, setActiveSection, onSignOut }: DashboardSidebarProps) => {
+export const DashboardSidebar = ({ activeSection, setActiveSection, onSignOut, userRole }: DashboardSidebarProps) => {
   const navigate = useNavigate();
   
   const menuItems = [
@@ -62,14 +63,16 @@ export const DashboardSidebar = ({ activeSection, setActiveSection, onSignOut }:
         </SidebarMenu>
         
         <div className="p-3 border-t border-border space-y-2">
-          <Button 
-            variant="ghost" 
-            onClick={() => navigate("/admin")}
-            className="w-full justify-start gap-3 text-primary hover:text-primary hover:bg-primary/10"
-          >
-            <Shield className="h-4 w-4" />
-            <span>Admin CMS</span>
-          </Button>
+          {userRole === 'admin' && (
+            <Button 
+              variant="ghost" 
+              onClick={() => navigate("/admin")}
+              className="w-full justify-start gap-3 text-primary hover:text-primary hover:bg-primary/10"
+            >
+              <Shield className="h-4 w-4" />
+              <span>Admin CMS</span>
+            </Button>
+          )}
           <Button 
             variant="ghost" 
             onClick={onSignOut}

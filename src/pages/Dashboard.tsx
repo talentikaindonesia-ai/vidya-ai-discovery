@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Sidebar, SidebarContent, SidebarProvider } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
@@ -9,6 +12,7 @@ import { CoursesSection } from "@/components/dashboard/CoursesSection";
 import { ProgressTracker } from "@/components/dashboard/ProgressTracker";
 import { Achievements } from "@/components/dashboard/Achievements";
 import { User, Session } from "@supabase/supabase-js";
+import { Crown, Check, X } from "lucide-react";
 import { toast } from "sonner";
 
 const Dashboard = () => {
@@ -16,7 +20,10 @@ const Dashboard = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [activeSection, setActiveSection] = useState("overview");
   const [profile, setProfile] = useState<any>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [subscriptionPlans, setSubscriptionPlans] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showSubscription, setShowSubscription] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -31,7 +38,7 @@ const Dashboard = () => {
         } else {
           // Defer profile loading to prevent potential deadlocks
           setTimeout(() => {
-            loadUserProfile(session.user.id);
+            loadUserData(session.user.id);
           }, 0);
         }
       }
@@ -45,27 +52,60 @@ const Dashboard = () => {
       if (!session) {
         navigate("/auth");
       } else {
-        loadUserProfile(session.user.id);
+        loadUserData(session.user.id);
       }
     });
 
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  const loadUserProfile = async (userId: string) => {
+  const loadUserData = async (userId: string) => {
     try {
-      const { data, error } = await supabase
+      // Load profile
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_id', userId)
         .single();
 
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error loading profile:', error);
+      if (profileError && profileError.code !== 'PGRST116') {
+        console.error('Error loading profile:', profileError);
         toast.error("Gagal memuat profil pengguna");
       } else {
-        setProfile(data);
+        setProfile(profileData);
+        
+        // Check subscription status
+        if (!profileData?.subscription_status || profileData.subscription_status === 'inactive') {
+          setShowSubscription(true);
+        }
       }
+
+      // Load user role
+      const { data: roleData, error: roleError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId)
+        .single();
+
+      if (roleError && roleError.code !== 'PGRST116') {
+        console.error('Error loading role:', roleError);
+      } else {
+        setUserRole(roleData?.role || 'individual');
+      }
+
+      // Load subscription plans
+      const { data: plansData, error: plansError } = await supabase
+        .from('subscription_plans')
+        .select('*')
+        .eq('is_active', true)
+        .order('price_monthly');
+
+      if (plansError) {
+        console.error('Error loading plans:', plansError);
+      } else {
+        setSubscriptionPlans(plansData || []);
+      }
+
     } catch (error) {
       console.error('Error:', error);
     } finally {
@@ -80,6 +120,32 @@ const Dashboard = () => {
       navigate("/");
     } catch (error: any) {
       toast.error("Gagal logout: " + error.message);
+    }
+  };
+
+  const handleSubscribe = async (planId: string) => {
+    try {
+      // Update user subscription status
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          subscription_status: 'active',
+          subscription_type: userRole === 'school' ? 'school' : 'individual',
+          subscription_end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+        })
+        .eq('user_id', user?.id);
+
+      if (error) throw error;
+
+      toast.success("Berlangganan berhasil!");
+      setShowSubscription(false);
+      
+      // Reload profile
+      if (user) {
+        loadUserData(user.id);
+      }
+    } catch (error: any) {
+      toast.error("Gagal berlangganan: " + error.message);
     }
   };
 
@@ -113,6 +179,73 @@ const Dashboard = () => {
     return null;
   }
 
+  // Show subscription modal if user needs to subscribe
+  if (showSubscription) {
+    const relevantPlans = subscriptionPlans.filter(plan => 
+      userRole === 'school' ? plan.name.toLowerCase().includes('school') : 
+      !plan.name.toLowerCase().includes('school')
+    );
+
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="w-full max-w-4xl">
+          <CardHeader className="text-center">
+            <div className="flex justify-center mb-4">
+              <Crown className="w-12 h-12 text-primary" />
+            </div>
+            <CardTitle className="text-3xl">Pilih Paket Berlangganan</CardTitle>
+            <CardDescription className="text-lg">
+              Untuk mengakses dashboard pembelajaran, Anda perlu berlangganan terlebih dahulu
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-6 md:grid-cols-2">
+              {relevantPlans.map((plan) => (
+                <Card key={plan.id} className="relative border-2 hover:border-primary transition-colors">
+                  {plan.name.toLowerCase().includes('premium') && (
+                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                      <Badge className="bg-primary text-primary-foreground">Terpopuler</Badge>
+                    </div>
+                  )}
+                  <CardHeader>
+                    <CardTitle className="text-xl">{plan.name}</CardTitle>
+                    <CardDescription>{plan.description}</CardDescription>
+                    <div className="text-3xl font-bold text-primary">
+                      Rp {(plan.price_monthly / 1000).toLocaleString('id-ID')}K
+                      <span className="text-sm font-normal text-muted-foreground">/bulan</span>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <ul className="space-y-2">
+                      {Array.isArray(plan.features) && plan.features.map((feature: string, index: number) => (
+                        <li key={index} className="flex items-center gap-2">
+                          <Check className="w-4 h-4 text-green-500" />
+                          <span className="text-sm">{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <Button 
+                      onClick={() => handleSubscribe(plan.id)} 
+                      className="w-full"
+                      variant={plan.name.toLowerCase().includes('premium') ? 'default' : 'outline'}
+                    >
+                      Pilih Paket Ini
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+            <div className="text-center mt-6">
+              <Button variant="ghost" onClick={() => navigate("/")}>
+                Kembali ke Beranda
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
@@ -120,6 +253,7 @@ const Dashboard = () => {
           activeSection={activeSection} 
           setActiveSection={setActiveSection}
           onSignOut={handleSignOut}
+          userRole={userRole}
         />
         <div className="flex-1 flex flex-col">
           <DashboardHeader user={user} profile={profile} />
