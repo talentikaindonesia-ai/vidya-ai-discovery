@@ -52,6 +52,51 @@ export type Database = {
           },
         ]
       }
+      assessment_results: {
+        Row: {
+          assessment_type: string
+          career_recommendations: string[] | null
+          completed_at: string
+          created_at: string
+          id: string
+          interest_categories: string[] | null
+          learning_style: string | null
+          personality_type: string | null
+          questions_answers: Json
+          score_breakdown: Json | null
+          talent_areas: string[] | null
+          user_id: string
+        }
+        Insert: {
+          assessment_type?: string
+          career_recommendations?: string[] | null
+          completed_at?: string
+          created_at?: string
+          id?: string
+          interest_categories?: string[] | null
+          learning_style?: string | null
+          personality_type?: string | null
+          questions_answers: Json
+          score_breakdown?: Json | null
+          talent_areas?: string[] | null
+          user_id: string
+        }
+        Update: {
+          assessment_type?: string
+          career_recommendations?: string[] | null
+          completed_at?: string
+          created_at?: string
+          id?: string
+          interest_categories?: string[] | null
+          learning_style?: string | null
+          personality_type?: string | null
+          questions_answers?: Json
+          score_breakdown?: Json | null
+          talent_areas?: string[] | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       courses: {
         Row: {
           category_id: string | null
@@ -175,11 +220,15 @@ export type Database = {
       }
       profiles: {
         Row: {
+          address: string | null
           avatar_url: string | null
           created_at: string
           email: string | null
           full_name: string | null
           id: string
+          organization_name: string | null
+          organization_type: string | null
+          phone: string | null
           subscription_end_date: string | null
           subscription_status: string | null
           subscription_type: string | null
@@ -187,11 +236,15 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          address?: string | null
           avatar_url?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
           id?: string
+          organization_name?: string | null
+          organization_type?: string | null
+          phone?: string | null
           subscription_end_date?: string | null
           subscription_status?: string | null
           subscription_type?: string | null
@@ -199,16 +252,53 @@ export type Database = {
           user_id: string
         }
         Update: {
+          address?: string | null
           avatar_url?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
           id?: string
+          organization_name?: string | null
+          organization_type?: string | null
+          phone?: string | null
           subscription_end_date?: string | null
           subscription_status?: string | null
           subscription_type?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      subscription_plans: {
+        Row: {
+          created_at: string
+          description: string | null
+          features: Json | null
+          id: string
+          is_active: boolean | null
+          name: string
+          price_monthly: number
+          price_yearly: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          features?: Json | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          price_monthly: number
+          price_yearly: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          features?: Json | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          price_monthly?: number
+          price_yearly?: number
         }
         Relationships: []
       }
@@ -312,6 +402,27 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["user_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       Vidya: {
         Row: {
           Content: string | null
@@ -335,10 +446,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["user_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      user_role: "admin" | "individual" | "school"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -465,6 +582,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      user_role: ["admin", "individual", "school"],
+    },
   },
 } as const
