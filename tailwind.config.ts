@@ -76,12 +76,14 @@ export default {
 				'gradient-primary': 'var(--gradient-primary)',
 				'gradient-soft': 'var(--gradient-soft)',
 				'gradient-hero': 'var(--gradient-hero)',
+				'gradient-accent': 'var(--gradient-accent)',
 				'gradient-card': 'var(--gradient-card)'
 			},
 			boxShadow: {
 				'soft': 'var(--shadow-soft)',
 				'card': 'var(--shadow-card)',
-				'floating': 'var(--shadow-floating)'
+				'floating': 'var(--shadow-floating)',
+				'accent': 'var(--shadow-accent)'
 			},
 			transitionTimingFunction: {
 				'smooth': 'var(--transition-smooth)',
