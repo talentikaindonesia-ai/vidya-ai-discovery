@@ -19,7 +19,7 @@ const Header = () => {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-primary rounded-xl flex items-center justify-center shadow-soft">
+            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-soft">
               <Brain className="w-6 h-6 text-white" />
             </div>
             <div>

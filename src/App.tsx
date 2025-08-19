@@ -9,6 +9,12 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
+import DiscoveryTimeline from "./pages/DiscoveryTimeline";
+import LearningHub from "./pages/LearningHub";
+import PortfolioBuilder from "./pages/PortfolioBuilder";
+import OpportunityBoard from "./pages/OpportunityBoard";
+import CommunityForum from "./pages/CommunityForum";
+import Onboarding from "./pages/Onboarding";
 
 const queryClient = new QueryClient();
 
@@ -20,9 +26,15 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/assessment" element={<Assessment />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/discovery" element={<DiscoveryTimeline />} />
+          <Route path="/learning" element={<LearningHub />} />
+          <Route path="/portfolio" element={<PortfolioBuilder />} />
+          <Route path="/opportunities" element={<OpportunityBoard />} />
+          <Route path="/community" element={<CommunityForum />} />
           <Route path="/admin" element={<Admin />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

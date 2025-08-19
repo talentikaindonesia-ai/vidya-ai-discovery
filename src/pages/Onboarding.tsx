@@ -89,15 +89,15 @@ const Onboarding = () => {
   const progress = (step / 3) * 100;
 
   return (
-    <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-4">
+    <div className="min-h-screen bg-primary flex items-center justify-center p-4">
       <Card className="w-full max-w-2xl shadow-floating border-0">
         <CardHeader className="text-center pb-2">
           <div className="flex justify-center mb-4">
-            <div className="bg-gradient-primary rounded-full p-4">
+            <div className="bg-secondary rounded-full p-4">
               <Sparkles className="w-8 h-8 text-white" />
             </div>
           </div>
-          <CardTitle className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+          <CardTitle className="text-3xl font-bold text-primary">
             Discover Your Potential
           </CardTitle>
           <p className="text-muted-foreground text-lg">
@@ -215,7 +215,7 @@ const Onboarding = () => {
                 (step === 2 && !formData.educationLevel) ||
                 (step === 3 && formData.interests.length === 0)
               }
-              className="ml-auto bg-gradient-primary hover:shadow-floating"
+              className="ml-auto bg-primary text-primary-foreground hover:shadow-floating"
             >
               {step === 3 ? 'Selesai' : 'Lanjut'}
               <ArrowRight className="w-4 h-4 ml-2" />

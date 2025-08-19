@@ -4,9 +4,9 @@ import heroImage from "@/assets/hero-image.jpg";
 
 const Hero = () => {
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-hero">
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-primary">
       {/* Background Elements */}
-      <div className="absolute inset-0 bg-gradient-hero opacity-90"></div>
+      <div className="absolute inset-0 bg-primary/90"></div>
       <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-primary/10 rounded-full blur-3xl"></div>
       <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-secondary/10 rounded-full blur-3xl"></div>
       
@@ -69,7 +69,7 @@ const Hero = () => {
                 className="w-full max-w-lg mx-auto rounded-3xl shadow-floating"
               />
             </div>
-            <div className="absolute inset-0 bg-gradient-soft opacity-30 rounded-3xl blur-xl transform scale-105"></div>
+            <div className="absolute inset-0 bg-secondary/30 opacity-30 rounded-3xl blur-xl transform scale-105"></div>
           </div>
         </div>
       </div>

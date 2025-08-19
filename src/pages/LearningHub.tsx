@@ -194,7 +194,7 @@ const LearningHub = () => {
                                     )}
                                   </div>
                                 </div>
-                                <Button size="sm" className="bg-gradient-primary">
+                                <Button size="sm" className="bg-primary text-primary-foreground">
                                   <Play className="w-4 h-4 mr-2" />
                                   Mulai
                                 </Button>
@@ -213,7 +213,7 @@ const LearningHub = () => {
                           <p className="text-muted-foreground mb-4">
                             Uji pemahaman materi dengan quiz yang menarik
                           </p>
-                          <Button className="bg-gradient-primary">
+                          <Button className="bg-primary text-primary-foreground">
                             Mulai Quiz
                           </Button>
                         </CardContent>
@@ -228,7 +228,7 @@ const LearningHub = () => {
                           <p className="text-muted-foreground mb-4">
                             Buat karya nyata untuk portfolio Anda
                           </p>
-                          <Button className="bg-gradient-accent">
+                          <Button className="bg-accent text-accent-foreground">
                             <Award className="w-4 h-4 mr-2" />
                             Mulai Project
                           </Button>
@@ -285,7 +285,7 @@ const LearningHub = () => {
                   </p>
                   <Button 
                     disabled={getCourseProgress(selectedCourse.id) < 100}
-                    className="w-full bg-gradient-primary"
+                    className="w-full bg-primary text-primary-foreground"
                   >
                     Dapatkan Sertifikat
                   </Button>
@@ -302,7 +302,7 @@ const LearningHub = () => {
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-4">
+          <h1 className="text-4xl font-bold text-primary mb-4">
             Learning Hub
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
@@ -318,7 +318,7 @@ const LearningHub = () => {
               onClick={() => setSelectedCourse(course)}
             >
               {course.thumbnail_url && (
-                <div className="aspect-video bg-gradient-soft rounded-t-lg overflow-hidden">
+                <div className="aspect-video bg-muted rounded-t-lg overflow-hidden">
                   <img 
                     src={course.thumbnail_url} 
                     alt={course.title}
@@ -361,7 +361,7 @@ const LearningHub = () => {
                   <Progress value={getCourseProgress(course.id)} />
                 </div>
 
-                <Button className="w-full bg-gradient-primary group-hover:shadow-floating">
+                <Button className="w-full bg-primary text-primary-foreground group-hover:shadow-floating">
                   {getCourseProgress(course.id) > 0 ? 'Lanjutkan' : 'Mulai Belajar'}
                   <Play className="w-4 h-4 ml-2" />
                 </Button>

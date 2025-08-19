@@ -66,7 +66,7 @@ const Features = () => {
           {features.map((feature, index) => (
             <Card 
               key={index} 
-              className="group hover:shadow-card transition-all duration-300 hover:-translate-y-2 bg-gradient-card border-primary/10"
+              className="group hover:shadow-card transition-all duration-300 hover:-translate-y-2 bg-card border-primary/10"
             >
               <CardHeader className="pb-4">
                 <div className={`inline-flex w-12 h-12 items-center justify-center rounded-xl ${feature.color} mb-4 group-hover:scale-110 transition-transform`}>

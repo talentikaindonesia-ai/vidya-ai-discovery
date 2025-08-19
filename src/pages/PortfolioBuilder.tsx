@@ -170,7 +170,7 @@ const PortfolioBuilder = () => {
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-4">
+            <h1 className="text-4xl font-bold text-primary mb-4">
               Portfolio Builder
             </h1>
             <p className="text-xl text-muted-foreground">

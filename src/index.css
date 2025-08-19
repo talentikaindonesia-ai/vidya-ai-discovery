@@ -44,12 +44,7 @@ All colors MUST be HSL.
     --input: 220 15% 95%;
     --ring: 210 80% 65%;
 
-    /* Elegant Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(188 85% 39%), hsl(44 96% 54%));
-    --gradient-soft: linear-gradient(135deg, hsl(188 70% 75%), hsl(44 86% 85%));
-    --gradient-hero: linear-gradient(135deg, hsl(188 95% 30%), hsl(188 85% 39%), hsl(44 96% 54%));
-    --gradient-accent: linear-gradient(135deg, hsl(20 80% 49%), hsl(44 96% 54%));
-    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(188 20% 98%));
+    /* Clean Solid Colors Only - No Gradients */
 
     /* Elegant Shadows */
     --shadow-soft: 0 4px 20px -4px hsl(188 85% 39% / 0.2);

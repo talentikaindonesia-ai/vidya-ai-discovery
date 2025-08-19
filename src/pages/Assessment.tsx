@@ -202,17 +202,17 @@ const Assessment = () => {
     const percentage = Math.min(95, Math.max(70, (compatibilityScore / (personalityQuestions.length * 2)) * 100));
 
     return (
-      <div className="min-h-screen bg-gradient-soft">
+      <div className="min-h-screen bg-secondary-light">
         <div className="container mx-auto px-4 py-8">
           {/* Results Header */}
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-4">
+            <h1 className="text-4xl font-bold text-primary mb-4">
               Hasil Assessment Kepribadian & Minat
             </h1>
             <Card className="max-w-2xl mx-auto">
               <CardHeader>
                 <div className="flex items-center justify-center mb-4">
-                  <div className="w-20 h-20 rounded-full bg-gradient-primary flex items-center justify-center">
+                  <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center">
                     <Brain className="w-10 h-10 text-white" />
                   </div>
                 </div>
