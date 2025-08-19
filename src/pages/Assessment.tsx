@@ -123,15 +123,30 @@ const Assessment = () => {
   const [showResults, setShowResults] = useState(false);
   const [answers, setAnswers] = useState<{[key: number]: number}>({});
   const [scores, setScores] = useState<{[key: string]: number}>({});
+  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
 
-  const handleAnswer = (questionIndex: number, answerIndex: number) => {
-    const newAnswers = { ...answers, [questionIndex]: answerIndex };
+  const handleAnswer = (answerIndex: number) => {
+    setSelectedAnswer(answerIndex);
+  };
+
+  const handleNext = () => {
+    if (selectedAnswer === null) return;
+    
+    const newAnswers = { ...answers, [currentStep]: selectedAnswer };
     setAnswers(newAnswers);
     
     if (currentStep < personalityQuestions.length - 1) {
       setCurrentStep(currentStep + 1);
+      setSelectedAnswer(newAnswers[currentStep + 1] || null);
     } else {
       calculateResults(newAnswers);
+    }
+  };
+
+  const handleBack = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+      setSelectedAnswer(answers[currentStep - 1] || null);
     }
   };
 
@@ -361,6 +376,7 @@ const Assessment = () => {
                 setCurrentStep(0); 
                 setAnswers({});
                 setScores({});
+                setSelectedAnswer(null);
               }} 
               variant="outline"
             >
@@ -373,12 +389,12 @@ const Assessment = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-soft">
+    <div className="min-h-screen bg-secondary-light">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
           {/* Header */}
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-4">
+            <h1 className="text-4xl font-bold text-primary mb-4">
               Assessment Kepribadian & Minat Bakat
             </h1>
             <p className="text-lg text-muted-foreground">
@@ -401,7 +417,7 @@ const Assessment = () => {
           <Card className="mb-8">
             <CardHeader>
               <div className="flex items-center justify-center mb-4">
-                <div className="w-16 h-16 rounded-full bg-gradient-primary flex items-center justify-center">
+                <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center">
                   {currentStep < 3 && <Heart className="w-8 h-8 text-white" />}
                   {currentStep >= 3 && currentStep < 6 && <Zap className="w-8 h-8 text-white" />}
                   {currentStep >= 6 && <Target className="w-8 h-8 text-white" />}
@@ -415,14 +431,23 @@ const Assessment = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <RadioGroup onValueChange={(value) => handleAnswer(currentStep, parseInt(value))}>
+              <RadioGroup 
+                value={selectedAnswer?.toString() || ""} 
+                onValueChange={(value) => handleAnswer(parseInt(value))}
+              >
                 <div className="space-y-3">
                   {personalityQuestions[currentStep].options.map((option, index) => (
-                    <div key={index} className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer">
+                    <div 
+                      key={index} 
+                      className={`flex items-center space-x-2 p-4 border rounded-lg cursor-pointer transition-all hover:bg-muted/50 ${
+                        selectedAnswer === index ? 'border-primary bg-primary/5' : 'border-border'
+                      }`}
+                      onClick={() => handleAnswer(index)}
+                    >
                       <RadioGroupItem value={index.toString()} id={`option-${index}`} />
                       <Label 
                         htmlFor={`option-${index}`} 
-                        className="flex-1 cursor-pointer"
+                        className="flex-1 cursor-pointer font-medium"
                       >
                         {option.text}
                       </Label>
@@ -434,16 +459,26 @@ const Assessment = () => {
           </Card>
 
           {/* Navigation */}
-          <div className="flex justify-between">
+          <div className="flex justify-between items-center gap-4">
             <Button 
               variant="outline" 
-              onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
+              onClick={handleBack}
               disabled={currentStep === 0}
+              className="flex items-center gap-2"
             >
-              Sebelumnya
+              ← Sebelumnya
             </Button>
+            
             <Button variant="outline" onClick={() => navigate("/")}>
               Kembali ke Beranda
+            </Button>
+            
+            <Button 
+              onClick={handleNext}
+              disabled={selectedAnswer === null}
+              className="bg-primary text-primary-foreground flex items-center gap-2"
+            >
+              {currentStep === personalityQuestions.length - 1 ? 'Selesai' : 'Selanjutnya'} →
             </Button>
           </div>
         </div>
