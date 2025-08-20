@@ -293,37 +293,190 @@ const Admin = () => {
           </TabsContent>
 
           <TabsContent value="challenges" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Trophy className="w-6 h-6" />
-                  Manajemen Tantangan
-                </CardTitle>
-                <CardDescription>
-                  Kelola tantangan dan kompetisi untuk pengguna
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">Fitur ini akan segera hadir...</p>
-              </CardContent>
-            </Card>
+            <div className="space-y-6">
+              {/* Add Challenge Form */}
+              {showAddForm && activeTab === "challenges" && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Tambah Tantangan Baru</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium">Judul Tantangan</label>
+                        <Input placeholder="Masukkan judul tantangan" />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium">Kategori</label>
+                        <Select>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Pilih kategori" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="data-science">Data Science</SelectItem>
+                            <SelectItem value="design">Design</SelectItem>
+                            <SelectItem value="programming">Programming</SelectItem>
+                            <SelectItem value="business">Business</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Deskripsi</label>
+                      <Textarea placeholder="Deskripsi tantangan" />
+                    </div>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <label className="text-sm font-medium">Level</label>
+                        <Select>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Pilih level" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="beginner">Pemula</SelectItem>
+                            <SelectItem value="intermediate">Menengah</SelectItem>
+                            <SelectItem value="advanced">Lanjutan</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium">Deadline</label>
+                        <Input type="date" />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium">Hadiah (Rp)</label>
+                        <Input type="number" placeholder="5000000" />
+                      </div>
+                    </div>
+                    <div className="flex gap-4">
+                      <Button>Simpan Tantangan</Button>
+                      <Button variant="outline" onClick={() => setShowAddForm(false)}>Batal</Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Challenges Preview */}
+              <div className="grid gap-4 md:grid-cols-2">
+                <Card className="hover:shadow-lg transition-smooth">
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <Trophy className="w-8 h-8 text-primary" />
+                      <Badge className="bg-green-100 text-green-800">Aktif</Badge>
+                    </div>
+                    <CardTitle className="text-lg">Data Science Hackathon</CardTitle>
+                    <CardDescription>Kategori: Data Science</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <p className="text-sm text-muted-foreground">Analisis dataset e-commerce untuk prediksi penjualan</p>
+                      <div className="flex justify-between items-center text-sm">
+                        <span>156 peserta</span>
+                        <span className="font-semibold">Rp 10,000,000</span>
+                      </div>
+                      <div className="flex gap-2 mt-4">
+                        <Button size="sm" variant="outline" className="flex-1">
+                          <Edit className="w-4 h-4 mr-1" />
+                          Edit
+                        </Button>
+                        <Button size="sm" variant="destructive">
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
           </TabsContent>
 
           <TabsContent value="opportunities" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Briefcase className="w-6 h-6" />
-                  Manajemen Peluang
-                </CardTitle>
-                <CardDescription>
-                  Kelola peluang karir, magang, dan beasiswa
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">Fitur ini akan segera hadir...</p>
-              </CardContent>
-            </Card>
+            <div className="space-y-6">
+              {/* Add Opportunity Form */}
+              {showAddForm && activeTab === "opportunities" && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Tambah Peluang Baru</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium">Judul Peluang</label>
+                        <Input placeholder="Masukkan judul peluang" />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium">Perusahaan/Institusi</label>
+                        <Input placeholder="Nama perusahaan" />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <label className="text-sm font-medium">Tipe</label>
+                        <Select>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Pilih tipe" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="internship">Magang</SelectItem>
+                            <SelectItem value="scholarship">Beasiswa</SelectItem>
+                            <SelectItem value="job">Pekerjaan</SelectItem>
+                            <SelectItem value="competition">Kompetisi</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium">Lokasi</label>
+                        <Input placeholder="Jakarta" />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium">Deadline</label>
+                        <Input type="date" />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Deskripsi</label>
+                      <Textarea placeholder="Deskripsi peluang" />
+                    </div>
+                    <div className="flex gap-4">
+                      <Button>Simpan Peluang</Button>
+                      <Button variant="outline" onClick={() => setShowAddForm(false)}>Batal</Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Opportunities Preview */}
+              <div className="grid gap-4 md:grid-cols-2">
+                <Card className="hover:shadow-lg transition-smooth">
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <Briefcase className="w-8 h-8 text-primary" />
+                      <Badge className="bg-blue-100 text-blue-800">Magang</Badge>
+                    </div>
+                    <CardTitle className="text-lg">Software Engineer Intern</CardTitle>
+                    <CardDescription>TechCorp Indonesia • Jakarta</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <p className="text-sm text-muted-foreground">Bergabung dengan tim engineering untuk mengembangkan aplikasi</p>
+                      <div className="flex justify-between items-center text-sm">
+                        <span>15 hari lagi</span>
+                        <span className="font-semibold">Rp 2-3 juta/bulan</span>
+                      </div>
+                      <div className="flex gap-2 mt-4">
+                        <Button size="sm" variant="outline" className="flex-1">
+                          <Edit className="w-4 h-4 mr-1" />
+                          Edit
+                        </Button>
+                        <Button size="sm" variant="destructive">
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
           </TabsContent>
 
           <TabsContent value="community" className="mt-6">

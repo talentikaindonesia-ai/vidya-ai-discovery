@@ -7,7 +7,9 @@ import {
   LogOut,
   Calendar,
   Settings,
-  Shield
+  Shield,
+  Award,
+  Briefcase
 } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
@@ -26,8 +28,10 @@ export const DashboardSidebar = ({ activeSection, setActiveSection, onSignOut, u
   const menuItems = [
     { id: "overview", label: "Dashboard", icon: Home },
     { id: "courses", label: "Kursus Saya", icon: BookOpen },
+    { id: "challenges", label: "Tantangan", icon: Trophy },
+    { id: "opportunities", label: "Peluang", icon: Briefcase },
     { id: "progress", label: "Progress", icon: BarChart3 },
-    { id: "achievements", label: "Pencapaian", icon: Trophy },
+    { id: "achievements", label: "Pencapaian", icon: Award },
     { id: "calendar", label: "Jadwal", icon: Calendar },
     { id: "profile", label: "Profil", icon: User },
     { id: "settings", label: "Pengaturan", icon: Settings },

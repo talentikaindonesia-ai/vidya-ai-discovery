@@ -9,6 +9,8 @@ import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { WelcomeDashboard } from "@/components/dashboard/WelcomeDashboard";
 import { CoursesSection } from "@/components/dashboard/CoursesSection";
+import { ChallengesSection } from "@/components/dashboard/ChallengesSection";
+import { OpportunitiesSection } from "@/components/dashboard/OpportunitiesSection";
 import { ProgressTracker } from "@/components/dashboard/ProgressTracker";
 import { Achievements } from "@/components/dashboard/Achievements";
 import { User, Session } from "@supabase/supabase-js";
@@ -155,6 +157,10 @@ const Dashboard = () => {
         return <WelcomeDashboard user={user} profile={profile} />;
       case "courses":
         return <CoursesSection />;
+      case "challenges":
+        return <ChallengesSection />;
+      case "opportunities":
+        return <OpportunitiesSection />;
       case "progress":
         return <ProgressTracker />;
       case "achievements":
