@@ -69,8 +69,8 @@ const Hero = () => {
             <div className="relative z-10">
               <div className="bg-card rounded-3xl p-8 shadow-floating border border-input/20">
                 <img 
-                  src={heroImage} 
-                  alt="Talentika - Professional Career Assessment Platform" 
+                  src="/lovable-uploads/029928be-11a9-49ba-9a70-7dd69aff1316.png" 
+                  alt="Professional young woman with laptop - Career development and talent discovery" 
                   className="w-full max-w-lg mx-auto rounded-2xl"
                 />
               </div>
