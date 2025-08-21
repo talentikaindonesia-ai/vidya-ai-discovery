@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
+import { AssessmentResultsCard } from "./AssessmentResultsCard";
 
 interface WelcomeDashboardProps {
   user: User | null;
@@ -35,6 +36,7 @@ export const WelcomeDashboard = ({ user, profile }: WelcomeDashboardProps) => {
   const [userInterests, setUserInterests] = useState([]);
   const [challenges, setChallenges] = useState([]);
   const [opportunities, setOpportunities] = useState([]);
+  const [assessmentResults, setAssessmentResults] = useState(null);
 
   useEffect(() => {
     if (user?.id) {
@@ -110,6 +112,15 @@ export const WelcomeDashboard = ({ user, profile }: WelcomeDashboardProps) => {
         }
       ];
 
+      // Load assessment results
+      const { data: assessmentData } = await supabase
+        .from('assessment_results')
+        .select('*')
+        .eq('user_id', user?.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
       setStats({
         coursesEnrolled: progressData?.length || 0,
         coursesCompleted: progressData?.filter(p => p.progress_percentage === 100).length || 0,
@@ -121,6 +132,7 @@ export const WelcomeDashboard = ({ user, profile }: WelcomeDashboardProps) => {
       setRecommendations(coursesData || []);
       setChallenges(mockChallenges);
       setOpportunities(mockOpportunities);
+      setAssessmentResults(assessmentData || null);
     } catch (error) {
       console.error('Error loading dashboard data:', error);
     }
@@ -220,8 +232,11 @@ export const WelcomeDashboard = ({ user, profile }: WelcomeDashboardProps) => {
         </Card>
       </div>
 
-      {/* Learning Progress */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Learning Progress and Assessment Results */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Assessment Results */}
+        <AssessmentResultsCard assessmentResults={assessmentResults} />
+        
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
