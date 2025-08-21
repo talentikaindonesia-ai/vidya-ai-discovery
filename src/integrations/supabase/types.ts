@@ -97,6 +97,39 @@ export type Database = {
         }
         Relationships: []
       }
+      audit_logs: {
+        Row: {
+          accessed_at: string | null
+          id: string
+          ip_address: string | null
+          operation: string
+          record_id: string | null
+          table_name: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          accessed_at?: string | null
+          id?: string
+          ip_address?: string | null
+          operation: string
+          record_id?: string | null
+          table_name: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          accessed_at?: string | null
+          id?: string
+          ip_address?: string | null
+          operation?: string
+          record_id?: string | null
+          table_name?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       courses: {
         Row: {
           category_id: string | null
@@ -494,6 +527,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_profile_secure: {
+        Args: { profile_user_id: string }
+        Returns: {
+          address: string
+          avatar_url: string
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          organization_name: string
+          organization_type: string
+          phone: string
+          subscription_status: string
+          subscription_type: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["user_role"]
