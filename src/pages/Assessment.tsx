@@ -594,19 +594,6 @@ const Assessment = () => {
             </Button>
             
             <Button 
-              variant="outline" 
-              onClick={() => {
-                setShowPersonalityTypes(true);
-                setCurrentStep(0);
-                setAnswers({});
-                setScores({});
-                setSelectedAnswer(null);
-              }}
-            >
-              Kembali ke Beranda
-            </Button>
-            
-            <Button 
               onClick={handleNext}
               disabled={selectedAnswer === null}
               className="bg-primary text-primary-foreground flex items-center gap-2"
