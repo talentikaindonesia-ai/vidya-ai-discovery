@@ -185,6 +185,12 @@ const Dashboard = () => {
         return <ProgressTracker />;
       case "achievements":
         return <Achievements />;
+      case "community":
+        window.location.href = '/community';
+        return null;
+      case "timeline":
+        window.location.href = '/discovery';
+        return null;
       default:
         return (
           <div className="space-y-6">

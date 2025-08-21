@@ -5,7 +5,8 @@ import {
   Home, 
   User, 
   LogOut,
-  Calendar,
+  Users,
+  Clock,
   Settings,
   Shield,
   Award,
@@ -32,8 +33,8 @@ export const DashboardSidebar = ({ activeSection, setActiveSection, onSignOut, u
     { id: "opportunities", label: "Peluang", icon: Briefcase },
     { id: "progress", label: "Progress", icon: BarChart3 },
     { id: "achievements", label: "Pencapaian", icon: Award },
-    { id: "calendar", label: "Jadwal", icon: Calendar },
-    { id: "profile", label: "Profil", icon: User },
+    { id: "community", label: "Community", icon: Users },
+    { id: "timeline", label: "Timeline", icon: Clock },
     { id: "settings", label: "Pengaturan", icon: Settings },
   ];
 
