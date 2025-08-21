@@ -88,11 +88,11 @@ const Features = () => {
 
         {/* Mobile Carousel */}
         <div className="md:hidden">
-          <div className="flex gap-3 overflow-x-auto pb-4 snap-x snap-mandatory">
+          <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory px-4 -mx-4">
             {features.map((feature, index) => (
               <Card 
                 key={index} 
-                className="min-w-[240px] flex-shrink-0 snap-start group hover:shadow-card transition-all duration-300 bg-card border-primary/10"
+                className="min-w-[280px] w-[280px] flex-shrink-0 snap-start group hover:shadow-card transition-all duration-300 bg-card border-primary/10"
               >
                 <CardHeader className="pb-2 pt-4">
                   <div className={`inline-flex w-10 h-10 items-center justify-center rounded-lg ${feature.color} mb-2 group-hover:scale-110 transition-transform`}>
