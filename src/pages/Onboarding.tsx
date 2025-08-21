@@ -201,25 +201,41 @@ const Onboarding = () => {
             </div>
           )}
 
-          <div className="flex justify-between pt-6">
-            {step > 1 && (
-              <Button variant="outline" onClick={() => setStep(step - 1)}>
-                Kembali
+          <div className="space-y-4 pt-6">
+            {/* Previous/Next buttons row */}
+            <div className="flex justify-between gap-4">
+              {step > 1 ? (
+                <Button variant="outline" onClick={() => setStep(step - 1)}>
+                  Sebelumnya
+                </Button>
+              ) : (
+                <div></div>
+              )}
+              
+              <Button 
+                onClick={handleNext}
+                disabled={
+                  (step === 1 && (!formData.fullName || !formData.age)) ||
+                  (step === 2 && !formData.educationLevel) ||
+                  (step === 3 && formData.interests.length === 0)
+                }
+                className="bg-primary text-primary-foreground hover:shadow-floating"
+              >
+                {step === 3 ? 'Selesai' : 'Lanjut'}
+                <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
-            )}
+            </div>
             
-            <Button 
-              onClick={handleNext}
-              disabled={
-                (step === 1 && (!formData.fullName || !formData.age)) ||
-                (step === 2 && !formData.educationLevel) ||
-                (step === 3 && formData.interests.length === 0)
-              }
-              className="ml-auto bg-primary text-primary-foreground hover:shadow-floating"
-            >
-              {step === 3 ? 'Selesai' : 'Lanjut'}
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
+            {/* Back to home button */}
+            <div className="flex justify-center">
+              <Button 
+                variant="ghost" 
+                onClick={() => navigate("/")}
+                className="text-muted-foreground hover:text-primary"
+              >
+                Kembali ke Beranda
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
