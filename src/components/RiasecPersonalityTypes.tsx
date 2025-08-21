@@ -106,7 +106,7 @@ const RiasecPersonalityTypes = ({
             {Object.entries(riasecTypes).map(([key, type]) => {
               const Icon = type.icon;
               return (
-                <CarouselItem key={key} className="pl-2 md:pl-4 md:basis-1/2 lg:basis-1/3">
+                <CarouselItem key={key} className="pl-2 md:pl-4 basis-full md:basis-1/2 lg:basis-1/3">
                   <Card className="group hover:shadow-lg transition-all duration-300 border-2 hover:border-primary/30 h-full">
                     <CardHeader className="text-center">
                       <div className={`w-20 h-20 mx-auto rounded-full bg-gradient-to-br ${type.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
@@ -146,8 +146,8 @@ const RiasecPersonalityTypes = ({
               );
             })}
           </CarouselContent>
-          <CarouselPrevious />
-          <CarouselNext />
+          <CarouselPrevious className="left-2" />
+          <CarouselNext className="right-2" />
         </Carousel>
 
         {showButton && (
