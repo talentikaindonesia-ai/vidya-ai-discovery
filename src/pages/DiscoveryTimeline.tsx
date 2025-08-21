@@ -115,7 +115,56 @@ const DiscoveryTimeline = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
+      {/* Hero Section */}
+      <div className="relative bg-gradient-primary overflow-hidden">
+        <div className="absolute inset-0 bg-black/20"></div>
+        <div className="container mx-auto px-4 py-24 relative z-10">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="text-white">
+              <h1 className="text-5xl font-bold mb-6 leading-tight">
+                Discovery Timeline
+              </h1>
+              <p className="text-xl text-white/90 mb-8 leading-relaxed">
+                Jelajahi passion map dan perjalanan belajar Anda. Visualisasi pencapaian, 
+                milestone, dan progress dalam timeline interaktif yang memotivasi.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button size="lg" className="bg-white text-primary hover:bg-white/90 shadow-floating">
+                  <Calendar className="w-5 h-5 mr-2" />
+                  Lihat Timeline
+                </Button>
+                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
+                  <Target className="w-5 h-5 mr-2" />
+                  Passion Map
+                </Button>
+              </div>
+              <div className="flex items-center gap-8 mt-8 text-white/80">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-white">100%</div>
+                  <div className="text-sm">Personal</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-white">AI</div>
+                  <div className="text-sm">Powered</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-white">Real-time</div>
+                  <div className="text-sm">Updates</div>
+                </div>
+              </div>
+            </div>
+            <div className="hidden lg:block">
+              <img 
+                src="/src/assets/timeline-hero.jpg" 
+                alt="Discovery Timeline" 
+                className="rounded-2xl shadow-2xl transform -rotate-3 hover:rotate-0 transition-transform duration-500"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="container mx-auto px-4 py-16">
         {/* Header Profile Card */}
         <Card className="shadow-card mb-8">
           <CardContent className="p-6">

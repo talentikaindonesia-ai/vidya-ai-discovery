@@ -150,14 +150,15 @@ export const WelcomeDashboard = ({ user, profile }: WelcomeDashboardProps) => {
   return (
     <div className="space-y-6">
       {/* Welcome Section */}
-      <div className="bg-primary rounded-lg p-6 text-white">
-        <div className="flex items-center justify-between">
+      <div className="bg-gradient-primary rounded-2xl p-6 text-white relative overflow-hidden">
+        <div className="absolute inset-0 bg-black/10"></div>
+        <div className="relative z-10 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold mb-2">
+            <h1 className="text-3xl font-bold mb-2">
               {getGreeting()}, {displayName}! 👋
             </h1>
-            <p className="text-white/80 mb-2">
-              Siap untuk melanjutkan perjalanan pembelajaran Anda hari ini?
+            <p className="text-white/90 mb-4 text-lg">
+              Mari lanjutkan perjalanan pembelajaran Anda hari ini
             </p>
             {userInterests.length > 0 && (
               <div className="flex gap-2 mb-4">
@@ -168,10 +169,6 @@ export const WelcomeDashboard = ({ user, profile }: WelcomeDashboardProps) => {
                 ))}
               </div>
             )}
-            <Button variant="secondary" className="bg-white text-primary hover:bg-gray-100">
-              <Play className="w-4 h-4 mr-2" />
-              Lanjutkan Belajar
-            </Button>
           </div>
           <div className="hidden md:block">
             <div className="w-32 h-32 bg-white/10 rounded-full flex items-center justify-center">
@@ -181,109 +178,69 @@ export const WelcomeDashboard = ({ user, profile }: WelcomeDashboardProps) => {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-2">
-              <BookOpen className="w-8 h-8 text-primary" />
-              <div>
-                <p className="text-2xl font-bold">{stats.coursesEnrolled}</p>
-                <p className="text-sm text-muted-foreground">Kursus Diikuti</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Assessment Results */}
+      <AssessmentResultsCard assessmentResults={assessmentResults} />
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-2">
-              <Award className="w-8 h-8 text-green-500" />
-              <div>
-                <p className="text-2xl font-bold">{stats.coursesCompleted}</p>
-                <p className="text-sm text-muted-foreground">Kursus Selesai</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-2">
-              <Clock className="w-8 h-8 text-blue-500" />
-              <div>
-                <p className="text-2xl font-bold">{Math.round(stats.totalLearningTime / 60)}h</p>
-                <p className="text-sm text-muted-foreground">Waktu Belajar</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-2">
-              <TrendingUp className="w-8 h-8 text-purple-500" />
-              <div>
-                <p className="text-2xl font-bold">{stats.achievements}</p>
-                <p className="text-sm text-muted-foreground">Pencapaian</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Learning Progress and Assessment Results */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Assessment Results */}
-        <AssessmentResultsCard assessmentResults={assessmentResults} />
-        
-        <Card>
+      {/* Learning Progress Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="shadow-card">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Target className="w-5 h-5" />
+            <CardTitle className="flex items-center gap-2 text-xl">
+              <Target className="w-6 h-6 text-primary" />
               Target Mingguan
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div>
                 <div className="flex justify-between text-sm mb-2">
-                  <span>Kursus Diselesaikan</span>
-                  <span>2/3</span>
+                  <span className="font-medium">Kursus Diselesaikan</span>
+                  <span className="text-primary font-bold">2/3</span>
                 </div>
-                <Progress value={67} className="h-2" />
+                <Progress value={67} className="h-3" />
               </div>
               <div>
                 <div className="flex justify-between text-sm mb-2">
-                  <span>Waktu Belajar</span>
-                  <span>8/12 jam</span>
+                  <span className="font-medium">Waktu Belajar Mingguan</span>
+                  <span className="text-primary font-bold">8/12 jam</span>
                 </div>
-                <Progress value={67} className="h-2" />
+                <Progress value={67} className="h-3" />
+              </div>
+              <div className="pt-2 border-t">
+                <p className="text-sm text-muted-foreground">
+                  Anda sudah mencapai <span className="font-semibold text-primary">67%</span> dari target mingguan!
+                </p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="shadow-card">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="w-5 h-5" />
+            <CardTitle className="flex items-center gap-2 text-xl">
+              <Calendar className="w-6 h-6 text-primary" />
               Jadwal Hari Ini
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 bg-primary/5 rounded-lg">
-                <div>
-                  <p className="font-medium">Kelas Python Dasar</p>
-                  <p className="text-sm text-muted-foreground">09:00 - 10:30</p>
+            <div className="space-y-4">
+              <div className="flex items-center gap-3 p-4 bg-primary/5 rounded-xl border-l-4 border-primary">
+                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                  <Play className="w-6 h-6 text-primary" />
                 </div>
-                <Badge variant="secondary">Live</Badge>
+                <div className="flex-1">
+                  <p className="font-semibold">Kelas Python Dasar</p>
+                  <p className="text-sm text-muted-foreground">09:00 - 10:30 WIB</p>
+                </div>
+                <Badge className="bg-primary text-primary-foreground">Live</Badge>
               </div>
-              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                <div>
-                  <p className="font-medium">Quiz Matematika</p>
-                  <p className="text-sm text-muted-foreground">14:00 - 14:30</p>
+              <div className="flex items-center gap-3 p-4 bg-muted/30 rounded-xl border-l-4 border-muted">
+                <div className="w-12 h-12 bg-muted/50 rounded-full flex items-center justify-center">
+                  <BookOpen className="w-6 h-6 text-muted-foreground" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-semibold">Quiz Matematika</p>
+                  <p className="text-sm text-muted-foreground">14:00 - 14:30 WIB</p>
                 </div>
                 <Badge variant="outline">Upcoming</Badge>
               </div>
@@ -292,112 +249,105 @@ export const WelcomeDashboard = ({ user, profile }: WelcomeDashboardProps) => {
         </Card>
       </div>
 
-      {/* Personalized Content Grid */}
+      {/* Quick Actions */}
       <div className="grid gap-6 md:grid-cols-2">
         {/* Course Recommendations */}
-        <Card>
+        <Card className="shadow-card border-primary/20">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BookOpen className="w-5 h-5" />
-              Kursus untuk Anda
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-xl">
+                <BookOpen className="w-6 h-6 text-primary" />
+                Kursus Direkomendasikan
+              </CardTitle>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                className="text-primary hover:bg-primary/10"
+                onClick={() => window.location.href = '/learning'}
+              >
+                Lihat Semua →
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
+            <div className="space-y-4">
               {recommendations.slice(0, 3).map((course: any) => (
-                <div key={course.id} className="flex items-center gap-3 p-3 rounded-lg border hover:bg-accent/50 transition-colors">
-                  <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <BookOpen className="w-5 h-5 text-primary" />
+                <div key={course.id} className="flex items-center gap-3 p-4 rounded-xl bg-gradient-to-r from-primary/5 to-transparent border hover:from-primary/10 transition-all">
+                  <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <BookOpen className="w-6 h-6 text-primary" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-semibold text-sm line-clamp-1">{course.title}</h4>
-                    <p className="text-xs text-muted-foreground">
+                    <h4 className="font-semibold line-clamp-1">{course.title}</h4>
+                    <p className="text-sm text-muted-foreground">
                       {course.interest_categories?.name} • {course.duration_hours}h
                     </p>
                   </div>
-                  <Button size="sm" variant="outline">
+                  <Button size="sm" className="bg-primary text-primary-foreground shadow-soft">
                     Mulai
                   </Button>
                 </div>
               ))}
             </div>
-            <Button variant="outline" className="w-full mt-4" onClick={() => window.location.href = '/learning'}>
-              Lihat Semua Kursus
+            <Button 
+              className="w-full mt-6 bg-gradient-primary text-white shadow-floating hover:shadow-card" 
+              onClick={() => window.location.href = '/learning'}
+            >
+              <BookOpen className="w-4 h-4 mr-2" />
+              Jelajahi Semua Kursus
             </Button>
           </CardContent>
         </Card>
 
-        {/* Challenges */}
-        <Card>
+        {/* Opportunities */}
+        <Card className="shadow-card border-accent/20">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Trophy className="w-5 h-5" />
-              Tantangan Terbaru
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-xl">
+                <Briefcase className="w-6 h-6 text-accent" />
+                Peluang Terbaru
+              </CardTitle>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                className="text-accent hover:bg-accent/10"
+                onClick={() => window.location.href = '/opportunities'}
+              >
+                Lihat Semua →
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {challenges.map((challenge: any) => (
-                <div key={challenge.id} className="p-3 rounded-lg border hover:bg-accent/50 transition-colors">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-sm">{challenge.title}</h4>
-                      <p className="text-xs text-muted-foreground mt-1">{challenge.description}</p>
-                      <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                        <span>{challenge.participants} peserta</span>
-                        <span>Hadiah: {challenge.prize}</span>
-                      </div>
-                    </div>
-                    <Badge variant="secondary" className="text-xs">
-                      {new Date(challenge.deadline).toLocaleDateString('id-ID')}
+            <div className="space-y-4">
+              {opportunities.slice(0, 2).map((opportunity: any) => (
+                <div key={opportunity.id} className="p-4 rounded-xl bg-gradient-to-r from-accent/5 to-transparent border hover:from-accent/10 transition-all">
+                  <div className="flex items-start justify-between mb-3">
+                    <h4 className="font-semibold line-clamp-1">{opportunity.title}</h4>
+                    <Badge variant={opportunity.type === 'Scholarship' ? 'default' : 'secondary'} className="text-xs">
+                      {opportunity.type}
                     </Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-2">{opportunity.company}</p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">
+                      📍 {opportunity.location}
+                    </span>
+                    <Button size="sm" variant="outline" className="border-accent text-accent hover:bg-accent/10">
+                      Lihat Detail
+                    </Button>
                   </div>
                 </div>
               ))}
             </div>
-            <Button variant="outline" className="w-full mt-4">
-              Lihat Semua Tantangan
+            <Button 
+              className="w-full mt-6 bg-gradient-accent text-white shadow-floating hover:shadow-card" 
+              onClick={() => window.location.href = '/opportunities'}
+            >
+              <Briefcase className="w-4 h-4 mr-2" />
+              Jelajahi Semua Peluang
             </Button>
           </CardContent>
         </Card>
       </div>
-
-      {/* Opportunities */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Briefcase className="w-5 h-5" />
-            Peluang untuk Anda
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-2">
-            {opportunities.map((opportunity: any) => (
-              <div key={opportunity.id} className="p-4 rounded-lg border hover:bg-accent/50 transition-colors">
-                <div className="flex items-start justify-between mb-2">
-                  <h4 className="font-semibold text-sm">{opportunity.title}</h4>
-                  <Badge variant={opportunity.type === 'Scholarship' ? 'default' : 'secondary'} className="text-xs">
-                    {opportunity.type}
-                  </Badge>
-                </div>
-                <p className="text-sm text-muted-foreground">{opportunity.company}</p>
-                <p className="text-xs text-muted-foreground mt-1">{opportunity.location}</p>
-                <div className="flex items-center justify-between mt-3">
-                  <span className="text-xs text-muted-foreground">
-                    Deadline: {new Date(opportunity.deadline).toLocaleDateString('id-ID')}
-                  </span>
-                  <Button size="sm" variant="outline">
-                    Lamar
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-          <Button variant="outline" className="w-full mt-4" onClick={() => window.location.href = '/opportunities'}>
-            Lihat Semua Peluang
-          </Button>
-        </CardContent>
-      </Card>
     </div>
   );
 };

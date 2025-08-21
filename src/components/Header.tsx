@@ -7,10 +7,10 @@ const Header = () => {
 
   const navItems = [
     { label: "Beranda", href: "#home" },
-    { label: "Fitur", href: "#features" },
-    { label: "Cara Kerja", href: "#how-it-works" },
-    { label: "Harga", href: "#pricing" },
-    { label: "Testimoni", href: "#testimonials" }
+    { label: "Learning Hub", href: "/learning" },
+    { label: "Peluang", href: "/opportunities" },
+    { label: "Community", href: "/community" },
+    { label: "Timeline", href: "/discovery" }
   ];
 
   return (

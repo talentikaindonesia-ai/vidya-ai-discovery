@@ -159,16 +159,56 @@ const OpportunityBoard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-primary mb-4">
-            Opportunity Board
-          </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Temukan beasiswa, kompetisi, dan kesempatan magang yang sesuai dengan minat dan bakatmu
-          </p>
+      {/* Hero Section */}
+      <div className="relative bg-gradient-accent overflow-hidden">
+        <div className="absolute inset-0 bg-black/20"></div>
+        <div className="container mx-auto px-4 py-24 relative z-10">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="text-white">
+              <h1 className="text-5xl font-bold mb-6 leading-tight">
+                Opportunity Board
+              </h1>
+              <p className="text-xl text-white/90 mb-8 leading-relaxed">
+                Temukan beasiswa, kompetisi, dan kesempatan magang yang sesuai dengan minat dan bakatmu. 
+                Raih impianmu dengan peluang terbaik dari seluruh dunia.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button size="lg" className="bg-white text-accent hover:bg-white/90 shadow-floating">
+                  <Briefcase className="w-5 h-5 mr-2" />
+                  Jelajahi Peluang
+                </Button>
+                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
+                  <Trophy className="w-5 h-5 mr-2" />
+                  Lihat Kompetisi
+                </Button>
+              </div>
+              <div className="flex items-center gap-8 mt-8 text-white/80">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-white">200+</div>
+                  <div className="text-sm">Peluang</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-white">5k+</div>
+                  <div className="text-sm">Berhasil</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-white">24/7</div>
+                  <div className="text-sm">Update</div>
+                </div>
+              </div>
+            </div>
+            <div className="hidden lg:block">
+              <img 
+                src="/src/assets/opportunity-hero.jpg" 
+                alt="Opportunity Board" 
+                className="rounded-2xl shadow-2xl transform -rotate-3 hover:rotate-0 transition-transform duration-500"
+              />
+            </div>
+          </div>
         </div>
+      </div>
+
+      <div className="container mx-auto px-4 py-16">
 
         {/* Recommended Section */}
         {recommendedOpportunities.length > 0 && (

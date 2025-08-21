@@ -300,15 +300,56 @@ const LearningHub = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-primary mb-4">
-            Learning Hub
-          </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Jelajahi kursus interaktif dengan mini project dan dapatkan sertifikat untuk portfolio Anda
-          </p>
+      {/* Hero Section */}
+      <div className="relative bg-gradient-primary overflow-hidden">
+        <div className="absolute inset-0 bg-black/20"></div>
+        <div className="container mx-auto px-4 py-24 relative z-10">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="text-white">
+              <h1 className="text-5xl font-bold mb-6 leading-tight">
+                Learning Hub
+              </h1>
+              <p className="text-xl text-white/90 mb-8 leading-relaxed">
+                Jelajahi kursus interaktif dengan mini project dan dapatkan sertifikat untuk portfolio Anda. 
+                Belajar dari ahli industri dengan kurikulum yang selalu update.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button size="lg" className="bg-white text-primary hover:bg-white/90 shadow-floating">
+                  <BookOpen className="w-5 h-5 mr-2" />
+                  Mulai Belajar
+                </Button>
+                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
+                  <Play className="w-5 h-5 mr-2" />
+                  Lihat Demo
+                </Button>
+              </div>
+              <div className="flex items-center gap-8 mt-8 text-white/80">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-white">50+</div>
+                  <div className="text-sm">Kursus</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-white">10k+</div>
+                  <div className="text-sm">Pelajar</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-white">95%</div>
+                  <div className="text-sm">Kepuasan</div>
+                </div>
+              </div>
+            </div>
+            <div className="hidden lg:block">
+              <img 
+                src="/src/assets/learning-hero.jpg" 
+                alt="Learning Hub" 
+                className="rounded-2xl shadow-2xl transform rotate-3 hover:rotate-0 transition-transform duration-500"
+              />
+            </div>
+          </div>
         </div>
+      </div>
+
+      <div className="container mx-auto px-4 py-16">
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {courses.map((course) => (
