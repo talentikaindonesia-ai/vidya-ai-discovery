@@ -25,7 +25,7 @@ const Hero = () => {
             </h1>
             
             <p className="text-xl text-muted-foreground max-w-xl leading-relaxed">
-              Vidya membantu generasi muda menemukan passion dan mengembangkan talenta melalui assessment yang komprehensif dan panduan karir yang personal.
+              Talentika membantu generasi muda menemukan passion dan mengembangkan talenta melalui assessment yang komprehensif dan panduan karir yang personal.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-6 pt-6">
@@ -70,7 +70,7 @@ const Hero = () => {
               <div className="bg-card rounded-3xl p-8 shadow-floating border border-input/20">
                 <img 
                   src={heroImage} 
-                  alt="Vidya - Professional Career Assessment Platform" 
+                  alt="Talentika - Professional Career Assessment Platform" 
                   className="w-full max-w-lg mx-auto rounded-2xl"
                 />
               </div>

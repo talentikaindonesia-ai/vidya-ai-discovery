@@ -129,7 +129,7 @@ const DiscoveryTimeline = () => {
               
               <div className="flex-1">
                 <h1 className="text-3xl font-bold text-foreground mb-2">
-                  {userProfile?.full_name || 'Pengguna Vidya'}
+                  {userProfile?.full_name || 'Pengguna Talentika'}
                 </h1>
                 <p className="text-muted-foreground mb-4">
                   Jelajahi passion map dan perjalanan belajar Anda

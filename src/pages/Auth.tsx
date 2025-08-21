@@ -114,7 +114,7 @@ const Auth = () => {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold text-primary">
-            Vidya: Discover Your Potential
+            Talentika: Discover Your Potential
           </CardTitle>
           <CardDescription>
             Masuk atau daftar untuk memulai perjalanan pembelajaran Anda

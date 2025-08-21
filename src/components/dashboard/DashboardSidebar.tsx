@@ -45,7 +45,7 @@ export const DashboardSidebar = ({ activeSection, setActiveSection, onSignOut, u
             <span className="text-white font-bold text-sm">V</span>
           </div>
           <span className="font-bold text-lg bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-            Vidya
+            Talentika
           </span>
         </div>
       </SidebarHeader>

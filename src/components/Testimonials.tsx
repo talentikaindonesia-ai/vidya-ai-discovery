@@ -9,7 +9,7 @@ const Testimonials = () => {
       role: "Mahasiswa Teknik Informatika",
       university: "Institut Teknologi Bandung",
       image: "https://images.unsplash.com/photo-1494790108755-2616c4e234d4?w=100&h=100&fit=crop&crop=face",
-      content: "Vidya benar-benar membantu saya menemukan passion di bidang teknologi. Sekarang saya lebih percaya diri dengan pilihan jurusan kuliah saya dan punya roadmap yang jelas untuk karir.",
+      content: "Talentika benar-benar membantu saya menemukan passion di bidang teknologi. Sekarang saya lebih percaya diri dengan pilihan jurusan kuliah saya dan punya roadmap yang jelas untuk karir.",
       rating: 5,
       badge: "Teknologi"
     },
@@ -18,7 +18,7 @@ const Testimonials = () => {
       role: "Siswa SMA Kelas 12",
       university: "SMAN 1 Jakarta",
       image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face",
-      content: "Tes minat bakat di Vidya sangat akurat! Saya awalnya bingung mau kuliah dimana, tapi setelah menggunakan Vidya, saya yakin memilih jurusan Psikologi.",
+      content: "Tes minat bakat di Talentika sangat akurat! Saya awalnya bingung mau kuliah dimana, tapi setelah menggunakan Talentika, saya yakin memilih jurusan Psikologi.",
       rating: 5,
       badge: "Psikologi"
     },
@@ -36,7 +36,7 @@ const Testimonials = () => {
       role: "Kepala Sekolah",
       university: "SMA Negeri 5 Surabaya",
       image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face",
-      content: "Vidya School Package sangat membantu kami dalam memberikan bimbingan karir yang tepat untuk siswa. Data analytics yang disediakan memberikan insight berharga.",
+      content: "Talentika School Package sangat membantu kami dalam memberikan bimbingan karir yang tepat untuk siswa. Data analytics yang disediakan memberikan insight berharga.",
       rating: 5,
       badge: "Pendidikan"
     },
@@ -45,7 +45,7 @@ const Testimonials = () => {
       role: "Mahasiswa Desain Grafis",
       university: "Institut Seni Budaya Indonesia",
       image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=face",
-      content: "Fitur portfolio builder di Vidya membantu saya menyusun karya-karya terbaik. Komunitas kreatifnya juga sangat supportive dan inspiring!",
+      content: "Fitur portfolio builder di Talentika membantu saya menyusun karya-karya terbaik. Komunitas kreatifnya juga sangat supportive dan inspiring!",
       rating: 5,
       badge: "Seni & Desain"
     },
@@ -54,7 +54,7 @@ const Testimonials = () => {
       role: "Siswa SMK Jurusan Otomotif",
       university: "SMK Negeri 2 Yogyakarta",
       image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face",
-      content: "Rekomendasi magang yang diberikan Vidya sangat berkualitas. Saya mendapat pengalaman berharga di bengkel ternama dan skills saya meningkat pesat.",
+      content: "Rekomendasi magang yang diberikan Talentika sangat berkualitas. Saya mendapat pengalaman berharga di bengkel ternama dan skills saya meningkat pesat.",
       rating: 5,
       badge: "Teknik"
     }
@@ -72,7 +72,7 @@ const Testimonials = () => {
             Mereka Telah Menemukan Jalannya
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            Ribuan pelajar, mahasiswa, dan institusi pendidikan telah mempercayai Vidya untuk mengembangkan potensi mereka
+            Ribuan pelajar, mahasiswa, dan institusi pendidikan telah mempercayai Talentika untuk mengembangkan potensi mereka
           </p>
         </div>
 

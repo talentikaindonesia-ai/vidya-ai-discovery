@@ -13,7 +13,7 @@ const Footer = () => {
                 <Brain className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h3 className="text-xl font-bold">Vidya</h3>
+                <h3 className="text-xl font-bold">Talentika</h3>
                 <p className="text-sm text-white/80">Minat & Bakat Explorer</p>
               </div>
             </div>
@@ -67,7 +67,7 @@ const Footer = () => {
             <div className="space-y-3">
               <div className="flex items-center gap-3">
                 <Mail className="w-5 h-5 text-primary" />
-                <span className="text-white/80">hello@vidya.app</span>
+                <span className="text-white/80">hello@talentika.app</span>
               </div>
               <div className="flex items-center gap-3">
                 <Phone className="w-5 h-5 text-primary" />
@@ -84,7 +84,7 @@ const Footer = () => {
         <div className="border-t border-white/10 mt-12 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-white/60 text-sm">
-              © 2024 Vidya. Semua hak dilindungi undang-undang.
+              © 2024 Talentika. Semua hak dilindungi undang-undang.
             </p>
             <div className="flex gap-6 text-sm">
               <a href="#" className="text-white/60 hover:text-white transition-colors">
