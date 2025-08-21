@@ -15,7 +15,7 @@ const Hero = () => {
           <div className="text-center lg:text-left space-y-8">
             <div className="inline-flex items-center gap-2 bg-secondary-light/80 backdrop-blur-sm px-6 py-3 rounded-full text-foreground text-sm font-medium shadow-soft">
               <Sparkles className="w-4 h-4 text-secondary" />
-              Empowering Your Future
+              Discover your full Potential
             </div>
             
             <h1 className="text-5xl md:text-7xl font-bold text-foreground leading-[1.1] tracking-tight">
