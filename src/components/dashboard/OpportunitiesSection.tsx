@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Briefcase, MapPin, Calendar, Building, Search, ExternalLink, Clock, GraduationCap } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Opportunity {
   id: string;
@@ -18,7 +19,10 @@ interface Opportunity {
   requirements: string[];
   benefits: string[];
   isRecommended?: boolean;
+  isPersonalized?: boolean;
   salaryRange?: string;
+  reason?: string;
+  field?: string;
 }
 
 export const OpportunitiesSection = () => {
@@ -26,14 +30,93 @@ export const OpportunitiesSection = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedType, setSelectedType] = useState("all");
   const [selectedLocation, setSelectedLocation] = useState("all");
+  const [userAssessment, setUserAssessment] = useState<any>(null);
 
-  useEffect(() => {
-    loadOpportunities();
-  }, []);
+  const loadUserAssessment = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: assessment } = await supabase
+        .from('assessment_results')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (assessment) {
+        setUserAssessment(assessment);
+      }
+    } catch (error) {
+      console.error('Error loading user assessment:', error);
+    }
+  };
 
   const loadOpportunities = () => {
-    // Mock data - in real app, fetch from Supabase
-    const mockOpportunities: Opportunity[] = [
+    // Get personalized opportunities based on assessment results
+    const getPersonalizedOpportunities = () => {
+      if (!userAssessment) return getMockOpportunities();
+      
+      const personalityType = userAssessment.personality_type;
+      const careerRecommendations = userAssessment.career_recommendations || [];
+      
+      const riasecOpportunities = {
+        realistic: [
+          { title: 'Engineering Intern - Manufacturing Company', company: 'IndustriCorp', type: 'internship' as const, field: 'Teknik' },
+          { title: 'Agricultural Technology Scholarship', company: 'AgriTech Foundation', type: 'scholarship' as const, field: 'Pertanian' },
+          { title: 'Construction Project Manager', company: 'BuildMax', type: 'job' as const, field: 'Konstruksi' }
+        ],
+        investigative: [
+          { title: 'Data Science Internship', company: 'DataTech Solutions', type: 'internship' as const, field: 'Data Science' },
+          { title: 'Research Fellowship Program', company: 'National Science Foundation', type: 'scholarship' as const, field: 'Penelitian' },
+          { title: 'Bioinformatics Analyst Position', company: 'BioLab Inc', type: 'job' as const, field: 'Sains' }
+        ],
+        artistic: [
+          { title: 'Creative Design Intern', company: 'Design Studio Pro', type: 'internship' as const, field: 'Design' },
+          { title: 'Digital Art Competition', company: 'Creative Foundation', type: 'competition' as const, field: 'Seni' },
+          { title: 'Media Production Assistant', company: 'MediaCorp', type: 'job' as const, field: 'Media' }
+        ],
+        social: [
+          { title: 'Education Program Coordinator', company: 'Learn Foundation', type: 'job' as const, field: 'Pendidikan' },
+          { title: 'Community Health Intern', company: 'Health NGO', type: 'internship' as const, field: 'Kesehatan' },
+          { title: 'Social Work Scholarship', company: 'Social Care Fund', type: 'scholarship' as const, field: 'Sosial' }
+        ],
+        enterprising: [
+          { title: 'Business Development Trainee', company: 'GrowthCorp', type: 'job' as const, field: 'Bisnis' },
+          { title: 'Startup Accelerator Program', company: 'Innovation Hub', type: 'competition' as const, field: 'Kewirausahaan' },
+          { title: 'Sales Management Intern', company: 'SalesPro', type: 'internship' as const, field: 'Penjualan' }
+        ],
+        conventional: [
+          { title: 'Financial Analyst Trainee', company: 'FinanceCorp', type: 'job' as const, field: 'Keuangan' },
+          { title: 'Administrative Excellence Program', company: 'OfficePro', type: 'internship' as const, field: 'Administrasi' },
+          { title: 'Accounting Scholarship', company: 'CPA Foundation', type: 'scholarship' as const, field: 'Akuntansi' }
+        ]
+      };
+
+      const personalizedOpps = personalityType && riasecOpportunities[personalityType as keyof typeof riasecOpportunities] 
+        ? riasecOpportunities[personalityType as keyof typeof riasecOpportunities]
+        : [];
+
+      // Add personalized opportunities with reasons
+      const personalizedWithReasons = personalizedOpps.map((opp, index) => ({
+        id: `personalized-${index + 1}`,
+        ...opp,
+        location: ['Jakarta', 'Bandung', 'Surabaya', 'Yogyakarta'][index % 4],
+        deadline: `2024-12-${20 + index}T23:59:59`,
+        description: `Peluang yang disesuaikan dengan kepribadian ${personalityType} dan minat di bidang ${opp.field}`,
+        requirements: ['Sesuai assessment RIASEC', 'Passion di bidang ini', 'Kemampuan komunikasi', 'Teamwork'],
+        benefits: ['Pengembangan karier', 'Mentoring', 'Certificate', 'Networking'],
+        isRecommended: true,
+        isPersonalized: true,
+        reason: `Cocok dengan kepribadian ${personalityType} Anda`
+      }));
+
+      // Combine with general opportunities
+      return [...personalizedWithReasons, ...getMockOpportunities().slice(0, 3)];
+    };
+
+    const getMockOpportunities = (): Opportunity[] => [
       {
         id: '1',
         title: 'Software Engineer Intern',
@@ -95,8 +178,18 @@ export const OpportunitiesSection = () => {
         isRecommended: true
       }
     ];
-    setOpportunities(mockOpportunities);
+
+    const allOpportunities = getPersonalizedOpportunities();
+    setOpportunities(allOpportunities);
   };
+
+  useEffect(() => {
+    loadUserAssessment();
+  }, []);
+
+  useEffect(() => {
+    loadOpportunities();
+  }, [userAssessment]);
 
   const filteredOpportunities = opportunities.filter(opportunity => {
     const matchesSearch = opportunity.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -221,6 +314,11 @@ export const OpportunitiesSection = () => {
                         Rekomendasi
                       </Badge>
                     )}
+                    {opportunity.isPersonalized && (
+                      <Badge variant="outline" className="text-xs">
+                        Personal
+                      </Badge>
+                    )}
                     <Badge className={getTypeColor(opportunity.type)}>
                       {getTypeLabel(opportunity.type)}
                     </Badge>
@@ -242,6 +340,12 @@ export const OpportunitiesSection = () => {
                 <p className="text-sm text-muted-foreground">
                   {opportunity.description}
                 </p>
+
+                {opportunity.reason && (
+                  <div className="text-xs text-primary bg-primary/10 p-2 rounded">
+                    💡 {opportunity.reason}
+                  </div>
+                )}
 
                 {opportunity.salaryRange && (
                   <div className="text-sm">

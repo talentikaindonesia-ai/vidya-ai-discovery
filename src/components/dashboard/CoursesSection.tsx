@@ -81,85 +81,139 @@ export const CoursesSection = () => {
       // Get user's interest category IDs
       const interestCategoryIds = interests?.map(i => i.category_id) || [];
       const talentAreas = assessment?.talent_areas || [];
+      const personalityType = assessment?.personality_type;
+      const careerRecommendations = assessment?.career_recommendations || [];
 
-      // Load personalized courses based on interests and assessment
-      const { data: personalizedCoursesData, error: coursesError } = await supabase
+      // Load personalized courses based on interests, assessment and personality type
+      let coursesQuery = supabase
         .from('courses')
         .select(`
           *,
           interest_categories(name, icon)
-        `)
-        .in('category_id', interestCategoryIds)
+        `);
+
+      // Filter by interest categories if available
+      if (interestCategoryIds.length > 0) {
+        coursesQuery = coursesQuery.in('category_id', interestCategoryIds);
+      } else if (careerRecommendations.length > 0) {
+        // Fallback to career recommendations from assessment
+        const { data: categoryData } = await supabase
+          .from('interest_categories')
+          .select('id, name')
+          .ilike('name', `%${careerRecommendations.join('%|%')}%`);
+        
+        if (categoryData && categoryData.length > 0) {
+          const categoryIds = categoryData.map(c => c.id);
+          coursesQuery = coursesQuery.in('category_id', categoryIds);
+        }
+      }
+
+      const { data: personalizedCoursesData, error: coursesError } = await coursesQuery
         .eq('is_featured', true)
-        .limit(6);
+        .limit(8);
 
       if (coursesError) throw coursesError;
       setPersonalizedCourses(personalizedCoursesData || []);
 
-      // Load personalized challenges based on user interests
-      loadPersonalizedChallenges(interests, talentAreas);
+      // Load personalized challenges based on user profile
+      loadPersonalizedChallenges(interests, talentAreas, personalityType);
       
-      // Load personalized opportunities based on user interests  
-      loadPersonalizedOpportunities(interests, talentAreas);
+      // Load personalized opportunities based on user profile  
+      loadPersonalizedOpportunities(interests, talentAreas, personalityType, careerRecommendations);
     } catch (error) {
       console.error('Error loading personalized content:', error);
     }
   };
 
-  const loadPersonalizedChallenges = (interests: any[], talentAreas: string[]) => {
-    // Mock personalized challenges based on user interests
-    const challenges = [
-      {
-        id: '1',
-        title: 'Data Science Challenge untuk Pemula',
-        category: 'Data Science',
-        deadline: '2024-12-31',
-        participants: 45,
-        prize: 'Rp 5,000,000',
-        isPersonalized: true,
-        reason: 'Sesuai dengan minat Data Science Anda'
-      },
-      {
-        id: '2', 
-        title: 'UI/UX Design Sprint',
-        category: 'Design',
-        deadline: '2024-12-25',
-        participants: 67,
-        prize: 'Rp 3,000,000', 
-        isPersonalized: true,
-        reason: 'Berdasarkan hasil assessment creative thinking'
-      }
-    ];
+  const loadPersonalizedChallenges = (interests: any[], talentAreas: string[], personalityType?: string) => {
+    // Personalized challenges based on RIASEC personality type and interests
+    const riasecChallenges = {
+      realistic: [
+        { title: 'Engineering Design Challenge', category: 'Teknik', reason: 'Sesuai dengan kepribadian Realistic Anda' },
+        { title: 'Robotics Competition', category: 'Teknologi', reason: 'Cocok untuk yang suka hands-on projects' }
+      ],
+      investigative: [
+        { title: 'Data Science Challenge', category: 'Data Science', reason: 'Sesuai dengan kepribadian Investigative Anda' },
+        { title: 'Research Innovation Contest', category: 'Penelitian', reason: 'Cocok untuk analytical thinking' }
+      ],
+      artistic: [
+        { title: 'UI/UX Design Sprint', category: 'Design', reason: 'Sesuai dengan kepribadian Artistic Anda' },
+        { title: 'Creative Content Challenge', category: 'Media', reason: 'Cocok untuk creative expression' }
+      ],
+      social: [
+        { title: 'Community Impact Challenge', category: 'Sosial', reason: 'Sesuai dengan kepribadian Social Anda' },
+        { title: 'Education Innovation Contest', category: 'Pendidikan', reason: 'Cocok untuk helping others' }
+      ],
+      enterprising: [
+        { title: 'Startup Pitch Competition', category: 'Bisnis', reason: 'Sesuai dengan kepribadian Enterprising Anda' },
+        { title: 'Marketing Strategy Challenge', category: 'Marketing', reason: 'Cocok untuk leadership skills' }
+      ],
+      conventional: [
+        { title: 'Financial Analysis Challenge', category: 'Keuangan', reason: 'Sesuai dengan kepribadian Conventional Anda' },
+        { title: 'Operations Optimization Contest', category: 'Administrasi', reason: 'Cocok untuk systematic thinking' }
+      ]
+    };
+
+    const personalizedChallenges = personalityType && riasecChallenges[personalityType as keyof typeof riasecChallenges] 
+      ? riasecChallenges[personalityType as keyof typeof riasecChallenges]
+      : riasecChallenges.investigative; // default
+
+    const challenges = personalizedChallenges.map((challenge, index) => ({
+      id: (index + 1).toString(),
+      ...challenge,
+      deadline: '2024-12-31',
+      participants: 45 + index * 10,
+      prize: `Rp ${(5 - index)},000,000`,
+      isPersonalized: true
+    }));
+
     setPersonalizedChallenges(challenges);
   };
 
-  const loadPersonalizedOpportunities = (interests: any[], talentAreas: string[]) => {
-    // Mock personalized opportunities based on user profile
-    const opportunities = [
-      {
-        id: '1',
-        title: 'Data Analyst Intern - Tech Startup',
-        company: 'DataCorp',
-        type: 'internship',
-        location: 'Jakarta',
-        deadline: '2024-12-30',
-        isPersonalized: true,
-        reason: 'Sesuai dengan minat Data Science & analisis data'
-      },
-      {
-        id: '2',
-        title: 'LPDP Scholarship - Data Science Program', 
-        company: 'LPDP',
-        type: 'scholarship',
-        location: 'Global',
-        deadline: '2024-12-15',
-        isPersonalized: true,
-        reason: 'Berdasarkan potensi akademik dan minat riset'
-      }
-    ];
+  const loadPersonalizedOpportunities = (interests: any[], talentAreas: string[], personalityType?: string, careerRecommendations?: string[]) => {
+    // Personalized opportunities based on RIASEC personality type and career recommendations
+    const riasecOpportunities = {
+      realistic: [
+        { title: 'Engineering Intern - Manufacturing', company: 'TechCorp', type: 'internship', field: 'Teknik' },
+        { title: 'Civil Engineering Scholarship', company: 'Infrastructure Fund', type: 'scholarship', field: 'Konstruksi' }
+      ],
+      investigative: [
+        { title: 'Data Analyst Intern - Tech Startup', company: 'DataCorp', type: 'internship', field: 'Data Science' },
+        { title: 'Research Assistant Position', company: 'National Research Lab', type: 'job', field: 'Penelitian' }
+      ],
+      artistic: [
+        { title: 'UI/UX Designer Intern', company: 'Creative Studio', type: 'internship', field: 'Design' },
+        { title: 'Graphic Design Competition', company: 'Art Foundation', type: 'competition', field: 'Seni' }
+      ],
+      social: [
+        { title: 'Education Program Coordinator', company: 'NGO Foundation', type: 'job', field: 'Pendidikan' },
+        { title: 'Community Development Intern', company: 'Social Impact Org', type: 'internship', field: 'Sosial' }
+      ],
+      enterprising: [
+        { title: 'Business Development Intern', company: 'Growth Corp', type: 'internship', field: 'Bisnis' },
+        { title: 'Startup Accelerator Program', company: 'Venture Capital', type: 'competition', field: 'Kewirausahaan' }
+      ],
+      conventional: [
+        { title: 'Financial Analyst Intern', company: 'Finance Corp', type: 'internship', field: 'Keuangan' },
+        { title: 'Administrative Excellence Award', company: 'Government Org', type: 'scholarship', field: 'Administrasi' }
+      ]
+    };
+
+    const personalizedOpps = personalityType && riasecOpportunities[personalityType as keyof typeof riasecOpportunities] 
+      ? riasecOpportunities[personalityType as keyof typeof riasecOpportunities]
+      : riasecOpportunities.investigative; // default
+
+    const opportunities = personalizedOpps.map((opp, index) => ({
+      id: (index + 1).toString(),
+      ...opp,
+      location: ['Jakarta', 'Bandung', 'Surabaya'][index % 3],
+      deadline: '2024-12-30',
+      isPersonalized: true,
+      reason: `Sesuai dengan kepribadian ${personalityType} dan minat di bidang ${opp.field}`
+    }));
+
     setPersonalizedOpportunities(opportunities);
   };
-
   const loadCourses = async () => {
     try {
       const { data, error } = await supabase

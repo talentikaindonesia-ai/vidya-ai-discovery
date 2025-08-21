@@ -18,6 +18,7 @@ import {
   Award,
   TrendingUp
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 // RIASEC Personality Types Data
 const riasecTypes = {
@@ -205,7 +206,7 @@ const Assessment = () => {
     }
   };
 
-  const calculateResults = (allAnswers: {[key: number]: number}) => {
+  const calculateResults = async (allAnswers: {[key: number]: number}) => {
     const newScores: {[key: string]: number} = {};
     
     // Calculate RIASEC scores based on answers
@@ -220,7 +221,68 @@ const Assessment = () => {
     });
     
     setScores(newScores);
+    
+    // Save assessment results to database
+    await saveAssessmentResults(allAnswers, newScores);
+    
     setShowResults(true);
+  };
+
+  const saveAssessmentResults = async (answers: {[key: number]: number}, scores: {[key: string]: number}) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const primaryType = getPrimaryRiasecTypeFromScores(scores);
+      
+      // Map RIASEC types to career recommendations and talent areas
+      const careerMappings = {
+        realistic: ['Teknik', 'Konstruksi', 'Pertanian', 'Teknologi'],
+        investigative: ['Sains', 'Penelitian', 'Matematika', 'Kedokteran'],
+        artistic: ['Seni', 'Design', 'Media', 'Kreatif'],
+        social: ['Pendidikan', 'Konseling', 'Sosial', 'Kesehatan'],
+        enterprising: ['Bisnis', 'Manajemen', 'Penjualan', 'Kewirausahaan'],
+        conventional: ['Akuntansi', 'Administrasi', 'Keuangan', 'Organisasi']
+      };
+
+      const { error } = await supabase
+        .from('assessment_results')
+        .insert({
+          user_id: user.id,
+          assessment_type: 'riasec_personality',
+          personality_type: primaryType,
+          questions_answers: answers,
+          score_breakdown: scores,
+          career_recommendations: careerMappings[primaryType as keyof typeof careerMappings] || [],
+          talent_areas: [primaryType, ...Object.entries(scores)
+            .sort(([,a], [,b]) => b - a)
+            .slice(1, 3)
+            .map(([key]) => key)
+          ]
+        });
+
+      if (error) {
+        console.error('Error saving assessment results:', error);
+      } else {
+        console.log('Assessment results saved successfully');
+      }
+    } catch (error) {
+      console.error('Error in saveAssessmentResults:', error);
+    }
+  };
+
+  const getPrimaryRiasecTypeFromScores = (scores: {[key: string]: number}) => {
+    const riasecScores = {
+      realistic: scores.realistic || 0,
+      investigative: scores.investigative || 0, 
+      artistic: scores.artistic || 0,
+      social: scores.social || 0,
+      enterprising: scores.enterprising || 0,
+      conventional: scores.conventional || 0
+    };
+
+    const maxScore = Math.max(...Object.values(riasecScores));
+    return Object.entries(riasecScores).find(([_, score]) => score === maxScore)?.[0] || 'realistic';
   };
 
   const getPrimaryRiasecType = () => {
@@ -429,7 +491,7 @@ const Assessment = () => {
               <p className="text-muted-foreground mb-4">
                 Daftar sekarang untuk mendapatkan pembelajaran yang dipersonalisasi berdasarkan hasil assessment ini!
               </p>
-              <Button onClick={() => navigate("/auth")} className="w-full mb-2">
+              <Button onClick={() => navigate("/dashboard")} className="w-full mb-2">
                 Mulai Belajar Sekarang
               </Button>
             </div>
