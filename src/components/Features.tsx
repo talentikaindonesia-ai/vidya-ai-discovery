@@ -88,29 +88,29 @@ const Features = () => {
 
         {/* Mobile Carousel */}
         <div className="md:hidden">
-          <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory">
+          <div className="flex gap-3 overflow-x-auto pb-4 snap-x snap-mandatory">
             {features.map((feature, index) => (
               <Card 
                 key={index} 
-                className="min-w-[280px] flex-shrink-0 snap-start group hover:shadow-card transition-all duration-300 bg-card border-primary/10"
+                className="min-w-[240px] flex-shrink-0 snap-start group hover:shadow-card transition-all duration-300 bg-card border-primary/10"
               >
-                <CardHeader className="pb-4">
-                  <div className={`inline-flex w-12 h-12 items-center justify-center rounded-xl ${feature.color} mb-4 group-hover:scale-110 transition-transform`}>
-                    <feature.icon className="w-6 h-6" />
+                <CardHeader className="pb-2 pt-4">
+                  <div className={`inline-flex w-10 h-10 items-center justify-center rounded-lg ${feature.color} mb-2 group-hover:scale-110 transition-transform`}>
+                    <feature.icon className="w-5 h-5" />
                   </div>
-                  <CardTitle className="text-xl group-hover:text-primary transition-colors">
+                  <CardTitle className="text-lg leading-tight group-hover:text-primary transition-colors">
                     {feature.title}
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground leading-relaxed">
+                <CardContent className="pt-0">
+                  <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
                     {feature.description}
                   </p>
                 </CardContent>
               </Card>
             ))}
           </div>
-          <p className="text-center text-sm text-muted-foreground mt-4">← Geser untuk melihat fitur lainnya →</p>
+          <p className="text-center text-xs text-muted-foreground mt-3">← Geser untuk melihat fitur lainnya →</p>
         </div>
         
         <div className="text-center mt-16">
