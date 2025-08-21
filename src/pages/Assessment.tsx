@@ -3,116 +3,170 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { 
-  BookOpen, 
-  Award, 
-  Briefcase, 
-  Trophy, 
-  GraduationCap, 
-  Building, 
+  Wrench, 
+  Microscope, 
+  Palette, 
   Users, 
-  Target,
-  Brain,
-  Heart,
-  Zap,
-  Palette,
-  Code,
-  Microscope,
+  Briefcase, 
   Calculator,
-  Music,
-  Camera,
-  Lightbulb,
-  Globe,
-  TrendingUp,
-  UserCheck
+  Brain,
+  Target,
+  Award,
+  TrendingUp
 } from "lucide-react";
 
-// Comprehensive personality and interest assessment
-const personalityQuestions = [
+// RIASEC Personality Types Data
+const riasecTypes = {
+  realistic: {
+    name: "Realistic",
+    icon: Wrench,
+    color: "from-yellow-500 to-orange-500",
+    description: "Cenderung suka pekerjaan yang berorientasi dengan penerapan dari skill yang dimiliki, keterampilan fisik & minim keterampilan sosial",
+    characteristics: ["Praktis", "Teknis", "Suka bekerja dengan tangan", "Oriented pada hasil nyata"],
+    careers: ["Insinyur Mesin", "Teknisi", "Arsitek", "Ahli Konstruksi", "Pilot", "Chef", "Teknisi IT"]
+  },
+  investigative: {
+    name: "Investigative", 
+    icon: Microscope,
+    color: "from-green-500 to-teal-500",
+    description: "Lebih suka pekerjaan yang mengandalkan analisa, pemahaman cara berpikir secara kreatif dan abstrak",
+    characteristics: ["Analitis", "Intelektual", "Suka riset", "Problem solver"],
+    careers: ["Peneliti", "Dokter", "Scientist", "Psikolog", "Data Scientist", "Ahli Forensik", "Profesor"]
+  },
+  artistic: {
+    name: "Artistic",
+    icon: Palette, 
+    color: "from-purple-500 to-pink-500",
+    description: "Tipikal orang yang suka bekerja sama dengan orang lain untuk menghasilkan suatu hal yang dianggap 'Karya Seni'",
+    characteristics: ["Kreatif", "Imajinatif", "Ekspresif", "Inovatif"],
+    careers: ["Desainer Grafis", "Penulis", "Musisi", "Fotografer", "Animator", "Content Creator", "Art Director"]
+  },
+  social: {
+    name: "Social",
+    icon: Users,
+    color: "from-blue-500 to-cyan-500", 
+    description: "Lebih suka pekerjaan yang bersifat membantu sesama. Punya karakter yang supel dan friendly. Sangat menikmati pekerjaan yang rutin dan teratur",
+    characteristics: ["Empatis", "Komunikatif", "Suka membantu", "Team oriented"],
+    careers: ["Guru", "Konselor", "Perawat", "Pekerja Sosial", "HR Manager", "Terapis", "Customer Service"]
+  },
+  enterprising: {
+    name: "Enterprising",
+    icon: Briefcase,
+    color: "from-red-500 to-rose-500",
+    description: "Suka bergaul dan berbicara dengan orang banyak, jago merangkai kata dan meyakinkan orang, mudah untuk mempresentasikan sesuatu",
+    characteristics: ["Persuasif", "Ambisius", "Leadership", "Goal oriented"],
+    careers: ["Entrepreneur", "Sales Manager", "Marketing Director", "CEO", "Business Consultant", "Lawyer", "Politisi"]
+  },
+  conventional: {
+    name: "Conventional",
+    icon: Calculator,
+    color: "from-gray-500 to-slate-500",
+    description: "Karakternya formal banget, terus juga sangat setia, tipikal tim player yang baik. Suka pekerjaan yang rutin, terstruktur dan sistematis",
+    characteristics: ["Terorganisir", "Detail oriented", "Sistematis", "Reliable"],
+    careers: ["Akuntan", "Administrasi", "Sekretaris", "Auditor", "Perpustakaan", "Data Entry", "Quality Control"]
+  }
+};
+
+// RIASEC-based personality assessment questions
+const riasecQuestions = [
   {
-    category: "Learning Style",
-    question: "Bagaimana cara kamu belajar paling efektif?",
+    category: "Aktivitas Kerja",
+    question: "Dari aktivitas berikut, mana yang paling menarik bagimu?",
     options: [
-      { text: "Membaca dan menulis catatan", weight: { visual: 2, auditory: 0, kinesthetic: 1 } },
-      { text: "Mendengarkan penjelasan", weight: { visual: 0, auditory: 2, kinesthetic: 1 } },
-      { text: "Praktek langsung", weight: { visual: 1, auditory: 0, kinesthetic: 2 } },
-      { text: "Diskusi kelompok", weight: { visual: 1, auditory: 2, kinesthetic: 0 } }
+      { text: "Memperbaiki mesin atau alat elektronik", weight: { realistic: 3, investigative: 0, artistic: 0, social: 0, enterprising: 0, conventional: 1 } },
+      { text: "Melakukan eksperimen atau penelitian", weight: { realistic: 0, investigative: 3, artistic: 0, social: 0, enterprising: 0, conventional: 1 } },
+      { text: "Mendesain atau menciptakan karya seni", weight: { realistic: 0, investigative: 0, artistic: 3, social: 1, enterprising: 0, conventional: 0 } },
+      { text: "Mengajar atau membantu orang lain", weight: { realistic: 0, investigative: 0, artistic: 0, social: 3, enterprising: 1, conventional: 0 } },
+      { text: "Memimpin tim atau memulai bisnis", weight: { realistic: 0, investigative: 0, artistic: 0, social: 1, enterprising: 3, conventional: 0 } },
+      { text: "Mengorganisir data dan dokumen", weight: { realistic: 0, investigative: 1, artistic: 0, social: 0, enterprising: 0, conventional: 3 } }
     ]
   },
   {
-    category: "Problem Solving",
-    question: "Ketika menghadapi masalah, kamu cenderung...",
+    category: "Lingkungan Kerja",
+    question: "Lingkungan kerja seperti apa yang paling cocok denganmu?",
     options: [
-      { text: "Menganalisis secara logis step by step", weight: { analytical: 2, creative: 0, practical: 1 } },
-      { text: "Mencari solusi kreatif dan inovatif", weight: { analytical: 0, creative: 2, practical: 1 } },
-      { text: "Langsung mencoba berbagai cara", weight: { analytical: 1, creative: 1, practical: 2 } },
-      { text: "Berkonsultasi dengan orang lain", weight: { analytical: 0, creative: 1, practical: 1 } }
+      { text: "Workshop atau laboratorium dengan alat-alat praktis", weight: { realistic: 3, investigative: 1, artistic: 0, social: 0, enterprising: 0, conventional: 0 } },
+      { text: "Ruang penelitian atau perpustakaan yang tenang", weight: { realistic: 0, investigative: 3, artistic: 0, social: 0, enterprising: 0, conventional: 1 } },
+      { text: "Studio kreatif atau ruang terbuka yang inspiratif", weight: { realistic: 0, investigative: 0, artistic: 3, social: 0, enterprising: 0, conventional: 0 } },
+      { text: "Ruang komunitas atau tempat berinteraksi dengan banyak orang", weight: { realistic: 0, investigative: 0, artistic: 1, social: 3, enterprising: 1, conventional: 0 } },
+      { text: "Kantor dinamis dengan banyak meeting dan presentasi", weight: { realistic: 0, investigative: 0, artistic: 0, social: 1, enterprising: 3, conventional: 0 } },
+      { text: "Kantor terstruktur dengan sistem dan prosedur yang jelas", weight: { realistic: 0, investigative: 0, artistic: 0, social: 0, enterprising: 1, conventional: 3 } }
     ]
   },
   {
-    category: "Interest Areas",
-    question: "Aktivitas mana yang paling membuatmu excited?",
+    category: "Kemampuan & Minat",
+    question: "Kemampuan mana yang paling menggambarkan dirimu?",
     options: [
-      { text: "Coding dan teknologi", weight: { technology: 2, arts: 0, science: 1, business: 0, social: 0 } },
-      { text: "Seni dan desain", weight: { technology: 0, arts: 2, science: 0, business: 0, social: 1 } },
-      { text: "Penelitian dan eksperimen", weight: { technology: 1, arts: 0, science: 2, business: 0, social: 0 } },
-      { text: "Bisnis dan entrepreneurship", weight: { technology: 0, arts: 0, science: 0, business: 2, social: 1 } },
-      { text: "Membantu dan berinteraksi dengan orang", weight: { technology: 0, arts: 0, science: 0, business: 1, social: 2 } }
+      { text: "Mahir menggunakan peralatan dan teknologi", weight: { realistic: 3, investigative: 1, artistic: 0, social: 0, enterprising: 0, conventional: 1 } },
+      { text: "Analitis dan suka memecahkan masalah kompleks", weight: { realistic: 1, investigative: 3, artistic: 0, social: 0, enterprising: 0, conventional: 1 } },
+      { text: "Kreatif dan imajinatif dalam berkarya", weight: { realistic: 0, investigative: 0, artistic: 3, social: 1, enterprising: 1, conventional: 0 } },
+      { text: "Empati tinggi dan mudah berkomunikasi", weight: { realistic: 0, investigative: 0, artistic: 1, social: 3, enterprising: 1, conventional: 0 } },
+      { text: "Persuasif dan berorientasi pada hasil", weight: { realistic: 0, investigative: 0, artistic: 0, social: 1, enterprising: 3, conventional: 1 } },
+      { text: "Teliti dan terorganisir dengan baik", weight: { realistic: 1, investigative: 1, artistic: 0, social: 0, enterprising: 1, conventional: 3 } }
     ]
   },
   {
-    category: "Work Environment",
-    question: "Lingkungan kerja yang ideal bagimu adalah...",
+    category: "Nilai & Motivasi",
+    question: "Apa yang paling memotivasimu dalam bekerja?",
     options: [
-      { text: "Quiet space untuk fokus sendiri", weight: { introvert: 2, extrovert: 0, structure: 1 } },
-      { text: "Open space dengan banyak kolaborasi", weight: { introvert: 0, extrovert: 2, structure: 0 } },
-      { text: "Fleksibel, bisa kerja dari mana saja", weight: { introvert: 1, extrovert: 1, flexibility: 2 } },
-      { text: "Structured dengan jadwal yang jelas", weight: { introvert: 0, extrovert: 0, structure: 2 } }
+      { text: "Melihat hasil kerja yang nyata dan bermanfaat", weight: { realistic: 3, investigative: 1, artistic: 1, social: 1, enterprising: 0, conventional: 0 } },
+      { text: "Menemukan pengetahuan baru atau memecahkan misteri", weight: { realistic: 0, investigative: 3, artistic: 0, social: 0, enterprising: 0, conventional: 0 } },
+      { text: "Mengekspresikan diri dan menciptakan sesuatu yang unik", weight: { realistic: 0, investigative: 0, artistic: 3, social: 0, enterprising: 0, conventional: 0 } },
+      { text: "Membantu orang lain dan membuat perbedaan positif", weight: { realistic: 0, investigative: 0, artistic: 0, social: 3, enterprising: 0, conventional: 0 } },
+      { text: "Mencapai kesuksesan finansial dan status", weight: { realistic: 0, investigative: 0, artistic: 0, social: 0, enterprising: 3, conventional: 1 } },
+      { text: "Stabilitas dan keamanan dalam pekerjaan", weight: { realistic: 1, investigative: 0, artistic: 0, social: 1, enterprising: 0, conventional: 3 } }
     ]
   },
   {
-    category: "Motivation",
-    question: "Apa yang paling memotivasimu dalam belajar/bekerja?",
+    category: "Gaya Komunikasi",
+    question: "Bagaimana cara kamu berkomunikasi yang paling efektif?",
     options: [
-      { text: "Mencapai target dan prestasi", weight: { achievement: 2, impact: 0, autonomy: 1 } },
-      { text: "Membuat dampak positif untuk orang lain", weight: { achievement: 0, impact: 2, autonomy: 0 } },
-      { text: "Kebebasan dan kontrol atas pekerjaanmu", weight: { achievement: 1, impact: 0, autonomy: 2 } },
-      { text: "Belajar hal-hal baru", weight: { achievement: 0, impact: 1, autonomy: 1 } }
+      { text: "Langsung ke pokok masalah dengan contoh praktis", weight: { realistic: 3, investigative: 1, artistic: 0, social: 0, enterprising: 1, conventional: 1 } },
+      { text: "Menyampaikan dengan data dan analisis mendalam", weight: { realistic: 0, investigative: 3, artistic: 0, social: 0, enterprising: 0, conventional: 2 } },
+      { text: "Menggunakan cerita dan visualisasi kreatif", weight: { realistic: 0, investigative: 0, artistic: 3, social: 1, enterprising: 1, conventional: 0 } },
+      { text: "Mendengarkan dulu, lalu memberikan dukungan", weight: { realistic: 0, investigative: 0, artistic: 1, social: 3, enterprising: 0, conventional: 0 } },
+      { text: "Mempresentasikan dengan percaya diri dan meyakinkan", weight: { realistic: 0, investigative: 0, artistic: 1, social: 1, enterprising: 3, conventional: 0 } },
+      { text: "Mengikuti prosedur komunikasi yang sudah ditetapkan", weight: { realistic: 1, investigative: 0, artistic: 0, social: 0, enterprising: 0, conventional: 3 } }
     ]
   },
   {
-    category: "Communication",
-    question: "Cara komunikasi yang kamu sukai adalah...",
+    category: "Cara Belajar",
+    question: "Metode belajar mana yang paling cocok untukmu?",
     options: [
-      { text: "Presentasi di depan banyak orang", weight: { verbal: 2, written: 0, visual: 1 } },
-      { text: "Menulis laporan atau artikel", weight: { verbal: 0, written: 2, visual: 0 } },
-      { text: "Membuat infografis atau video", weight: { verbal: 1, written: 0, visual: 2 } },
-      { text: "Diskusi one-on-one", weight: { verbal: 1, written: 1, visual: 0 } }
+      { text: "Learning by doing - praktik langsung", weight: { realistic: 3, investigative: 1, artistic: 1, social: 0, enterprising: 1, conventional: 0 } },
+      { text: "Membaca jurnal dan melakukan riset mendalam", weight: { realistic: 0, investigative: 3, artistic: 0, social: 0, enterprising: 0, conventional: 1 } },
+      { text: "Eksperimen kreatif dan eksplorasi bebas", weight: { realistic: 0, investigative: 1, artistic: 3, social: 0, enterprising: 0, conventional: 0 } },
+      { text: "Diskusi kelompok dan sharing pengalaman", weight: { realistic: 0, investigative: 0, artistic: 1, social: 3, enterprising: 1, conventional: 0 } },
+      { text: "Studi kasus bisnis dan simulasi", weight: { realistic: 0, investigative: 0, artistic: 0, social: 1, enterprising: 3, conventional: 1 } },
+      { text: "Mengikuti panduan step-by-step yang terstruktur", weight: { realistic: 1, investigative: 0, artistic: 0, social: 0, enterprising: 0, conventional: 3 } }
     ]
   },
   {
-    category: "Future Goals",
-    question: "Impian kariermu dalam 10 tahun ke depan adalah...",
+    category: "Keputusan Karier", 
+    question: "Faktor apa yang paling penting dalam memilih karier?",
     options: [
-      { text: "Tech entrepreneur atau CTO", weight: { technology: 2, leadership: 2, innovation: 2 } },
-      { text: "Creative director atau seniman terkenal", weight: { arts: 2, creativity: 2, recognition: 2 } },
-      { text: "Peneliti atau profesor", weight: { science: 2, knowledge: 2, academic: 2 } },
-      { text: "CEO atau business leader", weight: { business: 2, leadership: 2, influence: 2 } },
-      { text: "Social impact leader atau NGO founder", weight: { social: 2, impact: 2, service: 2 } }
+      { text: "Bisa bekerja dengan tangan dan melihat hasil konkret", weight: { realistic: 3, investigative: 0, artistic: 0, social: 0, enterprising: 0, conventional: 0 } },
+      { text: "Kesempatan untuk terus belajar dan meneliti", weight: { realistic: 0, investigative: 3, artistic: 0, social: 0, enterprising: 0, conventional: 0 } },
+      { text: "Kebebasan berkreasi dan mengekspresikan diri", weight: { realistic: 0, investigative: 0, artistic: 3, social: 0, enterprising: 0, conventional: 0 } },
+      { text: "Dapat membantu dan berinteraksi dengan banyak orang", weight: { realistic: 0, investigative: 0, artistic: 0, social: 3, enterprising: 0, conventional: 0 } },
+      { text: "Peluang untuk memimpin dan mengembangkan bisnis", weight: { realistic: 0, investigative: 0, artistic: 0, social: 0, enterprising: 3, conventional: 0 } },
+      { text: "Pekerjaan yang stabil dengan aturan yang jelas", weight: { realistic: 0, investigative: 0, artistic: 0, social: 0, enterprising: 0, conventional: 3 } }
     ]
   },
   {
-    category: "Stress Response",
-    question: "Ketika menghadapi deadline ketat, kamu...",
+    category: "Tantangan Kerja",
+    question: "Jenis tantangan kerja mana yang membuatmu bersemangat?",
     options: [
-      { text: "Membuat plan detail dan mengerjakannya step by step", weight: { organized: 2, spontaneous: 0, collaborative: 0 } },
-      { text: "Bekerja intensif last minute dengan energy tinggi", weight: { organized: 0, spontaneous: 2, collaborative: 0 } },
-      { text: "Meminta bantuan tim dan mendelegasikan", weight: { organized: 1, spontaneous: 0, collaborative: 2 } },
-      { text: "Fokus pada bagian terpenting saja", weight: { organized: 1, spontaneous: 1, collaborative: 0 } }
+      { text: "Memecahkan masalah teknis atau memperbaiki sistem", weight: { realistic: 3, investigative: 2, artistic: 0, social: 0, enterprising: 0, conventional: 0 } },
+      { text: "Menganalisis data kompleks untuk menemukan pola", weight: { realistic: 0, investigative: 3, artistic: 0, social: 0, enterprising: 0, conventional: 1 } },
+      { text: "Menciptakan ide baru yang belum pernah ada", weight: { realistic: 0, investigative: 0, artistic: 3, social: 0, enterprising: 1, conventional: 0 } },
+      { text: "Menyelesaikan konflik dan membangun hubungan", weight: { realistic: 0, investigative: 0, artistic: 0, social: 3, enterprising: 1, conventional: 0 } },
+      { text: "Mencapai target penjualan atau mengembangkan pasar", weight: { realistic: 0, investigative: 0, artistic: 0, social: 1, enterprising: 3, conventional: 0 } },
+      { text: "Mengelola sistem dan memastikan akurasi data", weight: { realistic: 1, investigative: 0, artistic: 0, social: 0, enterprising: 0, conventional: 3 } }
     ]
   }
 ];
@@ -121,6 +175,7 @@ const Assessment = () => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);
   const [showResults, setShowResults] = useState(false);
+  const [showPersonalityTypes, setShowPersonalityTypes] = useState(true);
   const [answers, setAnswers] = useState<{[key: number]: number}>({});
   const [scores, setScores] = useState<{[key: string]: number}>({});
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
@@ -135,7 +190,7 @@ const Assessment = () => {
     const newAnswers = { ...answers, [currentStep]: selectedAnswer };
     setAnswers(newAnswers);
     
-    if (currentStep < personalityQuestions.length - 1) {
+    if (currentStep < riasecQuestions.length - 1) {
       setCurrentStep(currentStep + 1);
       setSelectedAnswer(newAnswers[currentStep + 1] || null);
     } else {
@@ -153,13 +208,13 @@ const Assessment = () => {
   const calculateResults = (allAnswers: {[key: number]: number}) => {
     const newScores: {[key: string]: number} = {};
     
-    // Calculate scores based on answers
-    personalityQuestions.forEach((question, qIndex) => {
+    // Calculate RIASEC scores based on answers
+    riasecQuestions.forEach((question, qIndex) => {
       const answerIndex = allAnswers[qIndex];
       if (answerIndex !== undefined) {
         const selectedOption = question.options[answerIndex];
         Object.entries(selectedOption.weight).forEach(([trait, weight]) => {
-          newScores[trait] = (newScores[trait] || 0) + weight;
+          newScores[trait] = (newScores[trait] || 0) + (weight as number);
         });
       }
     });
@@ -168,191 +223,199 @@ const Assessment = () => {
     setShowResults(true);
   };
 
-  const getPersonalityType = () => {
-    const maxScores = {
-      learning: Math.max(scores.visual || 0, scores.auditory || 0, scores.kinesthetic || 0),
-      thinking: Math.max(scores.analytical || 0, scores.creative || 0, scores.practical || 0),
-      interest: Math.max(scores.technology || 0, scores.arts || 0, scores.science || 0, scores.business || 0, scores.social || 0)
+  const getPrimaryRiasecType = () => {
+    const riasecScores = {
+      realistic: scores.realistic || 0,
+      investigative: scores.investigative || 0, 
+      artistic: scores.artistic || 0,
+      social: scores.social || 0,
+      enterprising: scores.enterprising || 0,
+      conventional: scores.conventional || 0
     };
 
-    let learningStyle = "Visual";
-    if (scores.auditory === maxScores.learning) learningStyle = "Auditory";
-    if (scores.kinesthetic === maxScores.learning) learningStyle = "Kinesthetic";
-
-    let thinkingStyle = "Analytical";
-    if (scores.creative === maxScores.thinking) thinkingStyle = "Creative";
-    if (scores.practical === maxScores.thinking) thinkingStyle = "Practical";
-
-    let primaryInterest = "Technology";
-    if (scores.arts === maxScores.interest) primaryInterest = "Arts";
-    if (scores.science === maxScores.interest) primaryInterest = "Science";
-    if (scores.business === maxScores.interest) primaryInterest = "Business";
-    if (scores.social === maxScores.interest) primaryInterest = "Social";
-
-    return {
-      learning: learningStyle,
-      thinking: thinkingStyle,
-      interest: primaryInterest,
-      combination: `${thinkingStyle} ${learningStyle} - ${primaryInterest} Oriented`
-    };
-  };
-
-  const getCareerRecommendations = () => {
-    const personality = getPersonalityType();
-    const combinations: {[key: string]: string[]} = {
-      "Technology": ["Software Engineer", "Data Scientist", "Product Manager", "DevOps Engineer", "AI Researcher"],
-      "Arts": ["UI/UX Designer", "Graphic Designer", "Content Creator", "Art Director", "Digital Artist"],
-      "Science": ["Research Scientist", "Biomedical Engineer", "Environmental Scientist", "Lab Technician", "Science Teacher"],
-      "Business": ["Business Analyst", "Marketing Manager", "Consultant", "Entrepreneur", "Sales Director"],
-      "Social": ["Psychology", "Social Worker", "HR Manager", "Teacher", "Community Organizer"]
-    };
+    const maxScore = Math.max(...Object.values(riasecScores));
+    const primaryType = Object.entries(riasecScores).find(([_, score]) => score === maxScore)?.[0] as keyof typeof riasecTypes;
     
-    return combinations[personality.interest] || [];
+    return primaryType || 'realistic';
   };
+
+  const startAssessment = () => {
+    setShowPersonalityTypes(false);
+  };
+
+  if (showPersonalityTypes) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5">
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center mb-12">
+            <h1 className="text-4xl font-bold text-primary mb-4">
+              Tipe Kepribadian Berdasarkan RIASEC
+            </h1>
+            <p className="text-xl text-muted-foreground mb-2">
+              6 kepribadian ini bisa bantu kamu menentukan jurusan yang 
+            </p>
+            <p className="text-xl text-muted-foreground">
+              sesuai dengan minat dan karaktermu
+            </p>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-12">
+            {Object.entries(riasecTypes).map(([key, type]) => {
+              const Icon = type.icon;
+              return (
+                <Card key={key} className="group hover:shadow-lg transition-all duration-300 border-2 hover:border-primary/30">
+                  <CardHeader className="text-center">
+                    <div className={`w-20 h-20 mx-auto rounded-full bg-gradient-to-br ${type.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
+                      <Icon className="w-10 h-10 text-white" />
+                    </div>
+                    <CardTitle className="text-xl font-bold">{type.name}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
+                      {type.description}
+                    </p>
+                    <div className="space-y-2">
+                      <h4 className="font-semibold text-sm">Karakteristik:</h4>
+                      <div className="flex flex-wrap gap-1">
+                        {type.characteristics.map((char, index) => (
+                          <Badge key={index} variant="secondary" className="text-xs">
+                            {char}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+
+          <div className="text-center">
+            <Card className="max-w-md mx-auto">
+              <CardContent className="pt-6">
+                <Brain className="w-16 h-16 mx-auto mb-4 text-primary" />
+                <h3 className="text-xl font-semibold mb-2">Siap Menemukan Tipe Kepribadianmu?</h3>
+                <p className="text-muted-foreground mb-6">
+                  Ikuti tes minat bakat berdasarkan teori RIASEC untuk mengetahui kepribadian dan potensi kariermu.
+                </p>
+                <Button onClick={startAssessment} className="w-full" size="lg">
+                  Mulai Tes Minat Bakat
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (showResults) {
-    const personality = getPersonalityType();
-    const careerRecs = getCareerRecommendations();
-    const compatibilityScore = Math.max(...Object.values(scores));
-    const percentage = Math.min(95, Math.max(70, (compatibilityScore / (personalityQuestions.length * 2)) * 100));
+    const primaryType = getPrimaryRiasecType();
+    const personalityData = riasecTypes[primaryType];
+    const Icon = personalityData.icon;
+    const totalScore = Object.values(scores).reduce((sum, score) => sum + score, 0);
+    const percentage = Math.round((scores[primaryType] || 0) / totalScore * 100);
 
     return (
-      <div className="min-h-screen bg-secondary-light">
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5">
         <div className="container mx-auto px-4 py-8">
           {/* Results Header */}
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-primary mb-4">
-              Hasil Assessment Kepribadian & Minat
+            <h1 className="text-4xl font-bold text-primary mb-8">
+              Hasil Tes Kepribadian RIASEC
             </h1>
+            
             <Card className="max-w-2xl mx-auto">
               <CardHeader>
-                <div className="flex items-center justify-center mb-4">
-                  <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center">
-                    <Brain className="w-10 h-10 text-white" />
+                <div className="flex items-center justify-center mb-6">
+                  <div className={`w-24 h-24 rounded-full bg-gradient-to-br ${personalityData.color} flex items-center justify-center shadow-lg`}>
+                    <Icon className="w-12 h-12 text-white" />
                   </div>
                 </div>
-                <CardTitle className="text-2xl text-center">{personality.combination}</CardTitle>
-                <CardDescription className="text-center text-lg">
-                  Tipe pembelajar {personality.learning} dengan gaya berpikir {personality.thinking} yang tertarik pada bidang {personality.interest}
+                <CardTitle className="text-3xl text-center mb-2">{personalityData.name}</CardTitle>
+                <CardDescription className="text-center text-lg leading-relaxed">
+                  {personalityData.description}
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
+                <div className="space-y-6">
                   <div>
                     <div className="flex justify-between mb-2">
-                      <span>Kesesuaian Kepribadian</span>
-                      <span className="font-semibold">{Math.round(percentage)}%</span>
+                      <span className="font-medium">Tingkat Kesesuaian</span>
+                      <span className="font-bold text-primary">{percentage}%</span>
                     </div>
                     <Progress value={percentage} className="h-3" />
                   </div>
-                  <div className="flex gap-2 justify-center flex-wrap">
-                    <Badge variant="default">{personality.learning} Learner</Badge>
-                    <Badge variant="secondary">{personality.thinking} Thinker</Badge>
-                    <Badge variant="outline">{personality.interest} Oriented</Badge>
+                  
+                  <div>
+                    <h4 className="font-semibold mb-3">Karakteristik Kepribadian:</h4>
+                    <div className="flex gap-2 justify-center flex-wrap">
+                      {personalityData.characteristics.map((char, index) => (
+                        <Badge key={index} variant="default" className="px-3 py-1">
+                          {char}
+                        </Badge>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          {/* Detailed Results */}
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Heart className="w-5 h-5 text-primary" />
-                  Gaya Belajar
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span>Visual</span>
-                    <span>{scores.visual || 0}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Auditory</span>
-                    <span>{scores.auditory || 0}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Kinesthetic</span>
-                    <span>{scores.kinesthetic || 0}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Zap className="w-5 h-5 text-primary" />
-                  Gaya Berpikir
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span>Analytical</span>
-                    <span>{scores.analytical || 0}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Creative</span>
-                    <span>{scores.creative || 0}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Practical</span>
-                    <span>{scores.practical || 0}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Target className="w-5 h-5 text-primary" />
-                  Bidang Minat
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span>Technology</span>
-                    <span>{scores.technology || 0}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Arts</span>
-                    <span>{scores.arts || 0}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Science</span>
-                    <span>{scores.science || 0}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Business</span>
-                    <span>{scores.business || 0}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Social</span>
-                    <span>{scores.social || 0}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          {/* Detailed RIASEC Scores */}
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Target className="w-6 h-6" />
+                Detail Skor RIASEC
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {Object.entries(riasecTypes).map(([key, type]) => {
+                  const score = scores[key] || 0;
+                  const scorePercentage = totalScore > 0 ? (score / totalScore) * 100 : 0;
+                  const TypeIcon = type.icon;
+                  
+                  return (
+                    <div 
+                      key={key} 
+                      className={`p-4 rounded-lg border-2 transition-all ${
+                        key === primaryType 
+                          ? 'border-primary bg-primary/5' 
+                          : 'border-border bg-background hover:bg-muted/50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${type.color} flex items-center justify-center`}>
+                          <TypeIcon className="w-4 h-4 text-white" />
+                        </div>
+                        <span className="font-semibold">{type.name}</span>
+                      </div>
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-sm text-muted-foreground">Skor: {score}</span>
+                        <span className="font-medium">{Math.round(scorePercentage)}%</span>
+                      </div>
+                      <Progress value={scorePercentage} className="h-2" />
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Career Recommendations */}
           <Card className="mb-8">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Briefcase className="w-6 h-6" />
-                Rekomendasi Karier
+                <Award className="w-6 h-6" />
+                Rekomendasi Karier untuk Tipe {personalityData.name}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
-                {careerRecs.map((career, index) => (
-                  <Badge key={index} variant="outline" className="p-2 justify-center">
+                {personalityData.careers.map((career, index) => (
+                  <Badge key={index} variant="outline" className="p-3 justify-center text-center">
                     {career}
                   </Badge>
                 ))}
@@ -373,6 +436,7 @@ const Assessment = () => {
             <Button 
               onClick={() => {
                 setShowResults(false); 
+                setShowPersonalityTypes(true);
                 setCurrentStep(0); 
                 setAnswers({});
                 setScores({});
@@ -389,16 +453,16 @@ const Assessment = () => {
   }
 
   return (
-    <div className="min-h-screen bg-secondary-light">
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
           {/* Header */}
           <div className="text-center mb-8">
             <h1 className="text-4xl font-bold text-primary mb-4">
-              Assessment Kepribadian & Minat Bakat
+              Tes Kepribadian RIASEC
             </h1>
             <p className="text-lg text-muted-foreground">
-              Temukan gaya belajar, kepribadian, dan bidang yang paling sesuai denganmu
+              Jawab pertanyaan berikut untuk menemukan tipe kepribadian dan minat bakatmu
             </p>
           </div>
 
@@ -407,10 +471,10 @@ const Assessment = () => {
             <div className="flex justify-between mb-2">
               <span className="text-sm text-muted-foreground">Progress</span>
               <span className="text-sm font-medium">
-                {currentStep + 1} dari {personalityQuestions.length}
+                {currentStep + 1} dari {riasecQuestions.length}
               </span>
             </div>
-            <Progress value={((currentStep + 1) / personalityQuestions.length) * 100} className="h-2" />
+            <Progress value={((currentStep + 1) / riasecQuestions.length) * 100} className="h-2" />
           </div>
 
           {/* Question */}
@@ -418,16 +482,14 @@ const Assessment = () => {
             <CardHeader>
               <div className="flex items-center justify-center mb-4">
                 <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center">
-                  {currentStep < 3 && <Heart className="w-8 h-8 text-white" />}
-                  {currentStep >= 3 && currentStep < 6 && <Zap className="w-8 h-8 text-white" />}
-                  {currentStep >= 6 && <Target className="w-8 h-8 text-white" />}
+                  <Brain className="w-8 h-8 text-white" />
                 </div>
               </div>
               <Badge variant="outline" className="mx-auto mb-2">
-                {personalityQuestions[currentStep].category}
+                {riasecQuestions[currentStep].category}
               </Badge>
               <CardTitle className="text-xl text-center">
-                {personalityQuestions[currentStep].question}
+                {riasecQuestions[currentStep].question}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -436,10 +498,10 @@ const Assessment = () => {
                 onValueChange={(value) => handleAnswer(parseInt(value))}
               >
                 <div className="space-y-3">
-                  {personalityQuestions[currentStep].options.map((option, index) => (
+                  {riasecQuestions[currentStep].options.map((option, index) => (
                     <div 
                       key={index} 
-                      className={`flex items-center space-x-2 p-4 border rounded-lg cursor-pointer transition-all hover:bg-muted/50 ${
+                      className={`flex items-center space-x-3 p-4 border rounded-lg cursor-pointer transition-all hover:bg-muted/50 ${
                         selectedAnswer === index ? 'border-primary bg-primary/5' : 'border-border'
                       }`}
                       onClick={() => handleAnswer(index)}
@@ -447,7 +509,7 @@ const Assessment = () => {
                       <RadioGroupItem value={index.toString()} id={`option-${index}`} />
                       <Label 
                         htmlFor={`option-${index}`} 
-                        className="flex-1 cursor-pointer font-medium"
+                        className="flex-1 cursor-pointer font-medium leading-relaxed"
                       >
                         {option.text}
                       </Label>
@@ -469,7 +531,16 @@ const Assessment = () => {
               ← Sebelumnya
             </Button>
             
-            <Button variant="outline" onClick={() => navigate("/")}>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setShowPersonalityTypes(true);
+                setCurrentStep(0);
+                setAnswers({});
+                setScores({});
+                setSelectedAnswer(null);
+              }}
+            >
               Kembali ke Beranda
             </Button>
             
@@ -478,7 +549,7 @@ const Assessment = () => {
               disabled={selectedAnswer === null}
               className="bg-primary text-primary-foreground flex items-center gap-2"
             >
-              {currentStep === personalityQuestions.length - 1 ? 'Selesai' : 'Selanjutnya'} →
+              {currentStep === riasecQuestions.length - 1 ? 'Lihat Hasil' : 'Selanjutnya'} →
             </Button>
           </div>
         </div>
