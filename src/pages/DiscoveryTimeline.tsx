@@ -15,7 +15,8 @@ import {
   BookOpen,
   Users,
   Lightbulb,
-  Share2
+  Share2,
+  ArrowLeft
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -115,6 +116,18 @@ const DiscoveryTimeline = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Back to Dashboard Button */}
+      <div className="container mx-auto px-4 pt-6">
+        <Button 
+          variant="outline" 
+          onClick={() => window.location.href = '/dashboard'}
+          className="mb-4"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Kembali ke Dashboard
+        </Button>
+      </div>
+
       {/* Hero Section */}
       <div className="relative bg-gradient-primary overflow-hidden">
         <div className="absolute inset-0 bg-black/20"></div>

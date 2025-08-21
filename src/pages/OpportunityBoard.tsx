@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, MapPin, Calendar, ExternalLink, Sparkles, Trophy, Briefcase, GraduationCap } from "lucide-react";
+import { Search, MapPin, Calendar, ExternalLink, Sparkles, Trophy, Briefcase, GraduationCap, ArrowLeft } from "lucide-react";
 
 interface Opportunity {
   id: string;
@@ -159,6 +159,18 @@ const OpportunityBoard = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Back to Dashboard Button */}
+      <div className="container mx-auto px-4 pt-6">
+        <Button 
+          variant="outline" 
+          onClick={() => window.location.href = '/dashboard'}
+          className="mb-4"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Kembali ke Dashboard
+        </Button>
+      </div>
+
       {/* Hero Section */}
       <div className="relative bg-gradient-accent overflow-hidden">
         <div className="absolute inset-0 bg-black/20"></div>
