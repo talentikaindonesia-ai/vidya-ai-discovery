@@ -8,6 +8,7 @@ import { Sidebar, SidebarContent, SidebarProvider } from "@/components/ui/sideba
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { WelcomeDashboard } from "@/components/dashboard/WelcomeDashboard";
+import { ScrapedContent } from "@/components/dashboard/ScrapedContent";
 import { CoursesSection } from "@/components/dashboard/CoursesSection";
 import { ChallengesSection } from "@/components/dashboard/ChallengesSection";
 import { OpportunitiesSection } from "@/components/dashboard/OpportunitiesSection";
@@ -26,6 +27,7 @@ const Dashboard = () => {
   const [subscriptionPlans, setSubscriptionPlans] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showSubscription, setShowSubscription] = useState(false);
+  const [userInterests, setUserInterests] = useState<any[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -108,6 +110,19 @@ const Dashboard = () => {
         setSubscriptionPlans(plansData || []);
       }
 
+      // Load user interests
+      const { data: interestsData, error: interestsError } = await supabase
+        .from('user_interests')
+        .select('*, interest_categories(name)')
+        .eq('user_id', userId)
+        .limit(3);
+
+      if (interestsError) {
+        console.error('Error loading interests:', interestsError);
+      } else {
+        setUserInterests(interestsData || []);
+      }
+
     } catch (error) {
       console.error('Error:', error);
     } finally {
@@ -154,7 +169,12 @@ const Dashboard = () => {
   const renderActiveSection = () => {
     switch (activeSection) {
       case "overview":
-        return <WelcomeDashboard user={user} profile={profile} />;
+        return (
+          <div className="space-y-6">
+            <WelcomeDashboard user={user} profile={profile} />
+            <ScrapedContent category={userInterests[0]?.interest_categories?.name} />
+          </div>
+        );
       case "courses":
         return <CoursesSection />;
       case "challenges":
@@ -166,7 +186,12 @@ const Dashboard = () => {
       case "achievements":
         return <Achievements />;
       default:
-        return <WelcomeDashboard user={user} profile={profile} />;
+        return (
+          <div className="space-y-6">
+            <WelcomeDashboard user={user} profile={profile} />
+            <ScrapedContent category={userInterests[0]?.interest_categories?.name} />
+          </div>
+        );
     }
   };
 

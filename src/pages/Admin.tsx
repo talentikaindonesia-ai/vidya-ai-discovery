@@ -17,8 +17,176 @@ import {
   Users, 
   Trophy, 
   Briefcase,
-  ArrowLeft
+  ArrowLeft,
+  Globe,
+  Play,
+  Download
 } from "lucide-react";
+
+// Web Scraping Admin Component
+const WebScrapingAdmin = () => {
+  const [scrapedContent, setScrapedContent] = useState<any[]>([]);
+  const [isScrapingActive, setIsScrapingActive] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState("SCHOLARSHIP");
+
+  const loadScrapedContent = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('scraped_content')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      if (error) throw error;
+      setScrapedContent(data || []);
+    } catch (error: any) {
+      toast.error("Gagal memuat konten: " + error.message);
+    }
+  };
+
+  const handleStartScraping = async () => {
+    setIsScrapingActive(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('web-scraper', {
+        body: { category: selectedCategory }
+      });
+
+      if (error) throw error;
+
+      toast.success(`Berhasil scraping ${data.data?.length || 0} konten baru!`);
+      loadScrapedContent();
+    } catch (error: any) {
+      toast.error("Gagal scraping: " + error.message);
+    } finally {
+      setIsScrapingActive(false);
+    }
+  };
+
+  const handleDeleteContent = async (id: string) => {
+    if (!confirm("Yakin ingin menghapus konten ini?")) return;
+    
+    try {
+      const { error } = await supabase
+        .from('scraped_content')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast.success("Konten berhasil dihapus!");
+      loadScrapedContent();
+    } catch (error: any) {
+      toast.error("Gagal menghapus konten: " + error.message);
+    }
+  };
+
+  useEffect(() => {
+    loadScrapedContent();
+  }, []);
+
+  return (
+    <div className="space-y-6">
+      {/* Scraping Controls */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Globe className="w-5 h-5" />
+            Web Scraping Indonesia
+          </CardTitle>
+          <CardDescription>
+            Scraping otomatis website Indonesia untuk konten beasiswa, pekerjaan, dan kompetisi
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-4 items-end">
+            <div className="flex-1">
+              <label className="text-sm font-medium">Kategori</label>
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="SCHOLARSHIP">Beasiswa</SelectItem>
+                  <SelectItem value="JOB">Pekerjaan & Magang</SelectItem>
+                  <SelectItem value="COMPETITION">Kompetisi & Lomba</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button 
+              onClick={handleStartScraping} 
+              disabled={isScrapingActive}
+              className="flex items-center gap-2"
+            >
+              {isScrapingActive ? (
+                <>
+                  <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+                  Scraping...
+                </>
+              ) : (
+                <>
+                  <Play className="w-4 h-4" />
+                  Mulai Scraping
+                </>
+              )}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Scraped Content List */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {scrapedContent.map((content) => (
+          <Card key={content.id} className="hover:shadow-lg transition-smooth">
+            <CardHeader>
+              <div className="flex items-start justify-between">
+                <Badge variant={content.content_type === 'scholarship' ? 'default' : content.content_type === 'job' ? 'secondary' : 'destructive'}>
+                  {content.content_type}
+                </Badge>
+                <Badge variant="outline" className="text-xs">
+                  {content.source_website}
+                </Badge>
+              </div>
+              <CardTitle className="text-lg line-clamp-2">{content.title}</CardTitle>
+              <CardDescription className="line-clamp-2">{content.description}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {content.location && (
+                  <p className="text-sm text-muted-foreground">📍 {content.location}</p>
+                )}
+                <div className="flex flex-wrap gap-1">
+                  {content.tags?.slice(0, 3).map((tag: string, index: number) => (
+                    <Badge key={index} variant="outline" className="text-xs">
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+                <div className="flex gap-2 mt-4">
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="flex-1"
+                    onClick={() => window.open(content.url, '_blank')}
+                  >
+                    <Download className="w-4 h-4 mr-1" />
+                    Lihat
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="destructive" 
+                    onClick={() => handleDeleteContent(content.id)}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -147,10 +315,11 @@ const Admin = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="courses">Kursus</TabsTrigger>
             <TabsTrigger value="challenges">Tantangan</TabsTrigger>
             <TabsTrigger value="opportunities">Peluang</TabsTrigger>
+            <TabsTrigger value="scraping">Web Scraping</TabsTrigger>
             <TabsTrigger value="community">Komunitas</TabsTrigger>
           </TabsList>
 
@@ -477,6 +646,10 @@ const Admin = () => {
                 </Card>
               </div>
             </div>
+          </TabsContent>
+
+          <TabsContent value="scraping" className="mt-6">
+            <WebScrapingAdmin />
           </TabsContent>
 
           <TabsContent value="community" className="mt-6">

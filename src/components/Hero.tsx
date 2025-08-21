@@ -38,7 +38,11 @@ const Hero = () => {
                 Mulai Tes Sekarang
                 <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
               </Button>
-              <Button variant="soft" size="hero">
+              <Button 
+                variant="soft" 
+                size="hero"
+                onClick={() => window.location.href = '/assessment'}
+              >
                 Lihat Demo
               </Button>
             </div>

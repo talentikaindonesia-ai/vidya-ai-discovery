@@ -43,10 +43,16 @@ const Header = () => {
 
           {/* CTA Buttons */}
           <div className="hidden md:flex items-center gap-4">
-            <Button variant="ghost">
+            <Button 
+              variant="ghost"
+              onClick={() => window.location.href = '/auth'}
+            >
               Masuk
             </Button>
-            <Button variant="hero">
+            <Button 
+              variant="hero"
+              onClick={() => window.location.href = '/auth'}
+            >
               Daftar Gratis
             </Button>
           </div>
@@ -77,10 +83,18 @@ const Header = () => {
                 </a>
               ))}
               <div className="flex flex-col gap-2 mt-4">
-                <Button variant="ghost" className="justify-start">
+                <Button 
+                  variant="ghost" 
+                  className="justify-start"
+                  onClick={() => window.location.href = '/auth'}
+                >
                   Masuk
                 </Button>
-                <Button variant="hero" className="justify-start">
+                <Button 
+                  variant="hero" 
+                  className="justify-start"
+                  onClick={() => window.location.href = '/auth'}
+                >
                   Daftar Gratis
                 </Button>
               </div>

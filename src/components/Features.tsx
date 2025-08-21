@@ -62,7 +62,8 @@ const Features = () => {
           </p>
         </div>
         
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {/* Desktop Grid */}
+        <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {features.map((feature, index) => (
             <Card 
               key={index} 
@@ -84,10 +85,42 @@ const Features = () => {
             </Card>
           ))}
         </div>
+
+        {/* Mobile Carousel */}
+        <div className="md:hidden">
+          <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory">
+            {features.map((feature, index) => (
+              <Card 
+                key={index} 
+                className="min-w-[280px] flex-shrink-0 snap-start group hover:shadow-card transition-all duration-300 bg-card border-primary/10"
+              >
+                <CardHeader className="pb-4">
+                  <div className={`inline-flex w-12 h-12 items-center justify-center rounded-xl ${feature.color} mb-4 group-hover:scale-110 transition-transform`}>
+                    <feature.icon className="w-6 h-6" />
+                  </div>
+                  <CardTitle className="text-xl group-hover:text-primary transition-colors">
+                    {feature.title}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground leading-relaxed">
+                    {feature.description}
+                  </p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          <p className="text-center text-sm text-muted-foreground mt-4">← Geser untuk melihat fitur lainnya →</p>
+        </div>
         
         <div className="text-center mt-16">
-          <Button variant="floating" size="hero" className="group">
-            Jelajahi Semua Fitur
+          <Button 
+            variant="floating" 
+            size="hero" 
+            className="group"
+            onClick={() => window.location.href = '/assessment'}
+          >
+            Mulai Test Minat Bakat
             <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
           </Button>
         </div>

@@ -269,6 +269,54 @@ export type Database = {
         }
         Relationships: []
       }
+      scraped_content: {
+        Row: {
+          category: string
+          content_type: string
+          created_at: string
+          deadline: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          location: string | null
+          source_website: string
+          tags: string[] | null
+          title: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          category: string
+          content_type?: string
+          created_at?: string
+          deadline?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          location?: string | null
+          source_website: string
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          category?: string
+          content_type?: string
+          created_at?: string
+          deadline?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          location?: string | null
+          source_website?: string
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
+      }
       subscription_plans: {
         Row: {
           created_at: string
