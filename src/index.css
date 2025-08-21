@@ -8,31 +8,31 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Vidya Educational Design System - New Color Palette */
-    --background: 0 0% 98%;
-    --foreground: 208 20% 15%;
+    /* Elegant Professional Design System */
+    --background: 0 0% 100%;
+    --foreground: 217 19% 27%;
 
     --card: 0 0% 100%;
-    --card-foreground: 208 20% 15%;
+    --card-foreground: 217 19% 27%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 208 20% 15%;
+    --popover-foreground: 217 19% 27%;
 
-    /* Primary: Teal Blue (#0fa5bb) */
-    --primary: 188 85% 39%;
+    /* Primary: Deep Professional Blue */
+    --primary: 217 91% 60%;
     --primary-foreground: 0 0% 100%;
-    --primary-light: 188 70% 75%;
-    --primary-dark: 188 95% 30%;
+    --primary-light: 217 71% 85%;
+    --primary-dark: 217 100% 45%;
 
-    /* Secondary: Vibrant Yellow (#f9b61a) */
-    --secondary: 44 96% 54%;
-    --secondary-foreground: 208 20% 15%;
-    --secondary-light: 44 86% 85%;
+    /* Secondary: Elegant Yellow/Gold */
+    --secondary: 43 89% 70%;
+    --secondary-foreground: 217 19% 27%;
+    --secondary-light: 43 79% 90%;
 
-    /* Accent: Orange (#e55f15) */
-    --accent: 20 80% 49%;
+    /* Accent: Warm Coral */
+    --accent: 14 87% 62%;
     --accent-foreground: 0 0% 100%;
-    --accent-light: 20 70% 85%;
+    --accent-light: 14 77% 85%;
 
     --muted: 220 15% 95%;
     --muted-foreground: 230 10% 50%;
@@ -44,13 +44,17 @@ All colors MUST be HSL.
     --input: 220 15% 95%;
     --ring: 210 80% 65%;
 
-    /* Clean Solid Colors Only - No Gradients */
+    /* Elegant Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(217 91% 60%), hsl(217 71% 75%));
+    --gradient-secondary: linear-gradient(135deg, hsl(43 89% 70%), hsl(43 79% 80%));
+    --gradient-accent: linear-gradient(135deg, hsl(14 87% 62%), hsl(14 77% 75%));
+    --gradient-hero: linear-gradient(135deg, hsl(0 0% 100%) 0%, hsl(43 79% 97%) 100%);
 
-    /* Elegant Shadows */
-    --shadow-soft: 0 4px 20px -4px hsl(188 85% 39% / 0.2);
-    --shadow-card: 0 8px 30px -8px hsl(188 85% 39% / 0.15);
-    --shadow-floating: 0 12px 40px -12px hsl(44 96% 54% / 0.3);
-    --shadow-accent: 0 6px 25px -6px hsl(20 80% 49% / 0.25);
+    /* Professional Shadows */
+    --shadow-soft: 0 2px 20px -2px hsl(217 19% 27% / 0.08);
+    --shadow-card: 0 4px 30px -4px hsl(217 19% 27% / 0.12);
+    --shadow-floating: 0 8px 40px -8px hsl(217 19% 27% / 0.15);
+    --shadow-accent: 0 4px 25px -4px hsl(43 89% 70% / 0.25);
 
     /* Animation */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);

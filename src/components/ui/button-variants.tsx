@@ -11,8 +11,9 @@ export const buttonVariants = cva(
         secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-soft",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
-        hero: "bg-gradient-primary text-white hover:shadow-floating transform hover:scale-105 transition-bounce border-0",
-        soft: "bg-gradient-soft text-primary hover:shadow-card transition-smooth",
+        hero: "bg-gradient-primary text-white hover:shadow-floating transform hover:scale-[1.02] transition-smooth border-0",
+        soft: "bg-gradient-secondary text-foreground hover:shadow-accent transition-smooth border border-secondary/20",
+        elegant: "bg-white text-foreground border border-input hover:bg-secondary-light hover:border-secondary transition-smooth shadow-soft",
         floating: "bg-card text-card-foreground shadow-floating hover:shadow-card border border-primary/20 hover:bg-primary-light/20 transition-smooth"
       },
       size: {
