@@ -2,6 +2,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 import { 
   Wrench, 
   Microscope, 
@@ -88,48 +95,60 @@ const RiasecPersonalityTypes = ({
           </p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-12">
-          {Object.entries(riasecTypes).map(([key, type]) => {
-            const Icon = type.icon;
-            return (
-              <Card key={key} className="group hover:shadow-lg transition-all duration-300 border-2 hover:border-primary/30 h-full">
-                <CardHeader className="text-center">
-                  <div className={`w-20 h-20 mx-auto rounded-full bg-gradient-to-br ${type.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
-                    <Icon className="w-10 h-10 text-white" />
-                  </div>
-                  <CardTitle className="text-xl font-bold">{type.name}</CardTitle>
-                </CardHeader>
-                <CardContent className="flex-1 flex flex-col">
-                  <p className="text-sm text-muted-foreground mb-4 leading-relaxed flex-1">
-                    {type.description}
-                  </p>
-                  <div className="space-y-3">
-                    <div>
-                      <h4 className="font-semibold text-sm mb-2">Karakteristik:</h4>
-                      <div className="flex flex-wrap gap-1">
-                        {type.characteristics.map((char, index) => (
-                          <Badge key={index} variant="secondary" className="text-xs">
-                            {char}
-                          </Badge>
-                        ))}
+        <Carousel
+          opts={{
+            align: "start",
+            loop: true,
+          }}
+          className="w-full mb-12"
+        >
+          <CarouselContent className="-ml-2 md:-ml-4">
+            {Object.entries(riasecTypes).map(([key, type]) => {
+              const Icon = type.icon;
+              return (
+                <CarouselItem key={key} className="pl-2 md:pl-4 md:basis-1/2 lg:basis-1/3">
+                  <Card className="group hover:shadow-lg transition-all duration-300 border-2 hover:border-primary/30 h-full">
+                    <CardHeader className="text-center">
+                      <div className={`w-20 h-20 mx-auto rounded-full bg-gradient-to-br ${type.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
+                        <Icon className="w-10 h-10 text-white" />
                       </div>
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-sm mb-2">Contoh Karier:</h4>
-                      <div className="flex flex-wrap gap-1">
-                        {type.careers.slice(0, 3).map((career, index) => (
-                          <Badge key={index} variant="outline" className="text-xs">
-                            {career}
-                          </Badge>
-                        ))}
+                      <CardTitle className="text-xl font-bold">{type.name}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex-1 flex flex-col">
+                      <p className="text-sm text-muted-foreground mb-4 leading-relaxed flex-1">
+                        {type.description}
+                      </p>
+                      <div className="space-y-3">
+                        <div>
+                          <h4 className="font-semibold text-sm mb-2">Karakteristik:</h4>
+                          <div className="flex flex-wrap gap-1">
+                            {type.characteristics.map((char, index) => (
+                              <Badge key={index} variant="secondary" className="text-xs">
+                                {char}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-sm mb-2">Contoh Karier:</h4>
+                          <div className="flex flex-wrap gap-1">
+                            {type.careers.slice(0, 3).map((career, index) => (
+                              <Badge key={index} variant="outline" className="text-xs">
+                                {career}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+                    </CardContent>
+                  </Card>
+                </CarouselItem>
+              );
+            })}
+          </CarouselContent>
+          <CarouselPrevious />
+          <CarouselNext />
+        </Carousel>
 
         {showButton && (
           <div className="text-center">
