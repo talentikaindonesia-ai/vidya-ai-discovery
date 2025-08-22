@@ -251,6 +251,98 @@ export type Database = {
           },
         ]
       }
+      mentor_bookings: {
+        Row: {
+          created_at: string
+          duration_minutes: number | null
+          id: string
+          mentor_id: string
+          notes: string | null
+          session_date: string
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          duration_minutes?: number | null
+          id?: string
+          mentor_id: string
+          notes?: string | null
+          session_date: string
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          duration_minutes?: number | null
+          id?: string
+          mentor_id?: string
+          notes?: string | null
+          session_date?: string
+          status?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mentor_bookings_mentor_id_fkey"
+            columns: ["mentor_id"]
+            isOneToOne: false
+            referencedRelation: "mentors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mentors: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string
+          experience_years: number | null
+          expertise_areas: string[] | null
+          hourly_rate: number | null
+          id: string
+          is_available: boolean | null
+          name: string
+          rating: number | null
+          title: string
+          total_sessions: number | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          experience_years?: number | null
+          expertise_areas?: string[] | null
+          hourly_rate?: number | null
+          id?: string
+          is_available?: boolean | null
+          name: string
+          rating?: number | null
+          title: string
+          total_sessions?: number | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          experience_years?: number | null
+          expertise_areas?: string[] | null
+          hourly_rate?: number | null
+          id?: string
+          is_available?: boolean | null
+          name?: string
+          rating?: number | null
+          title?: string
+          total_sessions?: number | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           address: string | null

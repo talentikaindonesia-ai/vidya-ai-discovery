@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Play, Clock, Award, BookOpen, Code, FileText, Users, ArrowLeft, Crown, Lock } from "lucide-react";
+import { Play, Clock, Award, BookOpen, Code, FileText, Users, ArrowLeft, Crown, Lock, GraduationCap } from "lucide-react";
 import { toast } from "sonner";
 import { getSubscriptionLimits, checkSubscriptionAccess, getUserSubscriptionInfo } from "@/lib/subscription";
 import { UpgradePrompt } from "@/components/UpgradePrompt";
+import { MentorsSection } from "@/components/dashboard/MentorsSection";
 
 interface Course {
   id: string;
@@ -361,7 +362,20 @@ const LearningHub = () => {
           </div>
         )}
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <Tabs defaultValue="courses" className="w-full">
+          <TabsList className="grid w-full max-w-md mx-auto grid-cols-2">
+            <TabsTrigger value="courses" className="flex items-center gap-2">
+              <BookOpen className="w-4 h-4" />
+              Kursus
+            </TabsTrigger>
+            <TabsTrigger value="mentors" className="flex items-center gap-2">
+              <GraduationCap className="w-4 h-4" />
+              Mentor
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="courses" className="mt-8">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {courses.map((course, index) => {
             const canAccess = canAccessCourse(index);
             const isLocked = !canAccess;
@@ -471,7 +485,21 @@ const LearningHub = () => {
               </div>
             );
           })()}
-        </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="mentors" className="mt-8">
+            <div className="space-y-6">
+              <div className="text-center">
+                <h2 className="text-2xl font-bold mb-2">Mentor & Expert</h2>
+                <p className="text-muted-foreground max-w-2xl mx-auto">
+                  Terhubung dengan mentor profesional untuk mendapatkan bimbingan personal dalam pengembangan karir dan keahlian Anda
+                </p>
+              </div>
+              <MentorsSection />
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

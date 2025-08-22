@@ -9,6 +9,7 @@ import { Search, MapPin, Calendar, ExternalLink, Sparkles, Trophy, Briefcase, Gr
 import { supabase } from "@/integrations/supabase/client";
 import { getSubscriptionLimits, checkSubscriptionAccess, getUserSubscriptionInfo } from "@/lib/subscription";
 import { UpgradePrompt } from "@/components/UpgradePrompt";
+import { ScrapedContent } from "@/components/dashboard/ScrapedContent";
 import { toast } from "sonner";
 
 interface Opportunity {
@@ -33,6 +34,7 @@ const OpportunityBoard = () => {
   const [subscriptionInfo, setSubscriptionInfo] = useState<any>(null);
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("mock");
 
   useEffect(() => {
     checkAuthAndLoadData();
@@ -221,7 +223,7 @@ const OpportunityBoard = () => {
         {/* Search and Filters */}
         <Card className="shadow-card mb-8">
           <CardContent className="p-6">
-            <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex flex-col md:flex-row gap-4 mb-4">
               <div className="flex-1 relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                 <Input
@@ -244,11 +246,20 @@ const OpportunityBoard = () => {
                 </SelectContent>
               </Select>
             </div>
+            
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full max-w-md mx-auto grid-cols-2">
+                <TabsTrigger value="mock">Peluang Pilihan</TabsTrigger>
+                <TabsTrigger value="scraped">Update Terkini</TabsTrigger>
+              </TabsList>
+            </Tabs>
           </CardContent>
         </Card>
 
-        {/* Opportunities Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Opportunities Content */}
+        <Tabs value={activeTab} className="w-full">
+          <TabsContent value="mock">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredOpportunities.map((opportunity, index) => {
             const canAccess = canAccessOpportunity(index);
             const isLocked = !canAccess;
@@ -335,9 +346,23 @@ const OpportunityBoard = () => {
                   limit={limits.maxOpportunities} 
                 />
               </div>
-            );
-          })()}
-        </div>
+              );
+            })()}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="scraped">
+            <div className="space-y-6">
+              <div className="text-center">
+                <h2 className="text-2xl font-bold mb-2">Peluang Terkini</h2>
+                <p className="text-muted-foreground max-w-2xl mx-auto">
+                  Informasi peluang terbaru yang diperbarui secara real-time dari berbagai sumber terpercaya
+                </p>
+              </div>
+              <ScrapedContent />
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
