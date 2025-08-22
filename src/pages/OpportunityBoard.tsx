@@ -5,7 +5,11 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, MapPin, Calendar, ExternalLink, Sparkles, Trophy, Briefcase, GraduationCap, ArrowLeft } from "lucide-react";
+import { Search, MapPin, Calendar, ExternalLink, Sparkles, Trophy, Briefcase, GraduationCap, ArrowLeft, Crown, Lock } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { getSubscriptionLimits, checkSubscriptionAccess, getUserSubscriptionInfo } from "@/lib/subscription";
+import { UpgradePrompt } from "@/components/UpgradePrompt";
+import { toast } from "sonner";
 
 interface Opportunity {
   id: string;
@@ -26,9 +30,31 @@ const OpportunityBoard = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [filterCategory, setFilterCategory] = useState("all");
+  const [subscriptionInfo, setSubscriptionInfo] = useState<any>(null);
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Mock data - in real app, this would come from an API or database
+    checkAuthAndLoadData();
+  }, []);
+
+  const checkAuthAndLoadData = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        setUser(session.user);
+        const subInfo = await getUserSubscriptionInfo(session.user.id);
+        setSubscriptionInfo(subInfo);
+      }
+      loadOpportunities();
+    } catch (error) {
+      console.error('Error loading data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadOpportunities = () => {
     const mockOpportunities: Opportunity[] = [
       {
         id: "1",
@@ -106,9 +132,23 @@ const OpportunityBoard = () => {
         link: "https://figma.com/community"
       }
     ];
-
     setOpportunities(mockOpportunities);
-  }, []);
+  };
+
+  const canAccessOpportunity = (index: number) => {
+    if (!subscriptionInfo) return true;
+    const limits = getSubscriptionLimits(subscriptionInfo.subscription_status, subscriptionInfo.subscription_type);
+    const { canAccess } = checkSubscriptionAccess(index + 1, limits.maxOpportunities, subscriptionInfo.subscription_status);
+    return canAccess;
+  };
+
+  const handleOpportunityClick = (opportunity: Opportunity, index: number) => {
+    if (!canAccessOpportunity(index)) {
+      toast.error("Upgrade ke Premium untuk mengakses peluang ini!");
+      return;
+    }
+    window.open(opportunity.link, '_blank');
+  };
 
   const filteredOpportunities = opportunities.filter(opp => {
     const matchesSearch = opp.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -119,43 +159,6 @@ const OpportunityBoard = () => {
     
     return matchesSearch && matchesType && matchesCategory;
   });
-
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case 'scholarship': return <GraduationCap className="w-5 h-5" />;
-      case 'competition': return <Trophy className="w-5 h-5" />;
-      case 'internship': return <Briefcase className="w-5 h-5" />;
-      default: return <Sparkles className="w-5 h-5" />;
-    }
-  };
-
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case 'scholarship': return 'bg-secondary text-secondary-foreground';
-      case 'competition': return 'bg-accent text-accent-foreground';
-      case 'internship': return 'bg-primary text-primary-foreground';
-      default: return 'bg-muted text-muted-foreground';
-    }
-  };
-
-  const getTypeLabel = (type: string) => {
-    switch (type) {
-      case 'scholarship': return 'Beasiswa';
-      case 'competition': return 'Kompetisi';
-      case 'internship': return 'Magang';
-      default: return type;
-    }
-  };
-
-  const getDaysUntilDeadline = (deadline: string) => {
-    const today = new Date();
-    const deadlineDate = new Date(deadline);
-    const diffTime = deadlineDate.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
-  };
-
-  const recommendedOpportunities = opportunities.filter(opp => opp.isRecommended);
 
   return (
     <div className="min-h-screen bg-background">
@@ -181,103 +184,37 @@ const OpportunityBoard = () => {
                 Opportunity Board
               </h1>
               <p className="text-xl text-white/90 mb-8 leading-relaxed">
-                Temukan beasiswa, kompetisi, dan kesempatan magang yang sesuai dengan minat dan bakatmu. 
-                Raih impianmu dengan peluang terbaik dari seluruh dunia.
+                Temukan beasiswa, kompetisi, dan kesempatan magang yang sesuai dengan minat dan bakatmu.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Button size="lg" className="bg-white text-accent hover:bg-white/90 shadow-floating">
-                  <Briefcase className="w-5 h-5 mr-2" />
-                  Jelajahi Peluang
-                </Button>
-                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
-                  <Trophy className="w-5 h-5 mr-2" />
-                  Lihat Kompetisi
-                </Button>
-              </div>
-              <div className="flex items-center gap-8 mt-8 text-white/80">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-white">200+</div>
-                  <div className="text-sm">Peluang</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-white">5k+</div>
-                  <div className="text-sm">Berhasil</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-white">24/7</div>
-                  <div className="text-sm">Update</div>
-                </div>
-              </div>
-            </div>
-            <div className="hidden lg:block">
-              <img 
-                src="/src/assets/opportunity-hero.jpg" 
-                alt="Opportunity Board" 
-                className="rounded-2xl shadow-2xl transform -rotate-3 hover:rotate-0 transition-transform duration-500"
-              />
             </div>
           </div>
         </div>
       </div>
 
       <div className="container mx-auto px-4 py-16">
-
-        {/* Recommended Section */}
-        {recommendedOpportunities.length > 0 && (
+        {/* Subscription Status Banner */}
+        {subscriptionInfo && subscriptionInfo.subscription_status !== 'active' && (
           <div className="mb-8">
-            <div className="flex items-center gap-2 mb-4">
-              <Sparkles className="w-5 h-5 text-accent" />
-              <h2 className="text-2xl font-semibold">Direkomendasikan Untukmu</h2>
-            </div>
-            
-            <div className="grid md:grid-cols-2 gap-4">
-              {recommendedOpportunities.map((opportunity) => (
-                <Card key={opportunity.id} className="shadow-card hover:shadow-floating transition-all border-2 border-accent/20">
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Badge className={getTypeColor(opportunity.type)}>
-                            {getTypeIcon(opportunity.type)}
-                            <span className="ml-1">{getTypeLabel(opportunity.type)}</span>
-                          </Badge>
-                          <Badge variant="outline" className="border-accent text-accent">
-                            <Sparkles className="w-3 h-3 mr-1" />
-                            Rekomendasi
-                          </Badge>
-                        </div>
-                        <CardTitle className="line-clamp-2">{opportunity.title}</CardTitle>
-                        <p className="text-muted-foreground">{opportunity.organization}</p>
-                      </div>
+            <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-secondary/5">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Crown className="w-6 h-6 text-primary" />
+                    <div>
+                      <h3 className="font-semibold">Akun Basic - Akses Terbatas</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Anda dapat mengakses {getSubscriptionLimits(subscriptionInfo.subscription_status, subscriptionInfo.subscription_type).maxOpportunities} peluang gratis. 
+                        Upgrade ke Premium untuk akses tidak terbatas!
+                      </p>
                     </div>
-                  </CardHeader>
-
-                  <CardContent>
-                    <div className="space-y-4">
-                      <p className="text-sm line-clamp-3">{opportunity.description}</p>
-                      
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <MapPin className="w-4 h-4" />
-                          <span>{opportunity.location}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Calendar className="w-4 h-4" />
-                          <span>{getDaysUntilDeadline(opportunity.deadline)} hari lagi</span>
-                        </div>
-                      </div>
-
-                      <Button asChild className="w-full bg-gradient-accent">
-                        <a href={opportunity.link} target="_blank" rel="noopener noreferrer">
-                          Lihat Detail
-                          <ExternalLink className="w-4 h-4 ml-2" />
-                        </a>
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                  </div>
+                  <Button onClick={() => window.location.href = '/dashboard'} className="gap-2">
+                    <Crown className="w-4 h-4" />
+                    Upgrade
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         )}
 
@@ -306,188 +243,101 @@ const OpportunityBoard = () => {
                   <SelectItem value="internship">Magang</SelectItem>
                 </SelectContent>
               </Select>
-
-              <Select value={filterCategory} onValueChange={setFilterCategory}>
-                <SelectTrigger className="w-full md:w-48">
-                  <SelectValue placeholder="Semua Kategori" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Semua Kategori</SelectItem>
-                  <SelectItem value="technology">Teknologi</SelectItem>
-                  <SelectItem value="science">Sains</SelectItem>
-                  <SelectItem value="business">Bisnis</SelectItem>
-                  <SelectItem value="design">Desain</SelectItem>
-                  <SelectItem value="education">Pendidikan</SelectItem>
-                  <SelectItem value="finance">Keuangan</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
           </CardContent>
         </Card>
 
-        {/* Opportunities List */}
-        <Tabs defaultValue="all" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="all">Semua</TabsTrigger>
-            <TabsTrigger value="scholarship">Beasiswa</TabsTrigger>
-            <TabsTrigger value="competition">Kompetisi</TabsTrigger>
-            <TabsTrigger value="internship">Magang</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="all" className="mt-6">
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredOpportunities.map((opportunity) => (
-                <Card key={opportunity.id} className="shadow-card hover:shadow-floating transition-all">
-                  <CardHeader>
-                    <div className="flex items-start justify-between mb-2">
-                      <Badge className={getTypeColor(opportunity.type)}>
-                        {getTypeIcon(opportunity.type)}
-                        <span className="ml-1">{getTypeLabel(opportunity.type)}</span>
+        {/* Opportunities Grid */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredOpportunities.map((opportunity, index) => {
+            const canAccess = canAccessOpportunity(index);
+            const isLocked = !canAccess;
+            
+            return (
+              <Card 
+                key={opportunity.id} 
+                className={`group hover:shadow-lg transition-all duration-300 cursor-pointer relative ${isLocked ? 'opacity-60' : ''}`}
+                onClick={() => handleOpportunityClick(opportunity, index)}
+              >
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between mb-2">
+                    <Badge variant={opportunity.isRecommended ? "default" : "secondary"}>
+                      {opportunity.type === 'scholarship' && 'Beasiswa'}
+                      {opportunity.type === 'competition' && 'Kompetisi'}
+                      {opportunity.type === 'internship' && 'Magang'}
+                    </Badge>
+                    {isLocked && (
+                      <Badge variant="secondary" className="bg-black/10">
+                        <Crown className="w-3 h-3 mr-1" />
+                        Premium
                       </Badge>
-                      {opportunity.isRecommended && (
-                        <Badge variant="outline" className="border-accent text-accent">
-                          <Sparkles className="w-3 h-3" />
-                        </Badge>
-                      )}
+                    )}
+                  </div>
+
+                  <CardTitle className="group-hover:text-primary transition-colors line-clamp-2">
+                    {opportunity.title}
+                  </CardTitle>
+                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                    <span className="font-medium">{opportunity.organization}</span>
+                    <div className="flex items-center gap-1">
+                      <MapPin className="w-3 h-3" />
+                      <span>{opportunity.location}</span>
                     </div>
-                    
-                    <CardTitle className="line-clamp-2">{opportunity.title}</CardTitle>
-                    <p className="text-muted-foreground">{opportunity.organization}</p>
-                  </CardHeader>
+                  </div>
+                </CardHeader>
 
-                  <CardContent>
-                    <div className="space-y-4">
-                      <p className="text-sm line-clamp-3">{opportunity.description}</p>
-                      
-                      <div className="space-y-2">
-                        <h4 className="text-sm font-medium">Persyaratan:</h4>
-                        <ul className="text-xs text-muted-foreground space-y-1">
-                          {opportunity.requirements.slice(0, 3).map((req, index) => (
-                            <li key={index} className="flex items-start gap-2">
-                              <span className="w-1 h-1 bg-muted-foreground rounded-full mt-1.5 flex-shrink-0"></span>
-                              <span className="line-clamp-1">{req}</span>
-                            </li>
-                          ))}
-                          {opportunity.requirements.length > 3 && (
-                            <li className="text-accent">
-                              +{opportunity.requirements.length - 3} persyaratan lainnya
-                            </li>
-                          )}
-                        </ul>
-                      </div>
-
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <MapPin className="w-4 h-4" />
-                          <span>{opportunity.location}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Calendar className="w-4 h-4" />
-                          <span className={getDaysUntilDeadline(opportunity.deadline) <= 7 ? 'text-destructive font-medium' : ''}>
-                            {getDaysUntilDeadline(opportunity.deadline)} hari lagi
-                          </span>
-                        </div>
-                      </div>
-
-                      <Button asChild className="w-full bg-gradient-primary">
-                        <a href={opportunity.link} target="_blank" rel="noopener noreferrer">
-                          Apply Sekarang
-                          <ExternalLink className="w-4 h-4 ml-2" />
-                        </a>
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            {filteredOpportunities.length === 0 && (
-              <Card className="text-center py-12">
-                <CardContent>
-                  <Search className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">Tidak Ada Hasil</h3>
-                  <p className="text-muted-foreground">
-                    Coba ubah kata kunci pencarian atau filter yang dipilih
+                <CardContent className="pt-0">
+                  <p className="text-muted-foreground mb-4 line-clamp-3">
+                    {opportunity.description}
                   </p>
+
+                  <Button
+                    size="sm"
+                    disabled={isLocked}
+                    className="w-full"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleOpportunityClick(opportunity, index);
+                    }}
+                  >
+                    {isLocked ? (
+                      <>
+                        <Lock className="w-3 h-3 mr-1" />
+                        Upgrade untuk Akses
+                      </>
+                    ) : (
+                      <>
+                        <ExternalLink className="w-3 h-3 mr-1" />
+                        Lihat Detail
+                      </>
+                    )}
+                  </Button>
+
+                  {isLocked && (
+                    <div className="absolute inset-0 bg-background/30 backdrop-blur-[1px] rounded-lg flex items-center justify-center">
+                      <Lock className="w-8 h-8 text-muted-foreground" />
+                    </div>
+                  )}
                 </CardContent>
               </Card>
-            )}
-          </TabsContent>
-
-          {/* Individual tabs content */}
-          {['scholarship', 'competition', 'internship'].map(type => (
-            <TabsContent key={type} value={type} className="mt-6">
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredOpportunities
-                  .filter(opp => opp.type === type)
-                  .map((opportunity) => (
-                  <Card key={opportunity.id} className="shadow-card hover:shadow-floating transition-all">
-                    {/* Same card content as above */}
-                    <CardHeader>
-                      <div className="flex items-start justify-between mb-2">
-                        <Badge className={getTypeColor(opportunity.type)}>
-                          {getTypeIcon(opportunity.type)}
-                          <span className="ml-1">{getTypeLabel(opportunity.type)}</span>
-                        </Badge>
-                        {opportunity.isRecommended && (
-                          <Badge variant="outline" className="border-accent text-accent">
-                            <Sparkles className="w-3 h-3" />
-                          </Badge>
-                        )}
-                      </div>
-                      
-                      <CardTitle className="line-clamp-2">{opportunity.title}</CardTitle>
-                      <p className="text-muted-foreground">{opportunity.organization}</p>
-                    </CardHeader>
-
-                    <CardContent>
-                      <div className="space-y-4">
-                        <p className="text-sm line-clamp-3">{opportunity.description}</p>
-                        
-                        <div className="space-y-2">
-                          <h4 className="text-sm font-medium">Persyaratan:</h4>
-                          <ul className="text-xs text-muted-foreground space-y-1">
-                            {opportunity.requirements.slice(0, 3).map((req, index) => (
-                              <li key={index} className="flex items-start gap-2">
-                                <span className="w-1 h-1 bg-muted-foreground rounded-full mt-1.5 flex-shrink-0"></span>
-                                <span className="line-clamp-1">{req}</span>
-                              </li>
-                            ))}
-                            {opportunity.requirements.length > 3 && (
-                              <li className="text-accent">
-                                +{opportunity.requirements.length - 3} persyaratan lainnya
-                              </li>
-                            )}
-                          </ul>
-                        </div>
-
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <div className="flex items-center gap-1">
-                            <MapPin className="w-4 h-4" />
-                            <span>{opportunity.location}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Calendar className="w-4 h-4" />
-                            <span className={getDaysUntilDeadline(opportunity.deadline) <= 7 ? 'text-destructive font-medium' : ''}>
-                              {getDaysUntilDeadline(opportunity.deadline)} hari lagi
-                            </span>
-                          </div>
-                        </div>
-
-                        <Button asChild className="w-full bg-gradient-primary">
-                          <a href={opportunity.link} target="_blank" rel="noopener noreferrer">
-                            Apply Sekarang
-                            <ExternalLink className="w-4 h-4 ml-2" />
-                          </a>
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+            );
+          })}
+          
+          {/* Show upgrade prompt if user has reached opportunity limit */}
+          {subscriptionInfo && subscriptionInfo.subscription_status !== 'active' && filteredOpportunities.length > 0 && (() => {
+            const limits = getSubscriptionLimits(subscriptionInfo.subscription_status, subscriptionInfo.subscription_type);
+            const accessedCount = Math.min(limits.maxOpportunities, filteredOpportunities.length);
+            return accessedCount >= limits.maxOpportunities && (
+              <div className="md:col-span-2 lg:col-span-3">
+                <UpgradePrompt 
+                  type="opportunities" 
+                  currentCount={accessedCount} 
+                  limit={limits.maxOpportunities} 
+                />
               </div>
-            </TabsContent>
-          ))}
-        </Tabs>
+            );
+          })()}
+        </div>
       </div>
     </div>
   );
