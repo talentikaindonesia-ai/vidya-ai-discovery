@@ -5,51 +5,78 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// 20+ trusted Indonesian and international sources for opportunities
+// 50+ trusted Indonesian and international sources for opportunities
 const SOURCES = {
   SCHOLARSHIP: [
-    // Indonesian Government
+    // Indonesian Government Scholarships
     'https://knb.kemdiktisaintek.go.id',
     'https://www.lpdp.kemenkeu.go.id',
     'https://www.beasiswa.kemdikbud.go.id',
     'https://apply.darmasiswa.kemdikbud.go.id',
     'https://darmasiswa.kemdikbud.go.id',
-    // International Education
+    'https://international.undana.ac.id', // Indonesian Global Internship Program
+    
+    // International Scholarship Platforms
+    'https://scholarshipportal.eu', // European scholarships
+    'https://www.daad.de', // German scholarships
+    'https://www.chevening.org', // UK government scholarships
+    'https://www.fulbright.org', // US scholarships
+    'https://scholarshipscorner.website', // Global scholarships
     'https://edupass.org',
     'https://bigfuture.collegeboard.org',
-    'https://fulbrightscholars.org',
-    'https://www.daad.de',
-    // Study Abroad & Opportunities
-    'https://international.undana.ac.id',
-    'https://edwardconsulting.org',
-    'https://indooceanproject.org',
-    'https://ceastudyabroad.com'
+    
+    // Specialized Programs
+    'https://edwardconsulting.org', // Opportunity Desk
+    'https://indooceanproject.org', // Local Indonesia scholarships
+    'https://ceastudyabroad.com', // CEA CAPA Study Abroad
+    'https://baliinternships.com' // Bali programs
   ],
+  
   JOB: [
-    // Indonesian Job Portals
+    // Indonesian Job & Internship Portals
     'https://www.jobstreet.co.id',
     'https://glints.com/id',
     'https://karir.com',
     'https://www.urbanhire.com',
     'https://jobs.id',
-    // International Internships
-    'https://baliinternships.com',
-    'https://www.aiesec.org',
+    
+    // International Internship & Work Platforms
+    'https://www.linkedin.com/jobs/internships', // Global internships
+    'https://www.internships.com', // Global internship platform
+    'https://www.impactpool.org', // UN, NGO opportunities
+    'https://www.glassdoor.com/Internships', // Internships with reviews
+    'https://www.aiesec.org', // Global exchange & internships
+    'https://baliinternships.com', // Bali internships & volunteer
     'https://careers.goto.com',
     'https://www.techinasia.com/jobs'
   ],
+  
   COMPETITION: [
-    // Competition Platforms
+    // Global Competition Platforms
+    'https://youthop.com', // Youth opportunities & competitions
+    'https://competitions.archi', // Architecture & design competitions
+    'https://devpost.com', // Hackathons & tech competitions
+    'https://www.kaggle.com', // Data science competitions
+    
+    // Indonesian Competition Platforms
     'https://lomba.co',
     'https://eventori.id',
     'https://kompetisi.id',
+    'https://osn.kemdikbud.go.id',
+    
+    // STEM & Academic Competitions
     'https://www.globalschoolnet.org',
-    // STEM & Academic
-    'https://www.globalchangemakers.net',
-    'https://osn.kemdikbud.go.id'
+    'https://www.globalchangemakers.net'
   ],
+  
   CONFERENCE: [
-    // Academic & Professional Events
+    // Global Conference Platforms
+    'https://conferencealerts.com', // Global conferences across fields
+    'https://allconferences.com', // International conference database
+    'https://ieeexplore.ieee.org/conferences', // Technology & engineering
+    'https://www.nature.com/events', // Science & research conferences
+    
+    // Local Event Platforms
     'https://eventori.id',
     'https://www.globalchangemakers.net',
     'https://international.undana.ac.id'
