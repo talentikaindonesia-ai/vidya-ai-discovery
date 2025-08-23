@@ -5,13 +5,16 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Play, Clock, Award, BookOpen, Code, FileText, Users, ArrowLeft, Crown, Lock, GraduationCap, Zap, Brain, TrendingUp } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Play, Clock, Award, BookOpen, Code, FileText, Users, ArrowLeft, Crown, Lock, GraduationCap, Zap, Brain, TrendingUp, Search, Star, Filter } from "lucide-react";
 import { toast } from "sonner";
 import { getSubscriptionLimits, checkSubscriptionAccess, getUserSubscriptionInfo } from "@/lib/subscription";
 import { PersonalizedLearningHub } from "@/components/dashboard/PersonalizedLearningHub";
 import { MentorsSection } from "@/components/dashboard/MentorsSection";
 import { UpgradePrompt } from "@/components/UpgradePrompt";
 import { LearningProgressTracker } from "@/components/dashboard/LearningProgressTracker";
+import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 
 interface Course {
   id: string;
@@ -44,6 +47,8 @@ const LearningHub = () => {
   const [user, setUser] = useState<any>(null);
   const [userAssessment, setUserAssessment] = useState<any>(null);
   const [userInterests, setUserInterests] = useState<string[]>([]);
+  const [activeSection, setActiveSection] = useState("courses");
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     checkAuthAndLoadData();
@@ -224,6 +229,11 @@ const LearningHub = () => {
     }
   };
 
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    window.location.href = '/auth';
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -327,279 +337,349 @@ const LearningHub = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Back to Dashboard Button */}
-      <div className="container mx-auto px-4 pt-6">
-        <Button 
-          variant="outline" 
-          onClick={() => window.location.href = '/dashboard'}
-          className="mb-4"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Kembali ke Dashboard
-        </Button>
-      </div>
-
-      {/* Hero Section */}
-      <div className="relative bg-gradient-primary overflow-hidden">
-        <div className="absolute inset-0 bg-black/20"></div>
-        <div className="relative z-10 container mx-auto px-4 py-24">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="text-center lg:text-left">
-              <h1 className="text-4xl lg:text-6xl font-bold text-white mb-6 leading-tight">
-                Learning
-                <span className="block text-gradient-gold">Hub</span>
-              </h1>
-              <p className="text-xl text-white/90 mb-8 max-w-2xl">
-                Temukan berbagai kursus berkualitas untuk mengembangkan keahlian dan membangun masa depan yang lebih cerah
-              </p>
-              <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
-                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
-                  <Award className="w-8 h-8 text-accent mx-auto mb-2" />
-                  <div className="text-white font-semibold">Sertifikat</div>
-                  <div className="text-white/70 text-sm">Resmi</div>
-                </div>
-                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
-                  <Users className="w-8 h-8 text-accent mx-auto mb-2" />
-                  <div className="text-white font-semibold">Komunitas</div>
-                  <div className="text-white/70 text-sm">Aktif</div>
-                </div>
-                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
-                  <BookOpen className="w-8 h-8 text-accent mx-auto mb-2" />
-                  <div className="text-white font-semibold">Materi</div>
-                  <div className="text-white/70 text-sm">Terkini</div>
+    <SidebarProvider>
+      <div className="flex min-h-screen bg-background">
+        <DashboardSidebar
+          activeSection={activeSection}
+          setActiveSection={setActiveSection}
+          onSignOut={handleSignOut}
+        />
+        
+        <main className="flex-1 overflow-hidden">
+          <div className="p-6">
+            {/* Header */}
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-2">
+                <h1 className="text-3xl font-bold">Kursus Pembelajaran</h1>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">Muhammad Dafa</span>
+                  <Badge variant="outline" className="text-xs">Individual</Badge>
                 </div>
               </div>
-            </div>
-            <div className="hidden lg:block">
-              <img 
-                src="/src/assets/learning-hero.jpg" 
-                alt="Learning Hub" 
-                className="rounded-2xl shadow-2xl transform rotate-3 hover:rotate-0 transition-transform duration-500"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="container mx-auto px-4 py-16">
-        {/* Subscription Status Banner */}
-        {subscriptionInfo && subscriptionInfo.subscription_status !== 'active' && (
-          <div className="mb-8">
-            <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-secondary/5">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Crown className="w-6 h-6 text-primary" />
-                    <div>
-                      <h3 className="font-semibold">Akun Basic - Akses Terbatas</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Anda dapat mengakses {getSubscriptionLimits(subscriptionInfo.subscription_status, subscriptionInfo.subscription_type).maxCourses} kursus gratis. 
-                        Upgrade ke Premium untuk akses tidak terbatas!
-                      </p>
-                    </div>
-                  </div>
-                  <Button onClick={() => window.location.href = '/dashboard'} className="gap-2">
-                    <Crown className="w-4 h-4" />
-                    Upgrade
-                  </Button>
+              
+              {/* Search Bar */}
+              <div className="flex items-center gap-4 mb-6">
+                <div className="flex-1 relative max-w-md">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                  <Input
+                    placeholder="Cari kursus..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
+                <Button variant="outline" size="icon">
+                  <Filter className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
 
-        <Tabs defaultValue="adaptive" className="w-full">
-          <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-4">
-            <TabsTrigger value="adaptive" className="flex items-center gap-2">
-              <Zap className="w-4 h-4" />
-              Personal
-            </TabsTrigger>
-            <TabsTrigger value="progress" className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4" />
-              Progress
-            </TabsTrigger>
-            <TabsTrigger value="courses" className="flex items-center gap-2">
-              <BookOpen className="w-4 h-4" />
-              Kursus
-            </TabsTrigger>
-            <TabsTrigger value="mentors" className="flex items-center gap-2">
-              <GraduationCap className="w-4 h-4" />
-              Mentor
-            </TabsTrigger>
-          </TabsList>
+            {/* Tabs */}
+            <Tabs defaultValue="personal" className="w-full">
+              <TabsList className="mb-6">
+                <TabsTrigger value="personal">Rekomendasi Personal</TabsTrigger>
+                <TabsTrigger value="all">Semua Kursus</TabsTrigger>
+                <TabsTrigger value="my">Kursus Saya</TabsTrigger>
+                <TabsTrigger value="finished">Selesai</TabsTrigger>
+              </TabsList>
 
-            <TabsContent value="adaptive" className="mt-8">
-              <div className="space-y-6">
-                <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-secondary/5">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Brain className="w-6 h-6" />
-                      Learning Hub Personal untuk Anda
-                    </CardTitle>
-                    <CardDescription>
-                      Konten pembelajaran yang dipersonalisasi berdasarkan hasil assessment dan minat Anda
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <PersonalizedLearningHub 
-                      user={user}
-                      userAssessment={userAssessment}
-                      userInterests={userInterests}
-                      subscriptionInfo={subscriptionInfo}
-                    />
+              <TabsContent value="personal">
+                {/* Rekomendasi Personal Section */}
+                <Card className="mb-6 border-blue-200">
+                  <CardContent className="p-6">
+                    <div className="flex items-start gap-4 mb-4">
+                      <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                        <Brain className="w-5 h-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-lg">Rekomendasi Personal Anda</h3>
+                        <p className="text-muted-foreground text-sm mb-3">
+                          Berdasarkan hasil assessment dan minat Anda:
+                        </p>
+                        
+                        {/* Assessment Tags */}
+                        {userAssessment && (
+                          <div className="flex flex-wrap gap-2 mb-4">
+                            <Badge variant="outline" className="bg-blue-50 border-blue-200">
+                              <span className="text-xs mr-1">💡</span>
+                              Tipe: {userAssessment.personality_type || 'social'}
+                            </Badge>
+                            <Badge variant="outline" className="bg-blue-50 border-blue-200">
+                              Gaya Belajar: {userAssessment.learning_style || 'social'}
+                            </Badge>
+                            <Badge variant="outline" className="bg-blue-50 border-blue-200">
+                              realistic
+                            </Badge>
+                            <Badge variant="outline" className="bg-blue-50 border-blue-200">
+                              investigative
+                            </Badge>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
-              </div>
-            </TabsContent>
 
-            <TabsContent value="progress" className="mt-8">
-              <div className="space-y-6">
-                <Card className="border-secondary/20 bg-gradient-to-r from-secondary/5 to-accent/5">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <TrendingUp className="w-6 h-6" />
-                      Progress & Analytics Pembelajaran
-                    </CardTitle>
-                    <CardDescription>
-                      Pantau kemajuan belajar, waktu yang dihabiskan, dan pencapaian Anda
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <LearningProgressTracker user={user} />
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="courses" className="mt-8">
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {courses.map((course, index) => {
-            const canAccess = canAccessCourse(index);
-            const isLocked = !canAccess;
-            const progress = getCourseProgress(course.id);
-            
-            return (
-              <Card 
-                key={course.id} 
-                className={`shadow-card hover:shadow-floating transition-all cursor-pointer group ${isLocked ? 'opacity-75' : ''}`}
-                onClick={() => handleCourseClick(course, index)}
-              >
-                {course.thumbnail_url && (
-                  <div className="aspect-video bg-muted rounded-t-lg overflow-hidden relative">
-                    <img 
-                      src={course.thumbnail_url} 
-                      alt={course.title}
-                      className={`w-full h-full object-cover transition-transform ${isLocked ? 'grayscale' : 'group-hover:scale-105'}`}
-                    />
-                    <div className="absolute top-3 right-3 flex gap-2">
-                      {isLocked && (
-                        <Badge variant="secondary" className="bg-black/70 text-white border-0">
-                          <Crown className="w-3 h-3 mr-1" />
-                          Premium
-                        </Badge>
-                      )}
-                      <Badge className={getDifficultyColor(course.difficulty_level)}>
-                        {getDifficultyLabel(course.difficulty_level)}
-                      </Badge>
-                    </div>
-                    {isLocked && (
-                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                        <Lock className="w-8 h-8 text-white" />
-                      </div>
-                    )}
+                {/* Course Grid for Personal Recommendations */}
+                <div className="space-y-4 mb-6">
+                  <h3 className="font-semibold flex items-center gap-2">
+                    <BookOpen className="w-5 h-5" />
+                    Kursus yang Direkomendasikan
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {courses.slice(0, 3).map((course, index) => (
+                      <Card 
+                        key={course.id} 
+                        className="overflow-hidden hover:shadow-lg transition-all cursor-pointer bg-gradient-to-br from-blue-500 to-blue-600 text-white"
+                        onClick={() => handleCourseClick(course, index)}
+                      >
+                        <CardContent className="p-0">
+                          <div className="relative p-6">
+                            <Badge className="absolute top-4 left-4 bg-white/20 text-white border-white/30">
+                              Rekomendasi
+                            </Badge>
+                            
+                            <div className="flex items-center justify-center w-16 h-16 bg-white/10 rounded-lg mb-4 mt-8">
+                              <BookOpen className="w-8 h-8" />
+                            </div>
+                            
+                            <h4 className="font-semibold text-lg mb-2 line-clamp-2">
+                              {course.title}
+                            </h4>
+                            <p className="text-white/80 text-sm mb-4 line-clamp-2">
+                              {course.description}
+                            </p>
+                            
+                            <div className="flex items-center justify-between text-sm mb-4">
+                              <div className="flex items-center gap-1">
+                                <Clock className="w-4 h-4" />
+                                <span>{course.duration_hours}h</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Star className="w-4 h-4 fill-current" />
+                                <span>4.8</span>
+                              </div>
+                            </div>
+                            
+                            <Button 
+                              className="w-full bg-white text-blue-600 hover:bg-white/90"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                startLearning(course.id, index);
+                              }}
+                            >
+                              <Play className="w-4 h-4 mr-2" />
+                              Mulai Kursus
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
                   </div>
-                )}
-                
-                <CardHeader>
-                  <div className="flex items-start justify-between mb-2">
-                    <CardTitle className="line-clamp-2 group-hover:text-primary transition-colors">
-                      {course.title}
-                    </CardTitle>
-                  </div>
-                  <p className="text-muted-foreground line-clamp-3">
-                    {course.description}
-                  </p>
-                </CardHeader>
+                </div>
+              </TabsContent>
 
-                <CardContent>
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-1 text-muted-foreground">
-                      <Clock className="w-4 h-4" />
-                      <span>{course.duration_hours} jam</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-muted-foreground">
-                      <BookOpen className="w-4 h-4" />
-                      <span>{course.lessons?.length || 0} materi</span>
-                    </div>
-                  </div>
+              <TabsContent value="all">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {courses.filter(course => 
+                    course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    course.description.toLowerCase().includes(searchTerm.toLowerCase())
+                  ).map((course, index) => {
+                    const canAccess = canAccessCourse(index);
+                    const isLocked = !canAccess;
+                    const progress = getCourseProgress(course.id);
+                    
+                    return (
+                      <Card 
+                        key={course.id} 
+                        className={`shadow-card hover:shadow-floating transition-all cursor-pointer group ${isLocked ? 'opacity-75' : ''}`}
+                        onClick={() => handleCourseClick(course, index)}
+                      >
+                        {course.thumbnail_url && (
+                          <div className="aspect-video bg-muted rounded-t-lg overflow-hidden relative">
+                            <img 
+                              src={course.thumbnail_url} 
+                              alt={course.title}
+                              className={`w-full h-full object-cover transition-transform ${isLocked ? 'grayscale' : 'group-hover:scale-105'}`}
+                            />
+                            <div className="absolute top-3 right-3 flex gap-2">
+                              {isLocked && (
+                                <Badge variant="secondary" className="bg-black/70 text-white border-0">
+                                  <Crown className="w-3 h-3 mr-1" />
+                                  Premium
+                                </Badge>
+                              )}
+                              <Badge className={getDifficultyColor(course.difficulty_level)}>
+                                {getDifficultyLabel(course.difficulty_level)}
+                              </Badge>
+                            </div>
+                            {isLocked && (
+                              <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                                <Lock className="w-8 h-8 text-white" />
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        
+                        <CardHeader>
+                          <div className="flex items-start justify-between mb-2">
+                            <CardTitle className="line-clamp-2 group-hover:text-primary transition-colors">
+                              {course.title}
+                            </CardTitle>
+                          </div>
+                          <p className="text-muted-foreground line-clamp-3">
+                            {course.description}
+                          </p>
+                        </CardHeader>
 
-                  {progress > 0 && !isLocked && (
-                    <div className="mb-4">
-                      <div className="flex items-center justify-between text-sm mb-2">
-                        <span>Progress</span>
-                        <span>{progress}%</span>
-                      </div>
-                      <Progress value={progress} />
-                    </div>
-                  )}
+                        <CardContent>
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-1 text-muted-foreground">
+                              <Clock className="w-4 h-4" />
+                              <span>{course.duration_hours} jam</span>
+                            </div>
+                            <div className="flex items-center gap-1 text-muted-foreground">
+                              <BookOpen className="w-4 h-4" />
+                              <span>{course.lessons?.length || 0} materi</span>
+                            </div>
+                          </div>
 
-                  <Button 
-                    className="w-full bg-primary text-primary-foreground group-hover:shadow-floating"
-                    disabled={isLocked}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      startLearning(course.id, index);
-                    }}
-                  >
-                    {isLocked ? (
-                      <>
-                        <Lock className="w-4 h-4 mr-2" />
-                        Upgrade untuk Akses
-                      </>
-                    ) : (
-                      <>
-                        {progress > 0 ? 'Lanjutkan' : 'Mulai Belajar'}
-                        <Play className="w-4 h-4 ml-2" />
-                      </>
-                    )}
-                  </Button>
-                </CardContent>
-              </Card>
-            );
-          })}
-          
-          {/* Show upgrade prompt if user has reached course limit */}
-          {subscriptionInfo && subscriptionInfo.subscription_status !== 'active' && courses.length > 0 && (() => {
-            const limits = getSubscriptionLimits(subscriptionInfo.subscription_status, subscriptionInfo.subscription_type);
-            const accessedCount = Math.min(limits.maxCourses, courses.length);
-            return accessedCount >= limits.maxCourses && (
-              <div className="md:col-span-2 lg:col-span-3">
-                <UpgradePrompt 
-                  type="courses" 
-                  currentCount={accessedCount} 
-                  limit={limits.maxCourses} 
-                />
-              </div>
-            );
-          })()}
-            </div>
-          </TabsContent>
+                          {progress > 0 && !isLocked && (
+                            <div className="mb-4">
+                              <div className="flex items-center justify-between text-sm mb-2">
+                                <span>Progress</span>
+                                <span>{progress}%</span>
+                              </div>
+                              <Progress value={progress} />
+                            </div>
+                          )}
 
-          <TabsContent value="mentors" className="mt-8">
-            <div className="space-y-6">
-              <div className="text-center">
-                <h2 className="text-2xl font-bold mb-2">Mentor & Expert</h2>
-                <p className="text-muted-foreground max-w-2xl mx-auto">
-                  Terhubung dengan mentor profesional untuk mendapatkan bimbingan personal dalam pengembangan karir dan keahlian Anda
-                </p>
-              </div>
-              <MentorsSection />
-            </div>
-          </TabsContent>
-        </Tabs>
+                          <Button 
+                            className="w-full bg-primary text-primary-foreground group-hover:shadow-floating"
+                            disabled={isLocked}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              startLearning(course.id, index);
+                            }}
+                          >
+                            {isLocked ? (
+                              <>
+                                <Lock className="w-4 h-4 mr-2" />
+                                Upgrade untuk Akses
+                              </>
+                            ) : (
+                              <>
+                                {progress > 0 ? 'Lanjutkan' : 'Mulai Belajar'}
+                                <Play className="w-4 h-4 ml-2" />
+                              </>
+                            )}
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </TabsContent>
+
+              <TabsContent value="my">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {courses.filter(course => {
+                    const progress = getCourseProgress(course.id);
+                    return progress > 0 && progress < 100;
+                  }).map((course, index) => {
+                    const progress = getCourseProgress(course.id);
+                    
+                    return (
+                      <Card 
+                        key={course.id} 
+                        className="shadow-card hover:shadow-floating transition-all cursor-pointer group"
+                        onClick={() => handleCourseClick(course, index)}
+                      >
+                        <CardHeader>
+                          <CardTitle className="line-clamp-2 group-hover:text-primary transition-colors">
+                            {course.title}
+                          </CardTitle>
+                          <p className="text-muted-foreground line-clamp-3">
+                            {course.description}
+                          </p>
+                        </CardHeader>
+
+                        <CardContent>
+                          <div className="mb-4">
+                            <div className="flex items-center justify-between text-sm mb-2">
+                              <span>Progress</span>
+                              <span>{progress}%</span>
+                            </div>
+                            <Progress value={progress} />
+                          </div>
+
+                          <Button 
+                            className="w-full"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              startLearning(course.id, index);
+                            }}
+                          >
+                            <Play className="w-4 h-4 mr-2" />
+                            Lanjutkan Belajar
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </TabsContent>
+
+              <TabsContent value="finished">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {courses.filter(course => {
+                    const progress = getCourseProgress(course.id);
+                    return progress === 100;
+                  }).map((course, index) => {
+                    return (
+                      <Card 
+                        key={course.id} 
+                        className="shadow-card hover:shadow-floating transition-all cursor-pointer group border-green-200"
+                        onClick={() => handleCourseClick(course, index)}
+                      >
+                        <CardHeader>
+                          <div className="flex items-center justify-between mb-2">
+                            <CardTitle className="line-clamp-2 group-hover:text-primary transition-colors">
+                              {course.title}
+                            </CardTitle>
+                            <Badge className="bg-green-100 text-green-800">
+                              <Award className="w-3 h-3 mr-1" />
+                              Selesai
+                            </Badge>
+                          </div>
+                          <p className="text-muted-foreground line-clamp-3">
+                            {course.description}
+                          </p>
+                        </CardHeader>
+
+                        <CardContent>
+                          <Button 
+                            className="w-full"
+                            variant="outline"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCourseClick(course, index);
+                            }}
+                          >
+                            <Award className="w-4 h-4 mr-2" />
+                            Lihat Sertifikat
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </TabsContent>
+            </Tabs>
+          </div>
+        </main>
       </div>
-    </div>
+    </SidebarProvider>
   );
 };
 
