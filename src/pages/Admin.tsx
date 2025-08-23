@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { LearningContentManager } from "@/components/dashboard/LearningContentManager";
 import { ManualOpportunityManager } from "@/components/dashboard/ManualOpportunityManager";
+import { LearningPathBuilder } from "@/components/admin/LearningPathBuilder";
 
 // Web Scraping Admin Component
 const WebScrapingAdmin = () => {
@@ -317,9 +318,10 @@ const Admin = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="courses">Kursus</TabsTrigger>
             <TabsTrigger value="learning">Learning Hub</TabsTrigger>
+            <TabsTrigger value="paths">Learning Paths</TabsTrigger>
             <TabsTrigger value="challenges">Tantangan</TabsTrigger>
             <TabsTrigger value="opportunities">Peluang</TabsTrigger>
             <TabsTrigger value="scraping">Web Scraping</TabsTrigger>
@@ -466,6 +468,10 @@ const Admin = () => {
 
           <TabsContent value="learning" className="mt-6">
             <LearningContentManager />
+          </TabsContent>
+
+          <TabsContent value="paths" className="mt-6">
+            <LearningPathBuilder />
           </TabsContent>
 
           <TabsContent value="challenges" className="mt-6">

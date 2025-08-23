@@ -5,12 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Play, Clock, Award, BookOpen, Code, FileText, Users, ArrowLeft, Crown, Lock, GraduationCap, Zap, Brain } from "lucide-react";
+import { Play, Clock, Award, BookOpen, Code, FileText, Users, ArrowLeft, Crown, Lock, GraduationCap, Zap, Brain, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 import { getSubscriptionLimits, checkSubscriptionAccess, getUserSubscriptionInfo } from "@/lib/subscription";
-import { UpgradePrompt } from "@/components/UpgradePrompt";
+import { PersonalizedLearningHub } from "@/components/dashboard/PersonalizedLearningHub";
 import { MentorsSection } from "@/components/dashboard/MentorsSection";
-import { AdaptiveLearningFeed } from "@/components/dashboard/AdaptiveLearningFeed";
+import { UpgradePrompt } from "@/components/UpgradePrompt";
+import { LearningProgressTracker } from "@/components/dashboard/LearningProgressTracker";
 
 interface Course {
   id: string;
@@ -409,10 +410,14 @@ const LearningHub = () => {
         )}
 
         <Tabs defaultValue="adaptive" className="w-full">
-          <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-3">
+          <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-4">
             <TabsTrigger value="adaptive" className="flex items-center gap-2">
               <Zap className="w-4 h-4" />
-              Adaptive Learning
+              Personal
+            </TabsTrigger>
+            <TabsTrigger value="progress" className="flex items-center gap-2">
+              <TrendingUp className="w-4 h-4" />
+              Progress
             </TabsTrigger>
             <TabsTrigger value="courses" className="flex items-center gap-2">
               <BookOpen className="w-4 h-4" />
@@ -424,30 +429,50 @@ const LearningHub = () => {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="adaptive" className="mt-8">
-            <div className="space-y-6">
-              <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-secondary/5">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Brain className="w-6 h-6" />
-                    Learning Hub Personal untuk Anda
-                  </CardTitle>
-                  <CardDescription>
-                    Konten pembelajaran yang dipersonalisasi berdasarkan hasil assessment dan minat Anda
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <AdaptiveLearningFeed 
-                    userAssessment={userAssessment}
-                    userInterests={userInterests}
-                    subscriptionInfo={subscriptionInfo}
-                  />
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
+            <TabsContent value="adaptive" className="mt-8">
+              <div className="space-y-6">
+                <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-secondary/5">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Brain className="w-6 h-6" />
+                      Learning Hub Personal untuk Anda
+                    </CardTitle>
+                    <CardDescription>
+                      Konten pembelajaran yang dipersonalisasi berdasarkan hasil assessment dan minat Anda
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <PersonalizedLearningHub 
+                      user={user}
+                      userAssessment={userAssessment}
+                      userInterests={userInterests}
+                      subscriptionInfo={subscriptionInfo}
+                    />
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
 
-          <TabsContent value="courses" className="mt-8">
+            <TabsContent value="progress" className="mt-8">
+              <div className="space-y-6">
+                <Card className="border-secondary/20 bg-gradient-to-r from-secondary/5 to-accent/5">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <TrendingUp className="w-6 h-6" />
+                      Progress & Analytics Pembelajaran
+                    </CardTitle>
+                    <CardDescription>
+                      Pantau kemajuan belajar, waktu yang dihabiskan, dan pencapaian Anda
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <LearningProgressTracker user={user} />
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="courses" className="mt-8">
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {courses.map((course, index) => {
             const canAccess = canAccessCourse(index);
