@@ -19,8 +19,12 @@ const Header = () => {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-soft">
-              <Brain className="w-6 h-6 text-white" />
+            <div className="w-10 h-10 rounded-xl overflow-hidden shadow-soft">
+              <img 
+                src="/lovable-uploads/ce4aabf2-d425-472e-ada0-d085a2b285b9.png" 
+                alt="Talentika Logo" 
+                className="w-full h-full object-cover"
+              />
             </div>
             <div>
               <h1 className="text-xl font-bold text-foreground">Talentika</h1>
