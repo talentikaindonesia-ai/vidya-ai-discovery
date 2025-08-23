@@ -60,6 +60,15 @@ All colors MUST be HSL.
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
+    /* Gamification Colors */
+    --xp-bar: 43 89% 65%;
+    --level-badge: 217 91% 55%;
+    --quest-easy: 142 76% 36%;
+    --quest-medium: 43 89% 50%;
+    --quest-hard: 0 84% 60%;
+    --streak-fire: 14 87% 55%;
+    --achievement-gold: 43 74% 49%;
+
     --radius: 0.5rem;
 
     --sidebar-background: 0 0% 98%;
@@ -125,5 +134,77 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  /* Gamification animations and effects */
+  .hover-scale {
+    @apply transition-all duration-200 hover:scale-105;
+  }
+  
+  .pulse-glow {
+    @apply animate-pulse;
+    box-shadow: 0 0 20px hsl(var(--primary) / 0.3);
+  }
+  
+  .xp-gain {
+    @apply animate-bounce text-primary font-bold;
+  }
+  
+  .level-up {
+    @apply animate-pulse bg-gradient-to-r from-primary to-secondary text-primary-foreground;
+  }
+  
+  .streak-fire {
+    @apply text-orange-500;
+    filter: drop-shadow(0 0 8px hsl(14 87% 55% / 0.6));
+  }
+  
+  .quest-glow {
+    @apply shadow-lg;
+    box-shadow: 0 4px 20px hsl(var(--secondary) / 0.2);
+  }
+  
+  .achievement-shine {
+    @apply relative overflow-hidden;
+  }
+  
+  .achievement-shine::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      hsl(var(--primary) / 0.2),
+      transparent
+    );
+    animation: shine 2s infinite;
+  }
+  
+  @keyframes shine {
+    0% {
+      left: -100%;
+    }
+    100% {
+      left: 100%;
+    }
+  }
+  
+  /* Leaderboard effects */
+  .rank-gold {
+    @apply bg-gradient-to-br from-yellow-400 to-yellow-600 text-yellow-900;
+  }
+  
+  .rank-silver {
+    @apply bg-gradient-to-br from-gray-300 to-gray-500 text-gray-900;
+  }
+  
+  .rank-bronze {
+    @apply bg-gradient-to-br from-orange-400 to-orange-600 text-orange-900;
   }
 }

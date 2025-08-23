@@ -185,6 +185,24 @@ const Dashboard = () => {
         return <ProgressTracker />;
       case "achievements":
         return <Achievements />;
+      case "gamified":
+        return (
+          <div className="min-h-screen">
+            {/* Import and use GamifiedDashboard here */}
+            <div className="text-center py-12">
+              <h2 className="text-3xl font-bold mb-4">🎮 Gamified Dashboard</h2>
+              <p className="text-muted-foreground mb-6">
+                Experience learning like never before with XP, levels, quests, and rewards!
+              </p>
+              <button 
+                onClick={() => navigate('/dashboard-gamified')}
+                className="px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all hover-scale"
+              >
+                Enter Gamified Mode
+              </button>
+            </div>
+          </div>
+        );
       case "community":
         window.location.href = '/community';
         return null;
