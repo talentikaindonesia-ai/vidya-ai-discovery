@@ -28,7 +28,7 @@ const Header = () => {
             </div>
             <div>
               <h1 className="text-xl font-bold text-foreground">Talentika</h1>
-              <p className="text-xs text-muted-foreground">Minat & Bakat Explorer</p>
+              <p className="text-xs text-muted-foreground">Discover your full potential</p>
             </div>
           </div>
 
