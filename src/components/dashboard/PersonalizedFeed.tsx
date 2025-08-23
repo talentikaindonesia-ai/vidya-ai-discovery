@@ -3,9 +3,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Calendar, MapPin, Star, TrendingUp, Filter } from "lucide-react";
+import { ExternalLink, Calendar, MapPin, Star, TrendingUp, Filter, Clock, Play, Pause, CheckCircle2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface PersonalizedContent {
   id: string;
@@ -21,6 +22,8 @@ interface PersonalizedContent {
   created_at: string;
   relevance_score?: number;
   is_recommended?: boolean;
+  timeline_status?: 'past' | 'ongoing' | 'future';
+  days_until_deadline?: number;
 }
 
 interface PersonalizedFeedProps {
@@ -35,10 +38,16 @@ export const PersonalizedFeed = ({ userInterests = [], assessmentData, limit = 2
   const [filter, setFilter] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState<string>("relevance");
+  const [timelineFilter, setTimelineFilter] = useState<string>("all");
+  const [categorizedContent, setCategorizedContent] = useState({
+    ongoing: [] as PersonalizedContent[],
+    future: [] as PersonalizedContent[],
+    past: [] as PersonalizedContent[]
+  });
 
   useEffect(() => {
     loadPersonalizedContent();
-  }, [userInterests, assessmentData, filter, sortBy]);
+  }, [userInterests, assessmentData, filter, sortBy, timelineFilter]);
 
   const loadPersonalizedContent = async () => {
     try {
@@ -131,10 +140,40 @@ export const PersonalizedFeed = ({ userInterests = [], assessmentData, limit = 2
           }
         }
 
+        // Determine timeline status
+        const now = new Date();
+        const createdDate = new Date(item.created_at);
+        const deadlineDate = item.deadline ? new Date(item.deadline) : null;
+        
+        let timelineStatus: 'past' | 'ongoing' | 'future' = 'ongoing';
+        let daysUntilDeadline = 0;
+        
+        if (deadlineDate) {
+          daysUntilDeadline = Math.floor((deadlineDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+          
+          if (daysUntilDeadline < 0) {
+            timelineStatus = 'past';
+          } else if (daysUntilDeadline <= 30) {
+            timelineStatus = 'ongoing';
+          } else {
+            timelineStatus = 'future';
+          }
+        } else {
+          // If no deadline, assume it's ongoing if created within last 30 days
+          const daysSinceCreated = Math.floor((now.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
+          if (daysSinceCreated > 30) {
+            timelineStatus = 'past';
+          } else {
+            timelineStatus = 'ongoing';
+          }
+        }
+
         return {
           ...item,
           relevance_score: relevanceScore,
-          is_recommended: isRecommended
+          is_recommended: isRecommended,
+          timeline_status: timelineStatus,
+          days_until_deadline: daysUntilDeadline
         };
       });
 
@@ -163,6 +202,14 @@ export const PersonalizedFeed = ({ userInterests = [], assessmentData, limit = 2
       });
 
       setContent(sortedContent);
+      
+      // Categorize content by timeline
+      const categorized = {
+        ongoing: sortedContent.filter(item => item.timeline_status === 'ongoing'),
+        future: sortedContent.filter(item => item.timeline_status === 'future'),
+        past: sortedContent.filter(item => item.timeline_status === 'past')
+      };
+      setCategorizedContent(categorized);
     } catch (error) {
       console.error('Error loading personalized content:', error);
     } finally {
@@ -170,24 +217,57 @@ export const PersonalizedFeed = ({ userInterests = [], assessmentData, limit = 2
     }
   };
 
-  const filteredContent = content.filter(item =>
-    searchTerm === "" || 
-    item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const filteredContent = content.filter(item => {
+    const matchesSearch = searchTerm === "" || 
+      item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+    
+    const matchesTimeline = timelineFilter === "all" || item.timeline_status === timelineFilter;
+    
+    return matchesSearch && matchesTimeline;
+  });
 
-  const getDaysUntilDeadline = (deadline: string) => {
-    const days = Math.floor((new Date(deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-    return days;
+  const getTimelineIcon = (status: string) => {
+    switch (status) {
+      case 'ongoing':
+        return <Play className="w-4 h-4" />;
+      case 'future':
+        return <Clock className="w-4 h-4" />;
+      case 'past':
+        return <CheckCircle2 className="w-4 h-4" />;
+      default:
+        return <Clock className="w-4 h-4" />;
+    }
   };
 
-  const getDeadlineColor = (deadline: string) => {
-    const days = getDaysUntilDeadline(deadline);
-    if (days < 0) return "text-destructive";
-    if (days <= 7) return "text-orange-500";
-    if (days <= 30) return "text-yellow-500";
-    return "text-muted-foreground";
+  const getTimelineColor = (status: string) => {
+    switch (status) {
+      case 'ongoing':
+        return "text-green-500";
+      case 'future':
+        return "text-blue-500";
+      case 'past':
+        return "text-gray-500";
+      default:
+        return "text-muted-foreground";
+    }
+  };
+
+  const getTimelineText = (item: PersonalizedContent) => {
+    switch (item.timeline_status) {
+      case 'ongoing':
+        if (item.days_until_deadline > 0) {
+          return `Berlangsung - ${item.days_until_deadline} hari lagi`;
+        }
+        return "Sedang Berlangsung";
+      case 'future':
+        return `Akan Dibuka - ${item.days_until_deadline} hari lagi`;
+      case 'past':
+        return "Sudah Berakhir";
+      default:
+        return "Status Tidak Diketahui";
+    }
   };
 
   if (loading) {
@@ -238,15 +318,112 @@ export const PersonalizedFeed = ({ userInterests = [], assessmentData, limit = 2
                   <SelectItem value="conference">Konferensi & Event</SelectItem>
                 </SelectContent>
               </Select>
+              <Select value={timelineFilter} onValueChange={setTimelineFilter}>
+                <SelectTrigger className="w-full md:w-48">
+                  <SelectValue placeholder="Semua Waktu" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua Waktu</SelectItem>
+                  <SelectItem value="ongoing">Sedang Berlangsung</SelectItem>
+                  <SelectItem value="future">Akan Datang</SelectItem>
+                  <SelectItem value="past">Sudah Berakhir</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Personalized Content Grid */}
+      {/* Timeline Overview Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <Card className="border-green-200 bg-green-50/50">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-green-700 text-sm font-medium">Sedang Berlangsung</p>
+                <p className="text-2xl font-bold text-green-800">{categorizedContent.ongoing.length}</p>
+              </div>
+              <Play className="w-8 h-8 text-green-600" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-blue-200 bg-blue-50/50">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-blue-700 text-sm font-medium">Akan Datang</p>
+                <p className="text-2xl font-bold text-blue-800">{categorizedContent.future.length}</p>
+              </div>
+              <Clock className="w-8 h-8 text-blue-600" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-gray-200 bg-gray-50/50">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-700 text-sm font-medium">Sudah Berakhir</p>
+                <p className="text-2xl font-bold text-gray-800">{categorizedContent.past.length}</p>
+              </div>
+              <CheckCircle2 className="w-8 h-8 text-gray-600" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Timeline Tabs */}
+      <Tabs defaultValue="all" className="w-full">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="all">Semua ({content.length})</TabsTrigger>
+          <TabsTrigger value="ongoing" className="text-green-700">
+            Berlangsung ({categorizedContent.ongoing.length})
+          </TabsTrigger>
+          <TabsTrigger value="future" className="text-blue-700">
+            Akan Datang ({categorizedContent.future.length})
+          </TabsTrigger>
+          <TabsTrigger value="past" className="text-gray-700">
+            Berakhir ({categorizedContent.past.length})
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="all" className="mt-6">
+
+        <OpportunityGrid opportunities={filteredContent} />
+        </TabsContent>
+
+        <TabsContent value="ongoing" className="mt-6">
+          <OpportunityGrid opportunities={categorizedContent.ongoing} />
+        </TabsContent>
+
+        <TabsContent value="future" className="mt-6">
+          <OpportunityGrid opportunities={categorizedContent.future} />
+        </TabsContent>
+
+        <TabsContent value="past" className="mt-6">
+          <OpportunityGrid opportunities={categorizedContent.past} />
+        </TabsContent>
+      </Tabs>
+
+      {filteredContent.length === 0 && (
+        <Card className="text-center py-8">
+          <CardContent>
+            <p className="text-muted-foreground">
+              Tidak ada peluang yang sesuai dengan filter saat ini.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+
+  // Opportunity Grid Component
+  function OpportunityGrid({ opportunities }: { opportunities: PersonalizedContent[] }) {
+    return (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {filteredContent.map((item) => (
-          <Card key={item.id} className={`hover:shadow-card transition-all duration-300 bg-card border-primary/10 ${item.is_recommended ? 'ring-2 ring-primary/20' : ''}`}>
+        {opportunities.map((item) => (
+          <Card key={item.id} className={`hover:shadow-card transition-all duration-300 bg-card border-primary/10 ${item.is_recommended ? 'ring-2 ring-primary/20' : ''} ${item.timeline_status === 'past' ? 'opacity-75' : ''}`}>
             <CardHeader>
               <div className="flex items-start justify-between">
                 <div className="flex gap-2 flex-wrap">
@@ -260,6 +437,17 @@ export const PersonalizedFeed = ({ userInterests = [], assessmentData, limit = 2
                       Relevan
                     </Badge>
                   )}
+                  {/* Timeline Status Badge */}
+                  <Badge 
+                    variant="outline" 
+                    className={`mb-2 ${item.timeline_status === 'ongoing' ? 'border-green-300 text-green-700' : 
+                      item.timeline_status === 'future' ? 'border-blue-300 text-blue-700' : 
+                      'border-gray-300 text-gray-700'}`}
+                  >
+                    {getTimelineIcon(item.timeline_status)}
+                    <span className="ml-1">{item.timeline_status === 'ongoing' ? 'Berlangsung' : 
+                      item.timeline_status === 'future' ? 'Akan Datang' : 'Berakhir'}</span>
+                  </Badge>
                 </div>
                 <Badge variant="outline" className="text-xs">
                   {item.source_website}
@@ -281,15 +469,11 @@ export const PersonalizedFeed = ({ userInterests = [], assessmentData, limit = 2
                   </div>
                 )}
                 
-                {item.deadline && (
-                  <div className={`flex items-center gap-2 text-sm ${getDeadlineColor(item.deadline)}`}>
-                    <Calendar className="w-4 h-4" />
-                    Deadline: {getDaysUntilDeadline(item.deadline) >= 0 ? 
-                      `${getDaysUntilDeadline(item.deadline)} hari lagi` : 
-                      'Sudah lewat'
-                    }
-                  </div>
-                )}
+                {/* Timeline Status Display */}
+                <div className={`flex items-center gap-2 text-sm ${getTimelineColor(item.timeline_status)}`}>
+                  {getTimelineIcon(item.timeline_status)}
+                  {getTimelineText(item)}
+                </div>
 
                 {item.tags.length > 0 && (
                   <div className="flex flex-wrap gap-1">
@@ -302,29 +486,23 @@ export const PersonalizedFeed = ({ userInterests = [], assessmentData, limit = 2
                 )}
 
                 <Button 
-                  variant={item.is_recommended ? "default" : "outline"}
+                  variant={item.is_recommended ? "default" : item.timeline_status === 'past' ? "secondary" : "outline"}
                   size="sm" 
                   className="w-full group"
                   onClick={() => window.open(item.url, '_blank')}
+                  disabled={item.timeline_status === 'past'}
                 >
-                  {item.is_recommended ? 'Lihat Rekomendasi' : 'Lihat Detail'}
-                  <ExternalLink className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                  {item.timeline_status === 'past' ? 'Sudah Berakhir' : 
+                   item.is_recommended ? 'Lihat Rekomendasi' : 'Lihat Detail'}
+                  {item.timeline_status !== 'past' && (
+                    <ExternalLink className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                  )}
                 </Button>
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
-
-      {filteredContent.length === 0 && (
-        <Card className="text-center py-8">
-          <CardContent>
-            <p className="text-muted-foreground">
-              Tidak ada peluang yang sesuai dengan filter saat ini.
-            </p>
-          </CardContent>
-        </Card>
-      )}
-    </div>
-  );
+    );
+  }
 };
