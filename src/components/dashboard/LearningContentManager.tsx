@@ -82,7 +82,9 @@ export const LearningContentManager = () => {
     external_source: "",
     is_featured: false,
     is_premium: false,
-    priority_score: 0
+    priority_score: 0,
+    jenjang: "SMP",
+    media_files: [] as string[]
   });
 
   const [newTag, setNewTag] = useState("");
@@ -200,7 +202,9 @@ export const LearningContentManager = () => {
       external_source: content.external_source || "",
       is_featured: content.is_featured,
       is_premium: content.is_premium,
-      priority_score: content.priority_score
+      priority_score: content.priority_score,
+      jenjang: "SMP",
+      media_files: []
     });
     setShowAddForm(true);
   };
@@ -222,7 +226,9 @@ export const LearningContentManager = () => {
       external_source: "",
       is_featured: false,
       is_premium: false,
-      priority_score: 0
+      priority_score: 0,
+      jenjang: "SMP",
+      media_files: []
     });
   };
 
@@ -243,6 +249,11 @@ export const LearningContentManager = () => {
       case 'video': return <Video className="w-4 h-4" />;
       case 'article': return <FileText className="w-4 h-4" />;
       case 'module': return <Brain className="w-4 h-4" />;
+      case 'pdf': return <FileText className="w-4 h-4" />;
+      case 'quiz': return <Brain className="w-4 h-4" />;
+      case 'assignment': return <Edit className="w-4 h-4" />;
+      case 'audio': return <Video className="w-4 h-4" />;
+      case 'animation': return <Star className="w-4 h-4" />;
       default: return <BookOpen className="w-4 h-4" />;
     }
   };
@@ -300,6 +311,11 @@ export const LearningContentManager = () => {
                         <SelectItem value="video">Video</SelectItem>
                         <SelectItem value="article">Artikel</SelectItem>
                         <SelectItem value="module">Modul Interaktif</SelectItem>
+                        <SelectItem value="pdf">PDF Document</SelectItem>
+                        <SelectItem value="quiz">Quiz</SelectItem>
+                        <SelectItem value="assignment">Tugas Interaktif</SelectItem>
+                        <SelectItem value="audio">Audio/Podcast</SelectItem>
+                        <SelectItem value="animation">Animasi/Simulasi</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -314,7 +330,7 @@ export const LearningContentManager = () => {
                   />
                 </div>
 
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-4 gap-4">
                   <div>
                     <label className="text-sm font-medium">Kategori</label>
                     <Select value={formData.category_id} onValueChange={(value) => setFormData({...formData, category_id: value})}>
@@ -327,6 +343,19 @@ export const LearningContentManager = () => {
                             {category.name}
                           </SelectItem>
                         ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Jenjang</label>
+                    <Select value={formData.jenjang} onValueChange={(value) => setFormData({...formData, jenjang: value})}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="SMP">SMP</SelectItem>
+                        <SelectItem value="SMA">SMA</SelectItem>
+                        <SelectItem value="Umum">Umum</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -369,6 +398,24 @@ export const LearningContentManager = () => {
                       onChange={(e) => setFormData({...formData, thumbnail_url: e.target.value})}
                       placeholder="https://..."
                     />
+                  </div>
+                </div>
+
+                {/* File Upload Section */}
+                <div>
+                  <label className="text-sm font-medium">Upload Multimedia</label>
+                  <div className="border-2 border-dashed border-muted rounded-lg p-6 text-center">
+                    <Upload className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Drag & drop file multimedia atau klik untuk upload
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Mendukung: PDF, Video (MP4), Audio (MP3), Gambar (JPG, PNG), Animasi
+                    </p>
+                    <Button variant="outline" className="mt-2">
+                      <Upload className="w-4 h-4 mr-2" />
+                      Pilih File
+                    </Button>
                   </div>
                 </div>
 

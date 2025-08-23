@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -61,6 +62,7 @@ export const PersonalizedLearningHub = ({
   userInterests, 
   subscriptionInfo 
 }: PersonalizedLearningHubProps) => {
+  const navigate = useNavigate();
   const [recommendedPaths, setRecommendedPaths] = useState<LearningPath[]>([]);
   const [personalizedContent, setPersonalizedContent] = useState<PersonalizedContent[]>([]);
   const [currentPath, setCurrentPath] = useState<LearningPath | null>(null);
@@ -508,7 +510,7 @@ export const PersonalizedLearningHub = ({
                       <Button 
                         size="sm" 
                         className="w-full gap-2" 
-                        onClick={() => startContent(content)}
+                        onClick={() => navigate(`/learning/content/${content.id}`)}
                       >
                         <Play className="w-3 h-3" />
                         Mulai
