@@ -302,6 +302,137 @@ const OpportunityBoard = () => {
           </CardContent>
         </Card>
 
+        {/* Static Opportunities Section */}
+        {filteredOpportunities.length > 0 && (
+          <Card className="shadow-card">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Briefcase className="w-5 h-5" />
+                Peluang Unggulan
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredOpportunities.map((opportunity, index) => (
+                  <Card 
+                    key={opportunity.id} 
+                    className={`hover:shadow-lg transition-all duration-300 cursor-pointer ${
+                      opportunity.isRecommended ? 'border-primary/30 bg-primary/5' : ''
+                    } ${
+                      !canAccessOpportunity(index) ? 'opacity-75' : ''
+                    }`}
+                    onClick={() => handleOpportunityClick(opportunity, index)}
+                  >
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1">
+                          <CardTitle className="text-lg line-clamp-2 mb-2">
+                            {opportunity.title}
+                          </CardTitle>
+                          <p className="text-sm text-muted-foreground font-medium">
+                            {opportunity.organization}
+                          </p>
+                        </div>
+                        {opportunity.isRecommended && (
+                          <Badge className="bg-primary text-primary-foreground shrink-0">
+                            <Sparkles className="w-3 h-3 mr-1" />
+                            Direkomendasikan
+                          </Badge>
+                        )}
+                        {!canAccessOpportunity(index) && (
+                          <Badge variant="secondary" className="shrink-0">
+                            <Lock className="w-3 h-3 mr-1" />
+                            Premium
+                          </Badge>
+                        )}
+                      </div>
+                    </CardHeader>
+                    
+                    <CardContent className="space-y-4">
+                      <div className="flex flex-wrap gap-2">
+                        <Badge 
+                          variant={
+                            opportunity.type === 'scholarship' ? 'default' :
+                            opportunity.type === 'competition' ? 'secondary' :
+                            'outline'
+                          }
+                          className="text-xs"
+                        >
+                          {opportunity.type === 'scholarship' && <GraduationCap className="w-3 h-3 mr-1" />}
+                          {opportunity.type === 'competition' && <Trophy className="w-3 h-3 mr-1" />}
+                          {opportunity.type === 'internship' && <Briefcase className="w-3 h-3 mr-1" />}
+                          {opportunity.type === 'scholarship' ? 'Beasiswa' : 
+                           opportunity.type === 'competition' ? 'Kompetisi' : 
+                           'Magang'}
+                        </Badge>
+                        
+                        <Badge variant="outline" className="text-xs">
+                          {opportunity.category}
+                        </Badge>
+                      </div>
+                      
+                      <p className="text-sm text-muted-foreground line-clamp-3">
+                        {opportunity.description}
+                      </p>
+                      
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-sm">
+                          <MapPin className="w-4 h-4 text-muted-foreground" />
+                          <span>{opportunity.location}</span>
+                        </div>
+                        
+                        <div className="flex items-center gap-2 text-sm">
+                          <Calendar className="w-4 h-4 text-muted-foreground" />
+                          <span>Deadline: {new Date(opportunity.deadline).toLocaleDateString('id-ID')}</span>
+                        </div>
+                      </div>
+                      
+                      {opportunity.requirements.length > 0 && (
+                        <div>
+                          <p className="text-xs font-medium text-muted-foreground mb-2">Persyaratan:</p>
+                          <div className="space-y-1">
+                            {opportunity.requirements.slice(0, 2).map((req, idx) => (
+                              <p key={idx} className="text-xs text-muted-foreground flex items-start gap-1">
+                                <span className="w-1 h-1 bg-muted-foreground rounded-full mt-2 shrink-0"></span>
+                                {req}
+                              </p>
+                            ))}
+                            {opportunity.requirements.length > 2 && (
+                              <p className="text-xs text-muted-foreground">
+                                +{opportunity.requirements.length - 2} persyaratan lainnya
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      
+                      <div className="flex items-center justify-between pt-2">
+                        <Button 
+                          size="sm" 
+                          className="w-full gap-2"
+                          disabled={!canAccessOpportunity(index)}
+                        >
+                          {!canAccessOpportunity(index) ? (
+                            <>
+                              <Crown className="w-4 h-4" />
+                              Upgrade untuk Akses
+                            </>
+                          ) : (
+                            <>
+                              <ExternalLink className="w-4 h-4" />
+                              Lihat Detail
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
       </div>
     </div>
   );
