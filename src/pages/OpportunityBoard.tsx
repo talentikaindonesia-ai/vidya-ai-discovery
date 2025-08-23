@@ -4,13 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, MapPin, Calendar, ExternalLink, Sparkles, Trophy, Briefcase, GraduationCap, ArrowLeft, Crown, Lock } from "lucide-react";
+import { Search, MapPin, Calendar, Sparkles, Trophy, Briefcase, GraduationCap, Crown, Lock, Building2, ArrowLeft, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getSubscriptionLimits, checkSubscriptionAccess, getUserSubscriptionInfo } from "@/lib/subscription";
-import { UpgradePrompt } from "@/components/UpgradePrompt";
-import { ScrapedContent } from "@/components/dashboard/ScrapedContent";
 import { DynamicOpportunityBoard } from "@/components/dashboard/DynamicOpportunityBoard";
+import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { toast } from "sonner";
 
 interface Opportunity {
@@ -31,11 +30,11 @@ const OpportunityBoard = () => {
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
-  const [filterCategory, setFilterCategory] = useState("all");
+  const [filterLocation, setFilterLocation] = useState("all");
   const [subscriptionInfo, setSubscriptionInfo] = useState<any>(null);
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("dynamic");
+  const [activeSection, setActiveSection] = useState("opportunities");
   const [userAssessment, setUserAssessment] = useState<any>(null);
   const [userInterests, setUserInterests] = useState<string[]>([]);
 
@@ -203,238 +202,228 @@ const OpportunityBoard = () => {
                          opp.organization.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          opp.category.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = filterType === "all" || opp.type === filterType;
-    const matchesCategory = filterCategory === "all" || opp.category.toLowerCase() === filterCategory.toLowerCase();
+    const matchesLocation = filterLocation === "all" || opp.location.toLowerCase().includes(filterLocation.toLowerCase());
     
-    return matchesSearch && matchesType && matchesCategory;
+    return matchesSearch && matchesType && matchesLocation;
   });
 
-  return (
-    <div className="min-h-screen bg-background">
-      {/* Back to Dashboard Button */}
-      <div className="container mx-auto px-4 pt-6">
-        <Button 
-          variant="outline" 
-          onClick={() => window.location.href = '/dashboard'}
-          className="mb-4"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Kembali ke Dashboard
-        </Button>
-      </div>
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    window.location.href = '/auth';
+  };
 
-      {/* Hero Section */}
-      <div className="relative bg-gradient-accent overflow-hidden">
-        <div className="absolute inset-0 bg-black/20"></div>
-        <div className="container mx-auto px-4 py-24 relative z-10">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="text-white">
-              <h1 className="text-5xl font-bold mb-6 leading-tight">
-                Opportunity Board
-              </h1>
-              <p className="text-xl text-white/90 mb-8 leading-relaxed">
-                Temukan beasiswa, kompetisi, dan kesempatan magang yang sesuai dengan minat dan bakatmu.
+  return (
+    <SidebarProvider>
+      <div className="flex min-h-screen bg-background">
+        <DashboardSidebar
+          activeSection={activeSection}
+          setActiveSection={setActiveSection}
+          onSignOut={handleSignOut}
+        />
+        
+        <main className="flex-1 overflow-hidden">
+          <div className="p-6">
+            {/* Header */}
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-2">
+                <h1 className="text-3xl font-bold">Peluang Karir</h1>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">Muhammad Dafa</span>
+                  <Badge variant="outline" className="text-xs">Individual</Badge>
+                </div>
+              </div>
+              <p className="text-muted-foreground">
+                Temukan peluang magang, beasiswa, pekerjaan, dan kompetisi terbait
               </p>
             </div>
-          </div>
-        </div>
-      </div>
 
-      <div className="container mx-auto px-4 py-16">
-        {/* Subscription Status Banner */}
-        {subscriptionInfo && subscriptionInfo.subscription_status !== 'active' && (
-          <div className="mb-8">
-            <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-secondary/5">
+            {/* Search and Filters */}
+            <Card className="mb-6">
               <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Crown className="w-6 h-6 text-primary" />
-                    <div>
-                      <h3 className="font-semibold">Akun Basic - Akses Terbatas</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Anda dapat mengakses {getSubscriptionLimits(subscriptionInfo.subscription_status, subscriptionInfo.subscription_type).maxOpportunities} peluang gratis. 
-                        Upgrade ke Premium untuk akses tidak terbatas!
-                      </p>
-                    </div>
+                <div className="flex flex-col md:flex-row gap-4 mb-6">
+                  <div className="flex-1 relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                    <Input
+                      placeholder="Cari peluang..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10"
+                    />
                   </div>
-                  <Button onClick={() => window.location.href = '/dashboard'} className="gap-2">
-                    <Crown className="w-4 h-4" />
-                    Upgrade
-                  </Button>
+                  
+                  <Select value={filterType} onValueChange={setFilterType}>
+                    <SelectTrigger className="w-full md:w-48">
+                      <SelectValue placeholder="Semua Tipe" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Semua Tipe</SelectItem>
+                      <SelectItem value="scholarship">Beasiswa</SelectItem>
+                      <SelectItem value="competition">Kompetisi</SelectItem>
+                      <SelectItem value="internship">Magang</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <Select value={filterLocation} onValueChange={setFilterLocation}>
+                    <SelectTrigger className="w-full md:w-48">
+                      <SelectValue placeholder="Semua Lokasi" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Semua Lokasi</SelectItem>
+                      <SelectItem value="jakarta">Jakarta</SelectItem>
+                      <SelectItem value="bandung">Bandung</SelectItem>
+                      <SelectItem value="surabaya">Surabaya</SelectItem>
+                      <SelectItem value="online">Online</SelectItem>
+                      <SelectItem value="nasional">Nasional</SelectItem>
+                      <SelectItem value="internasional">Internasional</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
+                
+                {/* Dynamic Opportunity Board */}
+                <DynamicOpportunityBoard
+                  userAssessment={userAssessment}
+                  userInterests={userInterests}
+                  subscriptionInfo={subscriptionInfo}
+                />
               </CardContent>
             </Card>
-          </div>
-        )}
 
-        {/* Search and Filters */}
-        <Card className="shadow-card mb-8">
-          <CardContent className="p-6">
-            <div className="flex flex-col md:flex-row gap-4 mb-4">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                <Input
-                  placeholder="Cari beasiswa, kompetisi, atau magang..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              
-              <Select value={filterType} onValueChange={setFilterType}>
-                <SelectTrigger className="w-full md:w-48">
-                  <SelectValue placeholder="Semua Jenis" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Semua Jenis</SelectItem>
-                  <SelectItem value="scholarship">Beasiswa</SelectItem>
-                  <SelectItem value="competition">Kompetisi</SelectItem>
-                  <SelectItem value="internship">Magang</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            {/* Unified Real-time Opportunity Feed */}
-            <DynamicOpportunityBoard
-              userAssessment={userAssessment}
-              userInterests={userInterests}
-              subscriptionInfo={subscriptionInfo}
-            />
-          </CardContent>
-        </Card>
-
-        {/* Static Opportunities Section */}
-        {filteredOpportunities.length > 0 && (
-          <Card className="shadow-card">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Briefcase className="w-5 h-5" />
-                Peluang Unggulan
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredOpportunities.map((opportunity, index) => (
-                  <Card 
-                    key={opportunity.id} 
-                    className={`hover:shadow-lg transition-all duration-300 cursor-pointer ${
-                      opportunity.isRecommended ? 'border-primary/30 bg-primary/5' : ''
-                    } ${
-                      !canAccessOpportunity(index) ? 'opacity-75' : ''
-                    }`}
-                    onClick={() => handleOpportunityClick(opportunity, index)}
-                  >
-                    <CardHeader className="pb-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1">
-                          <CardTitle className="text-lg line-clamp-2 mb-2">
+            {/* Opportunity Cards Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {filteredOpportunities.map((opportunity, index) => (
+                <Card 
+                  key={opportunity.id} 
+                  className={`hover:shadow-lg transition-all duration-300 cursor-pointer ${
+                    opportunity.isRecommended ? 'border-primary/30' : ''
+                  } ${
+                    !canAccessOpportunity(index) ? 'opacity-75' : ''
+                  }`}
+                  onClick={() => handleOpportunityClick(opportunity, index)}
+                >
+                  <CardContent className="p-6">
+                    <div className="flex items-start gap-4">
+                      <div className="flex-shrink-0">
+                        <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                          {opportunity.type === 'scholarship' && <GraduationCap className="w-6 h-6 text-primary" />}
+                          {opportunity.type === 'competition' && <Trophy className="w-6 h-6 text-primary" />}
+                          {opportunity.type === 'internship' && <Briefcase className="w-6 h-6 text-primary" />}
+                        </div>
+                      </div>
+                      
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-4 mb-2">
+                          <h3 className="font-semibold text-lg line-clamp-1">
                             {opportunity.title}
-                          </CardTitle>
-                          <p className="text-sm text-muted-foreground font-medium">
-                            {opportunity.organization}
-                          </p>
-                        </div>
-                        {opportunity.isRecommended && (
-                          <Badge className="bg-primary text-primary-foreground shrink-0">
-                            <Sparkles className="w-3 h-3 mr-1" />
-                            Direkomendasikan
-                          </Badge>
-                        )}
-                        {!canAccessOpportunity(index) && (
-                          <Badge variant="secondary" className="shrink-0">
-                            <Lock className="w-3 h-3 mr-1" />
-                            Premium
-                          </Badge>
-                        )}
-                      </div>
-                    </CardHeader>
-                    
-                    <CardContent className="space-y-4">
-                      <div className="flex flex-wrap gap-2">
-                        <Badge 
-                          variant={
-                            opportunity.type === 'scholarship' ? 'default' :
-                            opportunity.type === 'competition' ? 'secondary' :
-                            'outline'
-                          }
-                          className="text-xs"
-                        >
-                          {opportunity.type === 'scholarship' && <GraduationCap className="w-3 h-3 mr-1" />}
-                          {opportunity.type === 'competition' && <Trophy className="w-3 h-3 mr-1" />}
-                          {opportunity.type === 'internship' && <Briefcase className="w-3 h-3 mr-1" />}
-                          {opportunity.type === 'scholarship' ? 'Beasiswa' : 
-                           opportunity.type === 'competition' ? 'Kompetisi' : 
-                           'Magang'}
-                        </Badge>
-                        
-                        <Badge variant="outline" className="text-xs">
-                          {opportunity.category}
-                        </Badge>
-                      </div>
-                      
-                      <p className="text-sm text-muted-foreground line-clamp-3">
-                        {opportunity.description}
-                      </p>
-                      
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-sm">
-                          <MapPin className="w-4 h-4 text-muted-foreground" />
-                          <span>{opportunity.location}</span>
-                        </div>
-                        
-                        <div className="flex items-center gap-2 text-sm">
-                          <Calendar className="w-4 h-4 text-muted-foreground" />
-                          <span>Deadline: {new Date(opportunity.deadline).toLocaleDateString('id-ID')}</span>
-                        </div>
-                      </div>
-                      
-                      {opportunity.requirements.length > 0 && (
-                        <div>
-                          <p className="text-xs font-medium text-muted-foreground mb-2">Persyaratan:</p>
-                          <div className="space-y-1">
-                            {opportunity.requirements.slice(0, 2).map((req, idx) => (
-                              <p key={idx} className="text-xs text-muted-foreground flex items-start gap-1">
-                                <span className="w-1 h-1 bg-muted-foreground rounded-full mt-2 shrink-0"></span>
-                                {req}
-                              </p>
-                            ))}
-                            {opportunity.requirements.length > 2 && (
-                              <p className="text-xs text-muted-foreground">
-                                +{opportunity.requirements.length - 2} persyaratan lainnya
-                              </p>
+                          </h3>
+                          <div className="flex gap-1 flex-wrap">
+                            {opportunity.isRecommended && (
+                              <Badge className="bg-blue-500 text-white text-xs">
+                                Rekomendasi
+                              </Badge>
                             )}
+                            <Badge variant="outline" className="text-xs">
+                              Personal
+                            </Badge>
+                            <Badge 
+                              className={
+                                opportunity.type === 'scholarship' ? 'bg-green-500 text-white' :
+                                opportunity.type === 'competition' ? 'bg-purple-500 text-white' :
+                                'bg-orange-500 text-white'
+                              }
+                            >
+                              {opportunity.type === 'scholarship' ? 'Beasiswa' : 
+                               opportunity.type === 'competition' ? 'Kompetisi' : 
+                               'Magang'}
+                            </Badge>
                           </div>
                         </div>
-                      )}
-                      
-                      <div className="flex items-center justify-between pt-2">
-                        <Button 
-                          size="sm" 
-                          className="w-full gap-2"
-                          disabled={!canAccessOpportunity(index)}
-                        >
-                          {!canAccessOpportunity(index) ? (
-                            <>
-                              <Crown className="w-4 h-4" />
-                              Upgrade untuk Akses
-                            </>
-                          ) : (
-                            <>
-                              <ExternalLink className="w-4 h-4" />
-                              Lihat Detail
-                            </>
-                          )}
-                        </Button>
+                        
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
+                          <div className="flex items-center gap-1">
+                            <Building2 className="w-4 h-4" />
+                            {opportunity.organization}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <MapPin className="w-4 h-4" />
+                            {opportunity.location}
+                          </div>
+                        </div>
+                        
+                        <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
+                          {opportunity.description}
+                        </p>
+                        
+                        {/* Warning for overdue */}
+                        <div className="bg-red-50 border border-red-200 rounded-md p-3 mb-4">
+                          <div className="flex items-center gap-2">
+                            <Calendar className="w-4 h-4 text-red-500" />
+                            <span className="text-sm text-red-700 font-medium">Deadline terlewat</span>
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-3">
+                          <div>
+                            <p className="text-sm font-medium mb-2">Persyaratan:</p>
+                            <div className="flex flex-wrap gap-2">
+                              {opportunity.requirements.slice(0, 4).map((req, idx) => (
+                                <Badge key={idx} variant="secondary" className="text-xs">
+                                  {req}
+                                </Badge>
+                              ))}
+                              {opportunity.requirements.length > 4 && (
+                                <Badge variant="secondary" className="text-xs">
+                                  +{opportunity.requirements.length - 4} lainnya
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                          
+                          <div>
+                            <p className="text-sm font-medium mb-2">Benefit:</p>
+                            <div className="flex flex-wrap gap-2">
+                              <Badge className="bg-yellow-100 text-yellow-800 text-xs">
+                                Pengembangan karier
+                              </Badge>
+                              <Badge className="bg-yellow-100 text-yellow-800 text-xs">
+                                Mentoring
+                              </Badge>
+                              <Badge className="bg-yellow-100 text-yellow-800 text-xs">
+                                +2 lainnya
+                              </Badge>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center justify-end mt-4">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="text-primary hover:text-primary"
+                            disabled={!canAccessOpportunity(index)}
+                          >
+                            {!canAccessOpportunity(index) ? (
+                              <>
+                                <Lock className="w-4 h-4 mr-2" />
+                                Premium
+                              </>
+                            ) : (
+                              <>
+                                <ExternalLink className="w-4 h-4 mr-2" />
+                                Detail
+                              </>
+                            )}
+                          </Button>
+                        </div>
                       </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </main>
       </div>
-    </div>
+    </SidebarProvider>
   );
 };
 
