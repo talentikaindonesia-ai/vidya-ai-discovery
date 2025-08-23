@@ -138,7 +138,11 @@ export const ManualOpportunityManager = () => {
       const opportunityData = {
         ...formData,
         is_manual: true,
-        category: formData.category.toLowerCase()
+        category: formData.category.toLowerCase(),
+        // Handle empty date strings by converting them to null
+        registration_start_date: formData.registration_start_date || null,
+        registration_end_date: formData.registration_end_date || null,
+        deadline: formData.deadline || null
       };
 
       if (editingOpportunity) {
