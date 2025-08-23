@@ -7,7 +7,7 @@ const Pricing = () => {
   const plans = [
     {
       name: "Individu",
-      price: "99,000",
+      price: "39,000",
       period: "/bulan",
       description: "Cocok untuk pelajar dan mahasiswa yang ingin mengembangkan minat bakat",
       features: [
@@ -25,7 +25,7 @@ const Pricing = () => {
     },
     {
       name: "Premium",
-      price: "199,000",
+      price: "99,000",
       period: "/bulan",
       description: "Untuk individu yang serius mengembangkan karir dan skill mendalam",
       features: [
@@ -45,7 +45,7 @@ const Pricing = () => {
     },
     {
       name: "School Package",
-      price: "1,999,000",
+      price: "3,999,000",
       period: "/tahun",
       description: "Solusi lengkap untuk sekolah dan institusi pendidikan",
       features: [
