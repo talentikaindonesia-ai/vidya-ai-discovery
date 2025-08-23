@@ -658,13 +658,21 @@ export type Database = {
       scraped_content: {
         Row: {
           category: string
+          contact_info: Json | null
           content_type: string
           created_at: string
           deadline: string | null
           description: string | null
           id: string
           is_active: boolean | null
+          is_manual: boolean | null
           location: string | null
+          organizer: string | null
+          poster_url: string | null
+          prize_info: string | null
+          registration_end_date: string | null
+          registration_start_date: string | null
+          requirements: string[] | null
           source_website: string
           tags: string[] | null
           title: string
@@ -673,13 +681,21 @@ export type Database = {
         }
         Insert: {
           category: string
+          contact_info?: Json | null
           content_type?: string
           created_at?: string
           deadline?: string | null
           description?: string | null
           id?: string
           is_active?: boolean | null
+          is_manual?: boolean | null
           location?: string | null
+          organizer?: string | null
+          poster_url?: string | null
+          prize_info?: string | null
+          registration_end_date?: string | null
+          registration_start_date?: string | null
+          requirements?: string[] | null
           source_website: string
           tags?: string[] | null
           title: string
@@ -688,13 +704,21 @@ export type Database = {
         }
         Update: {
           category?: string
+          contact_info?: Json | null
           content_type?: string
           created_at?: string
           deadline?: string | null
           description?: string | null
           id?: string
           is_active?: boolean | null
+          is_manual?: boolean | null
           location?: string | null
+          organizer?: string | null
+          poster_url?: string | null
+          prize_info?: string | null
+          registration_end_date?: string | null
+          registration_start_date?: string | null
+          requirements?: string[] | null
           source_website?: string
           tags?: string[] | null
           title?: string

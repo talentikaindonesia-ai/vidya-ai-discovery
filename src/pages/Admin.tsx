@@ -23,6 +23,7 @@ import {
   Download
 } from "lucide-react";
 import { LearningContentManager } from "@/components/dashboard/LearningContentManager";
+import { ManualOpportunityManager } from "@/components/dashboard/ManualOpportunityManager";
 
 // Web Scraping Admin Component
 const WebScrapingAdmin = () => {
@@ -566,92 +567,7 @@ const Admin = () => {
           </TabsContent>
 
           <TabsContent value="opportunities" className="mt-6">
-            <div className="space-y-6">
-              {/* Add Opportunity Form */}
-              {showAddForm && activeTab === "opportunities" && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Tambah Peluang Baru</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-sm font-medium">Judul Peluang</label>
-                        <Input placeholder="Masukkan judul peluang" />
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium">Perusahaan/Institusi</label>
-                        <Input placeholder="Nama perusahaan" />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-3 gap-4">
-                      <div>
-                        <label className="text-sm font-medium">Tipe</label>
-                        <Select>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Pilih tipe" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="internship">Magang</SelectItem>
-                            <SelectItem value="scholarship">Beasiswa</SelectItem>
-                            <SelectItem value="job">Pekerjaan</SelectItem>
-                            <SelectItem value="competition">Kompetisi</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium">Lokasi</label>
-                        <Input placeholder="Jakarta" />
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium">Deadline</label>
-                        <Input type="date" />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium">Deskripsi</label>
-                      <Textarea placeholder="Deskripsi peluang" />
-                    </div>
-                    <div className="flex gap-4">
-                      <Button>Simpan Peluang</Button>
-                      <Button variant="outline" onClick={() => setShowAddForm(false)}>Batal</Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Opportunities Preview */}
-              <div className="grid gap-4 md:grid-cols-2">
-                <Card className="hover:shadow-lg transition-smooth">
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <Briefcase className="w-8 h-8 text-primary" />
-                      <Badge className="bg-blue-100 text-blue-800">Magang</Badge>
-                    </div>
-                    <CardTitle className="text-lg">Software Engineer Intern</CardTitle>
-                    <CardDescription>TechCorp Indonesia • Jakarta</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      <p className="text-sm text-muted-foreground">Bergabung dengan tim engineering untuk mengembangkan aplikasi</p>
-                      <div className="flex justify-between items-center text-sm">
-                        <span>15 hari lagi</span>
-                        <span className="font-semibold">Rp 2-3 juta/bulan</span>
-                      </div>
-                      <div className="flex gap-2 mt-4">
-                        <Button size="sm" variant="outline" className="flex-1">
-                          <Edit className="w-4 h-4 mr-1" />
-                          Edit
-                        </Button>
-                        <Button size="sm" variant="destructive">
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
+            <ManualOpportunityManager />
           </TabsContent>
 
           <TabsContent value="scraping" className="mt-6">
