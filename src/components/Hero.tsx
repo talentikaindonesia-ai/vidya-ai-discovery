@@ -33,7 +33,7 @@ const Hero = () => {
                 variant="hero" 
                 size="hero" 
                 className="group shadow-floating"
-                onClick={() => window.location.href = '/assessment'}
+                onClick={() => window.location.href = '/onboarding'}
               >
                 Mulai Assessment
                 <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
