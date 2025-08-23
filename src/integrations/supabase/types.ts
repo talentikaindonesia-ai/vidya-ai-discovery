@@ -204,6 +204,267 @@ export type Database = {
         }
         Relationships: []
       }
+      learning_categories: {
+        Row: {
+          color: string | null
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          parent_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          parent_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          parent_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "learning_categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "learning_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      learning_content: {
+        Row: {
+          average_rating: number | null
+          category_id: string | null
+          content_type: string
+          content_url: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          difficulty_level: string | null
+          duration_minutes: number | null
+          external_id: string | null
+          external_source: string | null
+          id: string
+          is_active: boolean | null
+          is_featured: boolean | null
+          is_premium: boolean | null
+          priority_score: number | null
+          tags: string[] | null
+          target_personas: string[] | null
+          thumbnail_url: string | null
+          title: string
+          total_enrollments: number | null
+          updated_at: string
+        }
+        Insert: {
+          average_rating?: number | null
+          category_id?: string | null
+          content_type?: string
+          content_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          difficulty_level?: string | null
+          duration_minutes?: number | null
+          external_id?: string | null
+          external_source?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          is_premium?: boolean | null
+          priority_score?: number | null
+          tags?: string[] | null
+          target_personas?: string[] | null
+          thumbnail_url?: string | null
+          title: string
+          total_enrollments?: number | null
+          updated_at?: string
+        }
+        Update: {
+          average_rating?: number | null
+          category_id?: string | null
+          content_type?: string
+          content_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          difficulty_level?: string | null
+          duration_minutes?: number | null
+          external_id?: string | null
+          external_source?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          is_premium?: boolean | null
+          priority_score?: number | null
+          tags?: string[] | null
+          target_personas?: string[] | null
+          thumbnail_url?: string | null
+          title?: string
+          total_enrollments?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "learning_content_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "learning_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      learning_path_contents: {
+        Row: {
+          content_id: string
+          created_at: string
+          id: string
+          is_required: boolean | null
+          order_index: number
+          path_id: string
+        }
+        Insert: {
+          content_id: string
+          created_at?: string
+          id?: string
+          is_required?: boolean | null
+          order_index: number
+          path_id: string
+        }
+        Update: {
+          content_id?: string
+          created_at?: string
+          id?: string
+          is_required?: boolean | null
+          order_index?: number
+          path_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "learning_path_contents_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "learning_content"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "learning_path_contents_path_id_fkey"
+            columns: ["path_id"]
+            isOneToOne: false
+            referencedRelation: "learning_paths"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      learning_paths: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          difficulty_level: string | null
+          estimated_duration_hours: number | null
+          id: string
+          is_active: boolean | null
+          name: string
+          target_persona: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          difficulty_level?: string | null
+          estimated_duration_hours?: number | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          target_persona?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          difficulty_level?: string | null
+          estimated_duration_hours?: number | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          target_persona?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      learning_progress: {
+        Row: {
+          completed_at: string | null
+          content_id: string
+          created_at: string
+          feedback: string | null
+          id: string
+          last_accessed_at: string | null
+          progress_percentage: number | null
+          rating: number | null
+          status: string | null
+          time_spent_minutes: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          content_id: string
+          created_at?: string
+          feedback?: string | null
+          id?: string
+          last_accessed_at?: string | null
+          progress_percentage?: number | null
+          rating?: number | null
+          status?: string | null
+          time_spent_minutes?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          content_id?: string
+          created_at?: string
+          feedback?: string | null
+          id?: string
+          last_accessed_at?: string | null
+          progress_percentage?: number | null
+          rating?: number | null
+          status?: string | null
+          time_spent_minutes?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "learning_progress_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "learning_content"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lessons: {
         Row: {
           content: string | null

@@ -1,15 +1,16 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Play, Clock, Award, BookOpen, Code, FileText, Users, ArrowLeft, Crown, Lock, GraduationCap } from "lucide-react";
+import { Play, Clock, Award, BookOpen, Code, FileText, Users, ArrowLeft, Crown, Lock, GraduationCap, Zap, Brain } from "lucide-react";
 import { toast } from "sonner";
 import { getSubscriptionLimits, checkSubscriptionAccess, getUserSubscriptionInfo } from "@/lib/subscription";
 import { UpgradePrompt } from "@/components/UpgradePrompt";
 import { MentorsSection } from "@/components/dashboard/MentorsSection";
+import { AdaptiveLearningFeed } from "@/components/dashboard/AdaptiveLearningFeed";
 
 interface Course {
   id: string;
@@ -40,6 +41,8 @@ const LearningHub = () => {
   const [loading, setLoading] = useState(true);
   const [subscriptionInfo, setSubscriptionInfo] = useState<any>(null);
   const [user, setUser] = useState<any>(null);
+  const [userAssessment, setUserAssessment] = useState<any>(null);
+  const [userInterests, setUserInterests] = useState<string[]>([]);
 
   useEffect(() => {
     checkAuthAndLoadData();
@@ -52,13 +55,56 @@ const LearningHub = () => {
         setUser(session.user);
         const subInfo = await getUserSubscriptionInfo(session.user.id);
         setSubscriptionInfo(subInfo);
-        await loadCourses();
-        await loadUserProgress();
+        
+        // Load user assessment and interests for personalization
+        await Promise.all([
+          loadCourses(),
+          loadUserProgress(),
+          loadUserAssessment(session.user.id),
+          loadUserInterests(session.user.id)
+        ]);
       }
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadUserAssessment = async (userId: string) => {
+    try {
+      const { data } = await supabase
+        .from('assessment_results')
+        .select('*')
+        .eq('user_id', userId)
+        .order('completed_at', { ascending: false })
+        .limit(1);
+
+      if (data && data.length > 0) {
+        setUserAssessment(data[0]);
+      }
+    } catch (error) {
+      console.error('Error loading assessment:', error);
+    }
+  };
+
+  const loadUserInterests = async (userId: string) => {
+    try {
+      const { data } = await supabase
+        .from('user_interests')
+        .select(`
+          interest_categories (
+            name
+          )
+        `)
+        .eq('user_id', userId);
+
+      if (data) {
+        const interests = data.map((item: any) => item.interest_categories?.name).filter(Boolean);
+        setUserInterests(interests);
+      }
+    } catch (error) {
+      console.error('Error loading interests:', error);
     }
   };
 
@@ -362,8 +408,12 @@ const LearningHub = () => {
           </div>
         )}
 
-        <Tabs defaultValue="courses" className="w-full">
-          <TabsList className="grid w-full max-w-md mx-auto grid-cols-2">
+        <Tabs defaultValue="adaptive" className="w-full">
+          <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-3">
+            <TabsTrigger value="adaptive" className="flex items-center gap-2">
+              <Zap className="w-4 h-4" />
+              Adaptive Learning
+            </TabsTrigger>
             <TabsTrigger value="courses" className="flex items-center gap-2">
               <BookOpen className="w-4 h-4" />
               Kursus
@@ -373,6 +423,29 @@ const LearningHub = () => {
               Mentor
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="adaptive" className="mt-8">
+            <div className="space-y-6">
+              <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-secondary/5">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Brain className="w-6 h-6" />
+                    Learning Hub Personal untuk Anda
+                  </CardTitle>
+                  <CardDescription>
+                    Konten pembelajaran yang dipersonalisasi berdasarkan hasil assessment dan minat Anda
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <AdaptiveLearningFeed 
+                    userAssessment={userAssessment}
+                    userInterests={userInterests}
+                    subscriptionInfo={subscriptionInfo}
+                  />
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
 
           <TabsContent value="courses" className="mt-8">
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
