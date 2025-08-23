@@ -92,7 +92,7 @@ const HowItWorks = () => {
 
         <div className="text-center mt-16">
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button variant="hero" size="hero" className="group">
+            <Button variant="hero" size="hero" className="group" onClick={() => window.location.href = '/onboarding'}>
               Mulai Sekarang
               <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
             </Button>
