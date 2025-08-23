@@ -168,86 +168,48 @@ export const DynamicOpportunityBoard = ({
         </Card>
       </div>
 
-      {/* Dynamic Content Tabs */}
-      <Tabs defaultValue="personalized" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="personalized" className="gap-2">
-            <Zap className="w-4 h-4" />
-            Untuk Anda
-          </TabsTrigger>
-          <TabsTrigger value="trending" className="gap-2">
-            <TrendingUp className="w-4 h-4" />
-            Trending
-          </TabsTrigger>
-          <TabsTrigger value="latest" className="gap-2">
-            <Clock className="w-4 h-4" />
-            Terbaru
-          </TabsTrigger>
-        </TabsList>
+      {/* Dynamic Content - Unified View */}
+      <div className="space-y-6">
+        {/* Personalized Section */}
+        <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-secondary/5">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Zap className="w-5 h-5" />
+              Rekomendasi Personal untuk Anda
+            </CardTitle>
+            <CardDescription>
+              Peluang yang dipersonalisasi berdasarkan hasil assessment dan minat Anda
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <PersonalizedFeed 
+              userInterests={userInterests}
+              assessmentData={userAssessment}
+              limit={subscriptionInfo?.subscription_status === 'active' ? 12 : 6}
+            />
+          </CardContent>
+        </Card>
 
-        <TabsContent value="personalized" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Zap className="w-5 h-5" />
-                Peluang Personal untuk Anda
-              </CardTitle>
-              <CardDescription>
-                Peluang yang dipersonalisasi berdasarkan hasil assessment dan minat Anda
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <PersonalizedFeed 
-                userInterests={userInterests}
-                assessmentData={userAssessment}
-                limit={subscriptionInfo?.subscription_status === 'active' ? 50 : 10}
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="trending" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="w-5 h-5" />
-                Peluang Trending
-              </CardTitle>
-              <CardDescription>
-                Peluang paling populer dan banyak dilihat minggu ini
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <PersonalizedFeed 
-                userInterests={[]}
-                assessmentData={null}
-                limit={subscriptionInfo?.subscription_status === 'active' ? 30 : 6}
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="latest" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="w-5 h-5" />
-                Peluang Terbaru
-              </CardTitle>
-              <CardDescription>
-                Peluang terbaru yang baru saja dikumpulkan dari berbagai sumber terpercaya
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <PersonalizedFeed 
-                userInterests={[]}
-                assessmentData={null}
-                limit={subscriptionInfo?.subscription_status === 'active' ? 40 : 8}
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+        {/* All Opportunities Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Globe className="w-5 h-5" />
+              Semua Peluang Terkini
+            </CardTitle>
+            <CardDescription>
+              Semua peluang dari berbagai sumber terpercaya, diperbarui secara real-time
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <PersonalizedFeed 
+              userInterests={[]}
+              assessmentData={null}
+              limit={subscriptionInfo?.subscription_status === 'active' ? 50 : 12}
+            />
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Trust Indicators */}
       <Card className="bg-muted/30">

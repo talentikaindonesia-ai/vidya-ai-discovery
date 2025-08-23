@@ -293,131 +293,15 @@ const OpportunityBoard = () => {
               </Select>
             </div>
             
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-3">
-                <TabsTrigger value="dynamic">Feed Dinamis</TabsTrigger>
-                <TabsTrigger value="mock">Peluang Pilihan</TabsTrigger>
-                <TabsTrigger value="scraped">Update Real-time</TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </CardContent>
-        </Card>
-
-        {/* Opportunities Content */}
-        <Tabs value={activeTab} className="w-full">
-          <TabsContent value="dynamic">
+            {/* Unified Real-time Opportunity Feed */}
             <DynamicOpportunityBoard
               userAssessment={userAssessment}
               userInterests={userInterests}
               subscriptionInfo={subscriptionInfo}
             />
-          </TabsContent>
+          </CardContent>
+        </Card>
 
-          <TabsContent value="mock">
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredOpportunities.map((opportunity, index) => {
-            const canAccess = canAccessOpportunity(index);
-            const isLocked = !canAccess;
-            
-            return (
-              <Card 
-                key={opportunity.id} 
-                className={`group hover:shadow-lg transition-all duration-300 cursor-pointer relative ${isLocked ? 'opacity-60' : ''}`}
-                onClick={() => handleOpportunityClick(opportunity, index)}
-              >
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between mb-2">
-                    <Badge variant={opportunity.isRecommended ? "default" : "secondary"}>
-                      {opportunity.type === 'scholarship' && 'Beasiswa'}
-                      {opportunity.type === 'competition' && 'Kompetisi'}
-                      {opportunity.type === 'internship' && 'Magang'}
-                    </Badge>
-                    {isLocked && (
-                      <Badge variant="secondary" className="bg-black/10">
-                        <Crown className="w-3 h-3 mr-1" />
-                        Premium
-                      </Badge>
-                    )}
-                  </div>
-
-                  <CardTitle className="group-hover:text-primary transition-colors line-clamp-2">
-                    {opportunity.title}
-                  </CardTitle>
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <span className="font-medium">{opportunity.organization}</span>
-                    <div className="flex items-center gap-1">
-                      <MapPin className="w-3 h-3" />
-                      <span>{opportunity.location}</span>
-                    </div>
-                  </div>
-                </CardHeader>
-
-                <CardContent className="pt-0">
-                  <p className="text-muted-foreground mb-4 line-clamp-3">
-                    {opportunity.description}
-                  </p>
-
-                  <Button
-                    size="sm"
-                    disabled={isLocked}
-                    className="w-full"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleOpportunityClick(opportunity, index);
-                    }}
-                  >
-                    {isLocked ? (
-                      <>
-                        <Lock className="w-3 h-3 mr-1" />
-                        Upgrade untuk Akses
-                      </>
-                    ) : (
-                      <>
-                        <ExternalLink className="w-3 h-3 mr-1" />
-                        Lihat Detail
-                      </>
-                    )}
-                  </Button>
-
-                  {isLocked && (
-                    <div className="absolute inset-0 bg-background/30 backdrop-blur-[1px] rounded-lg flex items-center justify-center">
-                      <Lock className="w-8 h-8 text-muted-foreground" />
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            );
-          })}
-          
-          {/* Show upgrade prompt if user has reached opportunity limit */}
-          {subscriptionInfo && subscriptionInfo.subscription_status !== 'active' && filteredOpportunities.length > 0 && (() => {
-            const limits = getSubscriptionLimits(subscriptionInfo.subscription_status, subscriptionInfo.subscription_type);
-            const accessedCount = Math.min(limits.maxOpportunities, filteredOpportunities.length);
-            return accessedCount >= limits.maxOpportunities && (
-              <div className="md:col-span-2 lg:col-span-3">
-                <UpgradePrompt 
-                  type="opportunities" 
-                  currentCount={accessedCount} 
-                  limit={limits.maxOpportunities} 
-                />
-              </div>
-              );
-            })()}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="scraped">
-            <div className="space-y-6">
-              <div className="text-center">
-                <h2 className="text-2xl font-bold mb-2">Update Real-time</h2>
-                <p className="text-muted-foreground max-w-2xl mx-auto">
-                  Informasi peluang terbaru yang diperbarui secara real-time dari 20+ sumber terpercaya
-                </p>
-              </div>
-              <ScrapedContent />
-            </div>
-          </TabsContent>
-        </Tabs>
       </div>
     </div>
   );

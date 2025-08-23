@@ -138,8 +138,12 @@ export const PersonalizedFeed = ({ userInterests = [], assessmentData, limit = 2
         };
       });
 
-      // Sort by relevance or other criteria
+      // Sort by relevance or other criteria with real-time priority
       const sortedContent = enhancedContent.sort((a, b) => {
+        // Always prioritize recommended content first
+        if (a.is_recommended && !b.is_recommended) return -1;
+        if (!a.is_recommended && b.is_recommended) return 1;
+        
         switch (sortBy) {
           case 'relevance':
             return (b.relevance_score || 0) - (a.relevance_score || 0);
@@ -151,7 +155,10 @@ export const PersonalizedFeed = ({ userInterests = [], assessmentData, limit = 2
           case 'newest':
             return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
           default:
-            return 0;
+            // Default: Mix of relevance and recency
+            const scoreA = (a.relevance_score || 0) + (new Date(a.created_at).getTime() / 1000000000);
+            const scoreB = (b.relevance_score || 0) + (new Date(b.created_at).getTime() / 1000000000);
+            return scoreB - scoreA;
         }
       });
 
@@ -206,43 +213,35 @@ export const PersonalizedFeed = ({ userInterests = [], assessmentData, limit = 2
 
   return (
     <div className="space-y-6">
-      {/* Filters and Search */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
-              <Input
-                placeholder="Cari peluang yang relevan..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full"
-              />
+      {/* Filters and Search - Simplified for unified view */}
+      {content.length > 8 && (
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1">
+                <Input
+                  placeholder="Cari peluang yang relevan..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full"
+                />
+              </div>
+              <Select value={filter} onValueChange={setFilter}>
+                <SelectTrigger className="w-full md:w-48">
+                  <SelectValue placeholder="Semua Kategori" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua Kategori</SelectItem>
+                  <SelectItem value="scholarship">Beasiswa</SelectItem>
+                  <SelectItem value="job">Pekerjaan & Magang</SelectItem>
+                  <SelectItem value="competition">Kompetisi</SelectItem>
+                  <SelectItem value="conference">Konferensi & Event</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <Select value={filter} onValueChange={setFilter}>
-              <SelectTrigger className="w-full md:w-48">
-                <SelectValue placeholder="Semua Kategori" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Semua Kategori</SelectItem>
-                <SelectItem value="scholarship">Beasiswa</SelectItem>
-                <SelectItem value="job">Pekerjaan & Magang</SelectItem>
-                <SelectItem value="competition">Kompetisi</SelectItem>
-                <SelectItem value="conference">Konferensi & Event</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-full md:w-48">
-                <SelectValue placeholder="Urutkan" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="relevance">Relevansi</SelectItem>
-                <SelectItem value="deadline">Deadline</SelectItem>
-                <SelectItem value="newest">Terbaru</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Personalized Content Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
