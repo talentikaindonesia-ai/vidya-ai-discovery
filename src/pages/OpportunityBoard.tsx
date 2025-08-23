@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getSubscriptionLimits, checkSubscriptionAccess, getUserSubscriptionInfo } from "@/lib/subscription";
 import { UpgradePrompt } from "@/components/UpgradePrompt";
 import { ScrapedContent } from "@/components/dashboard/ScrapedContent";
+import { DynamicOpportunityBoard } from "@/components/dashboard/DynamicOpportunityBoard";
 import { toast } from "sonner";
 
 interface Opportunity {
@@ -34,7 +35,9 @@ const OpportunityBoard = () => {
   const [subscriptionInfo, setSubscriptionInfo] = useState<any>(null);
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("mock");
+  const [activeTab, setActiveTab] = useState("dynamic");
+  const [userAssessment, setUserAssessment] = useState<any>(null);
+  const [userInterests, setUserInterests] = useState<string[]>([]);
 
   useEffect(() => {
     checkAuthAndLoadData();
@@ -47,12 +50,55 @@ const OpportunityBoard = () => {
         setUser(session.user);
         const subInfo = await getUserSubscriptionInfo(session.user.id);
         setSubscriptionInfo(subInfo);
+        
+        // Load user assessment and interests
+        await Promise.all([
+          loadUserAssessment(session.user.id),
+          loadUserInterests(session.user.id)
+        ]);
       }
       loadOpportunities();
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadUserAssessment = async (userId: string) => {
+    try {
+      const { data } = await supabase
+        .from('assessment_results')
+        .select('*')
+        .eq('user_id', userId)
+        .order('completed_at', { ascending: false })
+        .limit(1);
+
+      if (data && data.length > 0) {
+        setUserAssessment(data[0]);
+      }
+    } catch (error) {
+      console.error('Error loading assessment:', error);
+    }
+  };
+
+  const loadUserInterests = async (userId: string) => {
+    try {
+      const { data } = await supabase
+        .from('user_interests')
+        .select(`
+          interest_categories (
+            name
+          )
+        `)
+        .eq('user_id', userId);
+
+      if (data) {
+        const interests = data.map((item: any) => item.interest_categories?.name).filter(Boolean);
+        setUserInterests(interests);
+      }
+    } catch (error) {
+      console.error('Error loading interests:', error);
     }
   };
 
@@ -248,9 +294,10 @@ const OpportunityBoard = () => {
             </div>
             
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full max-w-md mx-auto grid-cols-2">
+              <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-3">
+                <TabsTrigger value="dynamic">Feed Dinamis</TabsTrigger>
                 <TabsTrigger value="mock">Peluang Pilihan</TabsTrigger>
-                <TabsTrigger value="scraped">Update Terkini</TabsTrigger>
+                <TabsTrigger value="scraped">Update Real-time</TabsTrigger>
               </TabsList>
             </Tabs>
           </CardContent>
@@ -258,6 +305,14 @@ const OpportunityBoard = () => {
 
         {/* Opportunities Content */}
         <Tabs value={activeTab} className="w-full">
+          <TabsContent value="dynamic">
+            <DynamicOpportunityBoard
+              userAssessment={userAssessment}
+              userInterests={userInterests}
+              subscriptionInfo={subscriptionInfo}
+            />
+          </TabsContent>
+
           <TabsContent value="mock">
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredOpportunities.map((opportunity, index) => {
@@ -354,9 +409,9 @@ const OpportunityBoard = () => {
           <TabsContent value="scraped">
             <div className="space-y-6">
               <div className="text-center">
-                <h2 className="text-2xl font-bold mb-2">Peluang Terkini</h2>
+                <h2 className="text-2xl font-bold mb-2">Update Real-time</h2>
                 <p className="text-muted-foreground max-w-2xl mx-auto">
-                  Informasi peluang terbaru yang diperbarui secara real-time dari berbagai sumber terpercaya
+                  Informasi peluang terbaru yang diperbarui secara real-time dari 20+ sumber terpercaya
                 </p>
               </div>
               <ScrapedContent />

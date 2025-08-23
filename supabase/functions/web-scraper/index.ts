@@ -5,22 +5,54 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Indonesian websites to scrape for opportunities
+// 20+ trusted Indonesian and international sources for opportunities
 const SOURCES = {
   SCHOLARSHIP: [
-    'https://www.beasiswa.kemdikbud.go.id',
+    // Indonesian Government
+    'https://knb.kemdiktisaintek.go.id',
     'https://www.lpdp.kemenkeu.go.id',
-    'https://beasiswapendidikan.com'
+    'https://www.beasiswa.kemdikbud.go.id',
+    'https://apply.darmasiswa.kemdikbud.go.id',
+    'https://darmasiswa.kemdikbud.go.id',
+    // International Education
+    'https://edupass.org',
+    'https://bigfuture.collegeboard.org',
+    'https://fulbrightscholars.org',
+    'https://www.daad.de',
+    // Study Abroad & Opportunities
+    'https://international.undana.ac.id',
+    'https://edwardconsulting.org',
+    'https://indooceanproject.org',
+    'https://ceastudyabroad.com'
   ],
   JOB: [
+    // Indonesian Job Portals
     'https://www.jobstreet.co.id',
     'https://glints.com/id',
-    'https://karir.com'
+    'https://karir.com',
+    'https://www.urbanhire.com',
+    'https://jobs.id',
+    // International Internships
+    'https://baliinternships.com',
+    'https://www.aiesec.org',
+    'https://careers.goto.com',
+    'https://www.techinasia.com/jobs'
   ],
   COMPETITION: [
+    // Competition Platforms
     'https://lomba.co',
     'https://eventori.id',
-    'https://kompetisi.id'
+    'https://kompetisi.id',
+    'https://www.globalschoolnet.org',
+    // STEM & Academic
+    'https://www.globalchangemakers.net',
+    'https://osn.kemdikbud.go.id'
+  ],
+  CONFERENCE: [
+    // Academic & Professional Events
+    'https://eventori.id',
+    'https://www.globalchangemakers.net',
+    'https://international.undana.ac.id'
   ]
 }
 
@@ -61,32 +93,79 @@ Deno.serve(async (req) => {
           const titleMatches = html.match(/<title[^>]*>([^<]+)<\/title>/gi) || []
           const linkMatches = html.match(/<a[^>]+href=["']([^"']+)["'][^>]*>([^<]+)<\/a>/gi) || []
           
-          // Extract opportunity-related content
+          // Enhanced content extraction with better filtering
           const opportunities = linkMatches
             .filter(link => {
               const lowercaseLink = link.toLowerCase()
-              return lowercaseLink.includes('beasiswa') || 
-                     lowercaseLink.includes('lomba') || 
-                     lowercaseLink.includes('kompetisi') ||
-                     lowercaseLink.includes('kerja') ||
-                     lowercaseLink.includes('magang') ||
-                     lowercaseLink.includes('scholarship') ||
-                     lowercaseLink.includes('internship')
+              const text = link.match(/>([^<]+)<\/a>/)?.[1]?.toLowerCase() || ''
+              
+              // More comprehensive filtering based on keywords
+              const scholarshipKeywords = ['beasiswa', 'scholarship', 'grant', 'funding', 'fellowship']
+              const jobKeywords = ['kerja', 'magang', 'internship', 'job', 'karir', 'career', 'lowongan']
+              const competitionKeywords = ['lomba', 'kompetisi', 'competition', 'contest', 'challenge']
+              const eventKeywords = ['conference', 'konferensi', 'event', 'seminar', 'workshop']
+              
+              const allKeywords = [...scholarshipKeywords, ...jobKeywords, ...competitionKeywords, ...eventKeywords]
+              
+              return allKeywords.some(keyword => 
+                lowercaseLink.includes(keyword) || text.includes(keyword)
+              )
             })
-            .slice(0, 5) // Limit to 5 per source
+            .slice(0, 10) // Increased limit per source
             .map(link => {
               const hrefMatch = link.match(/href=["']([^"']+)["']/)
               const textMatch = link.match(/>([^<]+)<\/a>/)
+              const hostname = new URL(url).hostname
+              
+              // Enhanced title and description extraction
+              const title = textMatch ? textMatch[1].trim() : 'Peluang Menarik'
+              const cleanTitle = title.replace(/[^\w\s-]/g, '').trim()
+              
+              // Generate better tags based on content
+              const baseTags = [category.toLowerCase()]
+              const additionalTags = []
+              
+              // Add location tags
+              if (hostname.includes('.id') || hostname.includes('indonesia')) {
+                additionalTags.push('indonesia')
+              } else {
+                additionalTags.push('internasional')
+              }
+              
+              // Add type-specific tags
+              const titleLower = title.toLowerCase()
+              if (titleLower.includes('s1') || titleLower.includes('s2') || titleLower.includes('s3')) {
+                additionalTags.push('pendidikan-tinggi')
+              }
+              if (titleLower.includes('full') || titleLower.includes('penuh')) {
+                additionalTags.push('beasiswa-penuh')
+              }
+              if (titleLower.includes('stem') || titleLower.includes('teknologi') || titleLower.includes('sains')) {
+                additionalTags.push('STEM')
+              }
+              
+              // Extract potential deadline from title/description
+              const deadlineMatch = title.match(/(\d{1,2}[-\/]\d{1,2}[-\/]\d{4})|(\d{4}[-\/]\d{1,2}[-\/]\d{1,2})/)
+              let deadline = null
+              if (deadlineMatch) {
+                try {
+                  deadline = new Date(deadlineMatch[0]).toISOString()
+                } catch (e) {
+                  deadline = null
+                }
+              }
               
               return {
-                title: textMatch ? textMatch[1].trim() : 'Peluang Menarik',
-                description: `Peluang dari ${new URL(url).hostname}`,
+                title: cleanTitle.length > 5 ? cleanTitle : `Peluang ${category} dari ${hostname}`,
+                description: `Peluang ${category.toLowerCase()} terbaru dari ${hostname}. Klik untuk melihat detail lengkap dan persyaratan.`,
                 url: hrefMatch ? new URL(hrefMatch[1], url).href : url,
-                source_website: new URL(url).hostname,
+                source_website: hostname,
                 category: category.toLowerCase(),
                 content_type: category.toLowerCase(),
-                tags: [category.toLowerCase(), 'indonesia'],
-                location: 'Indonesia'
+                tags: [...baseTags, ...additionalTags],
+                location: hostname.includes('.id') ? 'Indonesia' : 'Internasional',
+                deadline: deadline,
+                is_active: true
               }
             })
             
