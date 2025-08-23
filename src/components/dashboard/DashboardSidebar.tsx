@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 interface DashboardSidebarProps {
   activeSection: string;
@@ -25,18 +25,37 @@ interface DashboardSidebarProps {
 
 export const DashboardSidebar = ({ activeSection, setActiveSection, onSignOut, userRole }: DashboardSidebarProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
   
   const menuItems = [
-    { id: "overview", label: "Dashboard", icon: Home },
-    { id: "courses", label: "Kursus Saya", icon: BookOpen },
-    { id: "challenges", label: "Tantangan", icon: Trophy },
-    { id: "opportunities", label: "Peluang", icon: Briefcase },
-    { id: "progress", label: "Progress", icon: BarChart3 },
-    { id: "achievements", label: "Pencapaian", icon: Award },
-    { id: "community", label: "Community", icon: Users },
-    { id: "timeline", label: "Timeline", icon: Clock },
-    { id: "settings", label: "Pengaturan", icon: Settings },
+    { id: "overview", label: "Dashboard", icon: Home, route: "/dashboard" },
+    { id: "courses", label: "Kursus Saya", icon: BookOpen, route: "/learning" },
+    { id: "challenges", label: "Tantangan", icon: Trophy, route: "/dashboard-gamified" },
+    { id: "opportunities", label: "Peluang", icon: Briefcase, route: "/opportunities" },
+    { id: "progress", label: "Progress", icon: BarChart3, route: "/dashboard" },
+    { id: "achievements", label: "Pencapaian", icon: Award, route: "/dashboard" },
+    { id: "community", label: "Community", icon: Users, route: "/community" },
+    { id: "timeline", label: "Timeline", icon: Clock, route: "/discovery" },
+    { id: "settings", label: "Pengaturan", icon: Settings, route: "/dashboard" },
   ];
+
+  const handleMenuClick = (item: typeof menuItems[0]) => {
+    if (item.route === "/dashboard") {
+      // For dashboard sections, use the section navigation
+      setActiveSection(item.id);
+      navigate(item.route);
+    } else {
+      // For other routes, navigate directly
+      navigate(item.route);
+    }
+  };
+
+  const isActiveItem = (item: typeof menuItems[0]) => {
+    if (item.route === "/dashboard") {
+      return location.pathname === "/dashboard" && activeSection === item.id;
+    }
+    return location.pathname === item.route;
+  };
 
   return (
     <Sidebar className="border-r border-border bg-card">
@@ -56,8 +75,8 @@ export const DashboardSidebar = ({ activeSection, setActiveSection, onSignOut, u
           {menuItems.map((item) => (
             <SidebarMenuItem key={item.id}>
               <SidebarMenuButton 
-                onClick={() => setActiveSection(item.id)}
-                isActive={activeSection === item.id}
+                onClick={() => handleMenuClick(item)}
+                isActive={isActiveItem(item)}
                 className="w-full justify-start gap-3 mb-1"
               >
                 <item.icon className="h-4 w-4" />
