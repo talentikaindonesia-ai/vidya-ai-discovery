@@ -213,10 +213,15 @@ const Onboarding = () => {
               )}
               
               <Button 
-                onClick={() => navigate("/assessment")}
+                onClick={handleNext}
+                disabled={
+                  (step === 1 && (!formData.fullName || !formData.age)) ||
+                  (step === 2 && !formData.educationLevel) ||
+                  (step === 3 && formData.interests.length === 0)
+                }
                 className="bg-primary text-primary-foreground hover:shadow-floating"
               >
-                Mulai Assessment
+                {step === 3 ? 'Selesai' : 'Lanjut'}
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
