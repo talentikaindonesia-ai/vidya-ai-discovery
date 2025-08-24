@@ -96,24 +96,24 @@ export const AssessmentResultsCard = ({ assessmentResults }: AssessmentResultsCa
   return (
     <Card className="bg-gradient-subtle border-primary/20">
       <CardHeader className="pb-3 sm:pb-4">
-        <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-          <Brain className="w-5 h-5" />
+        <CardTitle className="flex items-center gap-2 text-base sm:text-lg lg:text-xl">
+          <Brain className="w-4 h-4 sm:w-5 sm:h-5" />
           <span className="truncate">Hasil Assessment Anda</span>
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4 sm:space-y-6">
+      <CardContent className="space-y-3 sm:space-y-4 lg:space-y-6 p-3 sm:p-6">
         {/* Primary Personality Type */}
         <div className="text-center">
-          <div className={`w-12 h-12 sm:w-16 sm:h-16 mx-auto rounded-full bg-gradient-to-br ${personalityData?.color} flex items-center justify-center mb-4 shadow-lg`}>
-            <Icon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+          <div className={`w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 mx-auto rounded-full bg-gradient-to-br ${personalityData?.color} flex items-center justify-center mb-3 sm:mb-4 shadow-lg`}>
+            <Icon className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-white" />
           </div>
-          <h3 className="text-lg sm:text-xl font-bold mb-2 px-2">{personalityData?.name}</h3>
-          <p className="text-xs sm:text-sm text-muted-foreground mb-4 leading-relaxed px-2">
+          <h3 className="text-sm sm:text-lg lg:text-xl font-bold mb-2 px-2 break-words">{personalityData?.name}</h3>
+          <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4 leading-relaxed px-2">
             {personalityData?.description}
           </p>
           <div className="flex justify-between items-center mb-2 px-2">
             <span className="text-xs sm:text-sm font-medium">Tingkat Kesesuaian</span>
-            <span className="font-bold text-primary">{percentage}%</span>
+            <span className="font-bold text-primary text-sm sm:text-base">{percentage}%</span>
           </div>
           <Progress value={percentage} className="h-2 mx-2" />
         </div>
@@ -178,11 +178,11 @@ export const AssessmentResultsCard = ({ assessmentResults }: AssessmentResultsCa
         </div>
 
         {/* Actions */}
-        <div className="flex gap-2 px-2">
+        <div className="flex flex-col sm:flex-row gap-2 px-2">
           <Button 
             variant="outline" 
             size="sm" 
-            className="flex-1 text-xs sm:text-sm"
+            className="w-full sm:flex-1 text-xs sm:text-sm min-h-[44px]"
             onClick={() => window.location.href = '/assessment'}
           >
             <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
@@ -191,7 +191,7 @@ export const AssessmentResultsCard = ({ assessmentResults }: AssessmentResultsCa
           <Button 
             variant="outline" 
             size="sm" 
-            className="flex-1 text-xs sm:text-sm"
+            className="w-full sm:flex-1 text-xs sm:text-sm min-h-[44px]"
             onClick={() => window.location.href = '/learning'}
           >
             <span className="truncate">Lihat Kursus</span>

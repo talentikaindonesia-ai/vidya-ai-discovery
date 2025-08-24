@@ -183,69 +183,6 @@ export const WelcomeDashboard = ({ user, profile }: WelcomeDashboardProps) => {
       {/* Assessment Results */}
       <AssessmentResultsCard assessmentResults={assessmentResults} />
 
-      {/* Learning Progress Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        <Card className="shadow-card">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-              <Target className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
-              Target Mingguan
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4 sm:space-y-6">
-            <div>
-              <div className="flex justify-between text-sm mb-2">
-                <span className="font-medium">Kursus Diselesaikan</span>
-                <span className="text-primary font-bold">2/3</span>
-              </div>
-              <Progress value={67} className="h-2 sm:h-3" />
-            </div>
-            <div>
-              <div className="flex justify-between text-sm mb-2">
-                <span className="font-medium">Waktu Belajar Mingguan</span>
-                <span className="text-primary font-bold">8/12 jam</span>
-              </div>
-              <Progress value={67} className="h-2 sm:h-3" />
-            </div>
-            <div className="pt-2 border-t">
-              <p className="text-sm text-muted-foreground">
-                Anda sudah mencapai <span className="font-semibold text-primary">67%</span> dari target mingguan!
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-card">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-              <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
-              Jadwal Hari Ini
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 sm:space-y-4">
-            <div className="flex items-center gap-3 p-3 sm:p-4 bg-primary/5 rounded-xl border-l-4 border-primary">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                <Play className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-sm sm:text-base">Kelas Python Dasar</p>
-                <p className="text-xs sm:text-sm text-muted-foreground">09:00 - 10:30 WIB</p>
-              </div>
-              <Badge className="bg-primary text-primary-foreground text-xs">Live</Badge>
-            </div>
-            <div className="flex items-center gap-3 p-3 sm:p-4 bg-muted/30 rounded-xl border-l-4 border-muted">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-muted/50 rounded-full flex items-center justify-center flex-shrink-0">
-                <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-muted-foreground" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-sm sm:text-base">Quiz Matematika</p>
-                <p className="text-xs sm:text-sm text-muted-foreground">14:00 - 14:30 WIB</p>
-              </div>
-              <Badge variant="outline" className="text-xs">Upcoming</Badge>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
 
       {/* Quick Actions */}
       <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
