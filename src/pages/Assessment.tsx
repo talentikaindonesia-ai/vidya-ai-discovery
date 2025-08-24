@@ -19,6 +19,7 @@ import {
   TrendingUp
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import RiasecPersonalityTypes from "@/components/RiasecPersonalityTypes";
 
 // RIASEC Personality Types Data
 const riasecTypes = {
@@ -309,58 +310,24 @@ const Assessment = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5">
         <div className="container mx-auto px-4 py-8">
-          <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold text-primary mb-4">
-              Tipe Kepribadian Berdasarkan RIASEC
-            </h1>
-            <p className="text-xl text-muted-foreground mb-2">
-              6 kepribadian ini bisa bantu kamu menentukan jurusan yang 
-            </p>
-            <p className="text-xl text-muted-foreground">
-              sesuai dengan minat dan karaktermu
-            </p>
-          </div>
-
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-12">
-            {Object.entries(riasecTypes).map(([key, type]) => {
-              const Icon = type.icon;
-              return (
-                <Card key={key} className="group hover:shadow-lg transition-all duration-300 border-2 hover:border-primary/30">
-                  <CardHeader className="text-center">
-                    <div className={`w-20 h-20 mx-auto rounded-full bg-gradient-to-br ${type.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
-                      <Icon className="w-10 h-10 text-white" />
-                    </div>
-                    <CardTitle className="text-xl font-bold">{type.name}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-                      {type.description}
-                    </p>
-                    <div className="space-y-2">
-                      <h4 className="font-semibold text-sm">Karakteristik:</h4>
-                      <div className="flex flex-wrap gap-1">
-                        {type.characteristics.map((char, index) => (
-                          <Badge key={index} variant="secondary" className="text-xs">
-                            {char}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-
-          <div className="text-center">
-            <Card className="max-w-md mx-auto">
+          <RiasecPersonalityTypes showButton={false} />
+          
+          <div className="text-center mt-8">
+            <Card className="max-w-md mx-auto border-primary/20 shadow-lg">
               <CardContent className="pt-6">
-                <Brain className="w-16 h-16 mx-auto mb-4 text-primary" />
-                <h3 className="text-xl font-semibold mb-2">Siap Menemukan Tipe Kepribadianmu?</h3>
+                <div className="mb-4">
+                  <Brain className="w-12 h-12 mx-auto text-primary mb-2" />
+                  <h3 className="text-xl font-semibold mb-2">Temukan Tipe Kepribadianmu!</h3>
+                </div>
                 <p className="text-muted-foreground mb-6">
                   Ikuti tes minat bakat berdasarkan teori RIASEC untuk mengetahui kepribadian dan potensi kariermu.
                 </p>
-                <Button onClick={startAssessment} className="w-full" size="lg">
+                <Button 
+                  onClick={startAssessment} 
+                  className="w-full bg-gradient-to-r from-primary to-primary-dark hover:shadow-floating transform hover:scale-[1.02] transition-all duration-300 font-semibold" 
+                  size="lg"
+                >
+                  <Target className="w-5 h-5 mr-2" />
                   Mulai Tes Minat Bakat
                 </Button>
               </CardContent>
