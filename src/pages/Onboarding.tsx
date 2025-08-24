@@ -205,7 +205,11 @@ const Onboarding = () => {
             {/* Previous/Next buttons row */}
             <div className="flex justify-between gap-4">
               {step > 1 ? (
-                <Button variant="outline" onClick={() => setStep(step - 1)}>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setStep(step - 1)}
+                  className="min-h-[48px] touch-manipulation"
+                >
                   Sebelumnya
                 </Button>
               ) : (
@@ -215,11 +219,11 @@ const Onboarding = () => {
               <Button 
                 onClick={handleNext}
                 disabled={
-                  (step === 1 && (!formData.fullName || !formData.age)) ||
+                  (step === 1 && (!formData.fullName.trim() || !formData.age.trim())) ||
                   (step === 2 && !formData.educationLevel) ||
                   (step === 3 && formData.interests.length === 0)
                 }
-                className="bg-primary text-primary-foreground hover:shadow-floating"
+                className="bg-primary text-primary-foreground hover:shadow-floating min-h-[48px] px-6 touch-manipulation active:scale-95 transition-transform"
               >
                 {step === 3 ? 'Selesai' : 'Lanjut'}
                 <ArrowRight className="w-4 h-4 ml-2" />
