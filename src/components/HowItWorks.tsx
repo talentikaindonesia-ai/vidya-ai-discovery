@@ -14,7 +14,7 @@ const HowItWorks = () => {
       number: "02", 
       title: "Ikuti Tes Minat & Bakat",
       description: "Selesaikan tes psikometri yang fun dan interaktif untuk mengidentifikasi potensimu.",
-      highlight: "15-20 menit"
+      highlight: "5 menit"
     },
     {
       number: "03",
