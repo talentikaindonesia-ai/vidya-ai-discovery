@@ -1608,6 +1608,15 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_payment_analytics: {
+        Args: { end_date?: string; start_date?: string }
+        Returns: {
+          avg_transaction_amount: number
+          successful_transactions: number
+          total_revenue: number
+          transaction_count: number
+        }[]
+      }
       get_profile_secure: {
         Args: { profile_user_id: string }
         Returns: {
@@ -1622,6 +1631,17 @@ export type Database = {
           phone: string
           subscription_status: string
           subscription_type: string
+        }[]
+      }
+      get_transaction_summary: {
+        Args: { transaction_id: string }
+        Returns: {
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          status: string
+          transaction_type: string
         }[]
       }
       has_role: {

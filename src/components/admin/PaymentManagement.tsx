@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { Plus, Edit, Trash2, Eye, Download, Ticket, DollarSign, Users, TrendingUp } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/utils";
+import { auditAdminAction, useAuditLog, checkAdminRole } from "@/lib/security-audit";
 
 export const PaymentManagement = () => {
   const [plans, setPlans] = useState<any[]>([]);
@@ -22,13 +23,29 @@ export const PaymentManagement = () => {
   const [loading, setLoading] = useState(false);
   const [editingPlan, setEditingPlan] = useState<any>(null);
   const [editingVoucher, setEditingVoucher] = useState<any>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const { toast } = useToast();
 
+  // Audit log for payment management access
+  useAuditLog('ADMIN_PAYMENT_MANAGEMENT_ACCESS', 'payment_management');
+
   useEffect(() => {
-    loadData();
+    checkAdminRole().then(isAdminUser => {
+      setIsAdmin(isAdminUser);
+      if (isAdminUser) {
+        loadData();
+      } else {
+        toast({
+          title: "Access Denied",
+          description: "You don't have permission to access payment management",
+          variant: "destructive",
+        });
+      }
+    });
   }, []);
 
   const loadData = async () => {
+    if (!isAdmin) return;
     setLoading(true);
     await Promise.all([
       loadPlans(),
@@ -58,45 +75,77 @@ export const PaymentManagement = () => {
   };
 
   const loadTransactions = async () => {
-    const { data, error } = await supabase
-      .from('payment_transactions')
-      .select(`
-        *,
-        profiles!inner(full_name, email)
-      `)
-      .order('created_at', { ascending: false })
-      .limit(50);
+    try {
+      // Admins can view all transactions, but this access should be logged
+      const { data, error } = await supabase
+        .from('payment_transactions')
+        .select(`
+          *,
+          profiles!inner(full_name, email)
+        `)
+        .order('created_at', { ascending: false })
+        .limit(50);
 
-    if (data) setTransactions(data);
+      if (error) {
+        console.error('Error loading transactions:', error);
+        return;
+      }
+
+      // Log admin access for audit purposes
+      console.log(`Admin ${(await supabase.auth.getUser()).data.user?.email} accessed payment transactions at ${new Date().toISOString()}`);
+      
+      if (data) setTransactions(data);
+    } catch (error) {
+      console.error('Error in loadTransactions:', error);
+    }
   };
 
   const loadAnalytics = async () => {
-    // Get revenue analytics
-    const { data: revenue } = await supabase
-      .from('payment_transactions')
-      .select('amount, created_at')
-      .eq('status', 'completed');
+    try {
+      // Use secure analytics function instead of direct table access
+      const { data: analyticsData, error } = await supabase
+        .rpc('get_payment_analytics');
 
-    const { data: activeSubscriptions } = await supabase
-      .from('user_subscriptions')
-      .select('id')
-      .eq('status', 'active');
+      if (error) throw error;
 
-    const thisMonth = new Date();
-    thisMonth.setDate(1);
-    
-    const { data: monthlyRevenue } = await supabase
-      .from('payment_transactions')
-      .select('amount')
-      .eq('status', 'completed')
-      .gte('created_at', thisMonth.toISOString());
+      const analytics = analyticsData?.[0] || {
+        total_revenue: 0,
+        transaction_count: 0,
+        avg_transaction_amount: 0,
+        successful_transactions: 0
+      };
+      
+      const { data: activeSubscriptions } = await supabase
+        .from('user_subscriptions')
+        .select('id')
+        .eq('status', 'active');
 
-    setAnalytics({
-      totalRevenue: revenue?.reduce((sum, t) => sum + t.amount, 0) || 0,
-      monthlyRevenue: monthlyRevenue?.reduce((sum, t) => sum + t.amount, 0) || 0,
-      activeSubscriptions: activeSubscriptions?.length || 0,
-      totalTransactions: revenue?.length || 0,
-    });
+      setAnalytics({
+        totalRevenue: Number(analytics.total_revenue || 0),
+        monthlyRevenue: Number(analytics.total_revenue || 0), // Will be calculated separately for current month
+        activeSubscriptions: activeSubscriptions?.length || 0,
+        totalTransactions: Number(analytics.transaction_count || 0),
+      });
+
+      // Get current month revenue separately
+      const thisMonth = new Date();
+      thisMonth.setDate(1);
+      
+      const { data: monthlyAnalytics, error: monthlyError } = await supabase
+        .rpc('get_payment_analytics', {
+          start_date: thisMonth.toISOString().split('T')[0],
+          end_date: new Date().toISOString().split('T')[0]
+        });
+
+      if (!monthlyError && monthlyAnalytics?.[0]) {
+        setAnalytics(prev => ({
+          ...prev,
+          monthlyRevenue: Number(monthlyAnalytics[0].total_revenue || 0)
+        }));
+      }
+    } catch (error) {
+      console.error('Error loading analytics:', error);
+    }
   };
 
   const savePlan = async (planData: any) => {
