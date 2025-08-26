@@ -141,16 +141,13 @@ export const SubscriptionManager = ({ userId, onSubscriptionChange }: Subscripti
       description: "Akan diarahkan ke halaman pembayaran...",
     });
     
-    // Create pending transaction
-    const { error } = await supabase
-      .from('payment_transactions')
-      .insert({
-        user_id: userId,
-        transaction_type: 'subscription',
-        amount,
-        status: 'pending',
-        payment_gateway: 'midtrans', // or selected gateway
-      });
+    // Create pending transaction using secure function
+    const { data, error } = await supabase.rpc('create_payment_transaction', {
+      p_user_id: userId,
+      p_transaction_type: 'subscription',
+      p_amount: amount,
+      p_payment_gateway: 'midtrans'
+    });
 
     if (error) throw error;
   };

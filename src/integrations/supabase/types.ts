@@ -1604,6 +1604,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_payment_transaction: {
+        Args: {
+          p_amount: number
+          p_currency?: string
+          p_payment_gateway?: string
+          p_subscription_id?: string
+          p_transaction_type: string
+          p_user_id: string
+        }
+        Returns: string
+      }
       generate_invoice_number: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -1654,6 +1665,15 @@ export type Database = {
       update_subscription_status: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      update_transaction_status: {
+        Args: {
+          p_external_id?: string
+          p_new_status: string
+          p_payment_method?: string
+          p_transaction_id: string
+        }
+        Returns: boolean
       }
     }
     Enums: {
