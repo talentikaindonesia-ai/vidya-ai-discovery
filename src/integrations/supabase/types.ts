@@ -649,6 +649,110 @@ export type Database = {
         }
         Relationships: []
       }
+      one_time_products: {
+        Row: {
+          created_at: string
+          description: string | null
+          features: Json | null
+          id: string
+          is_active: boolean | null
+          is_digital: boolean | null
+          name: string
+          price: number
+          product_type: string
+          stock_quantity: number | null
+          thumbnail_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          features?: Json | null
+          id?: string
+          is_active?: boolean | null
+          is_digital?: boolean | null
+          name: string
+          price: number
+          product_type: string
+          stock_quantity?: number | null
+          thumbnail_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          features?: Json | null
+          id?: string
+          is_active?: boolean | null
+          is_digital?: boolean | null
+          name?: string
+          price?: number
+          product_type?: string
+          stock_quantity?: number | null
+          thumbnail_url?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      payment_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          external_transaction_id: string | null
+          id: string
+          invoice_number: string | null
+          notes: string | null
+          payment_gateway: string | null
+          payment_method: string | null
+          status: string
+          subscription_id: string | null
+          transaction_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          external_transaction_id?: string | null
+          id?: string
+          invoice_number?: string | null
+          notes?: string | null
+          payment_gateway?: string | null
+          payment_method?: string | null
+          status?: string
+          subscription_id?: string | null
+          transaction_type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          external_transaction_id?: string | null
+          id?: string
+          invoice_number?: string | null
+          notes?: string | null
+          payment_gateway?: string | null
+          payment_method?: string | null
+          status?: string
+          subscription_id?: string | null
+          transaction_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_transactions_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "user_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           address: string | null
@@ -741,6 +845,84 @@ export type Database = {
           xp_reward?: number | null
         }
         Relationships: []
+      }
+      referral_codes: {
+        Row: {
+          code: string
+          commission_rate: number
+          created_at: string
+          id: string
+          is_active: boolean | null
+          total_commission: number | null
+          total_referrals: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          code: string
+          commission_rate?: number
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          total_commission?: number | null
+          total_referrals?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          code?: string
+          commission_rate?: number
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          total_commission?: number | null
+          total_referrals?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      referral_usage: {
+        Row: {
+          commission_earned: number
+          created_at: string
+          id: string
+          referral_code_id: string | null
+          referred_user_id: string
+          transaction_id: string | null
+        }
+        Insert: {
+          commission_earned: number
+          created_at?: string
+          id?: string
+          referral_code_id?: string | null
+          referred_user_id: string
+          transaction_id?: string | null
+        }
+        Update: {
+          commission_earned?: number
+          created_at?: string
+          id?: string
+          referral_code_id?: string | null
+          referred_user_id?: string
+          transaction_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_usage_referral_code_id_fkey"
+            columns: ["referral_code_id"]
+            isOneToOne: false
+            referencedRelation: "referral_codes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referral_usage_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "payment_transactions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reward_items: {
         Row: {
@@ -850,6 +1032,51 @@ export type Database = {
           title?: string
           updated_at?: string
           url?: string
+        }
+        Relationships: []
+      }
+      subscription_packages: {
+        Row: {
+          created_at: string
+          features: Json
+          id: string
+          is_active: boolean | null
+          max_courses: number | null
+          max_opportunities: number | null
+          max_users: number | null
+          name: string
+          price_monthly: number
+          price_yearly: number
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          features?: Json
+          id?: string
+          is_active?: boolean | null
+          max_courses?: number | null
+          max_opportunities?: number | null
+          max_users?: number | null
+          name: string
+          price_monthly?: number
+          price_yearly?: number
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          features?: Json
+          id?: string
+          is_active?: boolean | null
+          max_courses?: number | null
+          max_opportunities?: number | null
+          max_users?: number | null
+          name?: string
+          price_monthly?: number
+          price_yearly?: number
+          type?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -1172,6 +1399,59 @@ export type Database = {
         }
         Relationships: []
       }
+      user_subscriptions: {
+        Row: {
+          amount_paid: number
+          auto_renew: boolean | null
+          billing_cycle: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          package_id: string | null
+          starts_at: string
+          status: string
+          stripe_subscription_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_paid?: number
+          auto_renew?: boolean | null
+          billing_cycle?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          package_id?: string | null
+          starts_at?: string
+          status?: string
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_paid?: number
+          auto_renew?: boolean | null
+          billing_cycle?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          package_id?: string | null
+          starts_at?: string
+          status?: string
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_subscriptions_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_packages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_xp: {
         Row: {
           created_at: string | null
@@ -1220,11 +1500,114 @@ export type Database = {
         }
         Relationships: []
       }
+      voucher_codes: {
+        Row: {
+          applicable_packages: string[] | null
+          code: string
+          created_at: string
+          created_by: string | null
+          current_uses: number | null
+          description: string | null
+          discount_type: string
+          discount_value: number
+          id: string
+          is_active: boolean | null
+          max_uses: number | null
+          min_purchase_amount: number | null
+          name: string
+          updated_at: string
+          valid_from: string
+          valid_until: string
+        }
+        Insert: {
+          applicable_packages?: string[] | null
+          code: string
+          created_at?: string
+          created_by?: string | null
+          current_uses?: number | null
+          description?: string | null
+          discount_type: string
+          discount_value: number
+          id?: string
+          is_active?: boolean | null
+          max_uses?: number | null
+          min_purchase_amount?: number | null
+          name: string
+          updated_at?: string
+          valid_from?: string
+          valid_until: string
+        }
+        Update: {
+          applicable_packages?: string[] | null
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          current_uses?: number | null
+          description?: string | null
+          discount_type?: string
+          discount_value?: number
+          id?: string
+          is_active?: boolean | null
+          max_uses?: number | null
+          min_purchase_amount?: number | null
+          name?: string
+          updated_at?: string
+          valid_from?: string
+          valid_until?: string
+        }
+        Relationships: []
+      }
+      voucher_usage: {
+        Row: {
+          discount_applied: number
+          id: string
+          transaction_id: string | null
+          used_at: string
+          user_id: string
+          voucher_id: string | null
+        }
+        Insert: {
+          discount_applied: number
+          id?: string
+          transaction_id?: string | null
+          used_at?: string
+          user_id: string
+          voucher_id?: string | null
+        }
+        Update: {
+          discount_applied?: number
+          id?: string
+          transaction_id?: string | null
+          used_at?: string
+          user_id?: string
+          voucher_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voucher_usage_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "payment_transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "voucher_usage_voucher_id_fkey"
+            columns: ["voucher_id"]
+            isOneToOne: false
+            referencedRelation: "voucher_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      generate_invoice_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_profile_secure: {
         Args: { profile_user_id: string }
         Returns: {
@@ -1247,6 +1630,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      update_subscription_status: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
     }
     Enums: {
