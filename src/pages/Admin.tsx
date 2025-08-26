@@ -25,6 +25,7 @@ import {
 import { LearningContentManager } from "@/components/dashboard/LearningContentManager";
 import { ManualOpportunityManager } from "@/components/dashboard/ManualOpportunityManager";
 import { LearningPathBuilder } from "@/components/admin/LearningPathBuilder";
+import { PaymentManagement } from "@/components/admin/PaymentManagement";
 
 // Web Scraping Admin Component
 const WebScrapingAdmin = () => {
@@ -318,12 +319,13 @@ const Admin = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-7">
+          <TabsList className="grid w-full grid-cols-8">
             <TabsTrigger value="courses">Kursus</TabsTrigger>
             <TabsTrigger value="learning">Learning Hub</TabsTrigger>
             <TabsTrigger value="paths">Learning Paths</TabsTrigger>
             <TabsTrigger value="challenges">Tantangan</TabsTrigger>
             <TabsTrigger value="opportunities">Peluang</TabsTrigger>
+            <TabsTrigger value="payments">Payments</TabsTrigger>
             <TabsTrigger value="scraping">Web Scraping</TabsTrigger>
             <TabsTrigger value="community">Komunitas</TabsTrigger>
           </TabsList>
@@ -574,6 +576,10 @@ const Admin = () => {
 
           <TabsContent value="opportunities" className="mt-6">
             <ManualOpportunityManager />
+          </TabsContent>
+
+          <TabsContent value="payments" className="mt-6">
+            <PaymentManagement />
           </TabsContent>
 
           <TabsContent value="scraping" className="mt-6">

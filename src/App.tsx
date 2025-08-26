@@ -16,6 +16,7 @@ import OpportunityBoard from "./pages/OpportunityBoard";
 import CommunityForum from "./pages/CommunityForum";
 import Onboarding from "./pages/Onboarding";
 import DashboardGamified from "./pages/DashboardGamified";
+import Subscription from "./pages/Subscription";
 import { ContentViewer } from "./components/dashboard/ContentViewer";
 
 const queryClient = new QueryClient();
@@ -39,6 +40,7 @@ const App = () => (
           <Route path="/opportunities" element={<OpportunityBoard />} />
           <Route path="/community" element={<CommunityForum />} />
           <Route path="/dashboard-gamified" element={<DashboardGamified />} />
+          <Route path="/subscription" element={<Subscription />} />
           <Route path="/admin" element={<Admin />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

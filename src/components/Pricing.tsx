@@ -135,7 +135,11 @@ const Pricing = () => {
                     }`}
                     size="lg"
                   >
-                    {plan.name === "School Package" ? "Hubungi Sales" : "Berlangganan Sekarang"}
+                    {plan.name === "School Package" ? "Hubungi Sales" : (
+                      <a href="/subscription" className="w-full block text-center">
+                        Berlangganan Sekarang
+                      </a>
+                    )}
                   </Button>
                 </CardFooter>
               </Card>
