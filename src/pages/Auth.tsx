@@ -165,7 +165,7 @@ const Auth = () => {
                     className="w-full"
                   >
                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Masuk dengan Google
+                    Untuk melanjutkan ke Talentika
                   </Button>
                 </div>
               </form>
@@ -261,7 +261,7 @@ const Auth = () => {
                     className="w-full"
                   >
                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Masuk dengan Google
+                    Untuk melanjutkan ke Talentika
                   </Button>
                 </div>
               </form>
