@@ -18,6 +18,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { AssessmentResultsCard } from "./AssessmentResultsCard";
+import { TestNotificationButton } from "./TestNotificationButton";
 
 interface WelcomeDashboardProps {
   user: User | null;
@@ -170,6 +171,11 @@ export const WelcomeDashboard = ({ user, profile }: WelcomeDashboardProps) => {
                   ))}
                 </div>
               )}
+              
+              {/* Test notification button - for development */}
+              <div className="mt-4">
+                <TestNotificationButton user={user} />
+              </div>
             </div>
             <div className="hidden lg:block flex-shrink-0">
               <div className="w-24 h-24 xl:w-32 xl:h-32 bg-white/10 rounded-full flex items-center justify-center">

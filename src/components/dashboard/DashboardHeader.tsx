@@ -1,8 +1,8 @@
-import { Bell, Search } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User } from "@supabase/supabase-js";
+import { NotificationDropdown } from "./NotificationDropdown";
 
 interface DashboardHeaderProps {
   user: User | null;
@@ -35,10 +35,7 @@ export const DashboardHeader = ({ user, profile }: DashboardHeaderProps) => {
         </div>
         
         <div className="flex items-center space-x-4">
-          <Button variant="ghost" size="icon" className="relative">
-            <Bell className="h-5 w-5" />
-            <span className="absolute -top-1 -right-1 h-3 w-3 bg-destructive rounded-full"></span>
-          </Button>
+          <NotificationDropdown userId={user?.id} />
           
           <div className="flex items-center space-x-3">
             <Avatar>
