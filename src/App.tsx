@@ -17,6 +17,7 @@ import CommunityForum from "./pages/CommunityForum";
 import Onboarding from "./pages/Onboarding";
 import DashboardGamified from "./pages/DashboardGamified";
 import Subscription from "./pages/Subscription";
+import QuizExplore from "./pages/QuizExplore";
 import { ContentViewer } from "./components/dashboard/ContentViewer";
 
 const queryClient = new QueryClient();
@@ -39,6 +40,7 @@ const App = () => (
           <Route path="/portfolio" element={<PortfolioBuilder />} />
           <Route path="/opportunities" element={<OpportunityBoard />} />
           <Route path="/community" element={<CommunityForum />} />
+          <Route path="/explore" element={<QuizExplore />} />
           <Route path="/dashboard-gamified" element={<DashboardGamified />} />
           <Route path="/subscription" element={<Subscription />} />
           <Route path="/admin" element={<Admin />} />

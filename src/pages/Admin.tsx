@@ -26,6 +26,7 @@ import { LearningContentManager } from "@/components/dashboard/LearningContentMa
 import { ManualOpportunityManager } from "@/components/dashboard/ManualOpportunityManager";
 import { LearningPathBuilder } from "@/components/admin/LearningPathBuilder";
 import { PaymentManagement } from "@/components/admin/PaymentManagement";
+import { QuizManager } from "@/components/admin/QuizManager";
 
 // Web Scraping Admin Component
 const WebScrapingAdmin = () => {
@@ -323,7 +324,7 @@ const Admin = () => {
             <TabsTrigger value="courses">Kursus</TabsTrigger>
             <TabsTrigger value="learning">Learning Hub</TabsTrigger>
             <TabsTrigger value="paths">Learning Paths</TabsTrigger>
-            <TabsTrigger value="challenges">Tantangan</TabsTrigger>
+            <TabsTrigger value="quizzes">Quiz Explorer</TabsTrigger>
             <TabsTrigger value="opportunities">Peluang</TabsTrigger>
             <TabsTrigger value="payments">Payments</TabsTrigger>
             <TabsTrigger value="scraping">Web Scraping</TabsTrigger>
@@ -474,6 +475,10 @@ const Admin = () => {
 
           <TabsContent value="paths" className="mt-6">
             <LearningPathBuilder />
+          </TabsContent>
+
+          <TabsContent value="quizzes" className="mt-6">
+            <QuizManager />
           </TabsContent>
 
           <TabsContent value="challenges" className="mt-6">
