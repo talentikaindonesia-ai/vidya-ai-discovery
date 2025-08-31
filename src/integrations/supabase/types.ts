@@ -888,6 +888,252 @@ export type Database = {
         }
         Relationships: []
       }
+      quiz_attempts: {
+        Row: {
+          completed_at: string
+          id: string
+          is_correct: boolean
+          points_earned: number | null
+          quiz_id: string | null
+          time_taken_seconds: number | null
+          user_answer: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          id?: string
+          is_correct: boolean
+          points_earned?: number | null
+          quiz_id?: string | null
+          time_taken_seconds?: number | null
+          user_answer: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          id?: string
+          is_correct?: boolean
+          points_earned?: number | null
+          quiz_id?: string | null
+          time_taken_seconds?: number | null
+          user_answer?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_attempts_quiz_id_fkey"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "quizzes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quiz_categories: {
+        Row: {
+          color: string | null
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      quiz_challenges: {
+        Row: {
+          category_id: string | null
+          challenge_type: string
+          created_at: string
+          description: string | null
+          end_date: string | null
+          id: string
+          is_active: boolean | null
+          min_score: number | null
+          quiz_ids: string[] | null
+          reward_badge: string | null
+          reward_points: number | null
+          start_date: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category_id?: string | null
+          challenge_type?: string
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          min_score?: number | null
+          quiz_ids?: string[] | null
+          reward_badge?: string | null
+          reward_points?: number | null
+          start_date?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category_id?: string | null
+          challenge_type?: string
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          min_score?: number | null
+          quiz_ids?: string[] | null
+          reward_badge?: string | null
+          reward_points?: number | null
+          start_date?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_challenges_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "quiz_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quiz_leaderboard: {
+        Row: {
+          correct_answers: number | null
+          created_at: string
+          current_streak: number | null
+          id: string
+          last_quiz_date: string | null
+          longest_streak: number | null
+          rank_position: number | null
+          total_points: number | null
+          total_quizzes_completed: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          correct_answers?: number | null
+          created_at?: string
+          current_streak?: number | null
+          id?: string
+          last_quiz_date?: string | null
+          longest_streak?: number | null
+          rank_position?: number | null
+          total_points?: number | null
+          total_quizzes_completed?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          correct_answers?: number | null
+          created_at?: string
+          current_streak?: number | null
+          id?: string
+          last_quiz_date?: string | null
+          longest_streak?: number | null
+          rank_position?: number | null
+          total_points?: number | null
+          total_quizzes_completed?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      quizzes: {
+        Row: {
+          category_id: string | null
+          clue_location: string | null
+          correct_answer: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          difficulty: string
+          explanation: string | null
+          id: string
+          is_active: boolean | null
+          is_isc_exclusive: boolean | null
+          media_url: string | null
+          options: Json | null
+          points_reward: number | null
+          question: string
+          question_type: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category_id?: string | null
+          clue_location?: string | null
+          correct_answer: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          difficulty?: string
+          explanation?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_isc_exclusive?: boolean | null
+          media_url?: string | null
+          options?: Json | null
+          points_reward?: number | null
+          question: string
+          question_type?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category_id?: string | null
+          clue_location?: string | null
+          correct_answer?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          difficulty?: string
+          explanation?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_isc_exclusive?: boolean | null
+          media_url?: string | null
+          options?: Json | null
+          points_reward?: number | null
+          question?: string
+          question_type?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quizzes_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "quiz_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       referral_codes: {
         Row: {
           code: string
@@ -1703,6 +1949,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      update_quiz_rankings: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       update_subscription_status: {
         Args: Record<PropertyKey, never>
