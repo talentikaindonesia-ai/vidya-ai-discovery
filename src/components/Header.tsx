@@ -7,11 +7,11 @@ const Header = () => {
 
   const navItems = [
     { label: "Beranda", href: "#home" },
-    { label: "Talentika Junior", href: "#talentika-junior" },
     { label: "Fitur", href: "#features" },
     { label: "Cara Kerja", href: "#how-it-works" },
     { label: "Harga", href: "#pricing" },
-    { label: "Testimoni", href: "#testimonials" }
+    { label: "Testimoni", href: "#testimonials" },
+    { label: "Talentika Junior", href: "#talentika-junior", highlight: true }
   ];
 
   return (
@@ -39,7 +39,11 @@ const Header = () => {
               <a
                 key={item.label}
                 href={item.href}
-                className="text-foreground hover:text-primary transition-colors font-medium"
+                className={`transition-colors font-medium ${
+                  item.highlight 
+                    ? "bg-yellow-400/20 text-yellow-700 hover:bg-yellow-400/30 hover:text-yellow-800 px-3 py-1.5 rounded-lg" 
+                    : "text-foreground hover:text-primary"
+                }`}
               >
                 {item.label}
               </a>
@@ -81,7 +85,11 @@ const Header = () => {
                 <a
                   key={item.label}
                   href={item.href}
-                  className="text-foreground hover:text-primary transition-colors font-medium"
+                  className={`transition-colors font-medium ${
+                    item.highlight 
+                      ? "bg-yellow-400/20 text-yellow-700 hover:bg-yellow-400/30 hover:text-yellow-800 px-3 py-1.5 rounded-lg" 
+                      : "text-foreground hover:text-primary"
+                  }`}
                   onClick={() => setIsMenuOpen(false)}
                 >
                   {item.label}
