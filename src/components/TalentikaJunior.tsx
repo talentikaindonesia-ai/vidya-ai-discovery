@@ -27,14 +27,14 @@ const TalentikaJunior = () => {
   ];
 
   return (
-    <section className="py-20 relative overflow-hidden">
-      {/* Background with gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-secondary/20 via-accent/10 to-primary/5" />
+    <section className="py-20 relative overflow-hidden bg-gradient-to-br from-amber-50 via-blue-50 to-orange-50">
+      {/* Background with vibrant gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-amber-100/30 via-blue-100/20 to-orange-100/30" />
       
       {/* Decorative elements */}
-      <div className="absolute top-10 left-10 w-20 h-20 bg-accent/20 rounded-full blur-xl" />
-      <div className="absolute bottom-10 right-10 w-32 h-32 bg-primary/10 rounded-full blur-2xl" />
-      <div className="absolute top-1/2 left-1/4 w-16 h-16 bg-secondary/30 rounded-full blur-lg" />
+      <div className="absolute top-10 left-10 w-20 h-20 bg-blue-400/20 rounded-full blur-xl animate-pulse" />
+      <div className="absolute bottom-10 right-10 w-32 h-32 bg-amber-400/20 rounded-full blur-2xl animate-pulse delay-1000" />
+      <div className="absolute top-1/2 left-1/4 w-16 h-16 bg-orange-400/30 rounded-full blur-lg animate-bounce delay-500" />
       
       <div className="container mx-auto px-4 relative z-10">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -83,20 +83,20 @@ const TalentikaJunior = () => {
 
           {/* Image Section */}
           <div className="relative">
-            <div className="relative rounded-3xl overflow-hidden shadow-2xl transform rotate-2 hover:rotate-0 transition-transform duration-500">
+            <div className="relative rounded-3xl overflow-hidden shadow-2xl transform rotate-2 hover:rotate-0 transition-transform duration-500 hover-scale">
               <img 
-                src="/lovable-uploads/d3833557-6c75-4159-adea-99cbc2ef3f6d.png" 
+                src="/lovable-uploads/95b023ea-1670-4b3c-bf9d-caf7b5c2cef1.png" 
                 alt="Happy child discovering talents with Talentika Junior"
-                className="w-full h-auto object-cover"
+                className="w-full h-auto object-cover animate-fade-in"
               />
               {/* Overlay gradient */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-amber-500/10 via-transparent to-blue-500/10" />
             </div>
             
             {/* Floating elements */}
-            <div className="absolute -top-4 -left-4 w-8 h-8 bg-accent rounded-full animate-bounce delay-100" />
-            <div className="absolute -bottom-4 -right-4 w-6 h-6 bg-primary rounded-full animate-bounce delay-300" />
-            <div className="absolute top-1/4 -right-6 w-4 h-4 bg-secondary rounded-full animate-pulse" />
+            <div className="absolute -top-4 -left-4 w-8 h-8 bg-blue-400 rounded-full animate-bounce delay-100" />
+            <div className="absolute -bottom-4 -right-4 w-6 h-6 bg-amber-400 rounded-full animate-bounce delay-300" />
+            <div className="absolute top-1/4 -right-6 w-4 h-4 bg-orange-400 rounded-full animate-pulse" />
           </div>
         </div>
       </div>
