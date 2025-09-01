@@ -7,7 +7,7 @@ const Header = () => {
 
   const navItems = [
     { label: "Beranda", href: "#home" },
-    { label: "Explore Quiz", href: "/explore" },
+    { label: "Talentika Junior", href: "#talentika-junior" },
     { label: "Fitur", href: "#features" },
     { label: "Cara Kerja", href: "#how-it-works" },
     { label: "Harga", href: "#pricing" },
