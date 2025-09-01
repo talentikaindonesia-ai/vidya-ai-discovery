@@ -27,14 +27,21 @@ const TalentikaJunior = () => {
   ];
 
   return (
-    <section className="py-20 relative overflow-hidden bg-gradient-to-br from-amber-50 via-blue-50 to-orange-50">
-      {/* Background with vibrant gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-amber-100/30 via-blue-100/20 to-orange-100/30" />
+    <section className="py-20 relative overflow-hidden bg-gradient-to-br from-amber-100 via-blue-100 to-orange-100">
+      {/* Enhanced background with vibrant gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-amber-200/50 via-blue-200/40 to-orange-200/50" />
+      
+      {/* Additional overlay for depth */}
+      <div className="absolute inset-0 bg-gradient-to-t from-amber-50/80 via-transparent to-blue-50/60" />
       
       {/* Decorative elements */}
-      <div className="absolute top-10 left-10 w-20 h-20 bg-blue-400/20 rounded-full blur-xl animate-pulse" />
-      <div className="absolute bottom-10 right-10 w-32 h-32 bg-amber-400/20 rounded-full blur-2xl animate-pulse delay-1000" />
-      <div className="absolute top-1/2 left-1/4 w-16 h-16 bg-orange-400/30 rounded-full blur-lg animate-bounce delay-500" />
+      <div className="absolute top-10 left-10 w-20 h-20 bg-blue-400/30 rounded-full blur-xl animate-pulse" />
+      <div className="absolute bottom-10 right-10 w-32 h-32 bg-amber-400/30 rounded-full blur-2xl animate-pulse delay-1000" />
+      <div className="absolute top-1/2 left-1/4 w-16 h-16 bg-orange-400/40 rounded-full blur-lg animate-bounce delay-500" />
+      
+      {/* Additional decorative circles */}
+      <div className="absolute top-20 right-1/4 w-12 h-12 bg-blue-300/25 rounded-full blur-md animate-pulse delay-700" />
+      <div className="absolute bottom-20 left-1/3 w-10 h-10 bg-amber-300/35 rounded-full blur-sm animate-bounce delay-200" />
       
       <div className="container mx-auto px-4 relative z-10">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
