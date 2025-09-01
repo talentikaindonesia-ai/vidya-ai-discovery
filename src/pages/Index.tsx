@@ -4,6 +4,7 @@ import Features from "@/components/Features";
 import HowItWorks from "@/components/HowItWorks";
 import Pricing from "@/components/Pricing";
 import Testimonials from "@/components/Testimonials";
+import TalentikaJunior from "@/components/TalentikaJunior";
 import Footer from "@/components/Footer";
 
 const Index = () => {
@@ -25,6 +26,9 @@ const Index = () => {
         </section>
         <section id="testimonials">
           <Testimonials />
+        </section>
+        <section id="talentika-junior">
+          <TalentikaJunior />
         </section>
       </main>
       <Footer />
