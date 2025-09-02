@@ -18,6 +18,7 @@ import Onboarding from "./pages/Onboarding";
 import DashboardGamified from "./pages/DashboardGamified";
 import Subscription from "./pages/Subscription";
 import QuizExplore from "./pages/QuizExplore";
+import Profile from "./pages/Profile";
 import { ContentViewer } from "./components/dashboard/ContentViewer";
 
 const queryClient = new QueryClient();
@@ -43,6 +44,7 @@ const App = () => (
           <Route path="/explore" element={<QuizExplore />} />
           <Route path="/dashboard-gamified" element={<DashboardGamified />} />
           <Route path="/subscription" element={<Subscription />} />
+          <Route path="/profile" element={<Profile />} />
           <Route path="/admin" element={<Admin />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

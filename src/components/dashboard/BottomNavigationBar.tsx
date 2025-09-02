@@ -36,8 +36,7 @@ const navigationItems = [
 export function BottomNavigationBar({ activeSection, onSectionChange }: BottomNavigationBarProps) {
   const handleSectionChange = (sectionId: string) => {
     if (sectionId === "profile") {
-      // For now, just show a placeholder for profile
-      // In the future, this could navigate to a profile page
+      window.location.href = '/profile';
       return;
     }
     onSectionChange(sectionId);
