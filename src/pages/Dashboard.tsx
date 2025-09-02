@@ -8,6 +8,7 @@ import { Sidebar, SidebarContent, SidebarProvider } from "@/components/ui/sideba
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { WelcomeDashboard } from "@/components/dashboard/WelcomeDashboard";
+import { BottomNavigationBar } from "@/components/dashboard/BottomNavigationBar";
 import { ScrapedContent } from "@/components/dashboard/ScrapedContent";
 import { CoursesSection } from "@/components/dashboard/CoursesSection";
 import { ChallengesSection } from "@/components/dashboard/ChallengesSection";
@@ -312,9 +313,13 @@ const Dashboard = () => {
         />
         <div className="flex-1 flex flex-col">
           <DashboardHeader user={user} profile={profile} />
-          <main className="flex-1 p-6 overflow-auto">
+          <main className="flex-1 p-6 overflow-auto pb-20 md:pb-6">
             {renderActiveSection()}
           </main>
+          <BottomNavigationBar 
+            activeSection={activeSection}
+            onSectionChange={setActiveSection}
+          />
         </div>
       </div>
     </SidebarProvider>
