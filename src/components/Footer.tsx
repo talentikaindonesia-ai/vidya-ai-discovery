@@ -9,8 +9,8 @@ const Footer = () => {
           {/* Brand */}
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-soft">
-                <Brain className="w-6 h-6 text-white" />
+              <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-soft p-1">
+                <img src="/lovable-uploads/9e67a8cf-6f81-4abc-898b-bc665dee2b57.png" alt="Talentika Logo" className="w-8 h-8 object-contain" />
               </div>
               <div>
                 <h3 className="text-xl font-bold">Talentika</h3>
