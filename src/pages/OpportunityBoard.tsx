@@ -10,6 +10,7 @@ import { getSubscriptionLimits, checkSubscriptionAccess, getUserSubscriptionInfo
 import { DynamicOpportunityBoard } from "@/components/dashboard/DynamicOpportunityBoard";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { BottomNavigationBar } from "@/components/dashboard/BottomNavigationBar";
 import { toast } from "sonner";
 
 interface Opportunity {
@@ -221,7 +222,7 @@ const OpportunityBoard = () => {
           onSignOut={handleSignOut}
         />
         
-        <main className="flex-1 overflow-hidden">
+        <main className="flex-1 overflow-hidden pb-20 md:pb-0">
           <div className="p-6">
             {/* Header */}
             <div className="mb-8">
@@ -422,6 +423,9 @@ const OpportunityBoard = () => {
             </div>
           </div>
         </main>
+        
+        {/* Bottom Navigation Bar for Mobile */}
+        <BottomNavigationBar />
       </div>
     </SidebarProvider>
   );

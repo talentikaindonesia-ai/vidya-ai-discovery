@@ -15,6 +15,7 @@ import { UpgradePrompt } from "@/components/UpgradePrompt";
 import { LearningProgressTracker } from "@/components/dashboard/LearningProgressTracker";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { BottomNavigationBar } from "@/components/dashboard/BottomNavigationBar";
 
 interface Course {
   id: string;
@@ -345,7 +346,7 @@ const LearningHub = () => {
           onSignOut={handleSignOut}
         />
         
-        <main className="flex-1 overflow-hidden">
+        <main className="flex-1 overflow-hidden pb-20 md:pb-0">
           <div className="p-6">
             {/* Header */}
             <div className="mb-8">
@@ -742,6 +743,9 @@ const LearningHub = () => {
             </Tabs>
           </div>
         </main>
+        
+        {/* Bottom Navigation Bar for Mobile */}
+        <BottomNavigationBar />
       </div>
     </SidebarProvider>
   );
