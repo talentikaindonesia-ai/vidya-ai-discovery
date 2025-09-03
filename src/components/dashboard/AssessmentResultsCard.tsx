@@ -61,20 +61,25 @@ const riasecTypes = {
 export const AssessmentResultsCard = ({ assessmentResults }: AssessmentResultsCardProps) => {
   if (!assessmentResults) {
     return (
-      <Card className="bg-gradient-subtle border-primary/20">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Brain className="w-5 h-5" />
-            Hasil Assessment
+      <Card className="shadow-card border-primary/20 mobile-card">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Brain className="w-5 h-5 text-primary" />
+            Hasil Assessment Anda
           </CardTitle>
         </CardHeader>
-        <CardContent className="text-center py-8">
-          <Brain className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+        <CardContent className="text-center py-6">
+          <div className="w-16 h-16 mx-auto bg-muted/50 rounded-full flex items-center justify-center mb-4">
+            <Brain className="w-8 h-8 text-muted-foreground" />
+          </div>
           <h3 className="text-lg font-semibold mb-2">Belum Ada Hasil Assessment</h3>
-          <p className="text-muted-foreground mb-4">
+          <p className="text-muted-foreground text-sm mb-6 leading-relaxed">
             Ikuti tes minat bakat untuk mendapatkan rekomendasi pembelajaran yang dipersonalisasi
           </p>
-          <Button onClick={() => window.location.href = '/assessment'}>
+          <Button 
+            onClick={() => window.location.href = '/assessment'}
+            className="w-full sm:w-auto"
+          >
             Mulai Tes Sekarang
           </Button>
         </CardContent>
@@ -87,80 +92,76 @@ export const AssessmentResultsCard = ({ assessmentResults }: AssessmentResultsCa
   const Icon = personalityData?.icon || Brain;
   const scoreBreakdown = assessmentResults.score_breakdown || {};
   
-  // Type-safe calculations
   const scores = Object.values(scoreBreakdown) as number[];
   const totalScore = scores.reduce((sum, score) => sum + Number(score || 0), 0);
   const primaryScore = Number(scoreBreakdown[personalityType] || 0);
   const percentage = totalScore > 0 ? Math.round((primaryScore / totalScore) * 100) : 0;
 
   return (
-    <Card className="bg-gradient-subtle border-primary/20">
-      <CardHeader className="pb-3 sm:pb-4">
-        <CardTitle className="flex items-center gap-2 text-base sm:text-lg lg:text-xl">
-          <Brain className="w-4 h-4 sm:w-5 sm:h-5" />
-          <span className="truncate">Hasil Assessment Anda</span>
+    <Card className="shadow-card border-primary/20 mobile-card bg-gradient-subtle">
+      <CardHeader className="pb-4">
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <Brain className="w-5 h-5 text-primary" />
+          Hasil Assessment Anda
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3 sm:space-y-4 lg:space-y-6 p-3 sm:p-6">
-        {/* Primary Personality Type */}
+      <CardContent className="space-y-6">
+        {/* Personality Type - Centered and Simple */}
         <div className="text-center">
-          <div className={`w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 mx-auto rounded-full bg-gradient-to-br ${personalityData?.color} flex items-center justify-center mb-3 sm:mb-4 shadow-lg`}>
-            <Icon className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-white" />
+          <div className={`w-16 h-16 mx-auto rounded-full bg-gradient-to-br ${personalityData?.color} flex items-center justify-center mb-4 shadow-lg`}>
+            <Icon className="w-8 h-8 text-white" />
           </div>
-          <h3 className="text-sm sm:text-lg lg:text-xl font-bold mb-2 px-2 break-words">{personalityData?.name}</h3>
-          <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4 leading-relaxed px-2">
+          <h3 className="text-xl font-bold mb-2">{personalityData?.name}</h3>
+          <p className="text-sm text-muted-foreground mb-4 leading-relaxed px-2">
             {personalityData?.description}
           </p>
-          <div className="flex justify-between items-center mb-2 px-2">
-            <span className="text-xs sm:text-sm font-medium">Tingkat Kesesuaian</span>
-            <span className="font-bold text-primary text-sm sm:text-base">{percentage}%</span>
+          
+          {/* Compatibility Level */}
+          <div className="mb-4">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm font-medium">Tingkat Kesesuaian</span>
+              <span className="font-bold text-primary">{percentage}%</span>
+            </div>
+            <Progress value={percentage} className="h-3" />
           </div>
-          <Progress value={percentage} className="h-2 mx-2" />
         </div>
 
-        {/* Career Recommendations */}
+        {/* Career Recommendations - Simple Badges */}
         {assessmentResults.career_recommendations && assessmentResults.career_recommendations.length > 0 && (
-          <div className="px-2">
-            <div className="flex items-center gap-2 mb-3">
+          <div>
+            <h4 className="font-semibold mb-3 flex items-center gap-2">
               <Target className="w-4 h-4 text-primary" />
-              <h4 className="font-semibold text-sm sm:text-base">Rekomendasi Karier</h4>
-            </div>
+              Rekomendasi Karier
+            </h4>
             <div className="flex flex-wrap gap-2">
               {assessmentResults.career_recommendations.slice(0, 4).map((career: string, index: number) => (
-                <Badge key={index} variant="secondary" className="text-xs">
+                <Badge 
+                  key={index} 
+                  className="bg-secondary text-secondary-foreground px-3 py-1"
+                >
                   {career}
                 </Badge>
               ))}
-              {assessmentResults.career_recommendations.length > 4 && (
-                <Badge variant="outline" className="text-xs">
-                  +{assessmentResults.career_recommendations.length - 4} lainnya
-                </Badge>
-              )}
             </div>
           </div>
         )}
 
-        {/* Talent Areas */}
+        {/* Talent Areas - Simple List */}
         {assessmentResults.talent_areas && assessmentResults.talent_areas.length > 0 && (
-          <div className="px-2">
-            <div className="flex items-center gap-2 mb-3">
+          <div>
+            <h4 className="font-semibold mb-3 flex items-center gap-2">
               <Award className="w-4 h-4 text-primary" />
-              <h4 className="font-semibold text-sm sm:text-base">Area Bakat Utama</h4>
-            </div>
-            <div className="grid grid-cols-1 gap-2">
+              Area Bakat Utama
+            </h4>
+            <div className="space-y-2">
               {assessmentResults.talent_areas.slice(0, 3).map((talent: string, index: number) => {
                 const talentType = talent as keyof typeof riasecTypes;
                 const TalentIcon = riasecTypes[talentType]?.icon || Target;
-                const talentScore = Number(scoreBreakdown[talent] || 0);
-                const talentPercentage = totalScore > 0 ? Math.round((talentScore / totalScore) * 100) : 0;
                 
                 return (
-                  <div key={index} className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
-                    <div className="flex items-center gap-2 min-w-0 flex-1">
-                      <TalentIcon className="w-4 h-4 text-primary flex-shrink-0" />
-                      <span className="text-xs sm:text-sm font-medium truncate">{riasecTypes[talentType]?.name || talent}</span>
-                    </div>
-                    <span className="text-xs sm:text-sm text-muted-foreground flex-shrink-0 ml-2">{talentPercentage}%</span>
+                  <div key={index} className="flex items-center gap-3 p-2 rounded-lg bg-muted/30">
+                    <TalentIcon className="w-4 h-4 text-primary" />
+                    <span className="text-sm font-medium">{riasecTypes[talentType]?.name || talent}</span>
                   </div>
                 );
               })}
@@ -168,33 +169,30 @@ export const AssessmentResultsCard = ({ assessmentResults }: AssessmentResultsCa
           </div>
         )}
 
-        {/* Assessment Date */}
-        <div className="text-xs text-muted-foreground text-center border-t pt-4 px-2">
-          Tes dilakukan pada: {new Date(assessmentResults.created_at).toLocaleDateString('id-ID', {
-            year: 'numeric',
+        {/* Test Date */}
+        <div className="text-xs text-muted-foreground text-center pt-4 border-t">
+          Tes dilakukan pada {new Date(assessmentResults.created_at).toLocaleDateString('id-ID', {
+            day: 'numeric',
             month: 'long',
-            day: 'numeric'
+            year: 'numeric'
           })}
         </div>
 
-        {/* Actions */}
-        <div className="flex flex-col sm:flex-row gap-2 px-2">
+        {/* Action Buttons - Simple Layout */}
+        <div className="flex gap-3 pt-2">
           <Button 
             variant="outline" 
-            size="sm" 
-            className="w-full sm:flex-1 text-xs sm:text-sm min-h-[44px]"
+            className="flex-1 text-sm"
             onClick={() => window.location.href = '/assessment'}
           >
-            <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-            <span className="truncate">Tes Ulang</span>
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Tes Ulang
           </Button>
           <Button 
-            variant="outline" 
-            size="sm" 
-            className="w-full sm:flex-1 text-xs sm:text-sm min-h-[44px]"
+            className="flex-1 text-sm bg-primary"
             onClick={() => window.location.href = '/learning'}
           >
-            <span className="truncate">Lihat Kursus</span>
+            Lihat Kursus
           </Button>
         </div>
       </CardContent>
