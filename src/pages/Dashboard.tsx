@@ -313,7 +313,7 @@ const Dashboard = () => {
         />
         <div className="flex-1 flex flex-col">
           <DashboardHeader user={user} profile={profile} />
-          <main className="flex-1 p-6 overflow-auto pb-20 md:pb-6">
+          <main className="flex-1 p-4 md:p-6 overflow-auto pb-20 md:pb-6 mobile-no-scroll">
             {renderActiveSection()}
           </main>
           <BottomNavigationBar 

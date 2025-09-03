@@ -346,8 +346,8 @@ const LearningHub = () => {
           onSignOut={handleSignOut}
         />
         
-        <main className="flex-1 overflow-hidden pb-20 md:pb-0">
-          <div className="p-6">
+        <main className="flex-1 overflow-hidden pb-20 md:pb-0 mobile-no-scroll">
+          <div className="mobile-container p-4 md:p-6">
             {/* Header */}
             <div className="mb-8">
               <div className="flex items-center justify-between mb-2">
@@ -376,7 +376,7 @@ const LearningHub = () => {
             </div>
 
             {/* Learning Progress Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8 prevent-overflow">
               <Card className="shadow-card">
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">

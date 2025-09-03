@@ -222,8 +222,8 @@ const OpportunityBoard = () => {
           onSignOut={handleSignOut}
         />
         
-        <main className="flex-1 overflow-hidden pb-20 md:pb-0">
-          <div className="p-6">
+        <main className="flex-1 overflow-hidden pb-20 md:pb-0 mobile-no-scroll">
+          <div className="mobile-container p-4 md:p-6">
             {/* Header */}
             <div className="mb-8">
               <div className="flex items-center justify-between mb-2">
@@ -290,18 +290,18 @@ const OpportunityBoard = () => {
             </Card>
 
             {/* Opportunity Cards Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="mobile-grid gap-4 md:gap-6 prevent-overflow">
               {filteredOpportunities.map((opportunity, index) => (
                 <Card 
                   key={opportunity.id} 
-                  className={`hover:shadow-lg transition-all duration-300 cursor-pointer ${
+                  className={`mobile-card hover:shadow-lg transition-all duration-300 cursor-pointer ${
                     opportunity.isRecommended ? 'border-primary/30' : ''
                   } ${
                     !canAccessOpportunity(index) ? 'opacity-75' : ''
                   }`}
                   onClick={() => handleOpportunityClick(opportunity, index)}
                 >
-                  <CardContent className="p-6">
+                  <CardContent className="p-4 md:p-6">
                     <div className="flex items-start gap-4">
                       <div className="flex-shrink-0">
                         <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
