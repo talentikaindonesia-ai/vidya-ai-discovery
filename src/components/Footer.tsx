@@ -84,7 +84,7 @@ const Footer = () => {
         <div className="border-t border-white/10 mt-12 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-white/60 text-sm">
-              © 2024 Talentika. Semua hak dilindungi undang-undang.
+              © 2025 Talentika. Semua hak dilindungi undang-undang.
             </p>
             <div className="flex gap-6 text-sm">
               <a href="#" className="text-white/60 hover:text-white transition-colors">
