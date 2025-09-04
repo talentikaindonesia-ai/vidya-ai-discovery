@@ -18,7 +18,7 @@ const Footer = () => {
               </div>
             </div>
             <p className="text-white/80 leading-relaxed">
-              Membantu pelajar dan mahasiswa menemukan passion mereka melalui tes psikometri yang fun dan rekomendasi yang personal.
+              Talentika membantu generasi muda menemukan passion dan mengembangkan talenta melalui assessment yang komprehensif dan panduan karir yang personal.
             </p>
             <div className="flex gap-3">
               <Button variant="ghost" size="icon" className="hover:bg-white/10 text-white">
