@@ -55,9 +55,11 @@ export function BottomNavigationBar({ activeSection, onSectionChange }: BottomNa
   };
 
   const handleSectionChange = (sectionId: string, route: string) => {
-    if (onSectionChange) {
+    if (onSectionChange && route === "/dashboard") {
+      // Only use section change for dashboard internal navigation
       onSectionChange(sectionId);
     } else {
+      // Always navigate for external routes
       navigate(route);
     }
   };

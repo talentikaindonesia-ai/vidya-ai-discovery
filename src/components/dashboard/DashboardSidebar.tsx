@@ -36,6 +36,7 @@ export const DashboardSidebar = ({ activeSection, setActiveSection, onSignOut, u
     { id: "achievements", label: "Pencapaian", icon: Award, route: "/dashboard" },
     { id: "community", label: "Community", icon: Users, route: "/community" },
     { id: "timeline", label: "Timeline", icon: Clock, route: "/discovery" },
+    { id: "profile", label: "Profile", icon: User, route: "/profile" },
     { id: "settings", label: "Pengaturan", icon: Settings, route: "/dashboard" },
   ];
 
