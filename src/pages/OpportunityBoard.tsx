@@ -125,13 +125,18 @@ const OpportunityBoard = () => {
     window.open(opportunity.link, '_blank');
   };
 
-  const categories = ["all", "Education", "Technology", "Business", "Science", "Finance", "Design"];
+  const categories = [
+    { id: "all", label: "Semua", count: opportunities.length },
+    { id: "scholarship", label: "Beasiswa", count: opportunities.filter(o => o.type === 'scholarship').length },
+    { id: "competition", label: "Kompetisi", count: opportunities.filter(o => o.type === 'competition').length },
+    { id: "internship", label: "Magang", count: opportunities.filter(o => o.type === 'internship').length }
+  ];
   
   const filteredOpportunities = opportunities.filter(opp => {
     const matchesSearch = opp.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          opp.organization.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          opp.category.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === "all" || opp.category === selectedCategory;
+    const matchesCategory = selectedCategory === "all" || opp.type === selectedCategory;
     
     return matchesSearch && matchesCategory;
   });
@@ -178,13 +183,16 @@ const OpportunityBoard = () => {
               <div className="flex flex-wrap gap-2">
                 {categories.map((category) => (
                   <Button
-                    key={category}
-                    variant={selectedCategory === category ? "default" : "outline"}
+                    key={category.id}
+                    variant={selectedCategory === category.id ? "default" : "outline"}
                     size="sm"
-                    onClick={() => setSelectedCategory(category)}
+                    onClick={() => setSelectedCategory(category.id)}
                     className="text-sm"
                   >
-                    {category === "all" ? "Semua" : category}
+                    {category.label}
+                    <span className="ml-2 px-2 py-1 bg-muted rounded-full text-xs">
+                      {category.count}
+                    </span>
                   </Button>
                 ))}
               </div>
