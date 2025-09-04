@@ -28,6 +28,8 @@ const OpportunityBoard = () => {
   const [loading, setLoading] = useState(true);
   const [activeSection, setActiveSection] = useState("opportunities");
 
+  console.log("OpportunityBoard component loaded - simplified version");
+
   useEffect(() => {
     loadOpportunities();
     setLoading(false);
