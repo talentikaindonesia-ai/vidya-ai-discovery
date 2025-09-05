@@ -267,7 +267,7 @@ export const WelcomeDashboard = ({ user, profile }: WelcomeDashboardProps) => {
             onClick={() => window.location.href = '/opportunities'}
           >
             <BookOpen className="w-4 h-4 mr-2" />
-            Jelajahi Semua Kursus
+            Explore Opportunity for you
           </Button>
         </div>
       </div>
