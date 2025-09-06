@@ -110,44 +110,63 @@ const TalentikaJuniorDashboard = () => {
 
   if (!user || !profile) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-100 via-blue-100 to-orange-100">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 p-4">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <Button 
-          variant="ghost" 
-          onClick={() => navigate('/')}
-          className="text-muted-foreground hover:text-foreground"
-        >
-          ← Back to Home
-        </Button>
-        <Button variant="ghost" size="icon">
-          <Settings className="w-5 h-5" />
-        </Button>
-      </div>
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-amber-100 via-blue-100 to-orange-100 p-4">
+      {/* Enhanced background with vibrant gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-amber-200/50 via-blue-200/40 to-orange-200/50" />
+      
+      {/* Additional overlay for depth */}
+      <div className="absolute inset-0 bg-gradient-to-t from-amber-50/80 via-transparent to-blue-50/60" />
+      
+      {/* Decorative elements */}
+      <div className="absolute top-10 left-10 w-20 h-20 bg-blue-400/30 rounded-full blur-xl animate-pulse" />
+      <div className="absolute bottom-10 right-10 w-32 h-32 bg-amber-400/30 rounded-full blur-2xl animate-pulse delay-1000" />
+      <div className="absolute top-1/2 left-1/4 w-16 h-16 bg-orange-400/40 rounded-full blur-lg animate-bounce delay-500" />
+      
+      {/* Additional decorative circles */}
+      <div className="absolute top-20 right-1/4 w-12 h-12 bg-blue-300/25 rounded-full blur-md animate-pulse delay-700" />
+      <div className="absolute bottom-20 left-1/3 w-10 h-10 bg-amber-300/35 rounded-full blur-sm animate-bounce delay-200" />
 
-      {/* Welcome Section */}
-      <div className="text-center mb-8">
-        <div className="relative inline-block mb-4">
-          <div className="w-24 h-24 bg-gradient-to-br from-yellow-400 to-orange-400 rounded-full flex items-center justify-center text-4xl mb-2 mx-auto shadow-lg">
-            👦
-          </div>
-          <Badge className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 bg-primary text-primary-foreground">
-            Level {userLevel}
-          </Badge>
+      <div className="relative z-10">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-6">
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate('/')}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            ← Back to Home
+          </Button>
+          <Button variant="ghost" size="icon">
+            <Settings className="w-5 h-5" />
+          </Button>
         </div>
-        <h1 className="text-3xl font-bold text-foreground mb-2">
-          Hi, {profile.full_name?.split(' ')[0] || 'Explorer'}! 🌟
-        </h1>
-        <p className="text-lg text-muted-foreground mb-4">
-          Ready for another fun adventure?
-        </p>
+
+        {/* Welcome Section */}
+        <div className="text-center mb-8">
+          <div className="relative inline-block mb-4">
+            <div className="w-24 h-24 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center text-4xl mb-2 mx-auto shadow-lg">
+              👦
+            </div>
+            <Badge className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-primary to-accent text-primary-foreground">
+              Level {userLevel}
+            </Badge>
+          </div>
+          <h1 className="text-4xl lg:text-5xl font-bold text-foreground mb-2">
+            Hi, 
+            <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent block">
+              {profile.full_name?.split(' ')[0] || 'Explorer'}! 🌟
+            </span>
+          </h1>
+          <p className="text-lg text-muted-foreground leading-relaxed mb-4">
+            Ready for another fun adventure?
+          </p>
         
         {/* XP Progress */}
         <div className="max-w-md mx-auto mb-6">
@@ -175,68 +194,69 @@ const TalentikaJuniorDashboard = () => {
         )}
       </div>
 
-      {/* Main Menu */}
-      <div className="grid grid-cols-2 gap-4 mb-8">
-        {menuItems.map((item, index) => (
-          <Card 
-            key={index}
-            className="p-6 cursor-pointer hover:scale-105 transition-all duration-300 border-0 shadow-lg"
-            onClick={item.action}
-          >
-            <div className={`w-16 h-16 bg-gradient-to-br ${item.color} rounded-2xl flex items-center justify-center mb-4 mx-auto shadow-md`}>
-              <item.icon className="w-8 h-8 text-white" />
-            </div>
-            <h3 className="text-xl font-bold text-center mb-1">{item.title}</h3>
-            <p className="text-sm text-muted-foreground text-center">{item.subtitle}</p>
-          </Card>
-        ))}
-      </div>
-
-      {/* Recent Activities */}
-      <Card className="p-6 shadow-lg border-0">
-        <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-          <Star className="w-5 h-5 text-yellow-500" />
-          Recent Adventures
-        </h3>
-        <div className="space-y-3">
-          {recentActivities.map((activity, index) => (
-            <div key={index} className="flex items-center justify-between p-3 bg-background/50 rounded-lg">
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">{activity.icon}</span>
-                <div>
-                  <h4 className="font-medium">{activity.title}</h4>
-                  <p className="text-sm text-muted-foreground capitalize">{activity.type}</p>
-                </div>
-              </div>
-              <Badge variant="secondary" className="bg-green-100 text-green-700">
-                +{activity.xp} XP
-              </Badge>
-            </div>
-          ))}
-        </div>
-      </Card>
-
-      {/* Quick Access Activities */}
-      <Card className="mt-6 p-6 shadow-lg border-0">
-        <h3 className="text-xl font-bold mb-4">Quick Activities</h3>
-        <div className="grid grid-cols-4 gap-3">
-          {[
-            { icon: Palette, label: "Art", color: "bg-red-100 text-red-600" },
-            { icon: Music, label: "Music", color: "bg-purple-100 text-purple-600" },
-            { icon: Microscope, label: "Science", color: "bg-blue-100 text-blue-600" },
-            { icon: BookOpen, label: "Stories", color: "bg-green-100 text-green-600" },
-          ].map((item, index) => (
-            <Button
+        {/* Main Menu */}
+        <div className="grid grid-cols-2 gap-4 mb-8">
+          {menuItems.map((item, index) => (
+            <Card 
               key={index}
-              variant="ghost"
-              className={`h-20 flex-col gap-2 ${item.color} hover:scale-105 transition-all`}
+              className="p-6 cursor-pointer hover:scale-105 transition-all duration-300 border-0 bg-card/50 backdrop-blur-sm hover:bg-card/80 shadow-lg group"
+              onClick={item.action}
             >
-              <item.icon className="w-6 h-6" />
-              <span className="text-xs font-medium">{item.label}</span>
-            </Button>
+              <div className={`w-16 h-16 bg-gradient-to-br ${item.color} rounded-2xl flex items-center justify-center mb-4 mx-auto shadow-md group-hover:scale-110 transition-transform duration-300`}>
+                <item.icon className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-xl font-bold text-center mb-1 text-foreground">{item.title}</h3>
+              <p className="text-sm text-muted-foreground text-center">{item.subtitle}</p>
+            </Card>
           ))}
         </div>
-      </Card>
+
+        {/* Recent Activities */}
+        <Card className="p-6 shadow-lg border-0 bg-card/50 backdrop-blur-sm">
+          <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+            <Star className="w-5 h-5 text-yellow-500" />
+            Recent Adventures
+          </h3>
+          <div className="space-y-3">
+            {recentActivities.map((activity, index) => (
+              <div key={index} className="flex items-center justify-between p-3 bg-background/50 rounded-lg hover:bg-background/80 transition-all duration-300">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">{activity.icon}</span>
+                  <div>
+                    <h4 className="font-medium">{activity.title}</h4>
+                    <p className="text-sm text-muted-foreground capitalize">{activity.type}</p>
+                  </div>
+                </div>
+                <Badge variant="secondary" className="bg-green-100 text-green-700">
+                  +{activity.xp} XP
+                </Badge>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        {/* Quick Access Activities */}
+        <Card className="mt-6 p-6 shadow-lg border-0 bg-card/50 backdrop-blur-sm">
+          <h3 className="text-xl font-bold mb-4">Quick Activities</h3>
+          <div className="grid grid-cols-4 gap-3">
+            {[
+              { icon: Palette, label: "Art", color: "bg-red-100 text-red-600 hover:bg-red-200" },
+              { icon: Music, label: "Music", color: "bg-purple-100 text-purple-600 hover:bg-purple-200" },
+              { icon: Microscope, label: "Science", color: "bg-blue-100 text-blue-600 hover:bg-blue-200" },
+              { icon: BookOpen, label: "Stories", color: "bg-green-100 text-green-600 hover:bg-green-200" },
+            ].map((item, index) => (
+              <Button
+                key={index}
+                variant="ghost"
+                className={`h-20 flex-col gap-2 ${item.color} hover:scale-105 transition-all duration-300`}
+              >
+                <item.icon className="w-6 h-6" />
+                <span className="text-xs font-medium">{item.label}</span>
+              </Button>
+            ))}
+          </div>
+        </Card>
+      </div>
     </div>
   );
 };
