@@ -20,6 +20,9 @@ import Subscription from "./pages/Subscription";
 import QuizExplore from "./pages/QuizExplore";
 import Profile from "./pages/Profile";
 import { ContentViewer } from "./components/dashboard/ContentViewer";
+import TalentikaJuniorDashboard from "./pages/TalentikaJuniorDashboard";
+import TalentikaJuniorDiscovery from "./pages/TalentikaJuniorDiscovery";
+import TalentikaJuniorLearning from "./pages/TalentikaJuniorLearning";
 
 const queryClient = new QueryClient();
 
@@ -46,6 +49,9 @@ const App = () => (
           <Route path="/subscription" element={<Subscription />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/admin" element={<Admin />} />
+          <Route path="/talentika-junior" element={<TalentikaJuniorDashboard />} />
+          <Route path="/talentika-junior/discovery" element={<TalentikaJuniorDiscovery />} />
+          <Route path="/talentika-junior/learning" element={<TalentikaJuniorLearning />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
