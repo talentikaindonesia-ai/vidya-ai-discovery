@@ -209,68 +209,6 @@ export const WelcomeDashboard = ({ user, profile }: WelcomeDashboardProps) => {
         </div>
       </div>
 
-      {/* Opportunities Section */}
-      <div className="bg-white rounded-2xl border mx-2 sm:mx-0">
-        <div className="p-4">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold flex items-center gap-2">
-              <Briefcase className="w-5 h-5 text-orange-600" />
-              Opportunity for you
-            </h2>
-          </div>
-          
-          {/* Category Filter Buttons */}
-          <div className="flex gap-2 mb-4 flex-wrap">
-            <Button 
-              size="sm" 
-              className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-4"
-            >
-              Semua
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="rounded-full px-3 text-sm"
-            >
-              Beasiswa <span className="ml-1 bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs">3</span>
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="rounded-full px-3 text-sm"
-            >
-              Kompetisi <span className="ml-1 bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs">3</span>
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="rounded-full px-3 text-sm"
-            >
-              Magang <span className="ml-1 bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs">2</span>
-            </Button>
-          </div>
-
-          {/* Opportunity Placeholder Cards */}
-          <div className="space-y-3 mb-4">
-            {Array.from({ length: 3 }).map((_, index) => (
-              <div 
-                key={index} 
-                className="w-full h-20 bg-gray-100 rounded-xl flex items-center justify-center"
-              >
-                <div className="text-gray-400 text-sm">Opportunity {index + 1}</div>
-              </div>
-            ))}
-          </div>
-          
-          <Button 
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-            onClick={() => window.location.href = '/opportunities'}
-          >
-            <BookOpen className="w-4 h-4 mr-2" />
-            Explore Opportunity for you
-          </Button>
-        </div>
-      </div>
     </div>
   );
 };
