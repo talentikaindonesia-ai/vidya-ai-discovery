@@ -146,7 +146,7 @@ const CoursesPreview = () => {
           <Button 
             size="lg" 
             className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium shadow-lg hover:shadow-xl transition-all duration-300 group"
-            onClick={() => window.location.href = '/learning-hub'}
+            onClick={() => window.location.href = '/learning'}
           >
             <BookOpen className="w-5 h-5 mr-2" />
             Jelajahi Semua Kursus

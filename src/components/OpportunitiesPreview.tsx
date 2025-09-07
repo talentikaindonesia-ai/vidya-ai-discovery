@@ -161,7 +161,7 @@ const OpportunitiesPreview = () => {
           <Button 
             size="lg" 
             className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium shadow-lg hover:shadow-xl transition-all duration-300 group"
-            onClick={() => window.location.href = '/opportunity-board'}
+            onClick={() => window.location.href = '/opportunities'}
           >
             <Briefcase className="w-5 h-5 mr-2" />
             Explore Opportunity for You
