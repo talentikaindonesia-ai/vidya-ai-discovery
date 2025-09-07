@@ -21,13 +21,18 @@ const Auth = () => {
   const [organizationType, setOrganizationType] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  
+  // Get redirect parameter from URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const redirectTo = urlParams.get('redirect');
 
   useEffect(() => {
     // Check if user is already logged in
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        navigate("/dashboard");
+        const destination = redirectTo === 'talentika-junior' ? '/talentika-junior' : '/dashboard';
+        navigate(destination);
       }
     };
     checkUser();
@@ -39,11 +44,15 @@ const Auth = () => {
     setError("");
 
     try {
+      const redirectUrl = redirectTo === 'talentika-junior' ? 
+        `${window.location.origin}/talentika-junior` : 
+        `${window.location.origin}/dashboard`;
+      
       const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/dashboard`,
+          emailRedirectTo: redirectUrl,
           data: {
             full_name: fullName,
             account_type: accountType,
@@ -79,7 +88,8 @@ const Auth = () => {
 
       if (data.user) {
         toast.success("Login berhasil!");
-        navigate("/dashboard");
+        const destination = redirectTo === 'talentika-junior' ? '/talentika-junior' : '/dashboard';
+        navigate(destination);
       }
     } catch (error: any) {
       setError(error.message);
@@ -94,10 +104,14 @@ const Auth = () => {
     setError("");
 
     try {
+      const redirectUrl = redirectTo === 'talentika-junior' ? 
+        `${window.location.origin}/talentika-junior` : 
+        `${window.location.origin}/dashboard`;
+        
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/dashboard`,
+          redirectTo: redirectUrl,
         },
       });
 

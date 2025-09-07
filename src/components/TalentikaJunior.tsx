@@ -82,7 +82,7 @@ const TalentikaJunior = () => {
               <Button 
                 size="lg" 
                 className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground font-medium shadow-lg hover:shadow-xl transition-all duration-300"
-                onClick={() => window.location.href = '/talentika-junior'}
+                onClick={() => window.location.href = '/auth?redirect=talentika-junior'}
               >
                 Mulai Eksplorasi Gratis
               </Button>
