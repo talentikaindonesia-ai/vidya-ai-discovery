@@ -68,7 +68,7 @@ export function BottomNavigationBar({ activeSection, onSectionChange }: BottomNa
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-t border-border shadow-lg md:hidden">
-      <div className="flex items-center justify-around px-2 py-2 safe-area-pb">
+      <div className="flex items-center justify-around px-1 py-1 safe-area-pb max-w-full">
         {navigationItems.map((item) => {
           const isActive = currentActive === item.id;
           const Icon = item.icon;
@@ -78,8 +78,8 @@ export function BottomNavigationBar({ activeSection, onSectionChange }: BottomNa
               key={item.id}
               onClick={() => handleSectionChange(item.id, item.route)}
               className={cn(
-                "flex flex-col items-center justify-center px-2 py-2 min-w-0 flex-1 rounded-lg transition-all duration-200",
-                "hover:bg-muted/50 active:scale-95",
+                "flex flex-col items-center justify-center px-1 py-2 min-w-0 flex-1 rounded-lg transition-all duration-200",
+                "hover:bg-muted/50 active:scale-95 max-w-20",
                 isActive 
                   ? "text-primary bg-primary/10" 
                   : "text-muted-foreground hover:text-foreground"
@@ -87,12 +87,12 @@ export function BottomNavigationBar({ activeSection, onSectionChange }: BottomNa
             >
               <Icon 
                 className={cn(
-                  "w-5 h-5 mb-1 transition-all duration-200",
+                  "w-4 h-4 sm:w-5 sm:h-5 mb-0.5 sm:mb-1 transition-all duration-200 flex-shrink-0",
                   isActive ? "text-primary scale-110" : ""
                 )} 
               />
               <span className={cn(
-                "text-xs font-medium leading-tight",
+                "text-xs font-medium leading-tight text-center line-clamp-1 px-0.5",
                 isActive ? "text-primary font-semibold" : ""
               )}>
                 {item.label}

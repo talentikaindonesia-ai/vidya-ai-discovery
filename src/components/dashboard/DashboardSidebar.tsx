@@ -59,13 +59,13 @@ export const DashboardSidebar = ({ activeSection, setActiveSection, onSignOut, u
   };
 
   return (
-    <Sidebar className="border-r border-border bg-card">
-      <SidebarHeader className="p-6 border-b border-border">
+    <Sidebar className="border-r border-border bg-card hidden md:flex">
+      <SidebarHeader className="p-4 sm:p-6 border-b border-border">
         <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">V</span>
+          <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
+            <span className="text-white font-bold text-xs sm:text-sm">T</span>
           </div>
-          <span className="font-bold text-lg bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+          <span className="font-bold text-base sm:text-lg bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
             Talentika
           </span>
         </div>

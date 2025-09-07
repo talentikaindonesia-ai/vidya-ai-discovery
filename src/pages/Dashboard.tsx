@@ -4,9 +4,11 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sidebar, SidebarContent, SidebarProvider } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
+import { NotificationDropdown } from "@/components/dashboard/NotificationDropdown";
 import { WelcomeDashboard } from "@/components/dashboard/WelcomeDashboard";
 import CoursesPreview from "@/components/CoursesPreview";
 import OpportunitiesPreview from "@/components/OpportunitiesPreview";
@@ -133,6 +135,15 @@ const Dashboard = () => {
     }
   };
 
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(word => word.charAt(0))
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
   const handleSignOut = async () => {
     try {
       await supabase.auth.signOut();
@@ -168,6 +179,8 @@ const Dashboard = () => {
       toast.error("Gagal berlangganan: " + error.message);
     }
   };
+
+  const displayName = profile?.full_name || user?.email || 'Pengguna';
 
   const renderActiveSection = () => {
     switch (activeSection) {
@@ -317,11 +330,39 @@ const Dashboard = () => {
           onSignOut={handleSignOut}
           userRole={userRole}
         />
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col w-full">
           <DashboardHeader user={user} profile={profile} />
-          <main className="flex-1 p-4 md:p-6 overflow-auto pb-20 md:pb-6 mobile-no-scroll">
-            {renderActiveSection()}
+          
+          {/* Mobile Header - shown only on mobile */}
+          <div className="md:hidden bg-background border-b border-border px-4 py-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold text-sm">T</span>
+                </div>
+                <span className="font-bold text-lg bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                  Talentika
+                </span>
+              </div>
+              
+              <div className="flex items-center space-x-3">
+                <NotificationDropdown userId={user?.id} />
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src={profile?.avatar_url} />
+                  <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                    {getInitials(displayName)}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
+            </div>
+          </div>
+
+          <main className="flex-1 p-3 sm:p-4 md:p-6 overflow-auto pb-20 md:pb-6 mobile-container">
+            <div className="max-w-full mx-auto">
+              {renderActiveSection()}
+            </div>
           </main>
+          
           <BottomNavigationBar 
             activeSection={activeSection}
             onSectionChange={setActiveSection}
