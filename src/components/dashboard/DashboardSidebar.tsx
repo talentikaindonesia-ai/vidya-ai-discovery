@@ -61,10 +61,12 @@ export const DashboardSidebar = ({ activeSection, setActiveSection, onSignOut, u
   return (
     <Sidebar className="border-r border-border bg-card hidden md:flex">
       <SidebarHeader className="p-4 sm:p-6 border-b border-border">
-        <div className="flex items-center space-x-2">
-          <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-xs sm:text-sm">T</span>
-          </div>
+        <div className="flex items-center space-x-3">
+          <img 
+            src="/lovable-uploads/eb8d335b-30bc-4402-af4d-de439c638a0b.png" 
+            alt="Talentika Logo" 
+            className="w-8 h-8 sm:w-10 sm:h-10 object-contain"
+          />
           <span className="font-bold text-base sm:text-lg bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
             Talentika
           </span>

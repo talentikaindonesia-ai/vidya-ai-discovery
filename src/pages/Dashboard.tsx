@@ -337,9 +337,11 @@ const Dashboard = () => {
           <div className="md:hidden bg-background border-b border-border px-4 py-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">T</span>
-                </div>
+                <img 
+                  src="/lovable-uploads/eb8d335b-30bc-4402-af4d-de439c638a0b.png" 
+                  alt="Talentika Logo" 
+                  className="w-8 h-8 object-contain"
+                />
                 <span className="font-bold text-lg bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                   Talentika
                 </span>
