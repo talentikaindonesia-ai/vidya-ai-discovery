@@ -175,6 +175,7 @@ const Dashboard = () => {
         return (
           <div className="space-y-6">
             <WelcomeDashboard user={user} profile={profile} />
+            <CoursesPreview />
             <OpportunitiesPreview />
             <ScrapedContent category={userInterests[0]?.interest_categories?.name} />
           </div>
@@ -217,6 +218,7 @@ const Dashboard = () => {
         return (
           <div className="space-y-6">
             <WelcomeDashboard user={user} profile={profile} />
+            <CoursesPreview />
             <OpportunitiesPreview />
             <ScrapedContent category={userInterests[0]?.interest_categories?.name} />
           </div>
