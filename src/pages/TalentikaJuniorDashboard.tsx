@@ -15,6 +15,9 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
+import { TalentikaJuniorBottomNav } from "@/components/dashboard/TalentikaJuniorBottomNav";
 
 const TalentikaJuniorDashboard = () => {
   const [user, setUser] = useState<any>(null);
@@ -23,6 +26,7 @@ const TalentikaJuniorDashboard = () => {
   const [userXP, setUserXP] = useState(0);
   const [badges, setBadges] = useState<string[]>([]);
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     // Check authentication and load user data
@@ -117,7 +121,7 @@ const TalentikaJuniorDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-amber-100 via-blue-100 to-orange-100 p-4">
+    <div className={cn("min-h-screen relative overflow-hidden bg-gradient-to-br from-amber-100 via-blue-100 to-orange-100 p-4", isMobile && "pb-20")}>
       {/* Enhanced background with vibrant gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-amber-200/50 via-blue-200/40 to-orange-200/50" />
       
@@ -134,16 +138,18 @@ const TalentikaJuniorDashboard = () => {
       <div className="absolute bottom-20 left-1/3 w-10 h-10 bg-amber-300/35 rounded-full blur-sm animate-bounce delay-200" />
 
       <div className="relative z-10">
-        {/* Header */}
+        {/* Header - Hide back button on mobile */}
         <div className="flex justify-between items-center mb-6">
-          <Button 
-            variant="ghost" 
-            onClick={() => navigate('/')}
-            className="text-muted-foreground hover:text-foreground"
-          >
-            ← Back to Home
-          </Button>
-          <Button variant="ghost" size="icon">
+          {!isMobile && (
+            <Button 
+              variant="ghost" 
+              onClick={() => navigate('/')}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              ← Back to Home
+            </Button>
+          )}
+          <Button variant="ghost" size="icon" className={cn(isMobile && "ml-auto")}>
             <Settings className="w-5 h-5" />
           </Button>
         </div>
@@ -248,6 +254,8 @@ const TalentikaJuniorDashboard = () => {
           </div>
         </Card>
       </div>
+      
+      <TalentikaJuniorBottomNav />
     </div>
   );
 };

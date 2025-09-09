@@ -5,18 +5,18 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 const navigationItems = [
   {
+    id: "home",
+    label: "Home", 
+    icon: BookOpen,
+    description: "Dashboard Utama",
+    route: "/talentika-junior"
+  },
+  {
     id: "discover",
     label: "Discover", 
     icon: Compass,
     description: "Find Your Talents",
     route: "/talentika-junior/discovery"
-  },
-  {
-    id: "learn",
-    label: "Learn",
-    icon: BookOpen,
-    description: "Fun Videos & Courses",
-    route: "/talentika-junior/learning"
   },
   {
     id: "play", 
@@ -45,11 +45,11 @@ export function TalentikaJuniorBottomNav() {
   // Determine current active section based on current route
   const getCurrentActiveSection = () => {
     const path = location.pathname;
+    if (path === "/talentika-junior") return "home";
     if (path.includes("/discovery")) return "discover";
-    if (path.includes("/learning")) return "learn";
     if (path.includes("/games")) return "play";
     if (path.includes("/rewards")) return "profile";
-    return "discover";
+    return "home";
   };
 
   const handleSectionChange = (route: string) => {
