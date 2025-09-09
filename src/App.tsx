@@ -23,6 +23,8 @@ import { ContentViewer } from "./components/dashboard/ContentViewer";
 import TalentikaJuniorDashboard from "./pages/TalentikaJuniorDashboard";
 import TalentikaJuniorDiscovery from "./pages/TalentikaJuniorDiscovery";
 import TalentikaJuniorLearning from "./pages/TalentikaJuniorLearning";
+import TalentikaJuniorGames from "./pages/TalentikaJuniorGames";
+import TalentikaJuniorRewards from "./pages/TalentikaJuniorRewards";
 
 const queryClient = new QueryClient();
 
@@ -52,6 +54,8 @@ const App = () => (
           <Route path="/talentika-junior" element={<TalentikaJuniorDashboard />} />
           <Route path="/talentika-junior/discovery" element={<TalentikaJuniorDiscovery />} />
           <Route path="/talentika-junior/learning" element={<TalentikaJuniorLearning />} />
+          <Route path="/talentika-junior/games" element={<TalentikaJuniorGames />} />
+          <Route path="/talentika-junior/rewards" element={<TalentikaJuniorRewards />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

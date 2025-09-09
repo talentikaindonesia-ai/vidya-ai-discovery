@@ -56,25 +56,8 @@ const TalentikaJunior = () => {
               </h2>
               
               <p className="text-lg text-muted-foreground leading-relaxed">
-                Talentika Junior hadir untuk menumbuhkan potensi anak sejak dini melalui pendekatan minat, bakat, dan eksplorasi diri. Kami percaya setiap anak punya keunikan, dan dengan ruang yang tepat mereka bisa berkembang menjadi bintang masa depan.
+                Talentika Junior hadir untuk menumbuhkan potensi anak sejak dini melalui pendekatan minat, bakat, dan eksplorasi diri. Dengan 5 program utama yang dirancang khusus untuk anak-anak: Discover (temukan bakat), Learn (belajar menyenangkan), Play (game edukatif), Rewards (kumpulkan badge), dan Recent Adventures (pantau progress).
               </p>
-            </div>
-
-            {/* Features Grid */}
-            <div className="grid sm:grid-cols-2 gap-4">
-              {features.map((feature, index) => (
-                <Card key={index} className="p-4 border-0 bg-card/50 backdrop-blur-sm hover:bg-card/80 transition-all duration-300 group">
-                  <div className="flex items-start space-x-3">
-                    <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                      <feature.icon className="w-5 h-5 text-primary-foreground" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-foreground mb-1">{feature.title}</h3>
-                      <p className="text-sm text-muted-foreground">{feature.description}</p>
-                    </div>
-                  </div>
-                </Card>
-              ))}
             </div>
 
             {/* CTA Buttons */}
