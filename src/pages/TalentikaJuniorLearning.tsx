@@ -1,22 +1,65 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Play, Clock, Star, Trophy } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArrowLeft, Play, Clock, Star, Trophy, BookOpen, Gamepad2, Microscope } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const TalentikaJuniorLearning = () => {
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState("all");
 
-  const categories = [
-    { id: "all", name: "All", emoji: "🌟", color: "bg-purple-100 text-purple-600" },
-    { id: "academic", name: "Academic Fun", emoji: "📚", color: "bg-blue-100 text-blue-600" },
-    { id: "creativity", name: "Arts & Creativity", emoji: "🎨", color: "bg-pink-100 text-pink-600" },
-    { id: "storytelling", name: "Storytelling", emoji: "📖", color: "bg-green-100 text-green-600" },
-    { id: "stem", name: "STEM Kids", emoji: "🔬", color: "bg-cyan-100 text-cyan-600" },
-    { id: "environment", name: "Environment", emoji: "🌱", color: "bg-emerald-100 text-emerald-600" },
+  const learningPrograms = [
+    {
+      id: "steam",
+      title: "STEAM Explorer",
+      description: "Sains & Teknologi untuk anak dengan eksperimen seru",
+      icon: "🔬",
+      color: "from-blue-400 to-cyan-400",
+      modules: ["Robot Mini", "Eksperimen Rumah", "Teknologi Sederhana"]
+    },
+    {
+      id: "creative",
+      title: "Creative Corner", 
+      description: "Musik, seni, dan coding kreatif untuk eksplorasi diri",
+      icon: "🎨",
+      color: "from-pink-400 to-purple-400",
+      modules: ["Digital Art", "Music Maker", "Creative Coding"]
+    },
+    {
+      id: "eco",
+      title: "Eco Hero Academy",
+      description: "Lingkungan, daur ulang, dan permainan ramah bumi",
+      icon: "🌱", 
+      color: "from-green-400 to-emerald-400",
+      modules: ["Eco Games", "Daur Ulang", "Pelestarian Alam"]
+    },
+    {
+      id: "digital",
+      title: "Digital Innovator Academy",
+      description: "Coding dasar, AR/VR sederhana, dan desain game",
+      icon: "💻",
+      color: "from-purple-400 to-indigo-400", 
+      modules: ["Coding Basics", "AR/VR Simple", "Game Design"]
+    },
+    {
+      id: "health",
+      title: "Healthy Heroes",
+      description: "Kesehatan, nutrisi, dan olahraga ringan untuk anak",
+      icon: "💪",
+      color: "from-orange-400 to-red-400",
+      modules: ["Nutrisi Fun", "Olahraga Ringan", "Kesehatan Mental"]
+    },
+    {
+      id: "culture",
+      title: "Culture & Language Fun",
+      description: "Bahasa Inggris dan budaya Nusantara yang menarik",
+      icon: "🌍",
+      color: "from-yellow-400 to-orange-400",
+      modules: ["English Games", "Budaya Nusantara", "Cerita Rakyat"]
+    }
   ];
 
   const learningContent = [
@@ -136,26 +179,120 @@ const TalentikaJuniorLearning = () => {
 
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold mb-2">Learning Hub Junior 📚</h1>
+          <h1 className="text-3xl font-bold mb-2 flex items-center justify-center gap-2">
+            <BookOpen className="w-8 h-8 text-blue-500" />
+            Learning Hub Junior 📚
+          </h1>
           <p className="text-lg text-muted-foreground">
-            Choose your adventure and start learning with fun!
+            6 Program Pembelajaran Seru untuk Mengembangkan Bakat dan Minatmu!
           </p>
         </div>
 
-        {/* Category Filter */}
-        <div className="flex flex-wrap gap-3 justify-center mb-8">
-          {categories.map((category) => (
-            <Button
-              key={category.id}
-              variant={selectedCategory === category.id ? "default" : "outline"}
-              onClick={() => setSelectedCategory(category.id)}
-              className={`${category.color} hover:scale-105 transition-all`}
-            >
-              <span className="mr-2">{category.emoji}</span>
-              {category.name}
-            </Button>
+        <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="w-full">
+          <TabsList className="grid w-full grid-cols-3 lg:grid-cols-7">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="steam">STEAM</TabsTrigger>
+            <TabsTrigger value="creative">Creative</TabsTrigger>
+            <TabsTrigger value="eco">Eco Hero</TabsTrigger>
+            <TabsTrigger value="digital">Digital</TabsTrigger>
+            <TabsTrigger value="health">Health</TabsTrigger>
+            <TabsTrigger value="culture">Culture</TabsTrigger>
+          </TabsList>
+
+          {/* Overview Tab */}
+          <TabsContent value="overview">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              {learningPrograms.map((program) => (
+                <Card 
+                  key={program.id}
+                  className="p-6 cursor-pointer hover:scale-105 transition-all duration-300 shadow-lg border-0"
+                  onClick={() => setSelectedCategory(program.id)}
+                >
+                  <div className={`h-20 bg-gradient-to-br ${program.color} rounded-lg flex items-center justify-center mb-4`}>
+                    <span className="text-4xl">{program.icon}</span>
+                  </div>
+                  <h3 className="font-bold text-xl mb-2">{program.title}</h3>
+                  <p className="text-muted-foreground mb-4">{program.description}</p>
+                  <div className="space-y-1">
+                    {program.modules.map((module, index) => (
+                      <div key={index} className="text-sm flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 bg-primary rounded-full"></span>
+                        {module}
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              ))}
+            </div>
+
+            {/* Stats Overview */}
+            <Card className="p-6 shadow-lg border-0 bg-gradient-to-r from-purple-100 to-pink-100">
+              <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                <Trophy className="w-6 h-6 text-yellow-500" />
+                Progress Overview
+              </h3>
+              <div className="grid md:grid-cols-4 gap-6">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-blue-500 mb-1">24</div>
+                  <div className="text-sm text-muted-foreground">Video Lessons</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-green-500 mb-1">12</div>
+                  <div className="text-sm text-muted-foreground">Completed</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-purple-500 mb-1">18</div>
+                  <div className="text-sm text-muted-foreground">Interactive</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-orange-500 mb-1">50%</div>
+                  <div className="text-sm text-muted-foreground">Progress</div>
+                </div>
+              </div>
+            </Card>
+          </TabsContent>
+
+          {/* Program-specific tabs */}
+          {learningPrograms.map((program) => (
+            <TabsContent key={program.id} value={program.id}>
+              <Card className="p-8 shadow-xl border-0">
+                <div className="text-center mb-8">
+                  <div className={`w-24 h-24 bg-gradient-to-br ${program.color} rounded-full flex items-center justify-center text-5xl mx-auto mb-4`}>
+                    {program.icon}
+                  </div>
+                  <h2 className="text-3xl font-bold mb-2">{program.title}</h2>
+                  <p className="text-lg text-muted-foreground">{program.description}</p>
+                </div>
+
+                <div className="grid md:grid-cols-3 gap-6 mb-8">
+                  {program.modules.map((module, index) => (
+                    <Card key={index} className="p-4 hover:scale-105 transition-transform cursor-pointer">
+                      <div className="text-center">
+                        <div className="text-3xl mb-2">
+                          {index === 0 ? "📚" : index === 1 ? "🎮" : "⭐"}
+                        </div>
+                        <h4 className="font-bold">{module}</h4>
+                        <p className="text-sm text-muted-foreground mt-2">
+                          Interactive learning module
+                        </p>
+                        <Button size="sm" className="mt-4" variant="outline">
+                          Start Learning
+                        </Button>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+
+                <div className="text-center">
+                  <Button size="lg" className={`bg-gradient-to-r ${program.color} text-white`}>
+                    <Play className="w-5 h-5 mr-2" />
+                    Mulai Program Ini
+                  </Button>
+                </div>
+              </Card>
+            </TabsContent>
           ))}
-        </div>
+        </Tabs>
 
         {/* Content Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">

@@ -211,49 +211,40 @@ const TalentikaJuniorDashboard = () => {
           ))}
         </div>
 
-        {/* Recent Activities */}
+        {/* Achievement Preview */}
         <Card className="p-6 shadow-lg border-0 bg-card/50 backdrop-blur-sm">
           <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-            <Star className="w-5 h-5 text-yellow-500" />
-            Recent Adventures
+            <Trophy className="w-5 h-5 text-yellow-500" />
+            Your Latest Achievement
           </h3>
-          <div className="space-y-3">
-            {recentActivities.map((activity, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-background/50 rounded-lg hover:bg-background/80 transition-all duration-300">
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">{activity.icon}</span>
-                  <div>
-                    <h4 className="font-medium">{activity.title}</h4>
-                    <p className="text-sm text-muted-foreground capitalize">{activity.type}</p>
-                  </div>
-                </div>
-                <Badge variant="secondary" className="bg-green-100 text-green-700">
-                  +{activity.xp} XP
-                </Badge>
-              </div>
-            ))}
+          <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-yellow-100 to-orange-100 rounded-lg">
+            <div className="text-4xl">🌱</div>
+            <div>
+              <h4 className="font-bold text-lg">Eco Hero Badge Earned!</h4>
+              <p className="text-sm text-muted-foreground">Completed 5 environmental activities</p>
+              <Badge className="mt-2 bg-green-100 text-green-700">+100 XP earned</Badge>
+            </div>
           </div>
         </Card>
 
-        {/* Quick Access Activities */}
-        <Card className="mt-6 p-6 shadow-lg border-0 bg-card/50 backdrop-blur-sm">
-          <h3 className="text-xl font-bold mb-4">Quick Activities</h3>
-          <div className="grid grid-cols-4 gap-3">
-            {[
-              { icon: Palette, label: "Art", color: "bg-red-100 text-red-600 hover:bg-red-200" },
-              { icon: Music, label: "Music", color: "bg-purple-100 text-purple-600 hover:bg-purple-200" },
-              { icon: Microscope, label: "Science", color: "bg-blue-100 text-blue-600 hover:bg-blue-200" },
-              { icon: BookOpen, label: "Stories", color: "bg-green-100 text-green-600 hover:bg-green-200" },
-            ].map((item, index) => (
-              <Button
-                key={index}
-                variant="ghost"
-                className={`h-20 flex-col gap-2 ${item.color} hover:scale-105 transition-all duration-300`}
-              >
-                <item.icon className="w-6 h-6" />
-                <span className="text-xs font-medium">{item.label}</span>
-              </Button>
-            ))}
+        {/* Next Adventure Preview */}
+        <Card className="mt-6 p-6 shadow-lg border-0 bg-gradient-to-r from-purple-100 to-pink-100">
+          <h3 className="text-xl font-bold mb-4">🚀 Ready for Your Next Adventure?</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <Button 
+              className="h-16 flex-col gap-2 bg-blue-100 text-blue-600 hover:bg-blue-200 hover:scale-105 transition-all"
+              onClick={() => navigate('/talentika-junior/discovery')}
+            >
+              <Star className="w-6 h-6" />
+              <span className="text-sm font-medium">Take Talent Quiz</span>
+            </Button>
+            <Button 
+              className="h-16 flex-col gap-2 bg-green-100 text-green-600 hover:bg-green-200 hover:scale-105 transition-all"
+              onClick={() => navigate('/talentika-junior/games')}
+            >
+              <Gamepad2 className="w-6 h-6" />
+              <span className="text-sm font-medium">Play New Game</span>
+            </Button>
           </div>
         </Card>
       </div>
