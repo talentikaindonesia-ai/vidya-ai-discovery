@@ -5,10 +5,14 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Trophy, Star, ShoppingCart, Gift } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { TalentikaJuniorBottomNav } from "@/components/dashboard/TalentikaJuniorBottomNav";
 
 const TalentikaJuniorRewards = () => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [userCoins, setUserCoins] = useState(250);
   const [userBadges, setUserBadges] = useState([
     { id: 1, name: "Eco Hero", icon: "🌱", earned: true },
@@ -190,16 +194,18 @@ const TalentikaJuniorRewards = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-yellow-100 via-orange-100 to-red-100 p-4">
+    <div className={cn("min-h-screen bg-gradient-to-br from-yellow-100 via-orange-100 to-red-100 p-4", isMobile && "pb-20")}>
       <div className="max-w-6xl mx-auto">
-        <Button 
-          variant="ghost" 
-          onClick={() => navigate('/talentika-junior')}
-          className="mb-6"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Dashboard
-        </Button>
+        {!isMobile && (
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate('/talentika-junior')}
+            className="mb-6"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Dashboard
+          </Button>
+        )}
 
         {/* Header with Coin Balance */}
         <div className="text-center mb-8">
@@ -382,6 +388,8 @@ const TalentikaJuniorRewards = () => {
           </div>
         </Card>
       </div>
+      
+      <TalentikaJuniorBottomNav />
     </div>
   );
 };

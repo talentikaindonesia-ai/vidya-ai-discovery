@@ -6,10 +6,14 @@ import { Progress } from "@/components/ui/progress";
 import { ArrowLeft, Gamepad2, Trophy, Clock, Star, Play } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useGameification } from "@/hooks/useGameification";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { TalentikaJuniorBottomNav } from "@/components/dashboard/TalentikaJuniorBottomNav";
 
 const TalentikaJuniorGames = () => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const { awardXP, updateStreak } = useGameification();
   const [playingGame, setPlayingGame] = useState<string | null>(null);
 
@@ -309,6 +313,8 @@ const TalentikaJuniorGames = () => {
           </div>
         </Card>
       </div>
+      
+      <TalentikaJuniorBottomNav />
     </div>
   );
 };
