@@ -45,36 +45,6 @@ const TalentikaJunior = () => {
       
       <div className="container mx-auto px-4 relative z-10">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
-          {/* Content Section */}
-          <div className="space-y-8">
-            <div className="space-y-4">
-              <h2 className="text-4xl lg:text-5xl font-bold text-foreground">
-                Talentika Junior: 
-                <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent block">
-                  Discover, Explore, and Shine!
-                </span>
-              </h2>
-              
-              <p className="text-lg text-muted-foreground leading-relaxed">
-                Talentika Junior hadir untuk menumbuhkan potensi anak sejak dini melalui pendekatan minat, bakat, dan eksplorasi diri. Dengan 5 program utama yang dirancang khusus untuk anak-anak: Discover (temukan bakat), Learn (belajar menyenangkan), Play (game edukatif), Rewards (kumpulkan badge), dan Recent Adventures (pantau progress).
-              </p>
-            </div>
-
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 pt-4">
-              <Button 
-                size="lg" 
-                className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground font-medium shadow-lg hover:shadow-xl transition-all duration-300"
-                onClick={() => window.location.href = '/auth?redirect=talentika-junior'}
-              >
-                Mulai Eksplorasi Gratis
-              </Button>
-              <Button variant="outline" size="lg" className="border-primary/20 hover:bg-primary/5">
-                Pelajari Lebih Lanjut
-              </Button>
-            </div>
-          </div>
-
           {/* Image Section */}
           <div className="relative">
             <div className="relative rounded-3xl overflow-hidden shadow-2xl transform rotate-2 hover:rotate-0 transition-transform duration-500 hover-scale">
@@ -91,6 +61,33 @@ const TalentikaJunior = () => {
             <div className="absolute -top-4 -left-4 w-8 h-8 bg-blue-400 rounded-full animate-bounce delay-100" />
             <div className="absolute -bottom-4 -right-4 w-6 h-6 bg-amber-400 rounded-full animate-bounce delay-300" />
             <div className="absolute top-1/4 -right-6 w-4 h-4 bg-orange-400 rounded-full animate-pulse" />
+          </div>
+
+          {/* Content Section */}
+          <div className="space-y-8">
+            <div className="space-y-4">
+              <h2 className="text-4xl lg:text-5xl font-bold text-foreground">
+                Talentika Junior: 
+                <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent block">
+                  Discover, Explore, and Shine!
+                </span>
+              </h2>
+              
+              <p className="text-lg text-muted-foreground leading-relaxed">
+                Talentika Junior hadir untuk menumbuhkan potensi anak sejak dini melalui pendekatan minat, bakat, dan eksplorasi diri. Dengan 5 program utama yang dirancang khusus untuk anak-anak: Discover, Learn , Play.
+              </p>
+            </div>
+
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 pt-4">
+              <Button 
+                size="lg" 
+                className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground font-medium shadow-lg hover:shadow-xl transition-all duration-300"
+                onClick={() => window.location.href = '/auth?redirect=talentika-junior'}
+              >
+                Mulai Eksplorasi Gratis
+              </Button>
+            </div>
           </div>
         </div>
       </div>

@@ -31,7 +31,7 @@ const Auth = () => {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        const destination = redirectTo === 'talentika-junior' ? '/talentika-junior' : '/dashboard';
+        const destination = '/dashboard';
         navigate(destination);
       }
     };
@@ -44,9 +44,7 @@ const Auth = () => {
     setError("");
 
     try {
-      const redirectUrl = redirectTo === 'talentika-junior' ? 
-        `${window.location.origin}/talentika-junior` : 
-        `${window.location.origin}/dashboard`;
+      const redirectUrl = `${window.location.origin}/dashboard`;
       
       const { error } = await supabase.auth.signUp({
         email,
@@ -88,7 +86,7 @@ const Auth = () => {
 
       if (data.user) {
         toast.success("Login berhasil!");
-        const destination = redirectTo === 'talentika-junior' ? '/talentika-junior' : '/dashboard';
+        const destination = '/dashboard';
         navigate(destination);
       }
     } catch (error: any) {
@@ -104,9 +102,7 @@ const Auth = () => {
     setError("");
 
     try {
-      const redirectUrl = redirectTo === 'talentika-junior' ? 
-        `${window.location.origin}/talentika-junior` : 
-        `${window.location.origin}/dashboard`;
+      const redirectUrl = `${window.location.origin}/dashboard`;
         
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
