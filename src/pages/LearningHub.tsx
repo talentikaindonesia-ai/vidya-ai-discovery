@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { Play, Clock, Award, BookOpen, Code, FileText, Users, ArrowLeft, Crown, Lock, GraduationCap, Zap, Brain, TrendingUp, Search, Star, Filter, Target, Calendar } from "lucide-react";
+import { Play, Clock, Award, BookOpen, Code, FileText, Users, ArrowLeft, Crown, Lock, GraduationCap, Zap, Brain, TrendingUp, Search, Star, Filter, Target, Calendar, Trophy, Rocket, Users2, Timer } from "lucide-react";
 import { toast } from "sonner";
 import { getSubscriptionLimits, checkSubscriptionAccess, getUserSubscriptionInfo } from "@/lib/subscription";
 import { PersonalizedLearningHub } from "@/components/dashboard/PersonalizedLearningHub";
@@ -50,6 +50,8 @@ const LearningHub = () => {
   const [userInterests, setUserInterests] = useState<string[]>([]);
   const [activeSection, setActiveSection] = useState("courses");
   const [searchTerm, setSearchTerm] = useState("");
+  const [challenges, setChallenges] = useState<any[]>([]);
+  const [programs, setPrograms] = useState<any[]>([]);
 
   useEffect(() => {
     checkAuthAndLoadData();
@@ -68,7 +70,9 @@ const LearningHub = () => {
           loadCourses(),
           loadUserProgress(),
           loadUserAssessment(session.user.id),
-          loadUserInterests(session.user.id)
+          loadUserInterests(session.user.id),
+          loadChallenges(),
+          loadPrograms()
         ]);
       }
     } catch (error) {
@@ -147,6 +151,38 @@ const LearningHub = () => {
       setUserProgress(data || []);
     } catch (error: any) {
       console.error('Error loading progress:', error);
+    }
+  };
+
+  const loadChallenges = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('community_challenges')
+        .select('*')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(6);
+
+      if (error) throw error;
+      setChallenges(data || []);
+    } catch (error: any) {
+      console.error('Error loading challenges:', error);
+    }
+  };
+
+  const loadPrograms = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('learning_paths')
+        .select('*')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(6);
+
+      if (error) throw error;
+      setPrograms(data || []);
+    } catch (error: any) {
+      console.error('Error loading programs:', error);
     }
   };
 
@@ -452,6 +488,15 @@ const LearningHub = () => {
                   </CardContent>
                 </Card>
                 <Card 
+                  className={`cursor-pointer transition-all ${activeSection === 'challenges' ? 'border-primary bg-primary/5' : 'hover:border-primary/50'}`}
+                  onClick={() => setActiveSection('challenges')}
+                >
+                  <CardContent className="p-4 text-center">
+                    <Trophy className="w-6 h-6 mx-auto mb-2 text-primary" />
+                    <p className="text-sm font-medium">Challenge & Program</p>
+                  </CardContent>
+                </Card>
+                <Card 
                   className={`cursor-pointer transition-all ${activeSection === 'all' ? 'border-primary bg-primary/5' : 'hover:border-primary/50'}`}
                   onClick={() => setActiveSection('all')}
                 >
@@ -485,6 +530,7 @@ const LearningHub = () => {
             <Tabs defaultValue="personal" className="w-full hidden md:block">
               <TabsList className="mb-6">
                 <TabsTrigger value="personal">Rekomendasi Personal</TabsTrigger>
+                <TabsTrigger value="challenges">Challenge & Program</TabsTrigger>
                 <TabsTrigger value="all">Semua Kursus</TabsTrigger>
                 <TabsTrigger value="my">Kursus Saya</TabsTrigger>
                 <TabsTrigger value="finished">Selesai</TabsTrigger>
@@ -579,6 +625,258 @@ const LearningHub = () => {
                               Mulai Kursus
                             </Button>
                           </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="challenges">
+                {/* Challenges Section */}
+                <div className="space-y-6 mb-8">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xl font-semibold flex items-center gap-2">
+                      <Trophy className="w-6 h-6 text-primary" />
+                      Tantangan Aktif
+                    </h3>
+                    <Button variant="outline" size="sm">
+                      Lihat Semua
+                    </Button>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {challenges.map((challenge) => (
+                      <Card key={challenge.id} className="bg-gradient-to-br from-orange-500 to-red-500 text-white border-0 hover:shadow-xl transition-all">
+                        <CardContent className="p-6">
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="flex items-center justify-center w-12 h-12 bg-white/20 rounded-lg">
+                              <Trophy className="w-6 h-6" />
+                            </div>
+                            <Badge className="bg-white/20 text-white border-white/30">
+                              {challenge.xp_reward || 100} XP
+                            </Badge>
+                          </div>
+                          
+                          <h4 className="font-semibold text-lg mb-2 line-clamp-2">
+                            {challenge.title || "Daily Learning Challenge"}
+                          </h4>
+                          <p className="text-white/80 text-sm mb-4 line-clamp-2">
+                            {challenge.description || "Complete daily learning goals to earn XP and badges"}
+                          </p>
+                          
+                          <div className="flex items-center justify-between text-sm mb-4">
+                            <div className="flex items-center gap-1">
+                              <Timer className="w-4 h-4" />
+                              <span>7 hari tersisa</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Users2 className="w-4 h-4" />
+                              <span>{Math.floor(Math.random() * 500) + 100} peserta</span>
+                            </div>
+                          </div>
+                          
+                          <div className="mb-4">
+                            <div className="flex items-center justify-between text-sm mb-1">
+                              <span>Progress</span>
+                              <span>{Math.floor(Math.random() * 100)}%</span>
+                            </div>
+                            <Progress value={Math.floor(Math.random() * 100)} className="h-2 bg-white/20" />
+                          </div>
+                          
+                          <Button className="w-full bg-white text-orange-600 hover:bg-white/90">
+                            <Rocket className="w-4 h-4 mr-2" />
+                            Ikuti Challenge
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ))}
+                    
+                    {/* Default challenges if none exist */}
+                    {challenges.length === 0 && [1, 2, 3].map((index) => (
+                      <Card key={index} className="bg-gradient-to-br from-orange-500 to-red-500 text-white border-0 hover:shadow-xl transition-all">
+                        <CardContent className="p-6">
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="flex items-center justify-center w-12 h-12 bg-white/20 rounded-lg">
+                              <Trophy className="w-6 h-6" />
+                            </div>
+                            <Badge className="bg-white/20 text-white border-white/30">
+                              {[100, 150, 200][index - 1]} XP
+                            </Badge>
+                          </div>
+                          
+                          <h4 className="font-semibold text-lg mb-2">
+                            {["Challenge Harian", "Weekly Streak", "Learning Master"][index - 1]}
+                          </h4>
+                          <p className="text-white/80 text-sm mb-4">
+                            {[
+                              "Selesaikan 3 kursus dalam sehari untuk mendapatkan bonus XP",
+                              "Belajar selama 7 hari berturut-turut tanpa jeda",
+                              "Capai nilai perfect dalam 5 quiz berturut-turut"
+                            ][index - 1]}
+                          </p>
+                          
+                          <div className="flex items-center justify-between text-sm mb-4">
+                            <div className="flex items-center gap-1">
+                              <Timer className="w-4 h-4" />
+                              <span>{[7, 14, 30][index - 1]} hari tersisa</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Users2 className="w-4 h-4" />
+                              <span>{[234, 156, 89][index - 1]} peserta</span>
+                            </div>
+                          </div>
+                          
+                          <div className="mb-4">
+                            <div className="flex items-center justify-between text-sm mb-1">
+                              <span>Progress</span>
+                              <span>{[45, 78, 23][index - 1]}%</span>
+                            </div>
+                            <Progress value={[45, 78, 23][index - 1]} className="h-2 bg-white/20" />
+                          </div>
+                          
+                          <Button className="w-full bg-white text-orange-600 hover:bg-white/90">
+                            <Rocket className="w-4 h-4 mr-2" />
+                            Ikuti Challenge
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Learning Programs Section */}
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xl font-semibold flex items-center gap-2">
+                      <Rocket className="w-6 h-6 text-primary" />
+                      Program Pembelajaran
+                    </h3>
+                    <Button variant="outline" size="sm">
+                      Lihat Semua
+                    </Button>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {programs.map((program) => (
+                      <Card key={program.id} className="bg-gradient-to-br from-blue-600 to-purple-600 text-white border-0 hover:shadow-xl transition-all">
+                        <CardContent className="p-6">
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="flex items-center justify-center w-12 h-12 bg-white/20 rounded-lg">
+                              <Rocket className="w-6 h-6" />
+                            </div>
+                            <Badge className="bg-white/20 text-white border-white/30">
+                              {program.difficulty_level || "Beginner"}
+                            </Badge>
+                          </div>
+                          
+                          <h4 className="font-semibold text-lg mb-2 line-clamp-2">
+                            {program.name || "Full Stack Development"}
+                          </h4>
+                          <p className="text-white/80 text-sm mb-4 line-clamp-3">
+                            {program.description || "Comprehensive program to master full stack development from frontend to backend"}
+                          </p>
+                          
+                          <div className="flex items-center gap-4 text-sm mb-4">
+                            <div className="flex items-center gap-1">
+                              <Clock className="w-4 h-4" />
+                              <span>{program.duration_hours || 120} jam</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <BookOpen className="w-4 h-4" />
+                              <span>{program.modules_count || 12} modul</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Users2 className="w-4 h-4" />
+                              <span>{Math.floor(Math.random() * 1000) + 500}+ siswa</span>
+                            </div>
+                          </div>
+                          
+                          <div className="mb-4">
+                            <div className="flex items-center justify-between text-sm mb-1">
+                              <span>Progress</span>
+                              <span>{program.progress || 0}%</span>
+                            </div>
+                            <Progress value={program.progress || 0} className="h-2 bg-white/20" />
+                          </div>
+                          
+                          <Button className="w-full bg-white text-blue-600 hover:bg-white/90">
+                            <Play className="w-4 h-4 mr-2" />
+                            {program.progress > 0 ? 'Lanjutkan Program' : 'Mulai Program'}
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ))}
+                    
+                    {/* Default programs if none exist */}
+                    {programs.length === 0 && [
+                      {
+                        name: "Full Stack Development",
+                        description: "Program lengkap untuk menguasai pengembangan web dari frontend hingga backend",
+                        duration: 120,
+                        modules: 12,
+                        progress: 35
+                      },
+                      {
+                        name: "Data Science Mastery",
+                        description: "Pelajari analisis data, machine learning, dan visualisasi data dari dasar hingga mahir",
+                        duration: 180,
+                        modules: 16,
+                        progress: 0
+                      },
+                      {
+                        name: "Mobile App Development",
+                        description: "Buat aplikasi mobile native dan cross-platform dengan React Native dan Flutter",
+                        duration: 100,
+                        modules: 10,
+                        progress: 60
+                      }
+                    ].map((program, index) => (
+                      <Card key={index} className="bg-gradient-to-br from-blue-600 to-purple-600 text-white border-0 hover:shadow-xl transition-all">
+                        <CardContent className="p-6">
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="flex items-center justify-center w-12 h-12 bg-white/20 rounded-lg">
+                              <Rocket className="w-6 h-6" />
+                            </div>
+                            <Badge className="bg-white/20 text-white border-white/30">
+                              {["Intermediate", "Advanced", "Beginner"][index]}
+                            </Badge>
+                          </div>
+                          
+                          <h4 className="font-semibold text-lg mb-2">
+                            {program.name}
+                          </h4>
+                          <p className="text-white/80 text-sm mb-4">
+                            {program.description}
+                          </p>
+                          
+                          <div className="flex items-center gap-4 text-sm mb-4">
+                            <div className="flex items-center gap-1">
+                              <Clock className="w-4 h-4" />
+                              <span>{program.duration} jam</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <BookOpen className="w-4 h-4" />
+                              <span>{program.modules} modul</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Users2 className="w-4 h-4" />
+                              <span>{[850, 1200, 650][index]}+ siswa</span>
+                            </div>
+                          </div>
+                          
+                          <div className="mb-4">
+                            <div className="flex items-center justify-between text-sm mb-1">
+                              <span>Progress</span>
+                              <span>{program.progress}%</span>
+                            </div>
+                            <Progress value={program.progress} className="h-2 bg-white/20" />
+                          </div>
+                          
+                          <Button className="w-full bg-white text-blue-600 hover:bg-white/90">
+                            <Play className="w-4 h-4 mr-2" />
+                            {program.progress > 0 ? 'Lanjutkan Program' : 'Mulai Program'}
+                          </Button>
                         </CardContent>
                       </Card>
                     ))}
@@ -865,6 +1163,282 @@ const LearningHub = () => {
                                 >
                                   <Play className="w-4 h-4 mr-2" />
                                   Mulai Kursus
+                                </Button>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeSection === 'challenges' && (
+                <div>
+                  {/* Challenges Section */}
+                  <div className="space-y-4 mb-8">
+                    <h3 className="text-xl font-semibold flex items-center gap-2">
+                      <Trophy className="w-6 h-6 text-primary" />
+                      Tantangan Aktif
+                    </h3>
+                    
+                    <div className="space-y-4">
+                      {challenges.map((challenge) => (
+                        <Card key={challenge.id} className="bg-gradient-to-r from-orange-500 to-red-500 text-white border-0">
+                          <CardContent className="p-4">
+                            <div className="flex items-start gap-4">
+                              <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center shrink-0">
+                                <Trophy className="w-6 h-6" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-start justify-between mb-2">
+                                  <h4 className="font-semibold text-base line-clamp-2">
+                                    {challenge.title || "Daily Learning Challenge"}
+                                  </h4>
+                                  <Badge className="bg-white/20 text-white border-white/30 ml-2 shrink-0 text-xs">
+                                    {challenge.xp_reward || 100} XP
+                                  </Badge>
+                                </div>
+                                
+                                <p className="text-white/80 text-sm mb-3 line-clamp-2">
+                                  {challenge.description || "Complete daily learning goals to earn XP and badges"}
+                                </p>
+                                
+                                <div className="flex items-center gap-4 text-xs mb-3">
+                                  <div className="flex items-center gap-1">
+                                    <Timer className="w-3 h-3" />
+                                    <span>7 hari tersisa</span>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <Users2 className="w-3 h-3" />
+                                    <span>{Math.floor(Math.random() * 500) + 100} peserta</span>
+                                  </div>
+                                </div>
+                                
+                                <div className="mb-3">
+                                  <div className="flex items-center justify-between text-xs mb-1">
+                                    <span>Progress</span>
+                                    <span>{Math.floor(Math.random() * 100)}%</span>
+                                  </div>
+                                  <Progress value={Math.floor(Math.random() * 100)} className="h-1 bg-white/20" />
+                                </div>
+                                
+                                <Button size="sm" className="w-full bg-white text-orange-600 hover:bg-white/90">
+                                  <Rocket className="w-3 h-3 mr-2" />
+                                  Ikuti Challenge
+                                </Button>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                      
+                      {/* Default challenges if none exist */}
+                      {challenges.length === 0 && [
+                        {
+                          title: "Challenge Harian",
+                          description: "Selesaikan 3 kursus dalam sehari untuk mendapatkan bonus XP",
+                          xp: 100,
+                          days: 7,
+                          participants: 234,
+                          progress: 45
+                        },
+                        {
+                          title: "Weekly Streak",
+                          description: "Belajar selama 7 hari berturut-turut tanpa jeda",
+                          xp: 150,
+                          days: 14,
+                          participants: 156,
+                          progress: 78
+                        },
+                        {
+                          title: "Learning Master",
+                          description: "Capai nilai perfect dalam 5 quiz berturut-turut",
+                          xp: 200,
+                          days: 30,
+                          participants: 89,
+                          progress: 23
+                        }
+                      ].map((challenge, index) => (
+                        <Card key={index} className="bg-gradient-to-r from-orange-500 to-red-500 text-white border-0">
+                          <CardContent className="p-4">
+                            <div className="flex items-start gap-4">
+                              <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center shrink-0">
+                                <Trophy className="w-6 h-6" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-start justify-between mb-2">
+                                  <h4 className="font-semibold text-base">
+                                    {challenge.title}
+                                  </h4>
+                                  <Badge className="bg-white/20 text-white border-white/30 ml-2 shrink-0 text-xs">
+                                    {challenge.xp} XP
+                                  </Badge>
+                                </div>
+                                
+                                <p className="text-white/80 text-sm mb-3">
+                                  {challenge.description}
+                                </p>
+                                
+                                <div className="flex items-center gap-4 text-xs mb-3">
+                                  <div className="flex items-center gap-1">
+                                    <Timer className="w-3 h-3" />
+                                    <span>{challenge.days} hari tersisa</span>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <Users2 className="w-3 h-3" />
+                                    <span>{challenge.participants} peserta</span>
+                                  </div>
+                                </div>
+                                
+                                <div className="mb-3">
+                                  <div className="flex items-center justify-between text-xs mb-1">
+                                    <span>Progress</span>
+                                    <span>{challenge.progress}%</span>
+                                  </div>
+                                  <Progress value={challenge.progress} className="h-1 bg-white/20" />
+                                </div>
+                                
+                                <Button size="sm" className="w-full bg-white text-orange-600 hover:bg-white/90">
+                                  <Rocket className="w-3 h-3 mr-2" />
+                                  Ikuti Challenge
+                                </Button>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Learning Programs Section */}
+                  <div className="space-y-4">
+                    <h3 className="text-xl font-semibold flex items-center gap-2">
+                      <Rocket className="w-6 h-6 text-primary" />
+                      Program Pembelajaran
+                    </h3>
+                    
+                    <div className="space-y-4">
+                      {programs.map((program) => (
+                        <Card key={program.id} className="bg-gradient-to-r from-blue-600 to-purple-600 text-white border-0">
+                          <CardContent className="p-4">
+                            <div className="flex items-start gap-4">
+                              <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center shrink-0">
+                                <Rocket className="w-6 h-6" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-start justify-between mb-2">
+                                  <h4 className="font-semibold text-base line-clamp-2">
+                                    {program.name || "Full Stack Development"}
+                                  </h4>
+                                  <Badge className="bg-white/20 text-white border-white/30 ml-2 shrink-0 text-xs">
+                                    {program.difficulty_level || "Beginner"}
+                                  </Badge>
+                                </div>
+                                
+                                <p className="text-white/80 text-sm mb-3 line-clamp-2">
+                                  {program.description || "Comprehensive program to master full stack development"}
+                                </p>
+                                
+                                <div className="flex items-center gap-4 text-xs mb-3">
+                                  <div className="flex items-center gap-1">
+                                    <Clock className="w-3 h-3" />
+                                    <span>{program.duration_hours || 120} jam</span>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <BookOpen className="w-3 h-3" />
+                                    <span>{program.modules_count || 12} modul</span>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <Users2 className="w-3 h-3" />
+                                    <span>{Math.floor(Math.random() * 1000) + 500}+ siswa</span>
+                                  </div>
+                                </div>
+                                
+                                <div className="mb-3">
+                                  <div className="flex items-center justify-between text-xs mb-1">
+                                    <span>Progress</span>
+                                    <span>{program.progress || 0}%</span>
+                                  </div>
+                                  <Progress value={program.progress || 0} className="h-1 bg-white/20" />
+                                </div>
+                                
+                                <Button size="sm" className="w-full bg-white text-blue-600 hover:bg-white/90">
+                                  <Play className="w-3 h-3 mr-2" />
+                                  {program.progress > 0 ? 'Lanjutkan Program' : 'Mulai Program'}
+                                </Button>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                      
+                      {/* Default programs if none exist */}
+                      {programs.length === 0 && [
+                        {
+                          name: "Full Stack Development",
+                          description: "Program lengkap untuk menguasai pengembangan web dari frontend hingga backend",
+                          duration: 120,
+                          modules: 12,
+                          progress: 35,
+                          level: "Intermediate"
+                        },
+                        {
+                          name: "Data Science Mastery", 
+                          description: "Pelajari analisis data, machine learning, dan visualisasi data dari dasar hingga mahir",
+                          duration: 180,
+                          modules: 16,
+                          progress: 0,
+                          level: "Advanced"
+                        }
+                      ].map((program, index) => (
+                        <Card key={index} className="bg-gradient-to-r from-blue-600 to-purple-600 text-white border-0">
+                          <CardContent className="p-4">
+                            <div className="flex items-start gap-4">
+                              <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center shrink-0">
+                                <Rocket className="w-6 h-6" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-start justify-between mb-2">
+                                  <h4 className="font-semibold text-base">
+                                    {program.name}
+                                  </h4>
+                                  <Badge className="bg-white/20 text-white border-white/30 ml-2 shrink-0 text-xs">
+                                    {program.level}
+                                  </Badge>
+                                </div>
+                                
+                                <p className="text-white/80 text-sm mb-3">
+                                  {program.description}
+                                </p>
+                                
+                                <div className="flex items-center gap-4 text-xs mb-3">
+                                  <div className="flex items-center gap-1">
+                                    <Clock className="w-3 h-3" />
+                                    <span>{program.duration} jam</span>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <BookOpen className="w-3 h-3" />
+                                    <span>{program.modules} modul</span>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <Users2 className="w-3 h-3" />
+                                    <span>{[850, 1200][index]}+ siswa</span>
+                                  </div>
+                                </div>
+                                
+                                <div className="mb-3">
+                                  <div className="flex items-center justify-between text-xs mb-1">
+                                    <span>Progress</span>
+                                    <span>{program.progress}%</span>
+                                  </div>
+                                  <Progress value={program.progress} className="h-1 bg-white/20" />
+                                </div>
+                                
+                                <Button size="sm" className="w-full bg-white text-blue-600 hover:bg-white/90">
+                                  <Play className="w-3 h-3 mr-2" />
+                                  {program.progress > 0 ? 'Lanjutkan Program' : 'Mulai Program'}
                                 </Button>
                               </div>
                             </div>
