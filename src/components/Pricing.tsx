@@ -82,13 +82,13 @@ const Pricing = () => {
           </p>
         </div>
 
-        <div className="flex overflow-x-auto gap-4 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-8 max-w-7xl mx-auto snap-x snap-mandatory pb-4 no-scrollbar">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
           {plans.map((plan, index) => {
             const IconComponent = plan.icon;
             return (
               <Card 
                 key={index} 
-                className={`flex-shrink-0 w-[80vw] sm:w-[60vw] md:w-auto snap-center relative overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-floating ${
+                className={`relative overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-floating ${
                   plan.popular 
                     ? 'border-2 border-primary shadow-floating ring-2 ring-primary/20' 
                     : 'border-border hover:border-primary/50'
