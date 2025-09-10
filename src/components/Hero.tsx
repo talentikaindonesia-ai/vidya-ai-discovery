@@ -38,6 +38,13 @@ const Hero = () => {
                 Mulai Assessment
                 <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
               </Button>
+              <Button 
+                variant="elegant" 
+                size="hero"
+                onClick={() => window.location.href = '/assessment'}
+              >
+                Pelajari Lebih Lanjut
+              </Button>
             </div>
             
             {/* Professional Stats */}

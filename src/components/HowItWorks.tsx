@@ -1,12 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle, ArrowRight, PlayCircle } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
 
 const HowItWorks = () => {
-  const [activeIndex, setActiveIndex] = useState(0);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-
   const steps = [
     {
       number: "01",
@@ -34,35 +30,6 @@ const HowItWorks = () => {
     }
   ];
 
-  useEffect(() => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-
-    const handleScroll = () => {
-      const scrollLeft = container.scrollLeft;
-      const children = Array.from(container.children) as HTMLElement[];
-
-      let newActiveIndex = 0;
-      for (let i = 0; i < children.length; i++) {
-        const child = children[i];
-        // Check if the middle of the child is within the middle of the container
-        if (child.offsetLeft + child.offsetWidth / 2 > scrollLeft + container.offsetWidth / 2) {
-          newActiveIndex = i;
-          break;
-        }
-      }
-      setActiveIndex(newActiveIndex);
-    };
-
-    container.addEventListener('scroll', handleScroll);
-    // Set initial active index on mount
-    handleScroll();
-
-    return () => {
-      container.removeEventListener('scroll', handleScroll);
-    };
-  }, []);
-
   return (
     <section className="py-20 bg-muted/30">
       <div className="container px-4">
@@ -76,10 +43,10 @@ const HowItWorks = () => {
         </div>
 
         <div className="max-w-4xl mx-auto">
-          <div ref={scrollContainerRef} className="flex overflow-x-auto gap-4 md:grid md:gap-8 snap-x snap-mandatory pb-4 no-scrollbar">
+          <div className="grid gap-8">
             {steps.map((step, index) => (
-              <div key={index} className="relative flex-shrink-0 w-[80vw] sm:w-[60vw] md:w-auto snap-center">
-                <Card className={`bg-gradient-card border-primary/10 shadow-card hover:shadow-floating transition-all duration-300 ${activeIndex === index ? 'border-primary shadow-lg' : ''}`}>
+              <div key={index} className="relative">
+                <Card className="bg-gradient-card border-primary/10 shadow-card hover:shadow-floating transition-all duration-300">
                   <CardContent className="p-8">
                     <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
                       {/* Step Number */}
