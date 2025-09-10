@@ -346,21 +346,21 @@ const LearningHub = () => {
           onSignOut={handleSignOut}
         />
         
-        <main className="flex-1 overflow-hidden pb-20 md:pb-0 mobile-no-scroll">
-          <div className="mobile-container p-4 md:p-6">
+        <main className="flex-1 overflow-hidden pb-20 md:pb-0">
+          <div className="w-full max-w-none px-4 md:px-6 prevent-overflow">
             {/* Header */}
-            <div className="mb-8">
-              <div className="flex items-center justify-between mb-2">
-                <h1 className="text-3xl font-bold">Kursus Pembelajaran</h1>
-                <div className="flex items-center gap-2">
+            <div className="mb-6 md:mb-8">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
+                <h1 className="text-2xl sm:text-3xl font-bold truncate">Kursus Pembelajaran</h1>
+                <div className="flex items-center gap-2 shrink-0">
                   <span className="text-sm text-muted-foreground">Muhammad Dafa</span>
                   <Badge variant="outline" className="text-xs">Individual</Badge>
                 </div>
               </div>
               
               {/* Search Bar */}
-              <div className="flex items-center gap-4 mb-6">
-                <div className="flex-1 relative max-w-md">
+              <div className="flex items-center gap-2 md:gap-4">
+                <div className="flex-1 relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                   <Input
                     placeholder="Cari kursus..."
@@ -369,14 +369,14 @@ const LearningHub = () => {
                     className="pl-10"
                   />
                 </div>
-                <Button variant="outline" size="icon">
+                <Button variant="outline" size="icon" className="shrink-0">
                   <Filter className="w-4 h-4" />
                 </Button>
               </div>
             </div>
 
             {/* Learning Progress Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8 prevent-overflow">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6 md:mb-8">
               <Card className="shadow-card">
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
@@ -420,27 +420,69 @@ const LearningHub = () => {
                       <Play className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-sm sm:text-base">Kelas Python Dasar</p>
+                      <p className="font-semibold text-sm sm:text-base truncate">Kelas Python Dasar</p>
                       <p className="text-xs sm:text-sm text-muted-foreground">09:00 - 10:30 WIB</p>
                     </div>
-                    <Badge className="bg-primary text-primary-foreground text-xs">Live</Badge>
+                    <Badge className="bg-primary text-primary-foreground text-xs shrink-0">Live</Badge>
                   </div>
                   <div className="flex items-center gap-3 p-3 sm:p-4 bg-muted/30 rounded-xl border-l-4 border-muted">
                     <div className="w-10 h-10 sm:w-12 sm:h-12 bg-muted/50 rounded-full flex items-center justify-center flex-shrink-0">
                       <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-muted-foreground" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-sm sm:text-base">Quiz Matematika</p>
+                      <p className="font-semibold text-sm sm:text-base truncate">Quiz Matematika</p>
                       <p className="text-xs sm:text-sm text-muted-foreground">14:00 - 14:30 WIB</p>
                     </div>
-                    <Badge variant="outline" className="text-xs">Upcoming</Badge>
+                    <Badge variant="outline" className="text-xs shrink-0">Upcoming</Badge>
                   </div>
                 </CardContent>
               </Card>
             </div>
 
-            {/* Tabs */}
-            <Tabs defaultValue="personal" className="w-full">
+            {/* Mobile Card Navigation */}
+            <div className="md:hidden mb-6">
+              <div className="grid grid-cols-2 gap-3">
+                <Card 
+                  className={`cursor-pointer transition-all ${activeSection === 'personal' ? 'border-primary bg-primary/5' : 'hover:border-primary/50'}`}
+                  onClick={() => setActiveSection('personal')}
+                >
+                  <CardContent className="p-4 text-center">
+                    <Brain className="w-6 h-6 mx-auto mb-2 text-primary" />
+                    <p className="text-sm font-medium">Rekomendasi Personal</p>
+                  </CardContent>
+                </Card>
+                <Card 
+                  className={`cursor-pointer transition-all ${activeSection === 'all' ? 'border-primary bg-primary/5' : 'hover:border-primary/50'}`}
+                  onClick={() => setActiveSection('all')}
+                >
+                  <CardContent className="p-4 text-center">
+                    <BookOpen className="w-6 h-6 mx-auto mb-2 text-primary" />
+                    <p className="text-sm font-medium">Semua Kursus</p>
+                  </CardContent>
+                </Card>
+                <Card 
+                  className={`cursor-pointer transition-all ${activeSection === 'my' ? 'border-primary bg-primary/5' : 'hover:border-primary/50'}`}
+                  onClick={() => setActiveSection('my')}
+                >
+                  <CardContent className="p-4 text-center">
+                    <GraduationCap className="w-6 h-6 mx-auto mb-2 text-primary" />
+                    <p className="text-sm font-medium">Kursus Saya</p>
+                  </CardContent>
+                </Card>
+                <Card 
+                  className={`cursor-pointer transition-all ${activeSection === 'finished' ? 'border-primary bg-primary/5' : 'hover:border-primary/50'}`}
+                  onClick={() => setActiveSection('finished')}
+                >
+                  <CardContent className="p-4 text-center">
+                    <Award className="w-6 h-6 mx-auto mb-2 text-primary" />
+                    <p className="text-sm font-medium">Selesai</p>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+
+            {/* Desktop Tabs */}
+            <Tabs defaultValue="personal" className="w-full hidden md:block">
               <TabsList className="mb-6">
                 <TabsTrigger value="personal">Rekomendasi Personal</TabsTrigger>
                 <TabsTrigger value="all">Semua Kursus</TabsTrigger>
@@ -741,6 +783,336 @@ const LearningHub = () => {
                 </div>
               </TabsContent>
             </Tabs>
+
+            {/* Mobile Content Sections */}
+            <div className="md:hidden">
+              {activeSection === 'personal' && (
+                <div>
+                  {/* Rekomendasi Personal Section */}
+                  <Card className="mb-6 border-blue-200">
+                    <CardContent className="p-4 md:p-6">
+                      <div className="flex items-start gap-3 mb-4">
+                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center shrink-0">
+                          <Brain className="w-5 h-5 text-blue-600" />
+                        </div>
+                        <div className="min-w-0">
+                          <h3 className="font-semibold text-base md:text-lg">Rekomendasi Personal Anda</h3>
+                          <p className="text-muted-foreground text-sm mb-3">
+                            Berdasarkan hasil assessment dan minat Anda:
+                          </p>
+                          
+                          {/* Assessment Tags */}
+                          {userAssessment && (
+                            <div className="flex flex-wrap gap-2 mb-4">
+                              <Badge variant="outline" className="bg-blue-50 border-blue-200 text-xs">
+                                <span className="mr-1">💡</span>
+                                Tipe: {userAssessment.personality_type || 'social'}
+                              </Badge>
+                              <Badge variant="outline" className="bg-blue-50 border-blue-200 text-xs">
+                                Gaya: {userAssessment.learning_style || 'social'}
+                              </Badge>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Course Grid for Personal Recommendations */}
+                  <div className="space-y-4 mb-6">
+                    <h3 className="font-semibold flex items-center gap-2">
+                      <BookOpen className="w-5 h-5" />
+                      Kursus yang Direkomendasikan
+                    </h3>
+                    <div className="grid grid-cols-1 gap-4">
+                      {courses.slice(0, 3).map((course, index) => (
+                        <Card 
+                          key={course.id} 
+                          className="overflow-hidden hover:shadow-lg transition-all cursor-pointer bg-gradient-to-br from-blue-500 to-blue-600 text-white"
+                          onClick={() => handleCourseClick(course, index)}
+                        >
+                          <CardContent className="p-4">
+                            <div className="flex items-start gap-4">
+                              <div className="flex items-center justify-center w-12 h-12 bg-white/10 rounded-lg shrink-0">
+                                <BookOpen className="w-6 h-6" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <h4 className="font-semibold text-base mb-1 line-clamp-2">
+                                  {course.title}
+                                </h4>
+                                <p className="text-white/80 text-sm mb-3 line-clamp-2">
+                                  {course.description}
+                                </p>
+                                
+                                <div className="flex items-center justify-between text-sm mb-3">
+                                  <div className="flex items-center gap-1">
+                                    <Clock className="w-4 h-4" />
+                                    <span>{course.duration_hours}h</span>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <Star className="w-4 h-4 fill-current" />
+                                    <span>4.8</span>
+                                  </div>
+                                </div>
+                                
+                                <Button 
+                                  size="sm"
+                                  className="w-full bg-white text-blue-600 hover:bg-white/90"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    startLearning(course.id, index);
+                                  }}
+                                >
+                                  <Play className="w-4 h-4 mr-2" />
+                                  Mulai Kursus
+                                </Button>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeSection === 'all' && (
+                <div className="grid grid-cols-1 gap-4">
+                  {courses.filter(course => 
+                    course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    course.description.toLowerCase().includes(searchTerm.toLowerCase())
+                  ).map((course, index) => {
+                    const canAccess = canAccessCourse(index);
+                    const isLocked = !canAccess;
+                    const progress = getCourseProgress(course.id);
+                    
+                    return (
+                      <Card 
+                        key={course.id} 
+                        className={`shadow-card hover:shadow-floating transition-all cursor-pointer group ${isLocked ? 'opacity-75' : ''}`}
+                        onClick={() => handleCourseClick(course, index)}
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex items-start gap-4">
+                            <div className="w-16 h-16 bg-muted rounded-lg overflow-hidden relative shrink-0">
+                              {course.thumbnail_url ? (
+                                <img 
+                                  src={course.thumbnail_url} 
+                                  alt={course.title}
+                                  className={`w-full h-full object-cover ${isLocked ? 'grayscale' : ''}`}
+                                />
+                              ) : (
+                                <div className="w-full h-full bg-muted flex items-center justify-center">
+                                  <BookOpen className="w-6 h-6 text-muted-foreground" />
+                                </div>
+                              )}
+                              {isLocked && (
+                                <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                                  <Lock className="w-4 h-4 text-white" />
+                                </div>
+                              )}
+                            </div>
+                            
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-start justify-between mb-2">
+                                <h4 className="font-semibold text-base line-clamp-2 group-hover:text-primary transition-colors">
+                                  {course.title}
+                                </h4>
+                                {isLocked && (
+                                  <Badge variant="secondary" className="bg-black/10 text-black border-0 ml-2 shrink-0">
+                                    <Crown className="w-3 h-3 mr-1" />
+                                    Premium
+                                  </Badge>
+                                )}
+                              </div>
+                              
+                              <p className="text-muted-foreground text-sm line-clamp-2 mb-3">
+                                {course.description}
+                              </p>
+                              
+                              <div className="flex items-center gap-4 mb-3 text-xs text-muted-foreground">
+                                <div className="flex items-center gap-1">
+                                  <Clock className="w-3 h-3" />
+                                  <span>{course.duration_hours} jam</span>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <BookOpen className="w-3 h-3" />
+                                  <span>{course.lessons?.length || 0} materi</span>
+                                </div>
+                                <Badge className={getDifficultyColor(course.difficulty_level)} style={{ fontSize: '10px' }}>
+                                  {getDifficultyLabel(course.difficulty_level)}
+                                </Badge>
+                              </div>
+
+                              {progress > 0 && !isLocked && (
+                                <div className="mb-3">
+                                  <div className="flex items-center justify-between text-xs mb-1">
+                                    <span>Progress</span>
+                                    <span>{progress}%</span>
+                                  </div>
+                                  <Progress value={progress} className="h-1" />
+                                </div>
+                              )}
+
+                              <Button 
+                                size="sm"
+                                className="w-full"
+                                disabled={isLocked}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  startLearning(course.id, index);
+                                }}
+                              >
+                                {isLocked ? (
+                                  <>
+                                    <Lock className="w-3 h-3 mr-2" />
+                                    Upgrade untuk Akses
+                                  </>
+                                ) : (
+                                  <>
+                                    {progress > 0 ? 'Lanjutkan' : 'Mulai Belajar'}
+                                    <Play className="w-3 h-3 ml-2" />
+                                  </>
+                                )}
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
+
+              {activeSection === 'my' && (
+                <div className="grid grid-cols-1 gap-4">
+                  {courses.filter(course => {
+                    const progress = getCourseProgress(course.id);
+                    return progress > 0 && progress < 100;
+                  }).map((course, index) => {
+                    const progress = getCourseProgress(course.id);
+                    
+                    return (
+                      <Card 
+                        key={course.id} 
+                        className="shadow-card hover:shadow-floating transition-all cursor-pointer group"
+                        onClick={() => handleCourseClick(course, index)}
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex items-start gap-4">
+                            <div className="w-16 h-16 bg-muted rounded-lg overflow-hidden shrink-0">
+                              {course.thumbnail_url ? (
+                                <img 
+                                  src={course.thumbnail_url} 
+                                  alt={course.title}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full bg-muted flex items-center justify-center">
+                                  <BookOpen className="w-6 h-6 text-muted-foreground" />
+                                </div>
+                              )}
+                            </div>
+                            
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-semibold text-base line-clamp-2 group-hover:text-primary transition-colors mb-2">
+                                {course.title}
+                              </h4>
+                              <p className="text-muted-foreground text-sm line-clamp-2 mb-3">
+                                {course.description}
+                              </p>
+
+                              <div className="mb-3">
+                                <div className="flex items-center justify-between text-xs mb-1">
+                                  <span>Progress</span>
+                                  <span>{progress}%</span>
+                                </div>
+                                <Progress value={progress} className="h-1" />
+                              </div>
+
+                              <Button 
+                                size="sm"
+                                className="w-full"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  startLearning(course.id, index);
+                                }}
+                              >
+                                <Play className="w-3 h-3 mr-2" />
+                                Lanjutkan Belajar
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
+
+              {activeSection === 'finished' && (
+                <div className="grid grid-cols-1 gap-4">
+                  {courses.filter(course => {
+                    const progress = getCourseProgress(course.id);
+                    return progress === 100;
+                  }).map((course, index) => {
+                    return (
+                      <Card 
+                        key={course.id} 
+                        className="shadow-card hover:shadow-floating transition-all cursor-pointer group border-green-200"
+                        onClick={() => handleCourseClick(course, index)}
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex items-start gap-4">
+                            <div className="w-16 h-16 bg-muted rounded-lg overflow-hidden shrink-0">
+                              {course.thumbnail_url ? (
+                                <img 
+                                  src={course.thumbnail_url} 
+                                  alt={course.title}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full bg-muted flex items-center justify-center">
+                                  <BookOpen className="w-6 h-6 text-muted-foreground" />
+                                </div>
+                              )}
+                            </div>
+                            
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-start justify-between mb-2">
+                                <h4 className="font-semibold text-base line-clamp-2 group-hover:text-primary transition-colors">
+                                  {course.title}
+                                </h4>
+                                <Badge className="bg-green-100 text-green-800 ml-2 shrink-0">
+                                  <Award className="w-3 h-3 mr-1" />
+                                  Selesai
+                                </Badge>
+                              </div>
+                              <p className="text-muted-foreground text-sm line-clamp-2 mb-3">
+                                {course.description}
+                              </p>
+
+                              <Button 
+                                size="sm"
+                                className="w-full"
+                                variant="outline"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleCourseClick(course, index);
+                                }}
+                              >
+                                <Award className="w-3 h-3 mr-2" />
+                                Lihat Sertifikat
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
         </main>
         
