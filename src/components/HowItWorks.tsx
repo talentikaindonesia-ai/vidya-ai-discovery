@@ -1,8 +1,32 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { CheckCircle, ArrowRight, PlayCircle } from "lucide-react";
+import { useState, useCallback, useEffect } from "react";
+import type { CarouselApi } from "@/components/ui/carousel";
 
 const HowItWorks = () => {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [api, setApi] = useState<CarouselApi>();
+
+  const onSelect = useCallback(() => {
+    if (!api) return;
+    setCurrentSlide(api.selectedScrollSnap());
+  }, [api]);
+
+  useEffect(() => {
+    if (!api) return;
+    
+    onSelect();
+    api.on("select", onSelect);
+    api.on("reInit", onSelect);
+    
+    return () => {
+      api.off("select", onSelect);
+      api.off("reInit", onSelect);
+    };
+  }, [api, onSelect]);
+  
   const steps = [
     {
       number: "01",
@@ -43,49 +67,62 @@ const HowItWorks = () => {
         </div>
 
         <div className="max-w-4xl mx-auto">
-          <div className="grid gap-8">
-            {steps.map((step, index) => (
-              <div key={index} className="relative">
-                <Card className="bg-gradient-card border-primary/10 shadow-card hover:shadow-floating transition-all duration-300">
-                  <CardContent className="p-8">
-                    <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
-                      {/* Step Number */}
-                      <div className="flex-shrink-0">
-                        <div className="w-16 h-16 bg-gradient-primary rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-soft">
-                          {step.number}
-                        </div>
-                      </div>
-                      
-                      {/* Content */}
-                      <div className="flex-1">
-                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                          <div>
-                            <h3 className="text-xl md:text-2xl font-bold mb-2 text-foreground">
+          <Carousel 
+            className="w-full"
+            opts={{
+              align: "start",
+              loop: true,
+            }}
+            setApi={setApi}
+          >
+            <CarouselContent>
+              {steps.map((step, index) => (
+                <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
+                  <div className="p-2">
+                    <Card className={`bg-gradient-card border-primary/10 shadow-card hover:shadow-floating transition-all duration-300 h-full ${
+                      currentSlide === index ? 'ring-2 ring-primary/50 border-primary/30' : ''
+                    }`}>
+                      <CardContent className="p-6">
+                        <div className="flex flex-col items-center text-center gap-4">
+                          {/* Step Number */}
+                          <div className="w-16 h-16 bg-gradient-primary rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-soft">
+                            {step.number}
+                          </div>
+                          
+                          {/* Content */}
+                          <div className="space-y-3">
+                            <h3 className="text-lg font-bold text-foreground">
                               {step.title}
                             </h3>
-                            <p className="text-muted-foreground leading-relaxed">
+                            <p className="text-sm text-muted-foreground leading-relaxed">
                               {step.description}
                             </p>
-                          </div>
-                          <div className="flex-shrink-0">
-                            <span className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium">
-                              <CheckCircle className="w-4 h-4" />
+                            <span className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-medium">
+                              <CheckCircle className="w-3 h-3" />
                               {step.highlight}
                             </span>
                           </div>
                         </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                {/* Arrow */}
-                {index < steps.length - 1 && (
-                  <div className="hidden md:flex justify-center py-4">
-                    <ArrowRight className="w-6 h-6 text-primary/50" />
+                      </CardContent>
+                    </Card>
                   </div>
-                )}
-              </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="hidden md:flex" />
+            <CarouselNext className="hidden md:flex" />
+          </Carousel>
+          
+          {/* Dots indicator for mobile */}
+          <div className="flex justify-center mt-6 gap-2 md:hidden">
+            {steps.map((_, index) => (
+              <button
+                key={index}
+                className={`w-2 h-2 rounded-full transition-all ${
+                  currentSlide === index ? 'bg-primary w-6' : 'bg-primary/30'
+                }`}
+                onClick={() => api?.scrollTo(index)}
+              />
             ))}
           </div>
         </div>

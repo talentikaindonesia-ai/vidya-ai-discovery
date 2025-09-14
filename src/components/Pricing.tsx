@@ -1,9 +1,33 @@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Check, Star, Users, BookOpen, Award, Shield } from "lucide-react";
+import { useState, useCallback, useEffect } from "react";
+import type { CarouselApi } from "@/components/ui/carousel";
 
 const Pricing = () => {
+  const [currentSlide, setCurrentSlide] = useState(1); // Start with Premium (middle)
+  const [api, setApi] = useState<CarouselApi>();
+
+  const onSelect = useCallback(() => {
+    if (!api) return;
+    setCurrentSlide(api.selectedScrollSnap());
+  }, [api]);
+
+  useEffect(() => {
+    if (!api) return;
+    
+    onSelect();
+    api.on("select", onSelect);
+    api.on("reInit", onSelect);
+    
+    return () => {
+      api.off("select", onSelect);
+      api.off("reInit", onSelect);
+    };
+  }, [api, onSelect]);
+  
   const plans = [
     {
       name: "Individu",
@@ -82,69 +106,98 @@ const Pricing = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
-          {plans.map((plan, index) => {
-            const IconComponent = plan.icon;
-            return (
-              <Card 
-                key={index} 
-                className={`relative overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-floating ${
-                  plan.popular 
-                    ? 'border-2 border-primary shadow-floating ring-2 ring-primary/20' 
-                    : 'border-border hover:border-primary/50'
-                }`}
-              >
-                {plan.popular && (
-                  <div className="absolute top-0 left-0 right-0 bg-gradient-primary text-white text-center py-2 text-sm font-semibold">
-                    <Star className="w-4 h-4 inline mr-1" />
-                    Paling Populer
-                  </div>
-                )}
-                
-                <CardHeader className={`text-center pb-8 ${plan.popular ? 'pt-12' : 'pt-8'}`}>
-                  <div className={`w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-${plan.color} flex items-center justify-center shadow-soft`}>
-                    <IconComponent className="w-8 h-8 text-white" />
-                  </div>
-                  <CardTitle className="text-2xl font-bold">{plan.name}</CardTitle>
-                  <div className="flex items-center justify-center gap-1 mb-4">
-                    <span className="text-3xl font-bold text-primary">Rp{plan.price}</span>
-                    <span className="text-muted-foreground">{plan.period}</span>
-                  </div>
-                  <CardDescription className="text-base leading-relaxed">
-                    {plan.description}
-                  </CardDescription>
-                </CardHeader>
+        <div className="max-w-7xl mx-auto">
+          <Carousel 
+            className="w-full"
+            opts={{
+              align: "center",
+              loop: true,
+            }}
+            setApi={setApi}
+          >
+            <CarouselContent>
+              {plans.map((plan, index) => {
+                const IconComponent = plan.icon;
+                return (
+                  <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
+                    <div className="p-2">
+                      <Card 
+                        className={`relative overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-floating h-full ${
+                          plan.popular || currentSlide === index
+                            ? 'border-2 border-primary shadow-floating ring-2 ring-primary/20' 
+                            : 'border-border hover:border-primary/50'
+                        }`}
+                      >
+                        {plan.popular && (
+                          <div className="absolute top-0 left-0 right-0 bg-gradient-primary text-white text-center py-2 text-sm font-semibold">
+                            <Star className="w-4 h-4 inline mr-1" />
+                            Paling Populer
+                          </div>
+                        )}
+                        
+                        <CardHeader className={`text-center pb-8 ${plan.popular ? 'pt-12' : 'pt-8'}`}>
+                          <div className={`w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-${plan.color} flex items-center justify-center shadow-soft`}>
+                            <IconComponent className="w-8 h-8 text-white" />
+                          </div>
+                          <CardTitle className="text-2xl font-bold">{plan.name}</CardTitle>
+                          <div className="flex items-center justify-center gap-1 mb-4">
+                            <span className="text-3xl font-bold text-primary">Rp{plan.price}</span>
+                            <span className="text-muted-foreground">{plan.period}</span>
+                          </div>
+                          <CardDescription className="text-base leading-relaxed">
+                            {plan.description}
+                          </CardDescription>
+                        </CardHeader>
 
-                <CardContent className="space-y-4">
-                  {plan.features.map((feature, featureIndex) => (
-                    <div key={featureIndex} className="flex items-center gap-3">
-                      <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                        <Check className="w-3 h-3 text-primary" />
-                      </div>
-                      <span className="text-sm text-foreground">{feature}</span>
+                        <CardContent className="space-y-4">
+                          {plan.features.map((feature, featureIndex) => (
+                            <div key={featureIndex} className="flex items-center gap-3">
+                              <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                <Check className="w-3 h-3 text-primary" />
+                              </div>
+                              <span className="text-sm text-foreground">{feature}</span>
+                            </div>
+                          ))}
+                        </CardContent>
+
+                        <CardFooter className="pt-8">
+                          <Button 
+                            className={`w-full h-12 font-semibold transition-all duration-300 ${
+                              plan.popular 
+                                ? 'hero' 
+                                : 'outline hover:bg-primary hover:text-white'
+                            }`}
+                            size="lg"
+                          >
+                            {plan.name === "School Package" ? "Hubungi Sales" : (
+                              <a href="/subscription" className="w-full block text-center">
+                                Berlangganan Sekarang
+                              </a>
+                            )}
+                          </Button>
+                        </CardFooter>
+                      </Card>
                     </div>
-                  ))}
-                </CardContent>
-
-                <CardFooter className="pt-8">
-                  <Button 
-                    className={`w-full h-12 font-semibold transition-all duration-300 ${
-                      plan.popular 
-                        ? 'hero' 
-                        : 'outline hover:bg-primary hover:text-white'
-                    }`}
-                    size="lg"
-                  >
-                    {plan.name === "School Package" ? "Hubungi Sales" : (
-                      <a href="/subscription" className="w-full block text-center">
-                        Berlangganan Sekarang
-                      </a>
-                    )}
-                  </Button>
-                </CardFooter>
-              </Card>
-            );
-          })}
+                  </CarouselItem>
+                );
+              })}
+            </CarouselContent>
+            <CarouselPrevious className="hidden md:flex" />
+            <CarouselNext className="hidden md:flex" />
+          </Carousel>
+          
+          {/* Dots indicator for mobile */}
+          <div className="flex justify-center mt-6 gap-2 md:hidden">
+            {plans.map((_, index) => (
+              <button
+                key={index}
+                className={`w-2 h-2 rounded-full transition-all ${
+                  currentSlide === index ? 'bg-primary w-6' : 'bg-primary/30'
+                }`}
+                onClick={() => api?.scrollTo(index)}
+              />
+            ))}
+          </div>
         </div>
 
         <div className="mt-16 text-center">

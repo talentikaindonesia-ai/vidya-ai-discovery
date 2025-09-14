@@ -44,9 +44,27 @@ const TalentikaJunior = () => {
       <div className="absolute bottom-20 left-1/3 w-10 h-10 bg-amber-300/35 rounded-full blur-sm animate-bounce delay-200" />
       
       <div className="container mx-auto px-4 relative z-10">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
-          {/* Content Section */}
-          <div className="space-y-8">
+        <div className="flex flex-col items-center text-center space-y-12">
+          {/* Image Section - Now at top */}
+          <div className="relative">
+            <div className="relative rounded-3xl overflow-hidden shadow-2xl transform rotate-2 hover:rotate-0 transition-transform duration-500 hover-scale">
+              <img 
+                src="/lovable-uploads/95b023ea-1670-4b3c-bf9d-caf7b5c2cef1.png" 
+                alt="Happy child discovering talents with Talentika Junior"
+                className="w-full h-auto object-cover animate-fade-in max-w-md mx-auto"
+              />
+              {/* Overlay gradient */}
+              <div className="absolute inset-0 bg-gradient-to-t from-amber-500/10 via-transparent to-blue-500/10" />
+            </div>
+            
+            {/* Floating elements */}
+            <div className="absolute -top-4 -left-4 w-8 h-8 bg-blue-400 rounded-full animate-bounce delay-100" />
+            <div className="absolute -bottom-4 -right-4 w-6 h-6 bg-amber-400 rounded-full animate-bounce delay-300" />
+            <div className="absolute top-1/4 -right-6 w-4 h-4 bg-orange-400 rounded-full animate-pulse" />
+          </div>
+
+          {/* Content Section - Now below image */}
+          <div className="space-y-8 max-w-4xl">
             <div className="space-y-4">
               <h2 className="text-4xl lg:text-5xl font-bold text-foreground">
                 Talentika Junior: 
@@ -60,8 +78,8 @@ const TalentikaJunior = () => {
               </p>
             </div>
 
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 pt-4">
+            {/* CTA Button - Only one button now */}
+            <div className="pt-4">
               <Button 
                 size="lg" 
                 className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground font-medium shadow-lg hover:shadow-xl transition-all duration-300"
@@ -69,28 +87,7 @@ const TalentikaJunior = () => {
               >
                 Mulai Eksplorasi Gratis
               </Button>
-              <Button variant="outline" size="lg" className="border-primary/20 hover:bg-primary/5">
-                Pelajari Lebih Lanjut
-              </Button>
             </div>
-          </div>
-
-          {/* Image Section */}
-          <div className="relative">
-            <div className="relative rounded-3xl overflow-hidden shadow-2xl transform rotate-2 hover:rotate-0 transition-transform duration-500 hover-scale">
-              <img 
-                src="/lovable-uploads/95b023ea-1670-4b3c-bf9d-caf7b5c2cef1.png" 
-                alt="Happy child discovering talents with Talentika Junior"
-                className="w-full h-auto object-cover animate-fade-in"
-              />
-              {/* Overlay gradient */}
-              <div className="absolute inset-0 bg-gradient-to-t from-amber-500/10 via-transparent to-blue-500/10" />
-            </div>
-            
-            {/* Floating elements */}
-            <div className="absolute -top-4 -left-4 w-8 h-8 bg-blue-400 rounded-full animate-bounce delay-100" />
-            <div className="absolute -bottom-4 -right-4 w-6 h-6 bg-amber-400 rounded-full animate-bounce delay-300" />
-            <div className="absolute top-1/4 -right-6 w-4 h-4 bg-orange-400 rounded-full animate-pulse" />
           </div>
         </div>
       </div>
