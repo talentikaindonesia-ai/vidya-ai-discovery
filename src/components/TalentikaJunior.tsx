@@ -45,8 +45,26 @@ const TalentikaJunior = () => {
       
       <div className="container mx-auto px-4 relative z-10">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
-          {/* Content Section */}
-          <div className="space-y-8">
+          {/* Image Section - First on mobile, second on desktop */}
+          <div className="relative order-1 lg:order-2">
+            <div className="relative rounded-3xl overflow-hidden shadow-2xl transform rotate-2 hover:rotate-0 transition-transform duration-500 hover-scale">
+              <img 
+                src="/lovable-uploads/95b023ea-1670-4b3c-bf9d-caf7b5c2cef1.png" 
+                alt="Happy child discovering talents with Talentika Junior"
+                className="w-full h-auto object-cover animate-fade-in"
+              />
+              {/* Overlay gradient */}
+              <div className="absolute inset-0 bg-gradient-to-t from-amber-500/10 via-transparent to-blue-500/10" />
+            </div>
+            
+            {/* Floating elements */}
+            <div className="absolute -top-4 -left-4 w-8 h-8 bg-blue-400 rounded-full animate-bounce delay-100" />
+            <div className="absolute -bottom-4 -right-4 w-6 h-6 bg-amber-400 rounded-full animate-bounce delay-300" />
+            <div className="absolute top-1/4 -right-6 w-4 h-4 bg-orange-400 rounded-full animate-pulse" />
+          </div>
+
+          {/* Content Section - Second on mobile, first on desktop */}
+          <div className="space-y-8 order-2 lg:order-1">
             <div className="space-y-4">
               <h2 className="text-4xl lg:text-5xl font-bold text-foreground">
                 Talentika Junior: 
@@ -73,24 +91,6 @@ const TalentikaJunior = () => {
                 Pelajari Lebih Lanjut
               </Button>
             </div>
-          </div>
-
-          {/* Image Section */}
-          <div className="relative">
-            <div className="relative rounded-3xl overflow-hidden shadow-2xl transform rotate-2 hover:rotate-0 transition-transform duration-500 hover-scale">
-              <img 
-                src="/lovable-uploads/95b023ea-1670-4b3c-bf9d-caf7b5c2cef1.png" 
-                alt="Happy child discovering talents with Talentika Junior"
-                className="w-full h-auto object-cover animate-fade-in"
-              />
-              {/* Overlay gradient */}
-              <div className="absolute inset-0 bg-gradient-to-t from-amber-500/10 via-transparent to-blue-500/10" />
-            </div>
-            
-            {/* Floating elements */}
-            <div className="absolute -top-4 -left-4 w-8 h-8 bg-blue-400 rounded-full animate-bounce delay-100" />
-            <div className="absolute -bottom-4 -right-4 w-6 h-6 bg-amber-400 rounded-full animate-bounce delay-300" />
-            <div className="absolute top-1/4 -right-6 w-4 h-4 bg-orange-400 rounded-full animate-pulse" />
           </div>
         </div>
       </div>
