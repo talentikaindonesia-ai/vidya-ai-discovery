@@ -44,14 +44,14 @@ const TalentikaJunior = () => {
       <div className="absolute bottom-20 left-1/3 w-10 h-10 bg-amber-300/35 rounded-full blur-sm animate-bounce delay-200" />
       
       <div className="container mx-auto px-4 relative z-10">
-        <div className="flex flex-col items-center text-center space-y-12">
-          {/* Image Section - Now at top */}
-          <div className="relative">
+        <div className="flex flex-col lg:grid lg:grid-cols-2 gap-12 items-center">
+          {/* Image Section - Top on mobile, right on desktop */}
+          <div className="relative order-1 lg:order-2">
             <div className="relative rounded-3xl overflow-hidden shadow-2xl transform rotate-2 hover:rotate-0 transition-transform duration-500 hover-scale">
               <img 
                 src="/lovable-uploads/95b023ea-1670-4b3c-bf9d-caf7b5c2cef1.png" 
                 alt="Happy child discovering talents with Talentika Junior"
-                className="w-full h-auto object-cover animate-fade-in max-w-md mx-auto"
+                className="w-full h-auto object-cover animate-fade-in"
               />
               {/* Overlay gradient */}
               <div className="absolute inset-0 bg-gradient-to-t from-amber-500/10 via-transparent to-blue-500/10" />
@@ -63,8 +63,8 @@ const TalentikaJunior = () => {
             <div className="absolute top-1/4 -right-6 w-4 h-4 bg-orange-400 rounded-full animate-pulse" />
           </div>
 
-          {/* Content Section - Now below image */}
-          <div className="space-y-8 max-w-4xl">
+          {/* Content Section - Bottom on mobile, left on desktop */}
+          <div className="space-y-8 order-2 lg:order-1 text-center lg:text-left">
             <div className="space-y-4">
               <h2 className="text-4xl lg:text-5xl font-bold text-foreground">
                 Talentika Junior: 
