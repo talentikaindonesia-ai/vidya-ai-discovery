@@ -8,13 +8,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2 } from "lucide-react";
+import { Loader2, Eye, EyeOff, Chrome } from "lucide-react";
 import { toast } from "sonner";
 
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [fullName, setFullName] = useState("");
   const [accountType, setAccountType] = useState("individual");
   const [organizationName, setOrganizationName] = useState("");
@@ -124,14 +125,20 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-primary flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
+    <div className="min-h-screen bg-gradient-primary flex items-center justify-center p-4">
+      <Card className="w-full max-w-md shadow-floating border-0">
+        <CardHeader className="text-center space-y-4">
+          {/* Logo */}
+          <div className="mx-auto bg-white rounded-full w-16 h-16 flex items-center justify-center shadow-soft">
+            <div className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+              T
+            </div>
+          </div>
           <CardTitle className="text-2xl font-bold text-primary">
-            Talentika: Discover Your Potential
+            Talentika
           </CardTitle>
-          <CardDescription>
-            Masuk atau daftar untuk memulai perjalanan pembelajaran Anda
+          <CardDescription className="text-muted-foreground">
+            Discover Your Potential - Masuk atau daftar untuk memulai perjalanan pembelajaran Anda
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -156,14 +163,31 @@ const Auth = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="password">Password</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="Masukkan password Anda"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Masukkan password Anda"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      className="pr-10"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() => setShowPassword(!showPassword)}
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -178,7 +202,8 @@ const Auth = () => {
                     disabled={isLoading} 
                     className="w-full"
                   >
-                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    <Chrome className="mr-2 h-4 w-4" />
+                    {isLoading && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
                     Masuk dengan Google
                   </Button>
                 </div>
@@ -251,15 +276,32 @@ const Auth = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="password">Password</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="Minimal 6 karakter"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    minLength={6}
-                  />
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Minimal 6 karakter"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      minLength={6}
+                      className="pr-10"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() => setShowPassword(!showPassword)}
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -274,8 +316,9 @@ const Auth = () => {
                     disabled={isLoading} 
                     className="w-full"
                   >
-                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Masuk dengan Google
+                    <Chrome className="mr-2 h-4 w-4" />
+                    {isLoading && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
+                    Daftar dengan Google
                   </Button>
                 </div>
               </form>
