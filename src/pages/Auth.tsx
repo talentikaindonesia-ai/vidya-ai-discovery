@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Eye, EyeOff, Chrome } from "lucide-react";
 import { toast } from "sonner";
+import talentikaLogo from "@/assets/talentika-logo.png";
 
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -129,10 +130,12 @@ const Auth = () => {
       <Card className="w-full max-w-md shadow-floating border-0">
         <CardHeader className="text-center space-y-4">
           {/* Logo */}
-          <div className="mx-auto bg-white rounded-full w-16 h-16 flex items-center justify-center shadow-soft">
-            <div className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-              T
-            </div>
+          <div className="mx-auto w-20 h-20 flex items-center justify-center">
+            <img 
+              src={talentikaLogo} 
+              alt="Talentika Logo" 
+              className="w-full h-full object-contain"
+            />
           </div>
           <CardTitle className="text-2xl font-bold text-primary">
             Talentika
