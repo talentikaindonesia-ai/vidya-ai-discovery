@@ -141,7 +141,7 @@ const Auth = () => {
             Talentika
           </CardTitle>
           <CardDescription className="text-muted-foreground">
-            Discover Your Potential - Masuk atau daftar untuk memulai perjalanan pembelajaran Anda
+            Untuk melanjutkan ke Talentika - Masuk atau daftar untuk memulai perjalanan pembelajaran Anda
           </CardDescription>
         </CardHeader>
         <CardContent>
