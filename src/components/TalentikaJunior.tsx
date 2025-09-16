@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Star, Sparkles, Heart, Palette } from "lucide-react";
+import talentikaJuniorLogo from "@/assets/talentika-junior-logo.png";
 
 const TalentikaJunior = () => {
   const features = [
@@ -66,9 +67,13 @@ const TalentikaJunior = () => {
           {/* Content Section - Second on mobile, first on desktop */}
           <div className="space-y-8 order-2 lg:order-1">
             <div className="space-y-4">
-              <h2 className="text-4xl lg:text-5xl font-bold text-foreground">
-                Talentika Junior: 
-                <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent block">
+              <img 
+                src={talentikaJuniorLogo} 
+                alt="Talentika Junior Logo" 
+                className="h-16 w-auto mb-4"
+              />
+              <h2 className="text-4xl lg:text-5xl font-bold">
+                <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                   Discover, Explore, and Shine!
                 </span>
               </h2>
