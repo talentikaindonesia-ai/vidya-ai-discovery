@@ -70,7 +70,7 @@ const TalentikaJunior = () => {
               <img 
                 src={talentikaJuniorLogo} 
                 alt="Talentika Junior Logo" 
-                className="h-16 w-auto mb-4"
+                className="h-24 w-auto mb-4"
               />
               <h2 className="text-4xl lg:text-5xl font-bold">
                 <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
