@@ -509,7 +509,8 @@ const LearningHub = () => {
               )}
             </div>
 
-            {/* Course Categories */}
+            {/* Course Categories - Hidden, only show recommendations */}
+            {/* 
             <div className="space-y-6">
               {filteredCategories.map((category) => (
                 <Card key={category.id} className="overflow-hidden">
@@ -571,6 +572,7 @@ const LearningHub = () => {
                 </Card>
               ))}
             </div>
+            */}
           </div>
         </main>
         
