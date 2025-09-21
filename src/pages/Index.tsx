@@ -27,9 +27,9 @@ const Index = () => {
         <section id="testimonials">
           <Testimonials />
         </section>
-        <section id="talentika-junior">
+        {/* <section id="talentika-junior">
           <TalentikaJunior />
-        </section>
+        </section> */}
       </main>
       <Footer />
     </div>
