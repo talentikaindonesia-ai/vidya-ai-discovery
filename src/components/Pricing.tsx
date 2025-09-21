@@ -33,16 +33,16 @@ const Pricing = () => {
       name: "Individu",
       price: "39,000",
       period: "/bulan",
-      description: "Cocok untuk pelajar dan mahasiswa yang ingin mengembangkan minat bakat",
+      description: "Cocok untuk pelajar & mahasiswa yang ingin kenali minat dan mulai kembangkan diri.",
       features: [
-        "Tes minat & bakat lengkap",
-        "Hasil analisis mendalam",
-        "Rekomendasi bidang studi",
-        "Akses kursus online dasar",
-        "Progress tracking",
-        "Community forum",
-        "1-on-1 konsultasi/bulan"
+        "Tes minat & bakat untuk kenali potensi",
+        "Rekomendasi jalur studi sesuai hasil analisis",
+        "Kursus online dasar untuk mulai belajar skill baru",
+        "Progress tracking agar tahu perkembangan diri",
+        "Akses forum komunitas untuk sharing & belajar bareng",
+        "1x Konsultasi pribadi per bulan"
       ],
+      benefit: "Lebih mudah tentukan arah masa depan tanpa bingung.",
       popular: false,
       icon: BookOpen,
       color: "primary"
@@ -51,18 +51,18 @@ const Pricing = () => {
       name: "Premium",
       price: "99,000",
       period: "/bulan",
-      description: "Untuk individu yang serius mengembangkan karir dan skill mendalam",
+      description: "Untuk individu yang serius membangun karier & skill mendalam.",
       features: [
         "Semua fitur Individu",
-        "Advanced analytics",
-        "Unlimited konsultasi",
-        "Akses semua kursus premium",
-        "Portfolio builder",
-        "Networking events",
-        "Mentorship program",
-        "Certificate tracking",
-        "Priority support"
+        "Analisis potensi & skill lebih detail",
+        "Konsultasi tanpa batas dengan mentor",
+        "Akses kursus premium lengkap",
+        "Portofolio builder untuk beasiswa/magang",
+        "Networking dengan profesional & industri",
+        "Program mentorship intensif",
+        "Sertifikat & pencatatan skill"
       ],
+      benefit: "Lebih siap masuk dunia kerja & dapat peluang nyata lebih cepat.",
       popular: true,
       icon: Star,
       color: "accent"
@@ -71,19 +71,17 @@ const Pricing = () => {
       name: "School Package",
       price: "3,999,000",
       period: "/tahun",
-      description: "Solusi lengkap untuk sekolah dan institusi pendidikan",
+      description: "Solusi menyeluruh untuk sekolah & institusi pendidikan.",
       features: [
-        "Multi-user dashboard",
-        "Bulk student assessment",
-        "Teacher admin panel",
-        "Detailed reporting",
-        "Custom branding",
-        "Integration support",
-        "Training sessions",
-        "24/7 dedicated support",
-        "Analytics & insights",
-        "Progress monitoring"
+        "Dashboard multi-user untuk guru & siswa",
+        "Tes minat & bakat untuk siswa (100 Siswa)",
+        "Panel guru untuk pantau perkembangan",
+        "Laporan detail & progress monitoring",
+        "Custom branding sekolah",
+        "Training & integrasi sistem",
+        "Insight & analytics"
       ],
+      benefit: "Sekolah lebih mudah mendukung siswa menemukan potensi & meningkatkan prestasi.",
       popular: false,
       icon: Users,
       color: "secondary"
@@ -158,6 +156,18 @@ const Pricing = () => {
                               <span className="text-sm text-foreground">{feature}</span>
                             </div>
                           ))}
+                          
+                          {plan.benefit && (
+                            <div className="mt-6 p-4 bg-gradient-primary/5 rounded-lg border-l-4 border-primary/20">
+                              <div className="flex items-start gap-3">
+                                <span className="text-lg">✨</span>
+                                <div>
+                                  <p className="font-medium text-primary text-sm">Manfaat:</p>
+                                  <p className="text-sm text-foreground mt-1">{plan.benefit}</p>
+                                </div>
+                              </div>
+                            </div>
+                          )}
                         </CardContent>
 
                         <CardFooter className="pt-8">
