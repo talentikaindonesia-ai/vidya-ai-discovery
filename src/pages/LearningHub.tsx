@@ -509,70 +509,37 @@ const LearningHub = () => {
               )}
             </div>
 
-            {/* Course Categories - Hidden, only show recommendations */}
-            {/* 
+            {/* Course Categories Overview */}
             <div className="space-y-6">
-              {filteredCategories.map((category) => (
-                <Card key={category.id} className="overflow-hidden">
-                  <CardHeader className="pb-4">
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg ${category.color} text-white`}>
-                        <category.icon className="w-6 h-6" />
-                      </div>
-                      <div>
-                        <CardTitle className="text-xl">{category.title}</CardTitle>
-                        <CardDescription className="text-sm">
-                          {category.description}
-                        </CardDescription>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {category.courses.map((course) => (
-                        <Card key={course.id} className="cursor-pointer hover:shadow-md transition-all hover:-translate-y-1">
-                          <CardContent className="p-4">
-                            <div className="flex items-start justify-between mb-3">
-                              <h3 className="font-semibold text-base">{course.title}</h3>
-                              {course.isRecommended && (
-                                <Badge variant="secondary" className="text-xs">
-                                  Rekomendasi
-                                </Badge>
-                              )}
-                            </div>
-                            
-                            <p className="text-sm text-muted-foreground mb-3">
-                              {course.description}
-                            </p>
-                            
-                            <div className="bg-blue-50 p-3 rounded-lg mb-4">
-                              <h4 className="text-xs font-medium text-blue-900 mb-1">Proyek Akhir:</h4>
-                              <p className="text-xs text-blue-800">{course.project}</p>
-                            </div>
-                            
-                            <div className="flex items-center justify-between mb-4">
-                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                <Clock className="w-4 h-4" />
-                                <span>{course.duration}</span>
-                              </div>
-                              <Badge className={getDifficultyColor(course.difficulty)}>
-                                {getDifficultyLabel(course.difficulty)}
-                              </Badge>
-                            </div>
-                            
-                            <Button className="w-full" size="sm">
-                              <Play className="w-4 h-4 mr-2" />
-                              Mulai Belajar
-                            </Button>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-xl">Kategori Pembelajaran</CardTitle>
+                  <CardDescription>
+                    Pilih kategori yang sesuai dengan minat dan tujuan karirmu
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {courseCategories.map((category) => (
+                      <Card key={category.id} className="cursor-pointer hover:shadow-md transition-all hover:-translate-y-1 text-center">
+                        <CardContent className="p-4">
+                          <div className={`p-3 rounded-lg ${category.color} text-white w-fit mx-auto mb-3`}>
+                            <category.icon className="w-6 h-6" />
+                          </div>
+                          <h3 className="font-semibold text-sm mb-2">{category.title}</h3>
+                          <p className="text-xs text-muted-foreground line-clamp-2">
+                            {category.description}
+                          </p>
+                          <div className="mt-3 text-xs text-muted-foreground">
+                            {category.courses.length} kursus tersedia
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
             </div>
-            */}
           </div>
         </main>
         
