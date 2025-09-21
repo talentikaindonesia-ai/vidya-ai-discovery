@@ -11,7 +11,7 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { NotificationDropdown } from "@/components/dashboard/NotificationDropdown";
 import { WelcomeDashboard } from "@/components/dashboard/WelcomeDashboard";
 import CoursesPreview from "@/components/CoursesPreview";
-import OpportunitiesPreview from "@/components/OpportunitiesPreview";
+import CommunityPreview from "@/components/CommunityPreview";
 import { BottomNavigationBar } from "@/components/dashboard/BottomNavigationBar";
 import { ScrapedContent } from "@/components/dashboard/ScrapedContent";
 import { CoursesSection } from "@/components/dashboard/CoursesSection";
@@ -189,7 +189,7 @@ const Dashboard = () => {
           <div className="space-y-6">
             <WelcomeDashboard user={user} profile={profile} />
             <CoursesPreview />
-            <OpportunitiesPreview />
+            <CommunityPreview userAssessment={profile} userInterests={userInterests} />
             <ScrapedContent category={userInterests[0]?.interest_categories?.name} />
           </div>
         );
@@ -232,7 +232,7 @@ const Dashboard = () => {
           <div className="space-y-6">
             <WelcomeDashboard user={user} profile={profile} />
             <CoursesPreview />
-            <OpportunitiesPreview />
+            <CommunityPreview userAssessment={profile} userInterests={userInterests} />
             <ScrapedContent category={userInterests[0]?.interest_categories?.name} />
           </div>
         );
