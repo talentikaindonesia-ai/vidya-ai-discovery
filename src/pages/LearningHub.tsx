@@ -4,54 +4,366 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { Play, Clock, Award, BookOpen, Code, FileText, Users, ArrowLeft, Crown, Lock, GraduationCap, Zap, Brain, TrendingUp, Search, Star, Filter, Target, Calendar, Trophy, Rocket, Users2, Timer } from "lucide-react";
+import { Play, Clock, BookOpen, Search, Filter, MessageSquare, Briefcase, Leaf, Globe, Cpu, TreePine, Lightbulb, Heart, ArrowRight, Users, Code, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
-import { getSubscriptionLimits, checkSubscriptionAccess, getUserSubscriptionInfo } from "@/lib/subscription";
-import { PersonalizedLearningHub } from "@/components/dashboard/PersonalizedLearningHub";
-import { MentorsSection } from "@/components/dashboard/MentorsSection";
-import { UpgradePrompt } from "@/components/UpgradePrompt";
-import { LearningProgressTracker } from "@/components/dashboard/LearningProgressTracker";
+import { getUserSubscriptionInfo } from "@/lib/subscription";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { BottomNavigationBar } from "@/components/dashboard/BottomNavigationBar";
+
+interface CourseCategory {
+  id: string;
+  title: string;
+  description: string;
+  icon: React.ComponentType<{ className?: string }>;
+  color: string;
+  courses: Course[];
+}
 
 interface Course {
   id: string;
   title: string;
   description: string;
-  thumbnail_url: string;
-  difficulty_level: string;
-  duration_hours: number;
-  category_id: string;
-  lessons: Lesson[];
-}
-
-interface Lesson {
-  id: string;
-  title: string;
-  description: string;
-  video_url: string;
-  content: string;
-  duration_minutes: number;
-  order_index: number;
-  is_preview: boolean;
+  project: string;
+  duration: string;
+  difficulty: 'beginner' | 'intermediate' | 'advanced';
+  isRecommended?: boolean;
 }
 
 const LearningHub = () => {
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
-  const [userProgress, setUserProgress] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [subscriptionInfo, setSubscriptionInfo] = useState<any>(null);
   const [user, setUser] = useState<any>(null);
-  const [userAssessment, setUserAssessment] = useState<any>(null);
-  const [userInterests, setUserInterests] = useState<string[]>([]);
   const [activeSection, setActiveSection] = useState("courses");
   const [searchTerm, setSearchTerm] = useState("");
-  const [challenges, setChallenges] = useState<any[]>([]);
-  const [programs, setPrograms] = useState<any[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const courseCategories: CourseCategory[] = [
+    {
+      id: "life-skills",
+      title: "Life Skills",
+      description: "Keterampilan hidup fundamental untuk masa depan",
+      icon: Heart,
+      color: "bg-rose-500",
+      courses: [
+        {
+          id: "communication",
+          title: "Komunikasi Efektif & Public Speaking",
+          description: "Belajar berbicara di depan umum dengan percaya diri",
+          project: "Membuat podcast/video 5 menit tentang isu sosial",
+          duration: "2 minggu",
+          difficulty: "beginner",
+          isRecommended: true
+        },
+        {
+          id: "leadership",
+          title: "Kepemimpinan & Kerja Tim",
+          description: "Mengembangkan jiwa kepemimpinan dan kolaborasi",
+          project: "Simulasi community project (kegiatan bakti sosial sekolah)",
+          duration: "3 minggu",
+          difficulty: "intermediate"
+        },
+        {
+          id: "financial-literacy",
+          title: "Literasi Keuangan",
+          description: "Mengelola keuangan dengan bijak sejak dini",
+          project: "Simulasi membuat anggaran keluarga/UKM mini",
+          duration: "2 minggu",
+          difficulty: "beginner"
+        },
+        {
+          id: "problem-solving",
+          title: "Problem Solving & Critical Thinking",
+          description: "Mengasah kemampuan berpikir kritis dan memecahkan masalah",
+          project: "Studi kasus: mengurangi sampah plastik di sekolah",
+          duration: "2 minggu",
+          difficulty: "intermediate"
+        }
+      ]
+    },
+    {
+      id: "digital-skills",
+      title: "Digital Skills",
+      description: "Keterampilan digital untuk era modern",
+      icon: Code,
+      color: "bg-blue-500",
+      courses: [
+        {
+          id: "graphic-design",
+          title: "Desain Grafis",
+          description: "Membuat karya visual yang menarik dan profesional",
+          project: "Buat poster digital untuk kampanye sekolah/lingkungan",
+          duration: "3 minggu",
+          difficulty: "beginner",
+          isRecommended: true
+        },
+        {
+          id: "coding-basics",
+          title: "Coding Dasar",
+          description: "Pengenalan pemrograman dengan bahasa yang mudah dipahami",
+          project: "Bikin game sederhana dengan Scratch/Python",
+          duration: "4 minggu",
+          difficulty: "beginner"
+        },
+        {
+          id: "digital-marketing",
+          title: "Digital Marketing",
+          description: "Strategi pemasaran digital untuk generasi Z",
+          project: "Jalankan mini campaign IG/TikTok untuk produk/jasa lokal",
+          duration: "3 minggu",
+          difficulty: "intermediate"
+        },
+        {
+          id: "data-literacy",
+          title: "Data Literacy",
+          description: "Memahami dan menganalisis data dengan mudah",
+          project: "Analisis data sederhana: survei minat siswa di sekolah",
+          duration: "2 minggu",
+          difficulty: "intermediate"
+        }
+      ]
+    },
+    {
+      id: "vocational-skills",
+      title: "Vocational Skills",
+      description: "Keterampilan vokasional yang praktis dan aplikatif",
+      icon: Briefcase,
+      color: "bg-orange-500",
+      courses: [
+        {
+          id: "culinary",
+          title: "Tata Boga",
+          description: "Seni memasak dan mengelola bisnis kuliner",
+          project: "Buka pop-up cafe di sekolah untuk sehari",
+          duration: "4 minggu",
+          difficulty: "beginner"
+        },
+        {
+          id: "fashion-design",
+          title: "Fashion Design & Menjahit",
+          description: "Merancang dan membuat busana dengan kreativitas",
+          project: "Lomba upcycle pakaian bekas jadi produk baru",
+          duration: "5 minggu",
+          difficulty: "intermediate"
+        },
+        {
+          id: "agribusiness",
+          title: "Agribisnis",
+          description: "Bisnis pertanian modern dan berkelanjutan",
+          project: "Buat kebun hidroponik mini & jual hasil panen",
+          duration: "6 minggu",
+          difficulty: "beginner"
+        },
+        {
+          id: "automotive",
+          title: "Otomotif Dasar",
+          description: "Pemahaman dasar sistem kendaraan bermotor",
+          project: "Simulasi bengkel kecil (service sepeda motor sekolah)",
+          duration: "4 minggu",
+          difficulty: "intermediate"
+        }
+      ]
+    },
+    {
+      id: "entrepreneurship",
+      title: "Entrepreneurship & Business",
+      description: "Jiwa wirausaha dan keterampilan bisnis",
+      icon: TrendingUp,
+      color: "bg-green-500",
+      courses: [
+        {
+          id: "business-model",
+          title: "Business Model Canvas",
+          description: "Merancang model bisnis yang solid dan terukur",
+          project: "Susun BMC untuk ide usaha siswa",
+          duration: "2 minggu",
+          difficulty: "beginner",
+          isRecommended: true
+        },
+        {
+          id: "product-innovation",
+          title: "Inovasi Produk & Prototyping",
+          description: "Mengembangkan produk inovatif dari ide hingga prototype",
+          project: "Kembangkan prototipe produk dengan barang sederhana",
+          duration: "4 minggu",
+          difficulty: "intermediate"
+        },
+        {
+          id: "pitching",
+          title: "Pitching",
+          description: "Mempresentasikan ide bisnis dengan meyakinkan",
+          project: "Presentasi ide bisnis ke 'investor' (guru, orang tua, komunitas)",
+          duration: "2 minggu",
+          difficulty: "intermediate"
+        },
+        {
+          id: "export-business",
+          title: "Ekspor & Go Global",
+          description: "Memahami pasar global dan strategi ekspor",
+          project: "Riset produk lokal & buat export readiness plan",
+          duration: "3 minggu",
+          difficulty: "advanced"
+        }
+      ]
+    },
+    {
+      id: "green-skills",
+      title: "Green Skills & Sustainability",
+      description: "Keterampilan untuk masa depan yang berkelanjutan",
+      icon: TreePine,
+      color: "bg-emerald-500",
+      courses: [
+        {
+          id: "waste-management",
+          title: "Pengelolaan Sampah",
+          description: "Mengelola sampah dengan prinsip reduce, reuse, recycle",
+          project: "Mendirikan bank sampah di sekolah/komunitas",
+          duration: "3 minggu",
+          difficulty: "beginner"
+        },
+        {
+          id: "renewable-energy",
+          title: "Energi Terbarukan",
+          description: "Memahami dan memanfaatkan energi ramah lingkungan",
+          project: "Membuat panel surya mini/lampu tenaga surya sederhana",
+          duration: "4 minggu",
+          difficulty: "intermediate"
+        },
+        {
+          id: "urban-farming",
+          title: "Urban Farming",
+          description: "Bertani di lahan terbatas dengan teknik modern",
+          project: "Kebun vertikal di sekolah",
+          duration: "5 minggu",
+          difficulty: "beginner"
+        },
+        {
+          id: "eco-entrepreneurship",
+          title: "Eco-Entrepreneurship",
+          description: "Bisnis yang menguntungkan dan ramah lingkungan",
+          project: "Membuat produk ramah lingkungan & dijual di bazaar sekolah",
+          duration: "4 minggu",
+          difficulty: "intermediate"
+        }
+      ]
+    },
+    {
+      id: "soft-skills",
+      title: "Soft Skills untuk Dunia Kerja",
+      description: "Persiapan memasuki dunia profesional",
+      icon: Users,
+      color: "bg-purple-500",
+      courses: [
+        {
+          id: "career-preparation",
+          title: "Persiapan Karir",
+          description: "Mempersiapkan diri untuk dunia kerja profesional",
+          project: "Buat CV, LinkedIn, & mock interview",
+          duration: "2 minggu",
+          difficulty: "beginner",
+          isRecommended: true
+        },
+        {
+          id: "networking-branding",
+          title: "Networking & Branding",
+          description: "Membangun jaringan dan personal branding yang kuat",
+          project: "Susun portfolio online",
+          duration: "3 minggu",
+          difficulty: "intermediate"
+        },
+        {
+          id: "project-management",
+          title: "Project Management",
+          description: "Mengelola proyek dari perencanaan hingga eksekusi",
+          project: "Jalankan event nyata (pameran, lomba, expo kecil)",
+          duration: "4 minggu",
+          difficulty: "intermediate"
+        },
+        {
+          id: "service-excellence",
+          title: "Service Excellence",
+          description: "Memberikan pelayanan terbaik kepada pelanggan",
+          project: "Simulasi melayani pelanggan (role-play restoran/hotel)",
+          duration: "2 minggu",
+          difficulty: "beginner"
+        }
+      ]
+    },
+    {
+      id: "steam-skills",
+      title: "21st Century STEAM Skills",
+      description: "Integrasi sains, teknologi, engineering, seni, dan matematika",
+      icon: Cpu,
+      color: "bg-indigo-500",
+      courses: [
+        {
+          id: "robotics",
+          title: "Robotics Dasar",
+          description: "Pengenalan dunia robotika dan automasi",
+          project: "Membuat robot line follower sederhana",
+          duration: "5 minggu",
+          difficulty: "intermediate"
+        },
+        {
+          id: "game-based-learning",
+          title: "Game-Based Learning",
+          description: "Belajar melalui permainan yang edukatif",
+          project: "Membuat boardgame edukasi",
+          duration: "3 minggu",
+          difficulty: "beginner"
+        },
+        {
+          id: "ar-vr-education",
+          title: "AR/VR untuk Edukasi",
+          description: "Teknologi immersive untuk pembelajaran",
+          project: "Buat AR sederhana pakai Assemblr",
+          duration: "4 minggu",
+          difficulty: "advanced"
+        },
+        {
+          id: "steam-interdisciplinary",
+          title: "STEAM Interdisipliner",
+          description: "Menggabungkan berbagai disiplin ilmu dalam proyek",
+          project: "Pameran karya gabungan sains, seni, teknologi",
+          duration: "6 minggu",
+          difficulty: "advanced"
+        }
+      ]
+    },
+    {
+      id: "community-skills",
+      title: "Community & Civic Skills",
+      description: "Keterampilan untuk berkontribusi pada masyarakat",
+      icon: Globe,
+      color: "bg-teal-500",
+      courses: [
+        {
+          id: "community-organizing",
+          title: "Community Organizing",
+          description: "Mengorganisir dan memobilisasi komunitas",
+          project: "Buat program sosial lokal (literasi anak kecil di sekitar sekolah)",
+          duration: "4 minggu",
+          difficulty: "intermediate"
+        },
+        {
+          id: "disaster-preparedness",
+          title: "Disaster Preparedness",
+          description: "Kesiapsiagaan menghadapi bencana alam",
+          project: "Simulasi tanggap bencana di sekolah",
+          duration: "2 minggu",
+          difficulty: "beginner"
+        },
+        {
+          id: "youth-empowerment",
+          title: "Youth Empowerment",
+          description: "Memberdayakan generasi muda untuk perubahan positif",
+          project: "Adakan youth talkshow atau webinar SDGs",
+          duration: "3 minggu",
+          difficulty: "intermediate"
+        }
+      ]
+    }
+  ];
 
   useEffect(() => {
     checkAuthAndLoadData();
@@ -62,18 +374,6 @@ const LearningHub = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
         setUser(session.user);
-        const subInfo = await getUserSubscriptionInfo(session.user.id);
-        setSubscriptionInfo(subInfo);
-        
-        // Load user assessment and interests for personalization
-        await Promise.all([
-          loadCourses(),
-          loadUserProgress(),
-          loadUserAssessment(session.user.id),
-          loadUserInterests(session.user.id),
-          loadChallenges(),
-          loadPrograms()
-        ]);
       }
     } catch (error) {
       console.error('Error loading data:', error);
@@ -82,124 +382,17 @@ const LearningHub = () => {
     }
   };
 
-  const loadUserAssessment = async (userId: string) => {
-    try {
-      const { data } = await supabase
-        .from('assessment_results')
-        .select('*')
-        .eq('user_id', userId)
-        .order('completed_at', { ascending: false })
-        .limit(1);
-
-      if (data && data.length > 0) {
-        setUserAssessment(data[0]);
-      }
-    } catch (error) {
-      console.error('Error loading assessment:', error);
-    }
-  };
-
-  const loadUserInterests = async (userId: string) => {
-    try {
-      const { data } = await supabase
-        .from('user_interests')
-        .select(`
-          interest_categories (
-            name
-          )
-        `)
-        .eq('user_id', userId);
-
-      if (data) {
-        const interests = data.map((item: any) => item.interest_categories?.name).filter(Boolean);
-        setUserInterests(interests);
-      }
-    } catch (error) {
-      console.error('Error loading interests:', error);
-    }
-  };
-
-  const loadCourses = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('courses')
-        .select(`
-          *,
-          lessons (*)
-        `)
-        .eq('is_featured', true)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setCourses(data || []);
-    } catch (error: any) {
-      toast.error("Gagal memuat kursus: " + error.message);
-    }
-  };
-
-  const loadUserProgress = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data, error } = await supabase
-        .from('user_progress')
-        .select('*')
-        .eq('user_id', user.id);
-
-      if (error) throw error;
-      setUserProgress(data || []);
-    } catch (error: any) {
-      console.error('Error loading progress:', error);
-    }
-  };
-
-  const loadChallenges = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('community_challenges')
-        .select('*')
-        .eq('is_active', true)
-        .order('created_at', { ascending: false })
-        .limit(6);
-
-      if (error) throw error;
-      setChallenges(data || []);
-    } catch (error: any) {
-      console.error('Error loading challenges:', error);
-    }
-  };
-
-  const loadPrograms = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('learning_paths')
-        .select('*')
-        .eq('is_active', true)
-        .order('created_at', { ascending: false })
-        .limit(6);
-
-      if (error) throw error;
-      setPrograms(data || []);
-    } catch (error: any) {
-      console.error('Error loading programs:', error);
-    }
-  };
-
-  const getCourseProgress = (courseId: string) => {
-    const courseProgressData = userProgress.filter(p => p.course_id === courseId);
-    if (courseProgressData.length === 0) return 0;
-    
-    const totalProgress = courseProgressData.reduce((sum, p) => sum + p.progress_percentage, 0);
-    return Math.round(totalProgress / courseProgressData.length);
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    window.location.href = '/auth';
   };
 
   const getDifficultyColor = (level: string) => {
     switch (level) {
-      case 'beginner': return 'bg-secondary text-secondary-foreground';
-      case 'intermediate': return 'bg-accent text-accent-foreground';
-      case 'advanced': return 'bg-primary text-primary-foreground';
-      default: return 'bg-muted text-muted-foreground';
+      case 'beginner': return 'bg-green-100 text-green-800';
+      case 'intermediate': return 'bg-yellow-100 text-yellow-800';
+      case 'advanced': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -212,163 +405,22 @@ const LearningHub = () => {
     }
   };
 
-  const canAccessCourse = (index: number) => {
-    if (!subscriptionInfo) return true;
-    const limits = getSubscriptionLimits(subscriptionInfo.subscription_status, subscriptionInfo.subscription_type);
-    const { canAccess } = checkSubscriptionAccess(index + 1, limits.maxCourses, subscriptionInfo.subscription_status);
-    return canAccess;
-  };
+  const filteredCategories = courseCategories.filter(category => 
+    category.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    category.courses.some(course => 
+      course.title.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  );
 
-  const handleCourseClick = (course: Course, index: number) => {
-    if (!canAccessCourse(index)) {
-      toast.error("Upgrade ke Premium untuk mengakses kursus ini!");
-      return;
-    }
-    setSelectedCourse(course);
-  };
-
-  const startLearning = async (courseId: string, courseIndex: number) => {
-    if (!canAccessCourse(courseIndex)) {
-      toast.error("Upgrade ke Premium untuk mengakses kursus ini!");
-      return;
-    }
-
-    if (!user) {
-      toast.error("Silakan login terlebih dahulu");
-      return;
-    }
-
-    try {
-      // Check if progress already exists
-      const existingProgress = userProgress.find(p => p.course_id === courseId);
-      
-      if (!existingProgress) {
-        // Create new progress entry
-        const { error } = await supabase
-          .from('user_progress')
-          .insert({
-            user_id: user.id,
-            course_id: courseId,
-            progress_percentage: 0,
-            time_spent_minutes: 0
-          });
-
-        if (error) throw error;
-        
-        toast.success("Kursus dimulai! Selamat belajar!");
-        await loadUserProgress();
-      } else {
-        toast.success("Melanjutkan kursus...");
-      }
-    } catch (error: any) {
-      console.error('Error starting course:', error);
-      toast.error("Gagal memulai kursus: " + error.message);
-    }
-  };
-
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    window.location.href = '/auth';
-  };
+  const recommendedCourses = courseCategories.flatMap(category => 
+    category.courses.filter(course => course.isRecommended)
+      .map(course => ({ ...course, categoryTitle: category.title, categoryColor: category.color }))
+  );
 
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
-  if (selectedCourse) {
-    return (
-      <div className="min-h-screen bg-background">
-        {/* Course Detail View */}
-        <div className="container mx-auto px-4 py-8">
-          <Button 
-            onClick={() => setSelectedCourse(null)}
-            variant="outline" 
-            className="mb-6"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Kembali ke Kursus
-          </Button>
-          
-          <div className="grid lg:grid-cols-3 gap-8">
-            {/* Course Content */}
-            <div className="lg:col-span-2">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-2xl">{selectedCourse.title}</CardTitle>
-                  <p className="text-muted-foreground">{selectedCourse.description}</p>
-                  <div className="flex items-center gap-4 mt-4">
-                    <Badge className={getDifficultyColor(selectedCourse.difficulty_level)}>
-                      {getDifficultyLabel(selectedCourse.difficulty_level)}
-                    </Badge>
-                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                      <Clock className="w-4 h-4" />
-                      <span>{selectedCourse.duration_hours} jam</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                      <BookOpen className="w-4 h-4" />
-                      <span>{selectedCourse.lessons?.length || 0} materi</span>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="mb-6">
-                    <h3 className="font-semibold mb-4">Materi Pembelajaran</h3>
-                    <div className="space-y-2">
-                      {selectedCourse.lessons?.sort((a, b) => a.order_index - b.order_index).map((lesson, index) => (
-                        <div key={lesson.id} className="flex items-center gap-3 p-3 rounded-lg border">
-                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm">
-                            {index + 1}
-                          </div>
-                          <div className="flex-1">
-                            <h4 className="font-medium">{lesson.title}</h4>
-                            <p className="text-sm text-muted-foreground">{lesson.description}</p>
-                          </div>
-                          <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                            <Clock className="w-4 h-4" />
-                            <span>{lesson.duration_minutes}m</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Course Progress Sidebar */}
-            <div className="lg:col-span-1">
-              <Card className="sticky top-4">
-                <CardHeader>
-                  <CardTitle>Progress Belajar</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="mb-6">
-                    <div className="flex items-center justify-between text-sm mb-2">
-                      <span>Kemajuan</span>
-                      <span>{getCourseProgress(selectedCourse.id)}%</span>
-                    </div>
-                    <Progress value={getCourseProgress(selectedCourse.id)} />
-                  </div>
-                  
-                  <Button 
-                    className="w-full"
-                    onClick={() => {
-                      const courseIndex = courses.findIndex(c => c.id === selectedCourse.id);
-                      startLearning(selectedCourse.id, courseIndex);
-                    }}
-                  >
-                    <Play className="w-4 h-4 mr-2" />
-                    {getCourseProgress(selectedCourse.id) > 0 ? 'Lanjutkan Belajar' : 'Mulai Belajar'}
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        </div>
       </div>
     );
   }
@@ -383,1314 +435,145 @@ const LearningHub = () => {
         />
         
         <main className="flex-1 overflow-hidden pb-20 md:pb-0">
-          <div className="w-full max-w-none px-4 md:px-6 prevent-overflow">
+          <div className="w-full max-w-none px-4 md:px-6">
             {/* Header */}
-            <div className="mb-6 md:mb-8">
+            <div className="mb-6 md:mb-8 pt-4">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
-                <h1 className="text-2xl sm:text-3xl font-bold truncate">Kursus Pembelajaran</h1>
-                <div className="flex items-center gap-2 shrink-0">
+                <h1 className="text-2xl sm:text-3xl font-bold">Kursus Pembelajaran</h1>
+                <div className="flex items-center gap-2">
                   <span className="text-sm text-muted-foreground">Muhammad Dafa</span>
                   <Badge variant="outline" className="text-xs">Individual</Badge>
                 </div>
               </div>
               
               {/* Search Bar */}
-              <div className="flex items-center gap-2 md:gap-4">
+              <div className="flex items-center gap-2 md:gap-4 mb-6">
                 <div className="flex-1 relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                   <Input
-                    placeholder="Cari kursus..."
+                    placeholder="Cari kursus atau kategori..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10"
                   />
                 </div>
-                <Button variant="outline" size="icon" className="shrink-0">
+                <Button variant="outline" size="icon">
                   <Filter className="w-4 h-4" />
                 </Button>
               </div>
+
+              {/* Recommended Courses */}
+              {recommendedCourses.length > 0 && (
+                <Card className="mb-6">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Lightbulb className="w-5 h-5 text-yellow-500" />
+                      Rekomendasi untuk Anda
+                    </CardTitle>
+                    <CardDescription>
+                      Kursus yang dipersonalisasi berdasarkan minat dan kemampuan Anda
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {recommendedCourses.map((course) => (
+                        <Card key={course.id} className="cursor-pointer hover:shadow-md transition-shadow">
+                          <CardContent className="p-4">
+                            <div className="flex items-start justify-between mb-2">
+                              <Badge className={course.categoryColor + " text-white text-xs"}>
+                                {course.categoryTitle}
+                              </Badge>
+                              <Badge variant="secondary" className="text-xs">
+                                Rekomendasi
+                              </Badge>
+                            </div>
+                            <h3 className="font-semibold text-sm mb-2">{course.title}</h3>
+                            <p className="text-xs text-muted-foreground mb-3 line-clamp-2">
+                              {course.description}
+                            </p>
+                            <div className="flex items-center justify-between text-xs text-muted-foreground">
+                              <div className="flex items-center gap-1">
+                                <Clock className="w-3 h-3" />
+                                <span>{course.duration}</span>
+                              </div>
+                              <Badge className={getDifficultyColor(course.difficulty)}>
+                                {getDifficultyLabel(course.difficulty)}
+                              </Badge>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
 
-            {/* Learning Progress Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6 md:mb-8">
-              <Card className="shadow-card">
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-                    <Target className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
-                    Target Mingguan
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4 sm:space-y-6">
-                  <div>
-                    <div className="flex justify-between text-sm mb-2">
-                      <span className="font-medium">Kursus Diselesaikan</span>
-                      <span className="text-primary font-bold">2/3</span>
-                    </div>
-                    <Progress value={67} className="h-2 sm:h-3" />
-                  </div>
-                  <div>
-                    <div className="flex justify-between text-sm mb-2">
-                      <span className="font-medium">Waktu Belajar Mingguan</span>
-                      <span className="text-primary font-bold">8/12 jam</span>
-                    </div>
-                    <Progress value={67} className="h-2 sm:h-3" />
-                  </div>
-                  <div className="pt-2 border-t">
-                    <p className="text-sm text-muted-foreground">
-                      Anda sudah mencapai <span className="font-semibold text-primary">67%</span> dari target mingguan!
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="shadow-card">
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-                    <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
-                    Jadwal Hari Ini
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3 sm:space-y-4">
-                  <div className="flex items-center gap-3 p-3 sm:p-4 bg-primary/5 rounded-xl border-l-4 border-primary">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                      <Play className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-sm sm:text-base truncate">Kelas Python Dasar</p>
-                      <p className="text-xs sm:text-sm text-muted-foreground">09:00 - 10:30 WIB</p>
-                    </div>
-                    <Badge className="bg-primary text-primary-foreground text-xs shrink-0">Live</Badge>
-                  </div>
-                  <div className="flex items-center gap-3 p-3 sm:p-4 bg-muted/30 rounded-xl border-l-4 border-muted">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-muted/50 rounded-full flex items-center justify-center flex-shrink-0">
-                      <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-muted-foreground" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-sm sm:text-base truncate">Quiz Matematika</p>
-                      <p className="text-xs sm:text-sm text-muted-foreground">14:00 - 14:30 WIB</p>
-                    </div>
-                    <Badge variant="outline" className="text-xs shrink-0">Upcoming</Badge>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Mobile Card Navigation */}
-            <div className="md:hidden mb-6">
-              <div className="grid grid-cols-2 gap-3">
-                <Card 
-                  className={`cursor-pointer transition-all ${activeSection === 'personal' ? 'border-primary bg-primary/5' : 'hover:border-primary/50'}`}
-                  onClick={() => setActiveSection('personal')}
-                >
-                  <CardContent className="p-4 text-center">
-                    <Brain className="w-6 h-6 mx-auto mb-2 text-primary" />
-                    <p className="text-sm font-medium">Rekomendasi Personal</p>
-                  </CardContent>
-                </Card>
-                <Card 
-                  className={`cursor-pointer transition-all ${activeSection === 'challenges' ? 'border-primary bg-primary/5' : 'hover:border-primary/50'}`}
-                  onClick={() => setActiveSection('challenges')}
-                >
-                  <CardContent className="p-4 text-center">
-                    <Trophy className="w-6 h-6 mx-auto mb-2 text-primary" />
-                    <p className="text-sm font-medium">Challenge & Program</p>
-                  </CardContent>
-                </Card>
-                <Card 
-                  className={`cursor-pointer transition-all ${activeSection === 'all' ? 'border-primary bg-primary/5' : 'hover:border-primary/50'}`}
-                  onClick={() => setActiveSection('all')}
-                >
-                  <CardContent className="p-4 text-center">
-                    <BookOpen className="w-6 h-6 mx-auto mb-2 text-primary" />
-                    <p className="text-sm font-medium">Semua Kursus</p>
-                  </CardContent>
-                </Card>
-                <Card 
-                  className={`cursor-pointer transition-all ${activeSection === 'my' ? 'border-primary bg-primary/5' : 'hover:border-primary/50'}`}
-                  onClick={() => setActiveSection('my')}
-                >
-                  <CardContent className="p-4 text-center">
-                    <GraduationCap className="w-6 h-6 mx-auto mb-2 text-primary" />
-                    <p className="text-sm font-medium">Kursus Saya</p>
-                  </CardContent>
-                </Card>
-                <Card 
-                  className={`cursor-pointer transition-all ${activeSection === 'finished' ? 'border-primary bg-primary/5' : 'hover:border-primary/50'}`}
-                  onClick={() => setActiveSection('finished')}
-                >
-                  <CardContent className="p-4 text-center">
-                    <Award className="w-6 h-6 mx-auto mb-2 text-primary" />
-                    <p className="text-sm font-medium">Selesai</p>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-
-            {/* Desktop Tabs */}
-            <Tabs defaultValue="personal" className="w-full hidden md:block">
-              <TabsList className="mb-6">
-                <TabsTrigger value="personal">Rekomendasi Personal</TabsTrigger>
-                <TabsTrigger value="challenges">Challenge & Program</TabsTrigger>
-                <TabsTrigger value="all">Semua Kursus</TabsTrigger>
-                <TabsTrigger value="my">Kursus Saya</TabsTrigger>
-                <TabsTrigger value="finished">Selesai</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="personal">
-                {/* Rekomendasi Personal Section */}
-                <Card className="mb-6 border-blue-200">
-                  <CardContent className="p-6">
-                    <div className="flex items-start gap-4 mb-4">
-                      <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                        <Brain className="w-5 h-5 text-blue-600" />
+            {/* Course Categories */}
+            <div className="space-y-6">
+              {filteredCategories.map((category) => (
+                <Card key={category.id} className="overflow-hidden">
+                  <CardHeader className="pb-4">
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-lg ${category.color} text-white`}>
+                        <category.icon className="w-6 h-6" />
                       </div>
                       <div>
-                        <h3 className="font-semibold text-lg">Rekomendasi Personal Anda</h3>
-                        <p className="text-muted-foreground text-sm mb-3">
-                          Berdasarkan hasil assessment dan minat Anda:
-                        </p>
-                        
-                        {/* Assessment Tags */}
-                        {userAssessment && (
-                          <div className="flex flex-wrap gap-2 mb-4">
-                            <Badge variant="outline" className="bg-blue-50 border-blue-200">
-                              <span className="text-xs mr-1">💡</span>
-                              Tipe: {userAssessment.personality_type || 'social'}
-                            </Badge>
-                            <Badge variant="outline" className="bg-blue-50 border-blue-200">
-                              Gaya Belajar: {userAssessment.learning_style || 'social'}
-                            </Badge>
-                            <Badge variant="outline" className="bg-blue-50 border-blue-200">
-                              realistic
-                            </Badge>
-                            <Badge variant="outline" className="bg-blue-50 border-blue-200">
-                              investigative
-                            </Badge>
-                          </div>
-                        )}
+                        <CardTitle className="text-xl">{category.title}</CardTitle>
+                        <CardDescription className="text-sm">
+                          {category.description}
+                        </CardDescription>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-
-                {/* Course Grid for Personal Recommendations */}
-                <div className="space-y-4 mb-6">
-                  <h3 className="font-semibold flex items-center gap-2">
-                    <BookOpen className="w-5 h-5" />
-                    Kursus yang Direkomendasikan
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {courses.slice(0, 3).map((course, index) => (
-                      <Card 
-                        key={course.id} 
-                        className="overflow-hidden hover:shadow-lg transition-all cursor-pointer bg-gradient-to-br from-blue-500 to-blue-600 text-white"
-                        onClick={() => handleCourseClick(course, index)}
-                      >
-                        <CardContent className="p-0">
-                          <div className="relative p-6">
-                            <Badge className="absolute top-4 left-4 bg-white/20 text-white border-white/30">
-                              Rekomendasi
-                            </Badge>
-                            
-                            <div className="flex items-center justify-center w-16 h-16 bg-white/10 rounded-lg mb-4 mt-8">
-                              <BookOpen className="w-8 h-8" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {category.courses.map((course) => (
+                        <Card key={course.id} className="cursor-pointer hover:shadow-md transition-all hover:-translate-y-1">
+                          <CardContent className="p-4">
+                            <div className="flex items-start justify-between mb-3">
+                              <h3 className="font-semibold text-base">{course.title}</h3>
+                              {course.isRecommended && (
+                                <Badge variant="secondary" className="text-xs">
+                                  Rekomendasi
+                                </Badge>
+                              )}
                             </div>
                             
-                            <h4 className="font-semibold text-lg mb-2 line-clamp-2">
-                              {course.title}
-                            </h4>
-                            <p className="text-white/80 text-sm mb-4 line-clamp-2">
+                            <p className="text-sm text-muted-foreground mb-3">
                               {course.description}
                             </p>
                             
-                            <div className="flex items-center justify-between text-sm mb-4">
-                              <div className="flex items-center gap-1">
+                            <div className="bg-blue-50 p-3 rounded-lg mb-4">
+                              <h4 className="text-xs font-medium text-blue-900 mb-1">Proyek Akhir:</h4>
+                              <p className="text-xs text-blue-800">{course.project}</p>
+                            </div>
+                            
+                            <div className="flex items-center justify-between mb-4">
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                 <Clock className="w-4 h-4" />
-                                <span>{course.duration_hours}h</span>
+                                <span>{course.duration}</span>
                               </div>
-                              <div className="flex items-center gap-1">
-                                <Star className="w-4 h-4 fill-current" />
-                                <span>4.8</span>
-                              </div>
+                              <Badge className={getDifficultyColor(course.difficulty)}>
+                                {getDifficultyLabel(course.difficulty)}
+                              </Badge>
                             </div>
                             
-                            <Button 
-                              className="w-full bg-white text-blue-600 hover:bg-white/90"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                startLearning(course.id, index);
-                              }}
-                            >
+                            <Button className="w-full" size="sm">
                               <Play className="w-4 h-4 mr-2" />
-                              Mulai Kursus
+                              Mulai Belajar
                             </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="challenges">
-                {/* Challenges Section */}
-                <div className="space-y-6 mb-8">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-xl font-semibold flex items-center gap-2">
-                      <Trophy className="w-6 h-6 text-primary" />
-                      Tantangan Aktif
-                    </h3>
-                    <Button variant="outline" size="sm">
-                      Lihat Semua
-                    </Button>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {challenges.map((challenge) => (
-                      <Card key={challenge.id} className="bg-gradient-to-br from-orange-500 to-red-500 text-white border-0 hover:shadow-xl transition-all">
-                        <CardContent className="p-6">
-                          <div className="flex items-start justify-between mb-4">
-                            <div className="flex items-center justify-center w-12 h-12 bg-white/20 rounded-lg">
-                              <Trophy className="w-6 h-6" />
-                            </div>
-                            <Badge className="bg-white/20 text-white border-white/30">
-                              {challenge.xp_reward || 100} XP
-                            </Badge>
-                          </div>
-                          
-                          <h4 className="font-semibold text-lg mb-2 line-clamp-2">
-                            {challenge.title || "Daily Learning Challenge"}
-                          </h4>
-                          <p className="text-white/80 text-sm mb-4 line-clamp-2">
-                            {challenge.description || "Complete daily learning goals to earn XP and badges"}
-                          </p>
-                          
-                          <div className="flex items-center justify-between text-sm mb-4">
-                            <div className="flex items-center gap-1">
-                              <Timer className="w-4 h-4" />
-                              <span>7 hari tersisa</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Users2 className="w-4 h-4" />
-                              <span>{Math.floor(Math.random() * 500) + 100} peserta</span>
-                            </div>
-                          </div>
-                          
-                          <div className="mb-4">
-                            <div className="flex items-center justify-between text-sm mb-1">
-                              <span>Progress</span>
-                              <span>{Math.floor(Math.random() * 100)}%</span>
-                            </div>
-                            <Progress value={Math.floor(Math.random() * 100)} className="h-2 bg-white/20" />
-                          </div>
-                          
-                          <Button className="w-full bg-white text-orange-600 hover:bg-white/90">
-                            <Rocket className="w-4 h-4 mr-2" />
-                            Ikuti Challenge
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    ))}
-                    
-                    {/* Default challenges if none exist */}
-                    {challenges.length === 0 && [1, 2, 3].map((index) => (
-                      <Card key={index} className="bg-gradient-to-br from-orange-500 to-red-500 text-white border-0 hover:shadow-xl transition-all">
-                        <CardContent className="p-6">
-                          <div className="flex items-start justify-between mb-4">
-                            <div className="flex items-center justify-center w-12 h-12 bg-white/20 rounded-lg">
-                              <Trophy className="w-6 h-6" />
-                            </div>
-                            <Badge className="bg-white/20 text-white border-white/30">
-                              {[100, 150, 200][index - 1]} XP
-                            </Badge>
-                          </div>
-                          
-                          <h4 className="font-semibold text-lg mb-2">
-                            {["Challenge Harian", "Weekly Streak", "Learning Master"][index - 1]}
-                          </h4>
-                          <p className="text-white/80 text-sm mb-4">
-                            {[
-                              "Selesaikan 3 kursus dalam sehari untuk mendapatkan bonus XP",
-                              "Belajar selama 7 hari berturut-turut tanpa jeda",
-                              "Capai nilai perfect dalam 5 quiz berturut-turut"
-                            ][index - 1]}
-                          </p>
-                          
-                          <div className="flex items-center justify-between text-sm mb-4">
-                            <div className="flex items-center gap-1">
-                              <Timer className="w-4 h-4" />
-                              <span>{[7, 14, 30][index - 1]} hari tersisa</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Users2 className="w-4 h-4" />
-                              <span>{[234, 156, 89][index - 1]} peserta</span>
-                            </div>
-                          </div>
-                          
-                          <div className="mb-4">
-                            <div className="flex items-center justify-between text-sm mb-1">
-                              <span>Progress</span>
-                              <span>{[45, 78, 23][index - 1]}%</span>
-                            </div>
-                            <Progress value={[45, 78, 23][index - 1]} className="h-2 bg-white/20" />
-                          </div>
-                          
-                          <Button className="w-full bg-white text-orange-600 hover:bg-white/90">
-                            <Rocket className="w-4 h-4 mr-2" />
-                            Ikuti Challenge
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Learning Programs Section */}
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-xl font-semibold flex items-center gap-2">
-                      <Rocket className="w-6 h-6 text-primary" />
-                      Program Pembelajaran
-                    </h3>
-                    <Button variant="outline" size="sm">
-                      Lihat Semua
-                    </Button>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {programs.map((program) => (
-                      <Card key={program.id} className="bg-gradient-to-br from-blue-600 to-purple-600 text-white border-0 hover:shadow-xl transition-all">
-                        <CardContent className="p-6">
-                          <div className="flex items-start justify-between mb-4">
-                            <div className="flex items-center justify-center w-12 h-12 bg-white/20 rounded-lg">
-                              <Rocket className="w-6 h-6" />
-                            </div>
-                            <Badge className="bg-white/20 text-white border-white/30">
-                              {program.difficulty_level || "Beginner"}
-                            </Badge>
-                          </div>
-                          
-                          <h4 className="font-semibold text-lg mb-2 line-clamp-2">
-                            {program.name || "Full Stack Development"}
-                          </h4>
-                          <p className="text-white/80 text-sm mb-4 line-clamp-3">
-                            {program.description || "Comprehensive program to master full stack development from frontend to backend"}
-                          </p>
-                          
-                          <div className="flex items-center gap-4 text-sm mb-4">
-                            <div className="flex items-center gap-1">
-                              <Clock className="w-4 h-4" />
-                              <span>{program.duration_hours || 120} jam</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <BookOpen className="w-4 h-4" />
-                              <span>{program.modules_count || 12} modul</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Users2 className="w-4 h-4" />
-                              <span>{Math.floor(Math.random() * 1000) + 500}+ siswa</span>
-                            </div>
-                          </div>
-                          
-                          <div className="mb-4">
-                            <div className="flex items-center justify-between text-sm mb-1">
-                              <span>Progress</span>
-                              <span>{program.progress || 0}%</span>
-                            </div>
-                            <Progress value={program.progress || 0} className="h-2 bg-white/20" />
-                          </div>
-                          
-                          <Button className="w-full bg-white text-blue-600 hover:bg-white/90">
-                            <Play className="w-4 h-4 mr-2" />
-                            {program.progress > 0 ? 'Lanjutkan Program' : 'Mulai Program'}
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    ))}
-                    
-                    {/* Default programs if none exist */}
-                    {programs.length === 0 && [
-                      {
-                        name: "Full Stack Development",
-                        description: "Program lengkap untuk menguasai pengembangan web dari frontend hingga backend",
-                        duration: 120,
-                        modules: 12,
-                        progress: 35
-                      },
-                      {
-                        name: "Data Science Mastery",
-                        description: "Pelajari analisis data, machine learning, dan visualisasi data dari dasar hingga mahir",
-                        duration: 180,
-                        modules: 16,
-                        progress: 0
-                      },
-                      {
-                        name: "Mobile App Development",
-                        description: "Buat aplikasi mobile native dan cross-platform dengan React Native dan Flutter",
-                        duration: 100,
-                        modules: 10,
-                        progress: 60
-                      }
-                    ].map((program, index) => (
-                      <Card key={index} className="bg-gradient-to-br from-blue-600 to-purple-600 text-white border-0 hover:shadow-xl transition-all">
-                        <CardContent className="p-6">
-                          <div className="flex items-start justify-between mb-4">
-                            <div className="flex items-center justify-center w-12 h-12 bg-white/20 rounded-lg">
-                              <Rocket className="w-6 h-6" />
-                            </div>
-                            <Badge className="bg-white/20 text-white border-white/30">
-                              {["Intermediate", "Advanced", "Beginner"][index]}
-                            </Badge>
-                          </div>
-                          
-                          <h4 className="font-semibold text-lg mb-2">
-                            {program.name}
-                          </h4>
-                          <p className="text-white/80 text-sm mb-4">
-                            {program.description}
-                          </p>
-                          
-                          <div className="flex items-center gap-4 text-sm mb-4">
-                            <div className="flex items-center gap-1">
-                              <Clock className="w-4 h-4" />
-                              <span>{program.duration} jam</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <BookOpen className="w-4 h-4" />
-                              <span>{program.modules} modul</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Users2 className="w-4 h-4" />
-                              <span>{[850, 1200, 650][index]}+ siswa</span>
-                            </div>
-                          </div>
-                          
-                          <div className="mb-4">
-                            <div className="flex items-center justify-between text-sm mb-1">
-                              <span>Progress</span>
-                              <span>{program.progress}%</span>
-                            </div>
-                            <Progress value={program.progress} className="h-2 bg-white/20" />
-                          </div>
-                          
-                          <Button className="w-full bg-white text-blue-600 hover:bg-white/90">
-                            <Play className="w-4 h-4 mr-2" />
-                            {program.progress > 0 ? 'Lanjutkan Program' : 'Mulai Program'}
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="all">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {courses.filter(course => 
-                    course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    course.description.toLowerCase().includes(searchTerm.toLowerCase())
-                  ).map((course, index) => {
-                    const canAccess = canAccessCourse(index);
-                    const isLocked = !canAccess;
-                    const progress = getCourseProgress(course.id);
-                    
-                    return (
-                      <Card 
-                        key={course.id} 
-                        className={`shadow-card hover:shadow-floating transition-all cursor-pointer group ${isLocked ? 'opacity-75' : ''}`}
-                        onClick={() => handleCourseClick(course, index)}
-                      >
-                        {course.thumbnail_url && (
-                          <div className="aspect-video bg-muted rounded-t-lg overflow-hidden relative">
-                            <img 
-                              src={course.thumbnail_url} 
-                              alt={course.title}
-                              className={`w-full h-full object-cover transition-transform ${isLocked ? 'grayscale' : 'group-hover:scale-105'}`}
-                            />
-                            <div className="absolute top-3 right-3 flex gap-2">
-                              {isLocked && (
-                                <Badge variant="secondary" className="bg-black/70 text-white border-0">
-                                  <Crown className="w-3 h-3 mr-1" />
-                                  Premium
-                                </Badge>
-                              )}
-                              <Badge className={getDifficultyColor(course.difficulty_level)}>
-                                {getDifficultyLabel(course.difficulty_level)}
-                              </Badge>
-                            </div>
-                            {isLocked && (
-                              <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                                <Lock className="w-8 h-8 text-white" />
-                              </div>
-                            )}
-                          </div>
-                        )}
-                        
-                        <CardHeader>
-                          <div className="flex items-start justify-between mb-2">
-                            <CardTitle className="line-clamp-2 group-hover:text-primary transition-colors">
-                              {course.title}
-                            </CardTitle>
-                          </div>
-                          <p className="text-muted-foreground line-clamp-3">
-                            {course.description}
-                          </p>
-                        </CardHeader>
-
-                        <CardContent>
-                          <div className="flex items-center justify-between mb-4">
-                            <div className="flex items-center gap-1 text-muted-foreground">
-                              <Clock className="w-4 h-4" />
-                              <span>{course.duration_hours} jam</span>
-                            </div>
-                            <div className="flex items-center gap-1 text-muted-foreground">
-                              <BookOpen className="w-4 h-4" />
-                              <span>{course.lessons?.length || 0} materi</span>
-                            </div>
-                          </div>
-
-                          {progress > 0 && !isLocked && (
-                            <div className="mb-4">
-                              <div className="flex items-center justify-between text-sm mb-2">
-                                <span>Progress</span>
-                                <span>{progress}%</span>
-                              </div>
-                              <Progress value={progress} />
-                            </div>
-                          )}
-
-                          <Button 
-                            className="w-full bg-primary text-primary-foreground group-hover:shadow-floating"
-                            disabled={isLocked}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              startLearning(course.id, index);
-                            }}
-                          >
-                            {isLocked ? (
-                              <>
-                                <Lock className="w-4 h-4 mr-2" />
-                                Upgrade untuk Akses
-                              </>
-                            ) : (
-                              <>
-                                {progress > 0 ? 'Lanjutkan' : 'Mulai Belajar'}
-                                <Play className="w-4 h-4 ml-2" />
-                              </>
-                            )}
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
-              </TabsContent>
-
-              <TabsContent value="my">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {courses.filter(course => {
-                    const progress = getCourseProgress(course.id);
-                    return progress > 0 && progress < 100;
-                  }).map((course, index) => {
-                    const progress = getCourseProgress(course.id);
-                    
-                    return (
-                      <Card 
-                        key={course.id} 
-                        className="shadow-card hover:shadow-floating transition-all cursor-pointer group"
-                        onClick={() => handleCourseClick(course, index)}
-                      >
-                        <CardHeader>
-                          <CardTitle className="line-clamp-2 group-hover:text-primary transition-colors">
-                            {course.title}
-                          </CardTitle>
-                          <p className="text-muted-foreground line-clamp-3">
-                            {course.description}
-                          </p>
-                        </CardHeader>
-
-                        <CardContent>
-                          <div className="mb-4">
-                            <div className="flex items-center justify-between text-sm mb-2">
-                              <span>Progress</span>
-                              <span>{progress}%</span>
-                            </div>
-                            <Progress value={progress} />
-                          </div>
-
-                          <Button 
-                            className="w-full"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              startLearning(course.id, index);
-                            }}
-                          >
-                            <Play className="w-4 h-4 mr-2" />
-                            Lanjutkan Belajar
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
-              </TabsContent>
-
-              <TabsContent value="finished">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {courses.filter(course => {
-                    const progress = getCourseProgress(course.id);
-                    return progress === 100;
-                  }).map((course, index) => {
-                    return (
-                      <Card 
-                        key={course.id} 
-                        className="shadow-card hover:shadow-floating transition-all cursor-pointer group border-green-200"
-                        onClick={() => handleCourseClick(course, index)}
-                      >
-                        <CardHeader>
-                          <div className="flex items-center justify-between mb-2">
-                            <CardTitle className="line-clamp-2 group-hover:text-primary transition-colors">
-                              {course.title}
-                            </CardTitle>
-                            <Badge className="bg-green-100 text-green-800">
-                              <Award className="w-3 h-3 mr-1" />
-                              Selesai
-                            </Badge>
-                          </div>
-                          <p className="text-muted-foreground line-clamp-3">
-                            {course.description}
-                          </p>
-                        </CardHeader>
-
-                        <CardContent>
-                          <Button 
-                            className="w-full"
-                            variant="outline"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleCourseClick(course, index);
-                            }}
-                          >
-                            <Award className="w-4 h-4 mr-2" />
-                            Lihat Sertifikat
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
-              </TabsContent>
-            </Tabs>
-
-            {/* Mobile Content Sections */}
-            <div className="md:hidden">
-              {activeSection === 'personal' && (
-                <div>
-                  {/* Rekomendasi Personal Section */}
-                  <Card className="mb-6 border-blue-200">
-                    <CardContent className="p-4 md:p-6">
-                      <div className="flex items-start gap-3 mb-4">
-                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center shrink-0">
-                          <Brain className="w-5 h-5 text-blue-600" />
-                        </div>
-                        <div className="min-w-0">
-                          <h3 className="font-semibold text-base md:text-lg">Rekomendasi Personal Anda</h3>
-                          <p className="text-muted-foreground text-sm mb-3">
-                            Berdasarkan hasil assessment dan minat Anda:
-                          </p>
-                          
-                          {/* Assessment Tags */}
-                          {userAssessment && (
-                            <div className="flex flex-wrap gap-2 mb-4">
-                              <Badge variant="outline" className="bg-blue-50 border-blue-200 text-xs">
-                                <span className="mr-1">💡</span>
-                                Tipe: {userAssessment.personality_type || 'social'}
-                              </Badge>
-                              <Badge variant="outline" className="bg-blue-50 border-blue-200 text-xs">
-                                Gaya: {userAssessment.learning_style || 'social'}
-                              </Badge>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Course Grid for Personal Recommendations */}
-                  <div className="space-y-4 mb-6">
-                    <h3 className="font-semibold flex items-center gap-2">
-                      <BookOpen className="w-5 h-5" />
-                      Kursus yang Direkomendasikan
-                    </h3>
-                    <div className="grid grid-cols-1 gap-4">
-                      {courses.slice(0, 3).map((course, index) => (
-                        <Card 
-                          key={course.id} 
-                          className="overflow-hidden hover:shadow-lg transition-all cursor-pointer bg-gradient-to-br from-blue-500 to-blue-600 text-white"
-                          onClick={() => handleCourseClick(course, index)}
-                        >
-                          <CardContent className="p-4">
-                            <div className="flex items-start gap-4">
-                              <div className="flex items-center justify-center w-12 h-12 bg-white/10 rounded-lg shrink-0">
-                                <BookOpen className="w-6 h-6" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <h4 className="font-semibold text-base mb-1 line-clamp-2">
-                                  {course.title}
-                                </h4>
-                                <p className="text-white/80 text-sm mb-3 line-clamp-2">
-                                  {course.description}
-                                </p>
-                                
-                                <div className="flex items-center justify-between text-sm mb-3">
-                                  <div className="flex items-center gap-1">
-                                    <Clock className="w-4 h-4" />
-                                    <span>{course.duration_hours}h</span>
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <Star className="w-4 h-4 fill-current" />
-                                    <span>4.8</span>
-                                  </div>
-                                </div>
-                                
-                                <Button 
-                                  size="sm"
-                                  className="w-full bg-white text-blue-600 hover:bg-white/90"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    startLearning(course.id, index);
-                                  }}
-                                >
-                                  <Play className="w-4 h-4 mr-2" />
-                                  Mulai Kursus
-                                </Button>
-                              </div>
-                            </div>
                           </CardContent>
                         </Card>
                       ))}
                     </div>
-                  </div>
-                </div>
-              )}
-
-              {activeSection === 'challenges' && (
-                <div>
-                  {/* Challenges Section */}
-                  <div className="space-y-4 mb-8">
-                    <h3 className="text-xl font-semibold flex items-center gap-2">
-                      <Trophy className="w-6 h-6 text-primary" />
-                      Tantangan Aktif
-                    </h3>
-                    
-                    <div className="space-y-4">
-                      {challenges.map((challenge) => (
-                        <Card key={challenge.id} className="bg-gradient-to-r from-orange-500 to-red-500 text-white border-0">
-                          <CardContent className="p-4">
-                            <div className="flex items-start gap-4">
-                              <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center shrink-0">
-                                <Trophy className="w-6 h-6" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-start justify-between mb-2">
-                                  <h4 className="font-semibold text-base line-clamp-2">
-                                    {challenge.title || "Daily Learning Challenge"}
-                                  </h4>
-                                  <Badge className="bg-white/20 text-white border-white/30 ml-2 shrink-0 text-xs">
-                                    {challenge.xp_reward || 100} XP
-                                  </Badge>
-                                </div>
-                                
-                                <p className="text-white/80 text-sm mb-3 line-clamp-2">
-                                  {challenge.description || "Complete daily learning goals to earn XP and badges"}
-                                </p>
-                                
-                                <div className="flex items-center gap-4 text-xs mb-3">
-                                  <div className="flex items-center gap-1">
-                                    <Timer className="w-3 h-3" />
-                                    <span>7 hari tersisa</span>
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <Users2 className="w-3 h-3" />
-                                    <span>{Math.floor(Math.random() * 500) + 100} peserta</span>
-                                  </div>
-                                </div>
-                                
-                                <div className="mb-3">
-                                  <div className="flex items-center justify-between text-xs mb-1">
-                                    <span>Progress</span>
-                                    <span>{Math.floor(Math.random() * 100)}%</span>
-                                  </div>
-                                  <Progress value={Math.floor(Math.random() * 100)} className="h-1 bg-white/20" />
-                                </div>
-                                
-                                <Button size="sm" className="w-full bg-white text-orange-600 hover:bg-white/90">
-                                  <Rocket className="w-3 h-3 mr-2" />
-                                  Ikuti Challenge
-                                </Button>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                      
-                      {/* Default challenges if none exist */}
-                      {challenges.length === 0 && [
-                        {
-                          title: "Challenge Harian",
-                          description: "Selesaikan 3 kursus dalam sehari untuk mendapatkan bonus XP",
-                          xp: 100,
-                          days: 7,
-                          participants: 234,
-                          progress: 45
-                        },
-                        {
-                          title: "Weekly Streak",
-                          description: "Belajar selama 7 hari berturut-turut tanpa jeda",
-                          xp: 150,
-                          days: 14,
-                          participants: 156,
-                          progress: 78
-                        },
-                        {
-                          title: "Learning Master",
-                          description: "Capai nilai perfect dalam 5 quiz berturut-turut",
-                          xp: 200,
-                          days: 30,
-                          participants: 89,
-                          progress: 23
-                        }
-                      ].map((challenge, index) => (
-                        <Card key={index} className="bg-gradient-to-r from-orange-500 to-red-500 text-white border-0">
-                          <CardContent className="p-4">
-                            <div className="flex items-start gap-4">
-                              <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center shrink-0">
-                                <Trophy className="w-6 h-6" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-start justify-between mb-2">
-                                  <h4 className="font-semibold text-base">
-                                    {challenge.title}
-                                  </h4>
-                                  <Badge className="bg-white/20 text-white border-white/30 ml-2 shrink-0 text-xs">
-                                    {challenge.xp} XP
-                                  </Badge>
-                                </div>
-                                
-                                <p className="text-white/80 text-sm mb-3">
-                                  {challenge.description}
-                                </p>
-                                
-                                <div className="flex items-center gap-4 text-xs mb-3">
-                                  <div className="flex items-center gap-1">
-                                    <Timer className="w-3 h-3" />
-                                    <span>{challenge.days} hari tersisa</span>
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <Users2 className="w-3 h-3" />
-                                    <span>{challenge.participants} peserta</span>
-                                  </div>
-                                </div>
-                                
-                                <div className="mb-3">
-                                  <div className="flex items-center justify-between text-xs mb-1">
-                                    <span>Progress</span>
-                                    <span>{challenge.progress}%</span>
-                                  </div>
-                                  <Progress value={challenge.progress} className="h-1 bg-white/20" />
-                                </div>
-                                
-                                <Button size="sm" className="w-full bg-white text-orange-600 hover:bg-white/90">
-                                  <Rocket className="w-3 h-3 mr-2" />
-                                  Ikuti Challenge
-                                </Button>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Learning Programs Section */}
-                  <div className="space-y-4">
-                    <h3 className="text-xl font-semibold flex items-center gap-2">
-                      <Rocket className="w-6 h-6 text-primary" />
-                      Program Pembelajaran
-                    </h3>
-                    
-                    <div className="space-y-4">
-                      {programs.map((program) => (
-                        <Card key={program.id} className="bg-gradient-to-r from-blue-600 to-purple-600 text-white border-0">
-                          <CardContent className="p-4">
-                            <div className="flex items-start gap-4">
-                              <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center shrink-0">
-                                <Rocket className="w-6 h-6" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-start justify-between mb-2">
-                                  <h4 className="font-semibold text-base line-clamp-2">
-                                    {program.name || "Full Stack Development"}
-                                  </h4>
-                                  <Badge className="bg-white/20 text-white border-white/30 ml-2 shrink-0 text-xs">
-                                    {program.difficulty_level || "Beginner"}
-                                  </Badge>
-                                </div>
-                                
-                                <p className="text-white/80 text-sm mb-3 line-clamp-2">
-                                  {program.description || "Comprehensive program to master full stack development"}
-                                </p>
-                                
-                                <div className="flex items-center gap-4 text-xs mb-3">
-                                  <div className="flex items-center gap-1">
-                                    <Clock className="w-3 h-3" />
-                                    <span>{program.duration_hours || 120} jam</span>
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <BookOpen className="w-3 h-3" />
-                                    <span>{program.modules_count || 12} modul</span>
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <Users2 className="w-3 h-3" />
-                                    <span>{Math.floor(Math.random() * 1000) + 500}+ siswa</span>
-                                  </div>
-                                </div>
-                                
-                                <div className="mb-3">
-                                  <div className="flex items-center justify-between text-xs mb-1">
-                                    <span>Progress</span>
-                                    <span>{program.progress || 0}%</span>
-                                  </div>
-                                  <Progress value={program.progress || 0} className="h-1 bg-white/20" />
-                                </div>
-                                
-                                <Button size="sm" className="w-full bg-white text-blue-600 hover:bg-white/90">
-                                  <Play className="w-3 h-3 mr-2" />
-                                  {program.progress > 0 ? 'Lanjutkan Program' : 'Mulai Program'}
-                                </Button>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                      
-                      {/* Default programs if none exist */}
-                      {programs.length === 0 && [
-                        {
-                          name: "Full Stack Development",
-                          description: "Program lengkap untuk menguasai pengembangan web dari frontend hingga backend",
-                          duration: 120,
-                          modules: 12,
-                          progress: 35,
-                          level: "Intermediate"
-                        },
-                        {
-                          name: "Data Science Mastery", 
-                          description: "Pelajari analisis data, machine learning, dan visualisasi data dari dasar hingga mahir",
-                          duration: 180,
-                          modules: 16,
-                          progress: 0,
-                          level: "Advanced"
-                        }
-                      ].map((program, index) => (
-                        <Card key={index} className="bg-gradient-to-r from-blue-600 to-purple-600 text-white border-0">
-                          <CardContent className="p-4">
-                            <div className="flex items-start gap-4">
-                              <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center shrink-0">
-                                <Rocket className="w-6 h-6" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-start justify-between mb-2">
-                                  <h4 className="font-semibold text-base">
-                                    {program.name}
-                                  </h4>
-                                  <Badge className="bg-white/20 text-white border-white/30 ml-2 shrink-0 text-xs">
-                                    {program.level}
-                                  </Badge>
-                                </div>
-                                
-                                <p className="text-white/80 text-sm mb-3">
-                                  {program.description}
-                                </p>
-                                
-                                <div className="flex items-center gap-4 text-xs mb-3">
-                                  <div className="flex items-center gap-1">
-                                    <Clock className="w-3 h-3" />
-                                    <span>{program.duration} jam</span>
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <BookOpen className="w-3 h-3" />
-                                    <span>{program.modules} modul</span>
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <Users2 className="w-3 h-3" />
-                                    <span>{[850, 1200][index]}+ siswa</span>
-                                  </div>
-                                </div>
-                                
-                                <div className="mb-3">
-                                  <div className="flex items-center justify-between text-xs mb-1">
-                                    <span>Progress</span>
-                                    <span>{program.progress}%</span>
-                                  </div>
-                                  <Progress value={program.progress} className="h-1 bg-white/20" />
-                                </div>
-                                
-                                <Button size="sm" className="w-full bg-white text-blue-600 hover:bg-white/90">
-                                  <Play className="w-3 h-3 mr-2" />
-                                  {program.progress > 0 ? 'Lanjutkan Program' : 'Mulai Program'}
-                                </Button>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {activeSection === 'all' && (
-                <div className="grid grid-cols-1 gap-4">
-                  {courses.filter(course => 
-                    course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    course.description.toLowerCase().includes(searchTerm.toLowerCase())
-                  ).map((course, index) => {
-                    const canAccess = canAccessCourse(index);
-                    const isLocked = !canAccess;
-                    const progress = getCourseProgress(course.id);
-                    
-                    return (
-                      <Card 
-                        key={course.id} 
-                        className={`shadow-card hover:shadow-floating transition-all cursor-pointer group ${isLocked ? 'opacity-75' : ''}`}
-                        onClick={() => handleCourseClick(course, index)}
-                      >
-                        <CardContent className="p-4">
-                          <div className="flex items-start gap-4">
-                            <div className="w-16 h-16 bg-muted rounded-lg overflow-hidden relative shrink-0">
-                              {course.thumbnail_url ? (
-                                <img 
-                                  src={course.thumbnail_url} 
-                                  alt={course.title}
-                                  className={`w-full h-full object-cover ${isLocked ? 'grayscale' : ''}`}
-                                />
-                              ) : (
-                                <div className="w-full h-full bg-muted flex items-center justify-center">
-                                  <BookOpen className="w-6 h-6 text-muted-foreground" />
-                                </div>
-                              )}
-                              {isLocked && (
-                                <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                                  <Lock className="w-4 h-4 text-white" />
-                                </div>
-                              )}
-                            </div>
-                            
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-start justify-between mb-2">
-                                <h4 className="font-semibold text-base line-clamp-2 group-hover:text-primary transition-colors">
-                                  {course.title}
-                                </h4>
-                                {isLocked && (
-                                  <Badge variant="secondary" className="bg-black/10 text-black border-0 ml-2 shrink-0">
-                                    <Crown className="w-3 h-3 mr-1" />
-                                    Premium
-                                  </Badge>
-                                )}
-                              </div>
-                              
-                              <p className="text-muted-foreground text-sm line-clamp-2 mb-3">
-                                {course.description}
-                              </p>
-                              
-                              <div className="flex items-center gap-4 mb-3 text-xs text-muted-foreground">
-                                <div className="flex items-center gap-1">
-                                  <Clock className="w-3 h-3" />
-                                  <span>{course.duration_hours} jam</span>
-                                </div>
-                                <div className="flex items-center gap-1">
-                                  <BookOpen className="w-3 h-3" />
-                                  <span>{course.lessons?.length || 0} materi</span>
-                                </div>
-                                <Badge className={getDifficultyColor(course.difficulty_level)} style={{ fontSize: '10px' }}>
-                                  {getDifficultyLabel(course.difficulty_level)}
-                                </Badge>
-                              </div>
-
-                              {progress > 0 && !isLocked && (
-                                <div className="mb-3">
-                                  <div className="flex items-center justify-between text-xs mb-1">
-                                    <span>Progress</span>
-                                    <span>{progress}%</span>
-                                  </div>
-                                  <Progress value={progress} className="h-1" />
-                                </div>
-                              )}
-
-                              <Button 
-                                size="sm"
-                                className="w-full"
-                                disabled={isLocked}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  startLearning(course.id, index);
-                                }}
-                              >
-                                {isLocked ? (
-                                  <>
-                                    <Lock className="w-3 h-3 mr-2" />
-                                    Upgrade untuk Akses
-                                  </>
-                                ) : (
-                                  <>
-                                    {progress > 0 ? 'Lanjutkan' : 'Mulai Belajar'}
-                                    <Play className="w-3 h-3 ml-2" />
-                                  </>
-                                )}
-                              </Button>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
-              )}
-
-              {activeSection === 'my' && (
-                <div className="grid grid-cols-1 gap-4">
-                  {courses.filter(course => {
-                    const progress = getCourseProgress(course.id);
-                    return progress > 0 && progress < 100;
-                  }).map((course, index) => {
-                    const progress = getCourseProgress(course.id);
-                    
-                    return (
-                      <Card 
-                        key={course.id} 
-                        className="shadow-card hover:shadow-floating transition-all cursor-pointer group"
-                        onClick={() => handleCourseClick(course, index)}
-                      >
-                        <CardContent className="p-4">
-                          <div className="flex items-start gap-4">
-                            <div className="w-16 h-16 bg-muted rounded-lg overflow-hidden shrink-0">
-                              {course.thumbnail_url ? (
-                                <img 
-                                  src={course.thumbnail_url} 
-                                  alt={course.title}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-full h-full bg-muted flex items-center justify-center">
-                                  <BookOpen className="w-6 h-6 text-muted-foreground" />
-                                </div>
-                              )}
-                            </div>
-                            
-                            <div className="flex-1 min-w-0">
-                              <h4 className="font-semibold text-base line-clamp-2 group-hover:text-primary transition-colors mb-2">
-                                {course.title}
-                              </h4>
-                              <p className="text-muted-foreground text-sm line-clamp-2 mb-3">
-                                {course.description}
-                              </p>
-
-                              <div className="mb-3">
-                                <div className="flex items-center justify-between text-xs mb-1">
-                                  <span>Progress</span>
-                                  <span>{progress}%</span>
-                                </div>
-                                <Progress value={progress} className="h-1" />
-                              </div>
-
-                              <Button 
-                                size="sm"
-                                className="w-full"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  startLearning(course.id, index);
-                                }}
-                              >
-                                <Play className="w-3 h-3 mr-2" />
-                                Lanjutkan Belajar
-                              </Button>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
-              )}
-
-              {activeSection === 'finished' && (
-                <div className="grid grid-cols-1 gap-4">
-                  {courses.filter(course => {
-                    const progress = getCourseProgress(course.id);
-                    return progress === 100;
-                  }).map((course, index) => {
-                    return (
-                      <Card 
-                        key={course.id} 
-                        className="shadow-card hover:shadow-floating transition-all cursor-pointer group border-green-200"
-                        onClick={() => handleCourseClick(course, index)}
-                      >
-                        <CardContent className="p-4">
-                          <div className="flex items-start gap-4">
-                            <div className="w-16 h-16 bg-muted rounded-lg overflow-hidden shrink-0">
-                              {course.thumbnail_url ? (
-                                <img 
-                                  src={course.thumbnail_url} 
-                                  alt={course.title}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-full h-full bg-muted flex items-center justify-center">
-                                  <BookOpen className="w-6 h-6 text-muted-foreground" />
-                                </div>
-                              )}
-                            </div>
-                            
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-start justify-between mb-2">
-                                <h4 className="font-semibold text-base line-clamp-2 group-hover:text-primary transition-colors">
-                                  {course.title}
-                                </h4>
-                                <Badge className="bg-green-100 text-green-800 ml-2 shrink-0">
-                                  <Award className="w-3 h-3 mr-1" />
-                                  Selesai
-                                </Badge>
-                              </div>
-                              <p className="text-muted-foreground text-sm line-clamp-2 mb-3">
-                                {course.description}
-                              </p>
-
-                              <Button 
-                                size="sm"
-                                className="w-full"
-                                variant="outline"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleCourseClick(course, index);
-                                }}
-                              >
-                                <Award className="w-3 h-3 mr-2" />
-                                Lihat Sertifikat
-                              </Button>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
-              )}
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           </div>
         </main>
         
-        {/* Bottom Navigation Bar for Mobile */}
         <BottomNavigationBar />
       </div>
     </SidebarProvider>
