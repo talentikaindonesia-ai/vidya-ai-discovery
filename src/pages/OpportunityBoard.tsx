@@ -14,7 +14,7 @@ interface Opportunity {
   id: string;
   title: string;
   organization: string;
-  type: 'scholarship' | 'competition' | 'internship';
+  type: 'scholarship' | 'competition' | 'internship' | 'job' | 'conference';
   category: string;
   location: string;
   description: string;
@@ -32,93 +32,47 @@ const OpportunityBoard = () => {
 
   useEffect(() => {
     loadOpportunities();
-    setLoading(false);
   }, []);
 
-  const loadOpportunities = () => {
-    const mockOpportunities: Opportunity[] = [
-      {
-        id: "1",
-        title: "Beasiswa LPDP S2 Luar Negeri",
-        organization: "LPDP",
-        type: "scholarship",
-        category: "Education",
-        location: "Internasional",
-        description: "Beasiswa penuh untuk program magister di universitas terbaik dunia dengan dukungan biaya hidup dan penelitian.",
-        link: "https://lpdp.kemenkeu.go.id"
-      },
-      {
-        id: "2",
-        title: "Kompetisi Data Science Indonesia",
-        organization: "Dicoding & Google",
-        type: "competition",
-        category: "Technology",
-        location: "Online",
-        description: "Kompetisi analisis data terbesar di Indonesia dengan hadiah total 500 juta rupiah dan kesempatan magang di perusahaan teknologi.",
-        link: "https://dicoding.com/competition"
-      },
-      {
-        id: "3",
-        title: "Internship Program - Product Manager",
-        organization: "GoTo Group",
-        type: "internship",
-        category: "Business",
-        location: "Jakarta",
-        description: "Program magang 6 bulan sebagai Product Manager dengan mentorship langsung dari senior PM dan project nyata.",
-        link: "https://careers.goto.com"
-      },
-      {
-        id: "4",
-        title: "Olimpiade Sains Nasional",
-        organization: "Kemendikbud",
-        type: "competition",
-        category: "Science",
-        location: "Nasional",
-        description: "Kompetisi sains tingkat nasional untuk siswa SMA dengan kesempatan mewakili Indonesia di olimpiade internasional.",
-        link: "https://osn.kemdikbud.go.id"
-      },
-      {
-        id: "5",
-        title: "Beasiswa BCA Finance",
-        organization: "BCA Finance",
-        type: "scholarship",
-        category: "Finance",
-        location: "Indonesia",
-        description: "Beasiswa untuk mahasiswa S1 jurusan ekonomi dan bisnis dengan program magang dan jaminan kerja.",
-        link: "https://bcafinance.co.id/scholarship"
-      },
-      {
-        id: "6",
-        title: "UI/UX Design Challenge",
-        organization: "Figma Community Indonesia",
-        type: "competition",
-        category: "Design",
-        location: "Online",
-        description: "Kompetisi desain UI/UX dengan tema 'Design for Good' dan hadiah peralatan desain senilai 50 juta rupiah.",
-        link: "https://figma.com/community"
-      },
-      {
-        id: "7",
-        title: "Google Developer Student Club",
-        organization: "Google",
-        type: "internship",
-        category: "Technology",
-        location: "Online",
-        description: "Program pengembangan mahasiswa dengan fokus pada teknologi dan inovasi digital.",
-        link: "https://developers.google.com/community/gdsc"
-      },
-      {
-        id: "8",
-        title: "Beasiswa Unggulan Kemendikbud",
-        organization: "Kemendikbud",
-        type: "scholarship",
-        category: "Education",
-        location: "Indonesia",
-        description: "Beasiswa untuk mahasiswa berprestasi dengan dukungan penuh biaya pendidikan.",
-        link: "https://beasiswaunggulan.kemdikbud.go.id"
+  const loadOpportunities = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('scraped_content')
+        .select('*')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error loading opportunities:', error);
+        toast.error('Gagal memuat peluang');
+        return;
       }
-    ];
-    setOpportunities(mockOpportunities);
+
+      // Transform database data to match component interface
+      const transformedOpportunities: Opportunity[] = data.map(item => ({
+        id: item.id,
+        title: item.title,
+        organization: item.organizer || 'Unknown',
+        type: item.category === 'SCHOLARSHIP' ? 'scholarship' : 
+              item.category === 'COMPETITION' ? 'competition' : 
+              item.category === 'INTERNSHIP' ? 'internship' :
+              item.category === 'JOB' ? 'job' :
+              item.category === 'CONFERENCE' ? 'conference' :
+              'scholarship', // Default fallback
+        category: item.category,
+        location: item.location || 'Unknown',
+        description: item.description || 'No description available',
+        link: item.url || item.source_website || '#'
+      }));
+
+      setOpportunities(transformedOpportunities);
+    } catch (error) {
+      console.error('Error fetching opportunities:', error);
+      toast.error('Terjadi kesalahan saat memuat peluang');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleOpportunityClick = (opportunity: Opportunity) => {
@@ -129,7 +83,9 @@ const OpportunityBoard = () => {
     { id: "all", label: "Semua", count: opportunities.length },
     { id: "scholarship", label: "Beasiswa", count: opportunities.filter(o => o.type === 'scholarship').length },
     { id: "competition", label: "Kompetisi", count: opportunities.filter(o => o.type === 'competition').length },
-    { id: "internship", label: "Magang", count: opportunities.filter(o => o.type === 'internship').length }
+    { id: "internship", label: "Magang", count: opportunities.filter(o => o.type === 'internship').length },
+    { id: "job", label: "Lowongan Kerja", count: opportunities.filter(o => o.type === 'job').length },
+    { id: "conference", label: "Konferensi", count: opportunities.filter(o => o.type === 'conference').length }
   ];
   
   const filteredOpportunities = opportunities.filter(opp => {
@@ -213,6 +169,8 @@ const OpportunityBoard = () => {
                           {opportunity.type === 'scholarship' && <GraduationCap className="w-5 h-5 text-primary" />}
                           {opportunity.type === 'competition' && <Trophy className="w-5 h-5 text-primary" />}
                           {opportunity.type === 'internship' && <Briefcase className="w-5 h-5 text-primary" />}
+                          {opportunity.type === 'job' && <Briefcase className="w-5 h-5 text-primary" />}
+                          {opportunity.type === 'conference' && <Building2 className="w-5 h-5 text-primary" />}
                         </div>
                       </div>
                       
@@ -226,12 +184,18 @@ const OpportunityBoard = () => {
                             className={
                               opportunity.type === 'scholarship' ? 'bg-green-100 text-green-700' :
                               opportunity.type === 'competition' ? 'bg-purple-100 text-purple-700' :
-                              'bg-orange-100 text-orange-700'
+                              opportunity.type === 'internship' ? 'bg-orange-100 text-orange-700' :
+                              opportunity.type === 'job' ? 'bg-blue-100 text-blue-700' :
+                              opportunity.type === 'conference' ? 'bg-red-100 text-red-700' :
+                              'bg-gray-100 text-gray-700'
                             }
                           >
                             {opportunity.type === 'scholarship' ? 'Beasiswa' : 
                              opportunity.type === 'competition' ? 'Kompetisi' : 
-                             'Magang'}
+                             opportunity.type === 'internship' ? 'Magang' :
+                             opportunity.type === 'job' ? 'Lowongan Kerja' :
+                             opportunity.type === 'conference' ? 'Konferensi' :
+                             'Unknown'}
                           </Badge>
                         </div>
                         
