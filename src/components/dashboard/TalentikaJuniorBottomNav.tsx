@@ -9,7 +9,7 @@ const navigationItems = [
     label: "Home", 
     icon: BookOpen,
     description: "Dashboard Utama",
-    route: "/talentika-junior"
+    route: "/talentika-junior/dashboard"
   },
   {
     id: "discover",
@@ -45,7 +45,7 @@ export function TalentikaJuniorBottomNav() {
   // Determine current active section based on current route
   const getCurrentActiveSection = () => {
     const path = location.pathname;
-    if (path === "/talentika-junior") return "home";
+    if (path === "/talentika-junior/dashboard") return "home";
     if (path.includes("/discovery")) return "discover";
     if (path.includes("/games")) return "play";
     if (path.includes("/rewards")) return "profile";
