@@ -1,73 +1,100 @@
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Briefcase, Calendar, MapPin, Trophy, Users, ArrowRight } from "lucide-react";
-import { useState } from "react";
 
 const OpportunitiesPreview = () => {
   const [activeFilter, setActiveFilter] = useState("Semua");
+  const [opportunities, setOpportunities] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filterTabs = [
-    { label: "Semua", count: 12 },
-    { label: "Beasiswa", count: 3 },
-    { label: "Kompetisi", count: 5 },
-    { label: "Magang", count: 4 }
-  ];
+  useEffect(() => {
+    loadOpportunities();
+  }, []);
 
-  const opportunities = [
-    {
-      id: 1,
-      title: "Beasiswa S1 Teknik Informatika",
-      description: "Program beasiswa penuh untuk mahasiswa berprestasi di bidang teknologi",
-      type: "Beasiswa",
-      deadline: "2024-02-15",
-      location: "Jakarta",
-      organizer: "Tech Foundation",
-      tags: ["Teknologi", "S1", "Full Scholarship"]
-    },
-    {
-      id: 2,
-      title: "Lomba Desain UI/UX Nasional",
-      description: "Kompetisi desain antarmuka untuk mahasiswa dan profesional muda",
-      type: "Kompetisi",
-      deadline: "2024-02-20",
-      location: "Online",
-      organizer: "Design Community",
-      tags: ["Design", "UI/UX", "Nasional"]
-    },
-    {
-      id: 3,
-      title: "Magang Digital Marketing",
-      description: "Program magang 6 bulan di startup teknologi terkemuka",
-      type: "Magang",
-      deadline: "2024-02-10",
-      location: "Bandung",
-      organizer: "TechStart Inc",
-      tags: ["Marketing", "Startup", "6 Bulan"]
+  const loadOpportunities = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('scraped_content')
+        .select('*')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(6);
+
+      if (error) throw error;
+      setOpportunities(data || []);
+    } catch (error) {
+      console.error('Error loading opportunities:', error);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
+
+  const getFilterTabs = () => {
+    const allCount = opportunities.length;
+    const scholarshipCount = opportunities.filter(opp => opp.category === 'SCHOLARSHIP').length;
+    const competitionCount = opportunities.filter(opp => opp.category === 'COMPETITION').length;
+    const internshipCount = opportunities.filter(opp => opp.category === 'JOB').length;
+
+    return [
+      { label: "Semua", count: allCount },
+      { label: "Beasiswa", count: scholarshipCount },
+      { label: "Kompetisi", count: competitionCount },
+      { label: "Magang", count: internshipCount }
+    ];
+  };
 
   const filteredOpportunities = activeFilter === "Semua" 
     ? opportunities 
-    : opportunities.filter(opp => opp.type === activeFilter);
+    : opportunities.filter(opp => {
+        if (activeFilter === "Beasiswa") return opp.category === 'SCHOLARSHIP';
+        if (activeFilter === "Kompetisi") return opp.category === 'COMPETITION';
+        if (activeFilter === "Magang") return opp.category === 'JOB';
+        return false;
+      });
 
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case "Beasiswa": return <Trophy className="w-4 h-4" />;
-      case "Kompetisi": return <Users className="w-4 h-4" />;
-      case "Magang": return <Briefcase className="w-4 h-4" />;
+  const getTypeIcon = (category: string) => {
+    switch (category) {
+      case "SCHOLARSHIP": return <Trophy className="w-4 h-4" />;
+      case "COMPETITION": return <Users className="w-4 h-4" />;
+      case "JOB": return <Briefcase className="w-4 h-4" />;
       default: return <Briefcase className="w-4 h-4" />;
     }
   };
 
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case "Beasiswa": return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case "Kompetisi": return "bg-blue-100 text-blue-800 border-blue-200";
-      case "Magang": return "bg-green-100 text-green-800 border-green-200";
+  const getTypeColor = (category: string) => {
+    switch (category) {
+      case "SCHOLARSHIP": return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case "COMPETITION": return "bg-blue-100 text-blue-800 border-blue-200";
+      case "JOB": return "bg-green-100 text-green-800 border-green-200";
       default: return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
+
+  const getTypeLabel = (category: string) => {
+    switch (category) {
+      case "SCHOLARSHIP": return "Beasiswa";
+      case "COMPETITION": return "Kompetisi";
+      case "JOB": return "Magang";
+      default: return category;
+    }
+  };
+
+  if (loading) {
+    return (
+      <section className="py-12 bg-muted/30">
+        <div className="container px-4">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  const filterTabs = getFilterTabs();
 
   return (
     <section className="py-20 bg-muted/30">
@@ -110,13 +137,13 @@ const OpportunitiesPreview = () => {
             <Card key={opportunity.id} className="group hover:shadow-card transition-all duration-300 hover:-translate-y-1 bg-card border-primary/10">
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between mb-2">
-                  <Badge variant="outline" className={`${getTypeColor(opportunity.type)} flex items-center gap-1`}>
-                    {getTypeIcon(opportunity.type)}
-                    {opportunity.type}
+                  <Badge variant="outline" className={`${getTypeColor(opportunity.category)} flex items-center gap-1`}>
+                    {getTypeIcon(opportunity.category)}
+                    {getTypeLabel(opportunity.category)}
                   </Badge>
                   <div className="text-xs text-muted-foreground flex items-center gap-1">
                     <Calendar className="w-3 h-3" />
-                    {new Date(opportunity.deadline).toLocaleDateString('id-ID')}
+                    {opportunity.deadline ? new Date(opportunity.deadline).toLocaleDateString('id-ID') : 'TBA'}
                   </div>
                 </div>
                 <CardTitle className="text-lg group-hover:text-primary transition-colors line-clamp-2">
@@ -130,32 +157,47 @@ const OpportunitiesPreview = () => {
                 <div className="space-y-2 mb-4">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <MapPin className="w-4 h-4" />
-                    <span>{opportunity.location}</span>
+                    <span>{opportunity.location || 'Online'}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Users className="w-4 h-4" />
-                    <span>{opportunity.organizer}</span>
+                    <span>{opportunity.organizer || 'Tidak diketahui'}</span>
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-1 mb-4">
-                  {opportunity.tags.slice(0, 2).map((tag, index) => (
+                  {opportunity.tags && opportunity.tags.slice(0, 2).map((tag: string, index: number) => (
                     <Badge key={index} variant="secondary" className="text-xs">
                       {tag}
                     </Badge>
                   ))}
-                  {opportunity.tags.length > 2 && (
+                  {opportunity.tags && opportunity.tags.length > 2 && (
                     <Badge variant="secondary" className="text-xs">
                       +{opportunity.tags.length - 2}
                     </Badge>
                   )}
                 </div>
-                <Button variant="outline" size="sm" className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
+                  onClick={() => window.open(opportunity.url, '_blank')}
+                >
                   Lihat Detail
                 </Button>
               </CardContent>
             </Card>
           ))}
         </div>
+
+        {filteredOpportunities.length === 0 && !loading && (
+          <div className="text-center py-12">
+            <Briefcase className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-xl font-semibold mb-2">Belum Ada Opportunity</h3>
+            <p className="text-muted-foreground">
+              Opportunity untuk kategori ini akan segera tersedia.
+            </p>
+          </div>
+        )}
 
         <div className="text-center">
           <Button 

@@ -14,7 +14,6 @@ import CoursesPreview from "@/components/CoursesPreview";
 import OpportunitiesPreview from "@/components/OpportunitiesPreview"; 
 import CommunityPreview from "@/components/CommunityPreview";
 import { BottomNavigationBar } from "@/components/dashboard/BottomNavigationBar";
-import { ScrapedContent } from "@/components/dashboard/ScrapedContent";
 import { CoursesSection } from "@/components/dashboard/CoursesSection";
 import { ChallengesSection } from "@/components/dashboard/ChallengesSection";
 import { OpportunitiesSection } from "@/components/dashboard/OpportunitiesSection";
@@ -192,7 +191,6 @@ const Dashboard = () => {
             <CoursesPreview />
             <OpportunitiesPreview />
             <CommunityPreview userAssessment={profile} userInterests={userInterests} />
-            <ScrapedContent category={userInterests[0]?.interest_categories?.name} />
           </div>
         );
       case "courses":
@@ -236,7 +234,6 @@ const Dashboard = () => {
             <CoursesPreview />
             <OpportunitiesPreview />
             <CommunityPreview userAssessment={profile} userInterests={userInterests} />
-            <ScrapedContent category={userInterests[0]?.interest_categories?.name} />
           </div>
         );
     }
