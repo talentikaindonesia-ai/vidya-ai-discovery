@@ -22,6 +22,7 @@ import Subscription from "./pages/Subscription";
 import QuizExplore from "./pages/QuizExplore";
 import Profile from "./pages/Profile";
 import { ContentDetailView } from "./components/learning/ContentDetailView";
+import { CategoryView } from "./components/learning/CategoryView";
 import { ContentEditor } from "./components/admin/ContentEditor";
 import TalentikaJuniorDashboard from "./pages/TalentikaJuniorDashboard";
 import TalentikaJuniorDiscovery from "./pages/TalentikaJuniorDiscovery";
@@ -75,6 +76,7 @@ const App = () => {
             <Route path="/discovery" element={user ? <DiscoveryTimeline /> : <Navigate to="/auth" />} />
             <Route path="/learning" element={user ? <LearningHub /> : <Navigate to="/auth" />} />
             <Route path="/learning/content/:contentId" element={user ? <ContentDetailView /> : <Navigate to="/auth" />} />
+            <Route path="/learning/category/:categoryId" element={user ? <CategoryView /> : <Navigate to="/auth" />} />
             <Route path="/portfolio" element={user ? <PortfolioBuilder /> : <Navigate to="/auth" />} />
             <Route path="/opportunities" element={user ? <OpportunityBoard /> : <Navigate to="/auth" />} />
             <Route path="/community" element={user ? <CommunityForum /> : <Navigate to="/auth" />} />

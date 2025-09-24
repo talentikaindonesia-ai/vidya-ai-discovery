@@ -527,7 +527,11 @@ const LearningHub = () => {
                 <CardContent>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {courseCategories.map((category) => (
-                      <Card key={category.id} className="cursor-pointer hover:shadow-md transition-all hover:-translate-y-1 text-center">
+                      <Card 
+                        key={category.id} 
+                        className="cursor-pointer hover:shadow-md transition-all hover:-translate-y-1 text-center"
+                        onClick={() => navigate(`/learning/category/${category.id}`)}
+                      >
                         <CardContent className="p-4">
                           <div className={`p-3 rounded-lg ${category.color} text-white w-fit mx-auto mb-3`}>
                             <category.icon className="w-6 h-6" />
