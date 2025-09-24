@@ -11,7 +11,7 @@ const Header = () => {
     { label: "Cara Kerja", href: "#how-it-works" },
     { label: "Harga", href: "#pricing" },
     { label: "Testimoni", href: "#testimonials" },
-    // { label: "Talentika Junior", href: "#talentika-junior", highlight: true }
+    { label: "Talentika Junior", href: "/talentika-junior", highlight: true }
   ];
 
   return (
@@ -39,7 +39,11 @@ const Header = () => {
               <a
                 key={item.label}
                 href={item.href}
-                className="transition-colors font-medium text-foreground hover:text-primary"
+                className={`transition-colors font-medium ${
+                  item.highlight 
+                    ? "text-primary hover:text-primary/80 bg-primary/10 px-3 py-1 rounded-lg" 
+                    : "text-foreground hover:text-primary"
+                }`}
               >
                 {item.label}
               </a>
@@ -81,7 +85,11 @@ const Header = () => {
                 <a
                   key={item.label}
                   href={item.href}
-                  className="transition-colors font-medium text-foreground hover:text-primary"
+                  className={`transition-colors font-medium ${
+                    item.highlight 
+                      ? "text-primary hover:text-primary/80 bg-primary/10 px-3 py-1 rounded-lg" 
+                      : "text-foreground hover:text-primary"
+                  }`}
                   onClick={() => setIsMenuOpen(false)}
                 >
                   {item.label}

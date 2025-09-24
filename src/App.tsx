@@ -24,6 +24,7 @@ import Profile from "./pages/Profile";
 import { ContentDetailView } from "./components/learning/ContentDetailView";
 import { CategoryView } from "./components/learning/CategoryView";
 import { ContentEditor } from "./components/admin/ContentEditor";
+import TalentikaJuniorLanding from "./pages/TalentikaJuniorLanding";
 import TalentikaJuniorDashboard from "./pages/TalentikaJuniorDashboard";
 import TalentikaJuniorDiscovery from "./pages/TalentikaJuniorDiscovery";
 import TalentikaJuniorLearning from "./pages/TalentikaJuniorLearning";
@@ -86,7 +87,8 @@ const App = () => {
             <Route path="/profile" element={user ? <Profile /> : <Navigate to="/auth" />} />
             <Route path="/admin" element={user ? <Admin /> : <Navigate to="/auth" />} />
             <Route path="/admin/content/edit/:contentId" element={user ? <ContentEditor /> : <Navigate to="/auth" />} />
-            <Route path="/talentika-junior" element={user ? <TalentikaJuniorDashboard /> : <Navigate to="/auth" />} />
+            <Route path="/talentika-junior" element={<TalentikaJuniorLanding />} />
+            <Route path="/talentika-junior/dashboard" element={user ? <TalentikaJuniorDashboard /> : <Navigate to="/auth" />} />
             <Route path="/talentika-junior/discovery" element={user ? <TalentikaJuniorDiscovery /> : <Navigate to="/auth" />} />
             <Route path="/talentika-junior/learning" element={user ? <TalentikaJuniorLearning /> : <Navigate to="/auth" />} />
             <Route path="/talentika-junior/games" element={user ? <TalentikaJuniorGames /> : <Navigate to="/auth" />} />
