@@ -5,6 +5,7 @@ import HowItWorks from "@/components/HowItWorks";
 import Pricing from "@/components/Pricing";
 import Testimonials from "@/components/Testimonials";
 import TalentikaJunior from "@/components/TalentikaJunior";
+import PartnershipCTA from "@/components/PartnershipCTA";
 import Footer from "@/components/Footer";
 
 const Index = () => {
@@ -30,6 +31,9 @@ const Index = () => {
         {/* <section id="talentika-junior">
           <TalentikaJunior />
         </section> */}
+        <section id="partnership">
+          <PartnershipCTA />
+        </section>
       </main>
       <Footer />
     </div>
