@@ -1,4 +1,4 @@
-import { MessageCircle, Users, Building2, Trophy } from "lucide-react";
+import { MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const PartnershipCTA = () => {
@@ -9,27 +9,6 @@ const PartnershipCTA = () => {
     window.open(whatsappUrl, '_blank');
   };
 
-  const stats = [
-    {
-      icon: Users,
-      value: "95%",
-      label: "Tingkat Kepuasan",
-      color: "text-primary"
-    },
-    {
-      icon: Building2,
-      value: "1,000+",
-      label: "Sekolah Partner",
-      color: "text-secondary"
-    },
-    {
-      icon: Trophy,
-      value: "10,000+",
-      label: "Siswa Terdaftar",
-      color: "text-accent"
-    }
-  ];
-
   return (
     <section className="py-20 bg-gradient-to-br from-muted/30 to-muted/60 relative overflow-hidden">
       {/* Background decoration */}
@@ -38,21 +17,6 @@ const PartnershipCTA = () => {
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-secondary/10 rounded-full blur-3xl"></div>
       
       <div className="container mx-auto px-4 relative z-10">
-        {/* Stats Section */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-          {stats.map((stat, index) => (
-            <div key={index} className="text-center group">
-              <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full bg-background shadow-soft mb-4 group-hover:shadow-floating transition-all duration-300 ${stat.color}`}>
-                <stat.icon className="w-8 h-8" />
-              </div>
-              <div className={`text-4xl md:text-5xl font-bold mb-2 ${stat.color}`}>
-                {stat.value}
-              </div>
-              <p className="text-muted-foreground font-medium">{stat.label}</p>
-            </div>
-          ))}
-        </div>
-
         {/* CTA Section */}
         <div className="bg-card rounded-3xl p-8 md:p-12 shadow-floating border border-primary/10 text-center max-w-4xl mx-auto">
           <div className="mb-8">
