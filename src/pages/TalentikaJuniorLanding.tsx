@@ -10,17 +10,12 @@ import {
   Microscope,
   Cpu,
   Lightbulb,
-  Users,
   Trophy,
   Target,
-  School,
-  Building2,
   Phone,
   Award,
   MapPin,
   Camera,
-  Clock,
-  CheckCircle,
   ArrowRight
 } from "lucide-react";
 import Header from "@/components/Header";
@@ -75,32 +70,6 @@ const TalentikaJuniorLanding = () => {
     }
   ];
 
-  const targetAudience = [
-    {
-      icon: Users,
-      title: "Untuk Anak",
-      description: "Main sambil belajar, portofolio digital",
-      benefits: ["Challenge seru", "XP & Badge", "Portofolio digital"]
-    },
-    {
-      icon: Heart,
-      title: "Untuk Orang Tua", 
-      description: "Aktivitas positif, terpantau, punya value nyata",
-      benefits: ["Progress terpantau", "Aktivitas edukatif", "Skill terukur"]
-    },
-    {
-      icon: School,
-      title: "Untuk Sekolah",
-      description: "Field trip edukatif & integrasi pembelajaran",
-      benefits: ["Program terintegrasi", "Experience Center", "Modul kurikulum"]
-    },
-    {
-      icon: Building2,
-      title: "Untuk Brand",
-      description: "CSR & sponsorship dengan impact",
-      benefits: ["CSR program", "Brand exposure", "Impact measurement"]
-    }
-  ];
 
   const achievements = [
     { name: "Alex S.", achievement: "Jagoan Sains Minggu Ini", xp: 2450, badge: "🔬" },
@@ -423,68 +392,6 @@ const TalentikaJuniorLanding = () => {
         </div>
       </section>
 
-      {/* Untuk Siapa? */}
-      <section className="py-20 bg-background">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold mb-6">
-              Untuk <span className="text-primary">Siapa</span>?
-            </h2>
-            <p className="text-lg text-muted-foreground">
-              Talentika Junior dirancang untuk berbagai kalangan
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {targetAudience.map((audience, index) => (
-              <Card key={index} className="p-6 text-center hover:shadow-lg transition-shadow duration-300">
-                <div className="w-16 h-16 rounded-full bg-primary/10 mx-auto mb-4 flex items-center justify-center">
-                  <audience.icon className="w-8 h-8 text-primary" />
-                </div>
-                <h3 className="font-bold text-xl mb-2">{audience.title}</h3>
-                <p className="text-muted-foreground mb-4">{audience.description}</p>
-                <div className="space-y-2">
-                  {audience.benefits.map((benefit, idx) => (
-                    <div key={idx} className="flex items-center gap-2 text-sm">
-                      <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
-                      <span>{benefit}</span>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Partner & Sponsor Section */}
-      <section className="py-20 bg-muted/30">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold mb-6">
-              Partner & <span className="text-primary">Sponsor</span>
-            </h2>
-            <p className="text-lg text-muted-foreground">
-              Bergabung dengan mitra terpercaya kami
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8 mb-12">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="aspect-square bg-background rounded-lg shadow-sm flex items-center justify-center">
-                <Building2 className="w-12 h-12 text-muted-foreground" />
-              </div>
-            ))}
-          </div>
-
-          <div className="text-center">
-            <Button size="lg" onClick={handleWhatsAppPartner}>
-              <Phone className="w-4 h-4 mr-2" />
-              Bergabung Jadi Mitra Talentika
-            </Button>
-          </div>
-        </div>
-      </section>
 
       {/* Final CTA */}
       <section className="py-20 bg-gradient-to-br from-primary/10 via-accent/10 to-secondary/10">
