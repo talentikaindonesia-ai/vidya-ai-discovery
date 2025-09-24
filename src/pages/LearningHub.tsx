@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Play, Clock, BookOpen, Search, Filter, MessageSquare, Briefcase, Leaf, Globe, Cpu, TreePine, Lightbulb, Heart, ArrowRight, Users, Code, TrendingUp } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { getUserSubscriptionInfo } from "@/lib/subscription";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
@@ -37,6 +38,7 @@ const LearningHub = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   const courseCategories: CourseCategory[] = [
     {
@@ -477,7 +479,11 @@ const LearningHub = () => {
                   <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {recommendedCourses.map((course) => (
-                        <Card key={course.id} className="cursor-pointer hover:shadow-md transition-shadow">
+                        <Card 
+                          key={course.id} 
+                          className="cursor-pointer hover:shadow-md transition-shadow"
+                          onClick={() => navigate(`/learning/content/${course.id}`)}
+                        >
                           <CardContent className="p-4">
                             <div className="flex items-start justify-between mb-2">
                               <Badge className={course.categoryColor + " text-white text-xs"}>

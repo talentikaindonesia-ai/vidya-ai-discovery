@@ -2,7 +2,9 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import Index from "./pages/Index";
 import Assessment from "./pages/Assessment";
 import Auth from "./pages/Auth";
@@ -19,7 +21,8 @@ import DashboardGamified from "./pages/DashboardGamified";
 import Subscription from "./pages/Subscription";
 import QuizExplore from "./pages/QuizExplore";
 import Profile from "./pages/Profile";
-import { ContentViewer } from "./components/dashboard/ContentViewer";
+import { ContentDetailView } from "./components/learning/ContentDetailView";
+import { ContentEditor } from "./components/admin/ContentEditor";
 import TalentikaJuniorDashboard from "./pages/TalentikaJuniorDashboard";
 import TalentikaJuniorDiscovery from "./pages/TalentikaJuniorDiscovery";
 import TalentikaJuniorLearning from "./pages/TalentikaJuniorLearning";
@@ -28,40 +31,71 @@ import TalentikaJuniorRewards from "./pages/TalentikaJuniorRewards";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/onboarding" element={<Onboarding />} />
-          <Route path="/assessment" element={<Assessment />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/discovery" element={<DiscoveryTimeline />} />
-          <Route path="/learning" element={<LearningHub />} />
-          <Route path="/learning/content/:contentId" element={<ContentViewer />} />
-          <Route path="/portfolio" element={<PortfolioBuilder />} />
-          <Route path="/opportunities" element={<OpportunityBoard />} />
-          <Route path="/community" element={<CommunityForum />} />
-          <Route path="/explore" element={<QuizExplore />} />
-          <Route path="/dashboard-gamified" element={<DashboardGamified />} />
-          <Route path="/subscription" element={<Subscription />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/admin" element={<Admin />} />
-          <Route path="/talentika-junior" element={<TalentikaJuniorDashboard />} />
-          <Route path="/talentika-junior/discovery" element={<TalentikaJuniorDiscovery />} />
-          <Route path="/talentika-junior/learning" element={<TalentikaJuniorLearning />} />
-          <Route path="/talentika-junior/games" element={<TalentikaJuniorGames />} />
-          <Route path="/talentika-junior/rewards" element={<TalentikaJuniorRewards />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/onboarding" element={user ? <Onboarding /> : <Navigate to="/auth" />} />
+            <Route path="/assessment" element={user ? <Assessment /> : <Navigate to="/auth" />} />
+            <Route path="/dashboard" element={user ? <Dashboard /> : <Navigate to="/auth" />} />
+            <Route path="/discovery" element={user ? <DiscoveryTimeline /> : <Navigate to="/auth" />} />
+            <Route path="/learning" element={user ? <LearningHub /> : <Navigate to="/auth" />} />
+            <Route path="/learning/content/:contentId" element={user ? <ContentDetailView /> : <Navigate to="/auth" />} />
+            <Route path="/portfolio" element={user ? <PortfolioBuilder /> : <Navigate to="/auth" />} />
+            <Route path="/opportunities" element={user ? <OpportunityBoard /> : <Navigate to="/auth" />} />
+            <Route path="/community" element={user ? <CommunityForum /> : <Navigate to="/auth" />} />
+            <Route path="/explore" element={user ? <QuizExplore /> : <Navigate to="/auth" />} />
+            <Route path="/dashboard-gamified" element={user ? <DashboardGamified /> : <Navigate to="/auth" />} />
+            <Route path="/subscription" element={user ? <Subscription /> : <Navigate to="/auth" />} />
+            <Route path="/profile" element={user ? <Profile /> : <Navigate to="/auth" />} />
+            <Route path="/admin" element={user ? <Admin /> : <Navigate to="/auth" />} />
+            <Route path="/admin/content/edit/:contentId" element={user ? <ContentEditor /> : <Navigate to="/auth" />} />
+            <Route path="/talentika-junior" element={user ? <TalentikaJuniorDashboard /> : <Navigate to="/auth" />} />
+            <Route path="/talentika-junior/discovery" element={user ? <TalentikaJuniorDiscovery /> : <Navigate to="/auth" />} />
+            <Route path="/talentika-junior/learning" element={user ? <TalentikaJuniorLearning /> : <Navigate to="/auth" />} />
+            <Route path="/talentika-junior/games" element={user ? <TalentikaJuniorGames /> : <Navigate to="/auth" />} />
+            <Route path="/talentika-junior/rewards" element={user ? <TalentikaJuniorRewards /> : <Navigate to="/auth" />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
