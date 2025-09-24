@@ -29,7 +29,7 @@ const TalentikaJuniorLanding = () => {
   };
 
   const handleRegister = () => {
-    window.location.href = '/auth?redirect=talentika-junior';
+    window.location.href = '/talentika-junior/dashboard';
   };
 
   const fields = [
