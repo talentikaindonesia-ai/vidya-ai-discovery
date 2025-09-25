@@ -2,6 +2,12 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+} from "@/components/ui/carousel";
+import Autoplay from "embla-carousel-autoplay";
 import { 
   Star, 
   Sparkles, 
@@ -161,7 +167,39 @@ const TalentikaJuniorLanding = () => {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 lg:grid-cols-5 gap-6 mb-12">
+          {/* Mobile Slider - Hidden on desktop */}
+          <div className="block md:hidden mb-12">
+            <Carousel
+              plugins={[
+                Autoplay({
+                  delay: 3000,
+                  stopOnInteraction: false,
+                })
+              ]}
+              opts={{
+                align: "start",
+                loop: true,
+              }}
+              className="w-full"
+            >
+              <CarouselContent className="-ml-2 md:-ml-4">
+                {fields.map((field, index) => (
+                  <CarouselItem key={index} className="pl-2 md:pl-4 basis-4/5">
+                    <Card className="p-6 text-center hover:shadow-lg transition-shadow duration-300 h-full">
+                      <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full ${field.bgColor} mb-4`}>
+                        <field.icon className={`w-8 h-8 ${field.color}`} />
+                      </div>
+                      <h3 className="font-bold mb-2">{field.title}</h3>
+                      <p className="text-sm text-muted-foreground">{field.description}</p>
+                    </Card>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+            </Carousel>
+          </div>
+
+          {/* Desktop Grid - Hidden on mobile */}
+          <div className="hidden md:grid md:grid-cols-3 lg:grid-cols-5 gap-6 mb-12">
             {fields.map((field, index) => (
               <Card key={index} className="p-6 text-center hover:shadow-lg transition-shadow duration-300">
                 <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full ${field.bgColor} mb-4`}>
