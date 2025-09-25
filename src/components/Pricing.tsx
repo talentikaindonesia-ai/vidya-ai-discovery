@@ -28,70 +28,64 @@ const Pricing = () => {
     };
   }, [api, onSelect]);
   
-  const handleWhatsAppContact = () => {
-    window.open('https://wa.me/6285155556666?text=Halo%20Talentika%2C%20saya%20tertarik%20dengan%20paket%20sekolah%20untuk%20institusi%20pendidikan', '_blank');
-  };
-  
   const plans = [
     {
-      name: "Individual",
+      name: "Individu",
       price: "39,000",
       period: "/bulan",
-      description: "Cocok untuk siswa dan mahasiswa yang ingin mengembangkan potensi diri",
+      description: "Cocok untuk pelajar & mahasiswa yang ingin kenali minat dan mulai kembangkan diri.",
       features: [
-        "Tes minat & bakat komprehensif",
-        "Assessment kepribadian & learning style", 
-        "Rekomendasi jurusan & karir",
-        "Akses ke 50+ course online",
-        "Progress tracking & analytics",
-        "1x konsultasi karir per bulan",
-        "Community forum access"
+        "Tes minat & bakat untuk kenali potensi",
+        "Rekomendasi jalur studi sesuai hasil assestment",
+        "Kursus online dasar untuk mulai belajar skill yang sesuai minatmu",
+        "Progress tracking agar tahu perkembangan diri",
+        "Akses kepada Peluang Mengembangkan diri (Beasiswa, Kompetisi, Karier, dll)",
+        "Akses forum komunitas untuk sharing & belajar bareng",
+      
       ],
-      benefit: "Temukan passion dan potensi terbaik Anda dengan panduan yang tepat.",
+      benefit: "Lebih mudah tentukan arah masa depan tanpa bingung.",
       popular: false,
       icon: BookOpen,
       color: "primary"
     },
     {
       name: "Premium",
-      price: "99,000", 
+      price: "99,000",
       period: "/bulan",
-      description: "Untuk yang serius mengembangkan karir dan membangun networking profesional",
+      description: "Untuk individu yang mengembangkan Minat, Bakat & Potensinya.",
       features: [
-        "Semua fitur Individual",
-        "Unlimited konsultasi dengan mentor",
-        "Akses ke program mentorship",
-        "Portfolio builder & review",
-        "Networking events & workshops",
-        "Job placement assistance",
-        "Sertifikat keahlian terverifikasi",
-        "Priority support 24/7"
+        "Semua fitur Individu",
+        "Analisis potensi & skill lebih lengkap",
+        "Konsultasi dengan mentor berpengalaman",
+        "Akses kursus & program premium",
+        "Portofolio builder untuk beasiswa/magang",
+        "Networking dengan profesional & industri",
+        "Akses lengkap kepada Peluang Mengembangkan diri (Beasiswa, Kompetisi, Karier, dll)",
+        "Sertifikat & pencatatan skill"
       ],
-      benefit: "Percepat karir Anda dengan mentorship dan networking berkualitas tinggi.",
+      benefit: "Lebih siap masuk dunia kerja & dapat peluang nyata lebih cepat.",
       popular: true,
       icon: Star,
       color: "accent"
     },
     {
       name: "School Package",
-      price: "Hubungi",
-      period: "Kami",
-      description: "Solusi lengkap untuk sekolah dan institusi pendidikan",
+      price: "3,999,000",
+      period: "/tahun",
+      description: "Solusi menyeluruh untuk sekolah & institusi pendidikan.",
       features: [
-        "Dashboard admin untuk sekolah",
-        "Bulk assessment untuk seluruh siswa",
-        "Analytics & reporting mendalam", 
+        "Dashboard multi-user untuk guru & siswa",
+        "Tes minat & bakat untuk siswa (100 Siswa)",
+        "Panel guru untuk pantau perkembangan",
+        "Laporan detail & progress monitoring",
         "Custom branding sekolah",
-        "Training untuk guru & konselor",
-        "Integration dengan sistem sekolah",
-        "Dedicated account manager",
-        "Custom workshop & seminar"
+        "Training & integrasi sistem",
+        "Insight & analytics"
       ],
-      benefit: "Tingkatkan kualitas bimbingan karir siswa dengan data yang komprehensif.",
+      benefit: "Sekolah lebih mudah mendukung siswa menemukan potensi & meningkatkan prestasi.",
       popular: false,
       icon: Users,
-      color: "secondary",
-      isWhatsApp: true
+      color: "secondary"
     }
   ];
 
@@ -149,7 +143,7 @@ const Pricing = () => {
                             <span className="text-3xl font-bold text-primary">Rp{plan.price}</span>
                             <span className="text-muted-foreground">{plan.period}</span>
                           </div>
-                          <CardDescription className="text-base leading-relaxed mb-4">
+                          <CardDescription className="text-base leading-relaxed">
                             {plan.description}
                           </CardDescription>
                         </CardHeader>
@@ -185,11 +179,8 @@ const Pricing = () => {
                                 : 'outline hover:bg-primary hover:text-white'
                             }`}
                             size="lg"
-                            onClick={plan.isWhatsApp ? handleWhatsAppContact : undefined}
                           >
-                            {plan.isWhatsApp ? (
-                              "Hubungi via WhatsApp"
-                            ) : (
+                            {plan.name === "School Package" ? "Hubungi Sales" : (
                               <a href="/subscription" className="w-full block text-center">
                                 Berlangganan Sekarang
                               </a>
