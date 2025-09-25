@@ -28,50 +28,70 @@ const Pricing = () => {
     };
   }, [api, onSelect]);
   
+  const handleWhatsAppContact = () => {
+    window.open('https://wa.me/6285155556666?text=Halo%20Talentika%2C%20saya%20tertarik%20dengan%20paket%20sekolah%20untuk%20institusi%20pendidikan', '_blank');
+  };
+  
   const plans = [
     {
-      name: "Individual",
-      price: "39,000",
+      name: "Personal",
+      price: "49,000",
       period: "/bulan",
-      description: "Untuk pelajar SMP/SMA & mahasiswa awal yang ingin menemukan potensi diri & arah studi.",
+      description: "Cocok untuk siswa dan mahasiswa yang ingin mengembangkan potensi diri",
       features: [
-        "Tes minat & bakat dasar",
-        "Basic assessment report (Lite)",
-        "Rekomendasi jalur studi awal",
-        "Akses kursus online dasar (skill umum)",
-        "Progress tracking",
-        "Forum komunitas umum",
-        "1x Konsultasi per bulan"
+        "Tes minat & bakat komprehensif",
+        "Assessment kepribadian & learning style", 
+        "Rekomendasi jurusan & karir",
+        "Akses ke 50+ course online",
+        "Progress tracking & analytics",
+        "1x konsultasi karir per bulan",
+        "Community forum access"
       ],
-      benefit: "Membantu menentukan arah studi & minat dengan biaya terjangkau.",
+      benefit: "Temukan passion dan potensi terbaik Anda dengan panduan yang tepat.",
       popular: false,
       icon: BookOpen,
-      color: "primary",
-      targetUser: "Pelajar SMP/SMA & Mahasiswa Awal",
-      focus: "Menemukan potensi diri & arah studi"
+      color: "primary"
     },
     {
       name: "Premium",
       price: "99,000", 
       period: "/bulan",
-      description: "Untuk mahasiswa tingkat akhir, fresh graduate & young professional yang siap berkembang.",
+      description: "Untuk yang serius mengembangkan karir dan membangun networking profesional",
       features: [
-        "Semua fitur Individual",
-        "Full assessment report (detail)",
-        "Analisis skill & potensi mendalam",
-        "Konsultasi tanpa batas dengan mentor",
-        "Akses kursus premium (AI, UI/UX, entrepreneurship)",
-        "Portofolio builder digital",
-        "Networking dengan profesional & industri",
-        "Program mentorship intensif (grup/1-on-1)",
-        "Sertifikat skill digital untuk beasiswa/magang"
+        "Semua fitur Personal",
+        "Unlimited konsultasi dengan mentor",
+        "Akses ke program mentorship",
+        "Portfolio builder & review",
+        "Networking events & workshops",
+        "Job placement assistance",
+        "Sertifikat keahlian terverifikasi",
+        "Priority support 24/7"
       ],
-      benefit: "Lebih siap masuk dunia kerja, peluang nyata lebih cepat.",
+      benefit: "Percepat karir Anda dengan mentorship dan networking berkualitas tinggi.",
       popular: true,
       icon: Star,
-      color: "accent",
-      targetUser: "Mahasiswa Tingkat Akhir, Fresh Graduate, Young Professional",
-      focus: "Mengembangkan skill + langsung ke peluang nyata"
+      color: "accent"
+    },
+    {
+      name: "School Package",
+      price: "Hubungi",
+      period: "Kami",
+      description: "Solusi lengkap untuk sekolah dan institusi pendidikan",
+      features: [
+        "Dashboard admin untuk sekolah",
+        "Bulk assessment untuk seluruh siswa",
+        "Analytics & reporting mendalam", 
+        "Custom branding sekolah",
+        "Training untuk guru & konselor",
+        "Integration dengan sistem sekolah",
+        "Dedicated account manager",
+        "Custom workshop & seminar"
+      ],
+      benefit: "Tingkatkan kualitas bimbingan karir siswa dengan data yang komprehensif.",
+      popular: false,
+      icon: Users,
+      color: "secondary",
+      isWhatsApp: true
     }
   ];
 
@@ -132,12 +152,6 @@ const Pricing = () => {
                           <CardDescription className="text-base leading-relaxed mb-4">
                             {plan.description}
                           </CardDescription>
-                          {(plan as any).targetUser && (
-                            <div className="text-sm bg-muted/50 p-3 rounded-lg mb-2">
-                              <p className="font-medium text-primary">Target: {(plan as any).targetUser}</p>
-                              <p className="text-muted-foreground">Focus: {(plan as any).focus}</p>
-                            </div>
-                          )}
                         </CardHeader>
 
                         <CardContent className="space-y-4">
@@ -171,10 +185,15 @@ const Pricing = () => {
                                 : 'outline hover:bg-primary hover:text-white'
                             }`}
                             size="lg"
+                            onClick={plan.isWhatsApp ? handleWhatsAppContact : undefined}
                           >
-                            <a href="/subscription" className="w-full block text-center">
-                              Berlangganan Sekarang
-                            </a>
+                            {plan.isWhatsApp ? (
+                              "Hubungi via WhatsApp"
+                            ) : (
+                              <a href="/subscription" className="w-full block text-center">
+                                Berlangganan Sekarang
+                              </a>
+                            )}
                           </Button>
                         </CardFooter>
                       </Card>
