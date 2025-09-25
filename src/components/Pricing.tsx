@@ -30,61 +30,48 @@ const Pricing = () => {
   
   const plans = [
     {
-      name: "Individu",
+      name: "Individual",
       price: "39,000",
       period: "/bulan",
-      description: "Cocok untuk pelajar & mahasiswa yang ingin kenali minat dan mulai kembangkan diri.",
+      description: "Untuk pelajar SMP/SMA & mahasiswa awal yang ingin menemukan potensi diri & arah studi.",
       features: [
-        "Tes minat & bakat untuk kenali potensi",
-        "Rekomendasi jalur studi sesuai hasil analisis",
-        "Kursus online dasar untuk mulai belajar skill baru",
-        "Progress tracking agar tahu perkembangan diri",
-        "Akses forum komunitas untuk sharing & belajar bareng",
-        "1x Konsultasi pribadi per bulan"
+        "Tes minat & bakat dasar",
+        "Basic assessment report (Lite)",
+        "Rekomendasi jalur studi awal",
+        "Akses kursus online dasar (skill umum)",
+        "Progress tracking",
+        "Forum komunitas umum",
+        "1x Konsultasi per bulan"
       ],
-      benefit: "Lebih mudah tentukan arah masa depan tanpa bingung.",
+      benefit: "Membantu menentukan arah studi & minat dengan biaya terjangkau.",
       popular: false,
       icon: BookOpen,
-      color: "primary"
+      color: "primary",
+      targetUser: "Pelajar SMP/SMA & Mahasiswa Awal",
+      focus: "Menemukan potensi diri & arah studi"
     },
     {
       name: "Premium",
-      price: "99,000",
+      price: "99,000", 
       period: "/bulan",
-      description: "Untuk individu yang serius membangun karier & skill mendalam.",
+      description: "Untuk mahasiswa tingkat akhir, fresh graduate & young professional yang siap berkembang.",
       features: [
-        "Semua fitur Individu",
-        "Analisis potensi & skill lebih detail",
+        "Semua fitur Individual",
+        "Full assessment report (detail)",
+        "Analisis skill & potensi mendalam",
         "Konsultasi tanpa batas dengan mentor",
-        "Akses kursus premium lengkap",
-        "Portofolio builder untuk beasiswa/magang",
+        "Akses kursus premium (AI, UI/UX, entrepreneurship)",
+        "Portofolio builder digital",
         "Networking dengan profesional & industri",
-        "Program mentorship intensif",
-        "Sertifikat & pencatatan skill"
+        "Program mentorship intensif (grup/1-on-1)",
+        "Sertifikat skill digital untuk beasiswa/magang"
       ],
-      benefit: "Lebih siap masuk dunia kerja & dapat peluang nyata lebih cepat.",
+      benefit: "Lebih siap masuk dunia kerja, peluang nyata lebih cepat.",
       popular: true,
       icon: Star,
-      color: "accent"
-    },
-    {
-      name: "School Package",
-      price: "3,999,000",
-      period: "/tahun",
-      description: "Solusi menyeluruh untuk sekolah & institusi pendidikan.",
-      features: [
-        "Dashboard multi-user untuk guru & siswa",
-        "Tes minat & bakat untuk siswa (100 Siswa)",
-        "Panel guru untuk pantau perkembangan",
-        "Laporan detail & progress monitoring",
-        "Custom branding sekolah",
-        "Training & integrasi sistem",
-        "Insight & analytics"
-      ],
-      benefit: "Sekolah lebih mudah mendukung siswa menemukan potensi & meningkatkan prestasi.",
-      popular: false,
-      icon: Users,
-      color: "secondary"
+      color: "accent",
+      targetUser: "Mahasiswa Tingkat Akhir, Fresh Graduate, Young Professional",
+      focus: "Mengembangkan skill + langsung ke peluang nyata"
     }
   ];
 
@@ -142,9 +129,15 @@ const Pricing = () => {
                             <span className="text-3xl font-bold text-primary">Rp{plan.price}</span>
                             <span className="text-muted-foreground">{plan.period}</span>
                           </div>
-                          <CardDescription className="text-base leading-relaxed">
+                          <CardDescription className="text-base leading-relaxed mb-4">
                             {plan.description}
                           </CardDescription>
+                          {(plan as any).targetUser && (
+                            <div className="text-sm bg-muted/50 p-3 rounded-lg mb-2">
+                              <p className="font-medium text-primary">Target: {(plan as any).targetUser}</p>
+                              <p className="text-muted-foreground">Focus: {(plan as any).focus}</p>
+                            </div>
+                          )}
                         </CardHeader>
 
                         <CardContent className="space-y-4">
@@ -179,11 +172,9 @@ const Pricing = () => {
                             }`}
                             size="lg"
                           >
-                            {plan.name === "School Package" ? "Hubungi Sales" : (
-                              <a href="/subscription" className="w-full block text-center">
-                                Berlangganan Sekarang
-                              </a>
-                            )}
+                            <a href="/subscription" className="w-full block text-center">
+                              Berlangganan Sekarang
+                            </a>
                           </Button>
                         </CardFooter>
                       </Card>

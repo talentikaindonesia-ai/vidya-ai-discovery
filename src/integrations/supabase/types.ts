@@ -130,6 +130,54 @@ export type Database = {
         }
         Relationships: []
       }
+      certificates: {
+        Row: {
+          certificate_type: string
+          certificate_url: string | null
+          created_at: string | null
+          description: string | null
+          expiry_date: string | null
+          id: string
+          is_active: boolean | null
+          issue_date: string | null
+          issuer: string | null
+          metadata: Json | null
+          title: string
+          user_id: string
+          verification_code: string | null
+        }
+        Insert: {
+          certificate_type: string
+          certificate_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          expiry_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          issue_date?: string | null
+          issuer?: string | null
+          metadata?: Json | null
+          title: string
+          user_id: string
+          verification_code?: string | null
+        }
+        Update: {
+          certificate_type?: string
+          certificate_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          expiry_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          issue_date?: string | null
+          issuer?: string | null
+          metadata?: Json | null
+          title?: string
+          user_id?: string
+          verification_code?: string | null
+        }
+        Relationships: []
+      }
       community_challenges: {
         Row: {
           challenge_type: string
@@ -172,6 +220,57 @@ export type Database = {
           title?: string
           updated_at?: string | null
           xp_reward?: number | null
+        }
+        Relationships: []
+      }
+      community_events: {
+        Row: {
+          created_at: string | null
+          current_participants: number | null
+          description: string | null
+          duration_minutes: number | null
+          event_date: string
+          event_type: string
+          id: string
+          is_active: boolean | null
+          is_premium_only: boolean | null
+          location: string | null
+          max_participants: number | null
+          organizer_id: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          current_participants?: number | null
+          description?: string | null
+          duration_minutes?: number | null
+          event_date: string
+          event_type: string
+          id?: string
+          is_active?: boolean | null
+          is_premium_only?: boolean | null
+          location?: string | null
+          max_participants?: number | null
+          organizer_id?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          current_participants?: number | null
+          description?: string | null
+          duration_minutes?: number | null
+          event_date?: string
+          event_type?: string
+          id?: string
+          is_active?: boolean | null
+          is_premium_only?: boolean | null
+          location?: string | null
+          max_participants?: number | null
+          organizer_id?: string | null
+          title?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -649,6 +748,78 @@ export type Database = {
         }
         Relationships: []
       }
+      mentorship_sessions: {
+        Row: {
+          created_at: string | null
+          duration_minutes: number | null
+          id: string
+          mentor_id: string
+          notes: string | null
+          session_date: string
+          session_type: string
+          status: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          duration_minutes?: number | null
+          id?: string
+          mentor_id: string
+          notes?: string | null
+          session_date: string
+          session_type?: string
+          status?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          duration_minutes?: number | null
+          id?: string
+          mentor_id?: string
+          notes?: string | null
+          session_date?: string
+          session_type?: string
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      networking_connections: {
+        Row: {
+          connected_user_id: string
+          connection_type: string | null
+          created_at: string | null
+          id: string
+          message: string | null
+          status: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          connected_user_id: string
+          connection_type?: string | null
+          created_at?: string | null
+          id?: string
+          message?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          connected_user_id?: string
+          connection_type?: string | null
+          created_at?: string | null
+          id?: string
+          message?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           action_url: string | null
@@ -794,6 +965,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      portfolio_items: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          external_url: string | null
+          file_url: string | null
+          id: string
+          is_featured: boolean | null
+          is_public: boolean | null
+          item_type: string
+          tags: string[] | null
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          external_url?: string | null
+          file_url?: string | null
+          id?: string
+          is_featured?: boolean | null
+          is_public?: boolean | null
+          item_type: string
+          tags?: string[] | null
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          external_url?: string | null
+          file_url?: string | null
+          id?: string
+          is_featured?: boolean | null
+          is_public?: boolean | null
+          item_type?: string
+          tags?: string[] | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
