@@ -252,36 +252,36 @@ const TalentikaJuniorGames = () => {
           ))}
         </div>
 
-        {/* Featured Game */}
-        <Card className="p-6 shadow-lg border-0 bg-gradient-to-r from-purple-100 to-pink-100">
+        {/* Challenge si Jagoan Sains */}
+        <Card className="p-6 shadow-lg border-0 bg-gradient-to-r from-blue-100 to-purple-100">
           <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
             <Trophy className="w-6 h-6 text-yellow-500" />
-            Featured Game of the Day
+            🧪 Challenge si Jagoan Sains
           </h3>
           <div className="flex items-center gap-6">
-            <div className="text-6xl">🤖</div>
+            <div className="text-6xl">🧪</div>
             <div className="flex-1">
-              <h4 className="text-2xl font-bold mb-2">Robot Builder Challenge</h4>
+              <h4 className="text-2xl font-bold mb-2">Quiz Sains Interaktif</h4>
               <p className="text-muted-foreground mb-4">
-                Special challenge: Build 3 different robots to earn bonus rewards!
+                Uji pengetahuan sainsmu dengan quiz interaktif ala Kahoot! Kompetisi dengan teman-teman dan lihat posisimu di leaderboard.
               </p>
               <div className="flex items-center gap-4 mb-4">
-                <Badge className="bg-purple-100 text-purple-700">Special Event</Badge>
+                <Badge className="bg-blue-100 text-blue-700">Quiz Challenge</Badge>
                 <div className="flex items-center gap-2 text-sm">
                   <Star className="w-4 h-4 text-yellow-500" />
-                  <span>150 XP (Double XP!)</span>
+                  <span>200 XP per Quiz</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
-                  <span className="text-yellow-600">🪙</span>
-                  <span>100 Coins</span>
+                  <Trophy className="w-4 h-4 text-yellow-500" />
+                  <span>Leaderboard</span>
                 </div>
               </div>
               <Button 
                 size="lg" 
-                className="bg-gradient-to-r from-purple-500 to-pink-500 hover:scale-105 transition-transform"
-                onClick={() => handlePlayGame(games.find(g => g.id === 'robot-builder'))}
+                className="bg-gradient-to-r from-blue-500 to-purple-500 hover:scale-105 transition-transform"
+                onClick={() => navigate('/quiz-explore')}
               >
-                Start Challenge! 🚀
+                Mulai Quiz Sekarang! 🚀
               </Button>
             </div>
           </div>

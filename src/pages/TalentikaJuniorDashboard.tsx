@@ -217,18 +217,18 @@ const TalentikaJuniorDashboard = () => {
           ))}
         </div>
 
-        {/* Achievement Preview */}
-        <Card className="p-6 shadow-lg border-0 bg-card/50 backdrop-blur-sm">
+        {/* Challenge Preview */}
+        <Card className="p-6 shadow-lg border-0 bg-card/50 backdrop-blur-sm cursor-pointer hover:scale-105 transition-all duration-300" onClick={() => navigate('/talentika-junior/games')}>
           <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
             <Trophy className="w-5 h-5 text-yellow-500" />
-            Your Latest Achievement
+            Challenge Terbaru
           </h3>
-          <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-yellow-100 to-orange-100 rounded-lg">
-            <div className="text-4xl">🌱</div>
-            <div>
-              <h4 className="font-bold text-lg">Eco Hero Badge Earned!</h4>
-              <p className="text-sm text-muted-foreground">Completed 5 environmental activities</p>
-              <Badge className="mt-2 bg-green-100 text-green-700">+100 XP earned</Badge>
+          <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-blue-100 to-purple-100 rounded-lg">
+            <div className="text-4xl">🧪</div>
+            <div className="flex-1">
+              <h4 className="font-bold text-lg">Ikuti Challenge si Jagoan Sains!</h4>
+              <p className="text-sm text-muted-foreground">Quiz interaktif ala Kahoot untuk menguji pengetahuan sains</p>
+              <Badge className="mt-2 bg-blue-100 text-blue-700">Main Sekarang →</Badge>
             </div>
           </div>
         </Card>
