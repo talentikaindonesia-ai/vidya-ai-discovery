@@ -16,17 +16,20 @@ import {
   Target,
   Trophy,
   Briefcase,
-  Heart
+  Heart,
+  Video,
+  FileText,
+  Headphones
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const CoursesSection = () => {
-  const [courses, setCourses] = useState([]);
-  const [enrolledCourses, setEnrolledCourses] = useState([]);
+  const [learningContent, setLearningContent] = useState([]);
+  const [enrolledContent, setEnrolledContent] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [categories, setCategories] = useState([]);
-  const [personalizedCourses, setPersonalizedCourses] = useState([]);
+  const [personalizedContent, setPersonalizedContent] = useState([]);
   const [userInterests, setUserInterests] = useState([]);
   const [assessmentResults, setAssessmentResults] = useState(null);
   const [personalizedChallenges, setPersonalizedChallenges] = useState([]);
@@ -34,9 +37,9 @@ export const CoursesSection = () => {
 
   useEffect(() => {
     loadUserData();
-    loadCourses();
+    loadLearningContent();
     loadCategories();
-    loadEnrolledCourses();
+    loadEnrolledContent();
   }, []);
 
   const loadUserData = async () => {
@@ -84,36 +87,37 @@ export const CoursesSection = () => {
       const personalityType = assessment?.personality_type;
       const careerRecommendations = assessment?.career_recommendations || [];
 
-      // Load personalized courses based on interests, assessment and personality type
-      let coursesQuery = supabase
-        .from('courses')
+      // Load personalized learning content based on interests, assessment and personality type
+      let contentQuery = supabase
+        .from('learning_content')
         .select(`
           *,
-          interest_categories(name, icon)
+          learning_categories(name, icon, color)
         `);
 
       // Filter by interest categories if available
       if (interestCategoryIds.length > 0) {
-        coursesQuery = coursesQuery.in('category_id', interestCategoryIds);
+        contentQuery = contentQuery.in('category_id', interestCategoryIds);
       } else if (careerRecommendations.length > 0) {
         // Fallback to career recommendations from assessment
         const { data: categoryData } = await supabase
-          .from('interest_categories')
+          .from('learning_categories')
           .select('id, name')
           .ilike('name', `%${careerRecommendations.join('%|%')}%`);
         
         if (categoryData && categoryData.length > 0) {
           const categoryIds = categoryData.map(c => c.id);
-          coursesQuery = coursesQuery.in('category_id', categoryIds);
+          contentQuery = contentQuery.in('category_id', categoryIds);
         }
       }
 
-      const { data: personalizedCoursesData, error: coursesError } = await coursesQuery
+      const { data: personalizedContentData, error: contentError } = await contentQuery
         .eq('is_featured', true)
+        .eq('is_active', true)
         .limit(8);
 
-      if (coursesError) throw coursesError;
-      setPersonalizedCourses(personalizedCoursesData || []);
+      if (contentError) throw contentError;
+      setPersonalizedContent(personalizedContentData || []);
 
       // Load personalized challenges based on user profile
       loadPersonalizedChallenges(interests, talentAreas, personalityType);
@@ -214,28 +218,31 @@ export const CoursesSection = () => {
 
     setPersonalizedOpportunities(opportunities);
   };
-  const loadCourses = async () => {
+
+  const loadLearningContent = async () => {
     try {
       const { data, error } = await supabase
-        .from('courses')
+        .from('learning_content')
         .select(`
           *,
-          interest_categories(name, icon)
+          learning_categories(name, icon, color)
         `)
+        .eq('is_active', true)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setCourses(data || []);
+      setLearningContent(data || []);
     } catch (error) {
-      console.error('Error loading courses:', error);
+      console.error('Error loading learning content:', error);
     }
   };
 
   const loadCategories = async () => {
     try {
       const { data, error } = await supabase
-        .from('interest_categories')
+        .from('learning_categories')
         .select('*')
+        .eq('is_active', true)
         .order('name');
 
       if (error) throw error;
@@ -245,65 +252,76 @@ export const CoursesSection = () => {
     }
   };
 
-  const loadEnrolledCourses = async () => {
+  const loadEnrolledContent = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       const { data, error } = await supabase
-        .from('user_progress')
+        .from('learning_progress')
         .select(`
           *,
-          courses(
+          learning_content(
             *,
-            interest_categories(name, icon)
+            learning_categories(name, icon, color)
           )
         `)
         .eq('user_id', user.id);
 
       if (error) throw error;
-      setEnrolledCourses(data || []);
+      setEnrolledContent(data || []);
     } catch (error) {
-      console.error('Error loading enrolled courses:', error);
+      console.error('Error loading enrolled content:', error);
     }
   };
 
-  const filteredCourses = courses.filter((course: any) => {
-    const matchesSearch = course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         course.description?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === "all" || course.category_id === selectedCategory;
+  const filteredContent = learningContent.filter((content: any) => {
+    const matchesSearch = content.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         content.description?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedCategory === "all" || content.category_id === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
-  const startCourse = async (courseId: string) => {
+  const startLearning = async (contentId: string) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       const { error } = await supabase
-        .from('user_progress')
+        .from('learning_progress')
         .upsert({
           user_id: user.id,
-          course_id: courseId,
-          progress_percentage: 0
+          content_id: contentId,
+          progress_percentage: 0,
+          status: 'in_progress'
         });
 
       if (error) throw error;
-      loadEnrolledCourses();
+      loadEnrolledContent();
     } catch (error) {
-      console.error('Error starting course:', error);
+      console.error('Error starting learning:', error);
+    }
+  };
+
+  const getContentIcon = (contentType: string) => {
+    switch (contentType) {
+      case 'video': return Video;
+      case 'article': return FileText;
+      case 'audio': case 'podcast': return Headphones;
+      case 'course': return BookOpen;
+      default: return BookOpen;
     }
   };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Kursus Pembelajaran</h1>
+        <h1 className="text-2xl font-bold">Konten Pembelajaran</h1>
         <div className="flex items-center space-x-2">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input 
-              placeholder="Cari kursus..." 
+              placeholder="Cari konten..." 
               className="pl-10 w-64"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -318,8 +336,8 @@ export const CoursesSection = () => {
       <Tabs defaultValue="personalized" className="w-full">
         <TabsList>
           <TabsTrigger value="personalized">Rekomendasi Personal</TabsTrigger>
-          <TabsTrigger value="all-courses">Semua Kursus</TabsTrigger>
-          <TabsTrigger value="my-courses">Kursus Saya</TabsTrigger>
+          <TabsTrigger value="all-courses">Semua Konten</TabsTrigger>
+          <TabsTrigger value="my-courses">Konten Saya</TabsTrigger>
           <TabsTrigger value="completed">Selesai</TabsTrigger>
         </TabsList>
 
@@ -353,15 +371,15 @@ export const CoursesSection = () => {
             </CardContent>
           </Card>
 
-          {/* Personalized Courses */}
+          {/* Personalized Content */}
           <div>
             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
               <BookOpen className="w-5 h-5" />
-              Kursus yang Direkomendasikan
+              Konten yang Direkomendasikan
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {personalizedCourses.map((course: any) => (
-                <Card key={course.id} className="overflow-hidden hover:shadow-lg transition-shadow border-primary/20">
+              {personalizedContent.map((content: any) => (
+                <Card key={content.id} className="overflow-hidden hover:shadow-lg transition-shadow border-primary/20">
                   <div className="aspect-video bg-gradient-primary relative">
                     <Badge className="absolute top-3 left-3 bg-primary text-primary-foreground">
                       Rekomendasi
@@ -369,10 +387,10 @@ export const CoursesSection = () => {
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="text-center text-white">
                         <span className="text-4xl mb-2 block">
-                          {course.interest_categories?.icon || '📚'}
+                          {content.learning_categories?.icon || '📚'}
                         </span>
                         <Badge variant="secondary" className="bg-white/20 text-white">
-                          {course.difficulty_level}
+                          {content.difficulty_level}
                         </Badge>
                       </div>
                     </div>
@@ -381,16 +399,16 @@ export const CoursesSection = () => {
                   <CardContent className="p-4">
                     <div className="space-y-3">
                       <div>
-                        <h4 className="font-semibold text-lg line-clamp-2">{course.title}</h4>
+                        <h4 className="font-semibold text-lg line-clamp-2">{content.title}</h4>
                         <p className="text-sm text-muted-foreground line-clamp-2">
-                          {course.description}
+                          {content.description}
                         </p>
                       </div>
                       
                       <div className="flex items-center justify-between text-sm text-muted-foreground">
                         <div className="flex items-center gap-1">
                           <Clock className="w-4 h-4" />
-                          <span>{course.duration_hours}h</span>
+                          <span>{Math.round(content.duration_minutes / 60)}h {content.duration_minutes % 60}m</span>
                         </div>
                         <div className="flex items-center gap-1">
                           <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
@@ -400,10 +418,10 @@ export const CoursesSection = () => {
                       
                       <Button 
                         className="w-full" 
-                        onClick={() => startCourse(course.id)}
+                        onClick={() => startLearning(content.id)}
                       >
                         <Play className="w-4 h-4 mr-2" />
-                        Mulai Kursus
+                        Mulai Belajar
                       </Button>
                     </div>
                   </CardContent>
@@ -428,13 +446,10 @@ export const CoursesSection = () => {
                     </div>
                     <h4 className="font-semibold mb-2">{challenge.title}</h4>
                     <p className="text-xs text-muted-foreground mb-3">{challenge.reason}</p>
-                    <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center justify-between text-sm text-muted-foreground">
                       <span>{challenge.participants} peserta</span>
                       <span className="font-semibold text-orange-600">{challenge.prize}</span>
                     </div>
-                    <Button size="sm" className="w-full mt-3">
-                      Ikut Tantangan
-                    </Button>
                   </CardContent>
                 </Card>
               ))}
@@ -445,7 +460,7 @@ export const CoursesSection = () => {
           <div>
             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
               <Briefcase className="w-5 h-5" />
-              Peluang Karir untuk Anda
+              Peluang untuk Anda
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {personalizedOpportunities.map((opportunity: any) => (
@@ -453,21 +468,19 @@ export const CoursesSection = () => {
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between mb-3">
                       <Briefcase className="w-6 h-6 text-blue-500" />
-                      <Badge className="bg-blue-100 text-blue-800">Rekomendasi</Badge>
+                      <Badge className="bg-blue-100 text-blue-800">
+                        {opportunity.type === 'job' ? 'Pekerjaan' : 
+                         opportunity.type === 'internship' ? 'Magang' : 
+                         opportunity.type === 'scholarship' ? 'Beasiswa' : 'Kompetisi'}
+                      </Badge>
                     </div>
                     <h4 className="font-semibold mb-1">{opportunity.title}</h4>
                     <p className="text-sm text-muted-foreground mb-2">{opportunity.company}</p>
                     <p className="text-xs text-muted-foreground mb-3">{opportunity.reason}</p>
-                    <div className="flex items-center justify-between text-sm mb-3">
-                      <Badge variant="outline" className="text-xs">
-                        {opportunity.type === 'internship' ? 'Magang' : 
-                         opportunity.type === 'scholarship' ? 'Beasiswa' : 'Kerja'}
-                      </Badge>
+                    <div className="flex items-center justify-between text-sm text-muted-foreground">
                       <span>{opportunity.location}</span>
+                      <span>{opportunity.field}</span>
                     </div>
-                    <Button size="sm" className="w-full">
-                      Lamar Sekarang
-                    </Button>
                   </CardContent>
                 </Card>
               ))}
@@ -477,165 +490,157 @@ export const CoursesSection = () => {
 
         <TabsContent value="all-courses" className="space-y-4">
           {/* Category Filter */}
-          <div className="flex space-x-2 overflow-x-auto pb-2">
-            <Button
+          <div className="flex flex-wrap gap-2 mb-4">
+            <Badge 
               variant={selectedCategory === "all" ? "default" : "outline"}
-              size="sm"
+              className="cursor-pointer"
               onClick={() => setSelectedCategory("all")}
             >
               Semua
-            </Button>
+            </Badge>
             {categories.map((category: any) => (
-              <Button
+              <Badge 
                 key={category.id}
                 variant={selectedCategory === category.id ? "default" : "outline"}
-                size="sm"
+                className="cursor-pointer"
                 onClick={() => setSelectedCategory(category.id)}
-                className="whitespace-nowrap"
               >
-                {category.icon} {category.name}
-              </Button>
+                {category.name}
+              </Badge>
             ))}
           </div>
 
-          {/* Courses Grid */}
+          {/* Content Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredCourses.map((course: any) => (
-              <Card key={course.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                <div className="aspect-video bg-gradient-primary relative">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center text-white">
-                      <span className="text-4xl mb-2 block">
-                        {course.interest_categories?.icon || '📚'}
-                      </span>
-                      <Badge variant="secondary" className="bg-white/20 text-white">
-                        {course.difficulty_level}
+            {filteredContent.map((content: any) => {
+              const ContentIcon = getContentIcon(content.content_type);
+              
+              return (
+                <Card key={content.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                  <div className="aspect-video bg-muted relative flex items-center justify-center">
+                    <ContentIcon className="w-12 h-12 text-muted-foreground" />
+                    <div className="absolute top-3 left-3">
+                      <Badge variant="secondary">
+                        {content.content_type}
                       </Badge>
                     </div>
-                  </div>
-                </div>
-                
-                <CardContent className="p-4">
-                  <div className="space-y-3">
-                    <div>
-                      <h3 className="font-semibold text-lg line-clamp-2">{course.title}</h3>
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {course.description}
-                      </p>
-                    </div>
-                    
-                    <div className="flex items-center justify-between text-sm text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-4 h-4" />
-                        <span>{course.duration_hours}h</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Users className="w-4 h-4" />
-                        <span>120 siswa</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                        <span>4.8</span>
-                      </div>
-                    </div>
-                    
-                    <Button 
-                      className="w-full" 
-                      onClick={() => startCourse(course.id)}
-                    >
-                      <Play className="w-4 h-4 mr-2" />
-                      Mulai Kursus
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="my-courses" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {enrolledCourses.map((enrollment: any) => (
-              <Card key={enrollment.id} className="overflow-hidden">
-                <div className="aspect-video bg-gradient-primary relative">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center text-white">
-                      <span className="text-4xl mb-2 block">
-                        {enrollment.courses?.interest_categories?.icon || '📚'}
-                      </span>
-                      <Badge variant="secondary" className="bg-white/20 text-white">
-                        {enrollment.progress_percentage}% Selesai
+                    <div className="absolute top-3 right-3">
+                      <Badge variant="outline">
+                        {content.difficulty_level}
                       </Badge>
-                    </div>
-                  </div>
-                </div>
-                
-                <CardContent className="p-4">
-                  <div className="space-y-3">
-                    <div>
-                      <h3 className="font-semibold text-lg line-clamp-2">
-                        {enrollment.courses?.title}
-                      </h3>
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {enrollment.courses?.description}
-                      </p>
-                    </div>
-                    
-                    <div>
-                      <div className="flex justify-between text-sm mb-2">
-                        <span>Progress</span>
-                        <span>{enrollment.progress_percentage}%</span>
-                      </div>
-                      <Progress value={enrollment.progress_percentage} className="h-2" />
-                    </div>
-                    
-                    <Button className="w-full">
-                      <Play className="w-4 h-4 mr-2" />
-                      Lanjutkan Belajar
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="completed" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {enrolledCourses
-              .filter((enrollment: any) => enrollment.progress_percentage === 100)
-              .map((enrollment: any) => (
-                <Card key={enrollment.id} className="overflow-hidden border-green-200">
-                  <div className="aspect-video bg-gradient-to-br from-green-500 to-green-600 relative">
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="text-center text-white">
-                        <span className="text-4xl mb-2 block">🏆</span>
-                        <Badge variant="secondary" className="bg-white/20 text-white">
-                          Selesai
-                        </Badge>
-                      </div>
                     </div>
                   </div>
                   
                   <CardContent className="p-4">
                     <div className="space-y-3">
                       <div>
-                        <h3 className="font-semibold text-lg line-clamp-2">
-                          {enrollment.courses?.title}
-                        </h3>
-                        <p className="text-sm text-green-600">
-                          ✅ Kursus selesai pada {new Date(enrollment.completed_at).toLocaleDateString()}
+                        <h4 className="font-semibold line-clamp-2">{content.title}</h4>
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {content.description}
                         </p>
                       </div>
                       
-                      <Button variant="outline" className="w-full">
-                        <BookOpen className="w-4 h-4 mr-2" />
-                        Lihat Sertifikat
+                      <div className="flex items-center justify-between text-sm text-muted-foreground">
+                        <div className="flex items-center gap-1">
+                          <Clock className="w-4 h-4" />
+                          <span>{content.duration_minutes}m</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Users className="w-4 h-4" />
+                          <span>{content.total_enrollments || 0}</span>
+                        </div>
+                      </div>
+                      
+                      <Button 
+                        className="w-full" 
+                        onClick={() => startLearning(content.id)}
+                      >
+                        <Play className="w-4 h-4 mr-2" />
+                        Mulai Belajar
                       </Button>
                     </div>
                   </CardContent>
                 </Card>
-              ))}
+              );
+            })}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="my-courses" className="space-y-4">
+          <div className="grid gap-4">
+            {enrolledContent.map((enrollment: any) => (
+              <Card key={enrollment.id} className="overflow-hidden">
+                <div className="flex">
+                  <div className="w-24 h-24 bg-muted flex items-center justify-center">
+                    <span className="text-2xl">
+                      {enrollment.learning_content?.learning_categories?.icon || '📚'}
+                    </span>
+                  </div>
+                  <div className="flex-1 p-4">
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <h4 className="font-semibold">
+                          {enrollment.learning_content?.title}
+                        </h4>
+                        <p className="text-sm text-muted-foreground">
+                          {enrollment.learning_content?.description}
+                        </p>
+                      </div>
+                      <Badge variant="outline">
+                        {enrollment.status || 'in_progress'}
+                      </Badge>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span>Progress</span>
+                        <span>{enrollment.progress_percentage}%</span>
+                      </div>
+                      <Progress value={enrollment.progress_percentage} className="h-2" />
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="completed" className="space-y-4">
+          <div className="grid gap-4">
+            {enrolledContent
+              .filter((enrollment: any) => enrollment.status === 'completed')
+              .map((enrollment: any) => (
+              <Card key={enrollment.id} className="overflow-hidden">
+                <div className="flex">
+                  <div className="w-24 h-24 bg-muted flex items-center justify-center">
+                    <span className="text-2xl">
+                      {enrollment.learning_content?.learning_categories?.icon || '📚'}
+                    </span>
+                  </div>
+                  <div className="flex-1 p-4">
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <h4 className="font-semibold">
+                          {enrollment.learning_content?.title}
+                        </h4>
+                        <p className="text-sm text-muted-foreground">
+                          Diselesaikan pada {new Date(enrollment.completed_at).toLocaleDateString('id-ID')}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge className="bg-green-100 text-green-800">
+                          Selesai
+                        </Badge>
+                        <div className="flex items-center gap-1">
+                          <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                          <span className="text-sm">{enrollment.rating || 'Belum dinilai'}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <Progress value={100} className="h-2" />
+                  </div>
+                </div>
+              </Card>
+            ))}
           </div>
         </TabsContent>
       </Tabs>
