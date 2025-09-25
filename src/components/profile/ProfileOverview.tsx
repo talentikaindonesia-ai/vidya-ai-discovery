@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Award, TrendingUp, Download } from "lucide-react";
+import { BookOpen, Award, TrendingUp, Download, Lock, Crown } from "lucide-react";
+import { getSubscriptionLimits } from "@/lib/subscription";
 
 interface ProfileOverviewProps {
   user: User | null;
@@ -19,8 +20,14 @@ interface ProfileOverviewProps {
 }
 
 export function ProfileOverview({ user, profile, stats }: ProfileOverviewProps) {
-  const progressPercentage = stats.totalCourses > 0 
-    ? Math.round((stats.coursesCompleted / stats.totalCourses) * 100) 
+  // Get subscription limits
+  const subscriptionLimits = getSubscriptionLimits(profile?.subscription_status, profile?.subscription_type);
+  
+  // Calculate available courses based on subscription
+  const availableCourses = subscriptionLimits.maxCourses === -1 ? stats.totalCourses : Math.min(subscriptionLimits.maxCourses, stats.totalCourses);
+  
+  const progressPercentage = availableCourses > 0 
+    ? Math.round((stats.coursesCompleted / availableCourses) * 100) 
     : 0;
 
   const recentAchievements = [
@@ -46,7 +53,17 @@ export function ProfileOverview({ user, profile, stats }: ProfileOverviewProps) 
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-3xl font-bold text-primary">{progressPercentage}%</span>
-              <Badge variant="secondary">{stats.coursesCompleted}/{stats.totalCourses} Kursus</Badge>
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary">
+                  {stats.coursesCompleted}/{subscriptionLimits.maxCourses === -1 ? stats.totalCourses : subscriptionLimits.maxCourses} Kursus
+                </Badge>
+                {subscriptionLimits.maxCourses !== -1 && (
+                  <Badge variant="outline" className="text-xs">
+                    <Lock className="w-3 h-3 mr-1" />
+                    Terbatas
+                  </Badge>
+                )}
+              </div>
             </div>
             <Progress value={progressPercentage} className="w-full" />
             <div className="grid grid-cols-2 gap-4 text-sm text-muted-foreground">

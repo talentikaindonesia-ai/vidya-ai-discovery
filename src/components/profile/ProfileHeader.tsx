@@ -2,7 +2,7 @@ import { User } from "@supabase/supabase-js";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Edit3, GraduationCap } from "lucide-react";
+import { Edit3, GraduationCap, Crown, User as UserIcon } from "lucide-react";
 
 interface ProfileHeaderProps {
   user: User | null;
@@ -20,6 +20,7 @@ interface ProfileHeaderProps {
 export function ProfileHeader({ user, profile, stats }: ProfileHeaderProps) {
   const displayName = profile?.full_name || user?.email?.split('@')[0] || 'Pengguna';
   const educationLevel = getEducationLevel(profile);
+  const membershipInfo = getMembershipInfo(profile);
   
   const badges = [];
   if (stats.achievements >= 5) badges.push({ icon: "🏅", label: "Top Learner" });
@@ -39,11 +40,24 @@ export function ProfileHeader({ user, profile, stats }: ProfileHeaderProps) {
             </Avatar>
             <div>
               <h1 className="text-2xl font-bold mb-1">{displayName}</h1>
-              <div className="flex items-center space-x-2 mb-2">
-                <GraduationCap className="w-4 h-4" />
-                <span className="text-primary-foreground/80">{educationLevel}</span>
+              <div className="flex items-center space-x-3 mb-2">
+                <div className="flex items-center space-x-1">
+                  <GraduationCap className="w-4 h-4" />
+                  <span className="text-primary-foreground/80">{educationLevel}</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  {membershipInfo.isPremium ? (
+                    <Crown className="w-4 h-4" />
+                  ) : (
+                    <UserIcon className="w-4 h-4" />
+                  )}
+                  <span className="text-primary-foreground/80">{membershipInfo.label}</span>
+                </div>
               </div>
               <div className="flex flex-wrap gap-2">
+                <Badge variant="secondary" className={`text-xs ${membershipInfo.isPremium ? 'bg-yellow-500/20 text-yellow-100' : 'bg-blue-500/20 text-blue-100'}`}>
+                  {membershipInfo.status}
+                </Badge>
                 {badges.map((badge, index) => (
                   <Badge key={index} variant="secondary" className="text-xs">
                     <span className="mr-1">{badge.icon}</span>
@@ -91,5 +105,22 @@ function getEducationLevel(profile: any): string {
     return "Mahasiswa";
   } else {
     return "Pembelajar";
+  }
+}
+
+function getMembershipInfo(profile: any): { label: string; status: string; isPremium: boolean } {
+  if (!profile) return { label: "Individual", status: "Tidak Aktif", isPremium: false };
+  
+  const subscriptionStatus = profile.subscription_status;
+  const subscriptionType = profile.subscription_type;
+  
+  if (subscriptionStatus === 'active') {
+    if (subscriptionType === 'premium') {
+      return { label: "Premium", status: "Aktif", isPremium: true };
+    } else {
+      return { label: "Individual", status: "Aktif", isPremium: false };
+    }
+  } else {
+    return { label: "Individual", status: "Tidak Aktif", isPremium: false };
   }
 }
