@@ -34,8 +34,8 @@ const Pricing = () => {
   
   const plans = [
     {
-      name: "Personal",
-      price: "49,000",
+      name: "Individual",
+      price: "39,000",
       period: "/bulan",
       description: "Cocok untuk siswa dan mahasiswa yang ingin mengembangkan potensi diri",
       features: [
@@ -58,7 +58,7 @@ const Pricing = () => {
       period: "/bulan",
       description: "Untuk yang serius mengembangkan karir dan membangun networking profesional",
       features: [
-        "Semua fitur Personal",
+        "Semua fitur Individual",
         "Unlimited konsultasi dengan mentor",
         "Akses ke program mentorship",
         "Portfolio builder & review",
