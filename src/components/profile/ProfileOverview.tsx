@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Award, TrendingUp, Download, Lock, Crown } from "lucide-react";
+import { BookOpen, Award, TrendingUp, Download, Lock, Crown, User as UserIcon } from "lucide-react";
 import { getSubscriptionLimits } from "@/lib/subscription";
 
 interface ProfileOverviewProps {
@@ -43,6 +43,70 @@ export function ProfileOverview({ user, profile, stats }: ProfileOverviewProps) 
 
   return (
     <div className="space-y-6">
+      {/* Membership Status Card */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-lg font-semibold">Status Membership</CardTitle>
+          {profile?.subscription_status === 'active' && profile?.subscription_type === 'premium' ? (
+            <Crown className="h-5 w-5 text-yellow-500" />
+          ) : (
+            <UserIcon className="h-5 w-5 text-muted-foreground" />
+          )}
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-2xl font-bold text-primary">
+                  {profile?.subscription_type === 'premium' ? 'Premium' : 'Individual'}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {profile?.subscription_status === 'active' ? 'Aktif' : 'Tidak Aktif'}
+                </div>
+              </div>
+              <Badge 
+                variant={profile?.subscription_status === 'active' ? "default" : "secondary"}
+                className={profile?.subscription_type === 'premium' && profile?.subscription_status === 'active' 
+                  ? 'bg-yellow-500 text-yellow-900' 
+                  : profile?.subscription_status === 'active' 
+                    ? 'bg-blue-500 text-blue-50' 
+                    : 'bg-gray-500 text-gray-50'
+                }
+              >
+                {profile?.subscription_status === 'active' ? 'Aktif' : 'Tidak Aktif'}
+              </Badge>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4 p-3 bg-muted/50 rounded-lg">
+              <div className="text-center">
+                <div className="text-sm font-medium">
+                  {subscriptionLimits.maxCourses === -1 ? '∞' : subscriptionLimits.maxCourses}
+                </div>
+                <div className="text-xs text-muted-foreground">Maks Kursus</div>
+              </div>
+              <div className="text-center">
+                <div className="text-sm font-medium">
+                  {subscriptionLimits.canAccessPremiumContent ? '✓' : '✗'}
+                </div>
+                <div className="text-xs text-muted-foreground">Konten Premium</div>
+              </div>
+            </div>
+
+            {profile?.subscription_end_date && profile?.subscription_status === 'active' && (
+              <div className="text-xs text-muted-foreground">
+                Berlaku hingga: {new Date(profile.subscription_end_date).toLocaleDateString('id-ID')}
+              </div>
+            )}
+
+            {profile?.subscription_status !== 'active' && (
+              <Button className="w-full" onClick={() => window.location.href = '/subscription'}>
+                Upgrade ke Premium
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Learning Progress Card */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
