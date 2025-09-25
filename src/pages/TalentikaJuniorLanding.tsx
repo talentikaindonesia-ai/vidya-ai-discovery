@@ -102,20 +102,12 @@ const TalentikaJuniorLanding = () => {
                 />
                 <h1 className="text-4xl lg:text-6xl font-bold">
                   <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                    Jelajahi Dunia,
-                  </span>
-                  <br />
-                  <span className="bg-gradient-to-r from-accent to-secondary bg-clip-text text-transparent">
-                    Temukan Bakatmu,
-                  </span>
-                  <br />
-                  <span className="bg-gradient-to-r from-secondary to-primary bg-clip-text text-transparent">
-                    Jadi Jagoan Masa Depan!
+                    Talentika Junior: Jelajahi Bakatmu, Bangun Masa Depanmu!
                   </span>
                 </h1>
                 
                 <p className="text-lg text-muted-foreground leading-relaxed">
-                  Talentika Junior menghadirkan pengalaman belajar interaktif, challenge seru, dan portofolio digital untuk anak-anak Indonesia.
+                  Platform pembelajaran berbasis pengalaman untuk anak dan remaja. Dari saintis, technologist, entrepreneur, creative hingga environmentalist—jadilah versi terbaik dirimu dengan tantangan seru, program interaktif, dan pengalaman nyata!
                 </p>
               </div>
 
@@ -125,7 +117,7 @@ const TalentikaJuniorLanding = () => {
                   className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground font-medium shadow-lg hover:shadow-xl transition-all duration-300"
                   onClick={handleRegister}
                 >
-                  Daftar Sekarang
+                  Mulai Petualanganmu Sekarang!
                 </Button>
                 <Button 
                   variant="outline" 
@@ -133,7 +125,7 @@ const TalentikaJuniorLanding = () => {
                   className="border-primary/20 hover:bg-primary/5"
                   onClick={handleWhatsAppPartner}
                 >
-                  Bergabung Jadi Mitra
+                  Gabung & Hubungi Kami di WhatsApp
                 </Button>
               </div>
             </div>
