@@ -11,9 +11,7 @@ import {
   Palette, 
   Microscope,
   Music,
-  Settings,
-  Crown,
-  ArrowRight
+  Settings
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -201,28 +199,6 @@ const TalentikaJuniorDashboard = () => {
           </div>
         )}
       </div>
-
-        {/* Membership Status Card */}
-        <Card className="mb-6 p-6 shadow-lg border-0 bg-gradient-to-r from-blue-50 to-purple-50 backdrop-blur-sm">
-          <div className="text-center">
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-purple-400 rounded-full flex items-center justify-center mx-auto mb-4 shadow-md">
-              <Crown className="w-8 h-8 text-white" />
-            </div>
-            <h3 className="text-xl font-bold mb-2 text-foreground">
-              Siap Mengembangkan Karir?
-            </h3>
-            <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-              Bergabung dengan sistem membership Talentika untuk akses penuh ke fitur assessment, mentorship, dan networking profesional
-            </p>
-            <Button 
-              className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium flex items-center gap-2 mx-auto"
-              onClick={() => navigate('/membership')}
-            >
-              Akses Membership Dashboard
-              <ArrowRight className="w-4 h-4" />
-            </Button>
-          </div>
-        </Card>
 
         {/* Main Menu */}
         <div className="grid grid-cols-2 gap-4 mb-8">
