@@ -22,7 +22,7 @@ interface UserSubscription {
   subscription_packages: {
     name: string;
     type: string;
-    features: string[];
+    features: any; // Change from string[] to any to handle Json type
   };
 }
 
@@ -79,10 +79,20 @@ const MembershipDashboard = () => {
       `)
       .eq('user_id', userId)
       .eq('status', 'active')
-      .single();
+      .maybeSingle(); // Use maybeSingle to handle no data gracefully
 
     if (data) {
-      setSubscription(data);
+      // Ensure features is properly typed
+      const subscriptionData = {
+        ...data,
+        subscription_packages: {
+          ...data.subscription_packages,
+          features: Array.isArray(data.subscription_packages.features) 
+            ? data.subscription_packages.features 
+            : JSON.parse(data.subscription_packages.features as string)
+        }
+      };
+      setSubscription(subscriptionData);
     }
   };
 

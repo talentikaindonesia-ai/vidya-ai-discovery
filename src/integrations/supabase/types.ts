@@ -176,7 +176,15 @@ export type Database = {
           user_id?: string
           verification_code?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "certificates_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       community_challenges: {
         Row: {
@@ -320,6 +328,44 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "interest_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_participants: {
+        Row: {
+          attendance_status: string | null
+          event_id: string
+          feedback: string | null
+          id: string
+          rating: number | null
+          registration_date: string | null
+          user_id: string
+        }
+        Insert: {
+          attendance_status?: string | null
+          event_id: string
+          feedback?: string | null
+          id?: string
+          rating?: number | null
+          registration_date?: string | null
+          user_id: string
+        }
+        Update: {
+          attendance_status?: string | null
+          event_id?: string
+          feedback?: string | null
+          id?: string
+          rating?: number | null
+          registration_date?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_participants_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "community_events"
             referencedColumns: ["id"]
           },
         ]
@@ -785,7 +831,22 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "mentorship_sessions_mentor_id_fkey"
+            columns: ["mentor_id"]
+            isOneToOne: false
+            referencedRelation: "mentors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mentorship_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       networking_connections: {
         Row: {
@@ -818,7 +879,22 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "networking_connections_connected_user_id_fkey"
+            columns: ["connected_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "networking_connections_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       notifications: {
         Row: {
@@ -1009,7 +1085,15 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "portfolio_items_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       profiles: {
         Row: {

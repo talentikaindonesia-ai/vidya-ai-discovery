@@ -85,10 +85,7 @@ export const MentorshipBooking = ({ userId, userPlan }: MentorshipBookingProps) 
   const loadUserSessions = async () => {
     const { data, error } = await supabase
       .from('mentorship_sessions')
-      .select(`
-        *,
-        mentors (*)
-      `)
+      .select('*')
       .eq('user_id', userId)
       .order('session_date', { ascending: false });
 
@@ -101,7 +98,23 @@ export const MentorshipBooking = ({ userId, userPlan }: MentorshipBookingProps) 
       return;
     }
 
-    setSessions(data || []);
+    // Load mentor details separately to avoid join issues
+    const sessionsWithMentors = await Promise.all(
+      (data || []).map(async (session) => {
+        const { data: mentorData } = await supabase
+          .from('mentors')
+          .select('*')
+          .eq('id', session.mentor_id)
+          .single();
+        
+        return {
+          ...session,
+          mentors: mentorData
+        };
+      })
+    );
+
+    setSessions(sessionsWithMentors);
   };
 
   const handleBookSession = async () => {

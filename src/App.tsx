@@ -30,6 +30,7 @@ import TalentikaJuniorDiscovery from "./pages/TalentikaJuniorDiscovery";
 import TalentikaJuniorLearning from "./pages/TalentikaJuniorLearning";
 import TalentikaJuniorGames from "./pages/TalentikaJuniorGames";
 import TalentikaJuniorRewards from "./pages/TalentikaJuniorRewards";
+import MembershipDashboard from "./pages/MembershipDashboard";
 
 const queryClient = new QueryClient();
 
@@ -87,6 +88,7 @@ const App = () => {
             <Route path="/profile" element={user ? <Profile /> : <Navigate to="/auth" />} />
             <Route path="/admin" element={user ? <Admin /> : <Navigate to="/auth" />} />
             <Route path="/admin/content/edit/:contentId" element={user ? <ContentEditor /> : <Navigate to="/auth" />} />
+            <Route path="/membership" element={user ? <MembershipDashboard /> : <Navigate to="/auth" />} />
             <Route path="/talentika-junior" element={<TalentikaJuniorLanding />} />
             <Route path="/talentika-junior/dashboard" element={user ? <TalentikaJuniorDashboard /> : <Navigate to="/auth" />} />
             <Route path="/talentika-junior/discovery" element={user ? <TalentikaJuniorDiscovery /> : <Navigate to="/auth" />} />
