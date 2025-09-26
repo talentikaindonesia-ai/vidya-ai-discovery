@@ -253,23 +253,6 @@ const TalentikaJuniorDashboard = () => {
             </Button>
           </div>
         </Card>
-
-        {/* Membership CTA Section */}
-        <Card className="mt-6 p-6 shadow-lg border-0 bg-gradient-to-r from-primary/5 to-secondary/5">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold mb-4">Siap Mengembangkan Karir?</h2>
-            <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-              Bergabung dengan sistem membership Talentika untuk akses penuh ke fitur assessment, mentorship, dan networking profesional
-            </p>
-            <Button 
-              className="bg-gradient-to-r from-primary to-primary-dark hover:shadow-glow transition-all duration-300 transform hover:scale-105"
-              size="lg"
-              onClick={() => navigate('/membership')}
-            >
-              Akses Membership Dashboard
-            </Button>
-          </div>
-        </Card>
       </div>
       
       <TalentikaJuniorBottomNav />
