@@ -83,9 +83,14 @@ const Dashboard = () => {
       } else {
         setProfile(profileData);
         
-        // Check subscription status
-        if (!profileData?.subscription_status || profileData.subscription_status === 'inactive') {
+        // Check subscription status - allow free users in
+        if (!profileData?.subscription_status || 
+            (profileData.subscription_status === 'inactive' && !profileData.subscription_type)) {
+          // If no subscription at all, show subscription selection
           setShowSubscription(true);
+        } else if (profileData.subscription_status === 'active' || profileData.subscription_type === 'free') {
+          // Allow active subscribers and free users to access dashboard
+          setShowSubscription(false);
         }
       }
 
@@ -161,11 +166,35 @@ const Dashboard = () => {
       const selectedPlan = subscriptionPlans.find(p => p.id === planId);
       if (!selectedPlan) return;
 
-      // Navigate to subscription page with selected plan
+      // Check if it's a free plan
+      if (selectedPlan.type === 'free') {
+        // Activate free plan directly
+        const { error } = await supabase
+          .from('profiles')
+          .update({
+            subscription_status: 'active',
+            subscription_type: 'free',
+            subscription_end_date: null // Free plans don't expire
+          })
+          .eq('user_id', user.id);
+
+        if (error) throw error;
+
+        toast.success("Paket Free berhasil diaktifkan!");
+        setShowSubscription(false);
+        
+        // Reload profile
+        if (user) {
+          loadUserData(user.id);
+        }
+        return;
+      }
+
+      // For paid plans, navigate to subscription page with selected plan
       navigate(`/subscription?planId=${planId}&planName=${encodeURIComponent(selectedPlan.name)}`);
       
     } catch (error: any) {
-      console.error('Error navigating to subscription:', error);
+      console.error('Error subscribing:', error);
       toast.error("Terjadi kesalahan: " + error.message);
     }
   };
@@ -178,9 +207,9 @@ const Dashboard = () => {
         return (
           <div className="space-y-6">
             <WelcomeDashboard user={user} profile={profile} />
-            <CoursesPreview />
-            <OpportunitiesPreview />
-            <CommunityPreview userAssessment={profile} userInterests={userInterests} />
+            <CoursesPreview profile={profile} />
+            <OpportunitiesPreview profile={profile} />
+            <CommunityPreview userAssessment={profile} userInterests={userInterests} profile={profile} />
           </div>
         );
       case "courses":
@@ -221,9 +250,9 @@ const Dashboard = () => {
         return (
           <div className="space-y-6">
             <WelcomeDashboard user={user} profile={profile} />
-            <CoursesPreview />
-            <OpportunitiesPreview />
-            <CommunityPreview userAssessment={profile} userInterests={userInterests} />
+            <CoursesPreview profile={profile} />
+            <OpportunitiesPreview profile={profile} />
+            <CommunityPreview userAssessment={profile} userInterests={userInterests} profile={profile} />
           </div>
         );
     }

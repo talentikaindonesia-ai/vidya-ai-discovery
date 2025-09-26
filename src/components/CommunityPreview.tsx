@@ -8,9 +8,10 @@ import { supabase } from "@/integrations/supabase/client";
 interface CommunityPreviewProps {
   userAssessment?: any;
   userInterests?: any[];
+  profile?: any;
 }
 
-const CommunityPreview = ({ userAssessment, userInterests }: CommunityPreviewProps) => {
+const CommunityPreview = ({ userAssessment, userInterests, profile }: CommunityPreviewProps) => {
   const [communities, setCommunities] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 

@@ -5,7 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Briefcase, Calendar, MapPin, Trophy, Users, ArrowRight } from "lucide-react";
 
-const OpportunitiesPreview = () => {
+interface OpportunitiesPreviewProps {
+  profile?: any;
+}
+
+const OpportunitiesPreview = ({ profile }: OpportunitiesPreviewProps) => {
   const [activeFilter, setActiveFilter] = useState("Semua");
   const [opportunities, setOpportunities] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

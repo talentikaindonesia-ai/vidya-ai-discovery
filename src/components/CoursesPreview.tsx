@@ -1,8 +1,19 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, Clock, Star, Users, ArrowRight } from "lucide-react";
+import { BookOpen, Clock, Star, Users, ArrowRight, Lock } from "lucide-react";
+import { FreeLimitReached, LockedContent } from "./dashboard/LockedContent";
+import { UpgradePrompt } from "./dashboard/UpgradePrompt";
+import { useNavigate } from "react-router-dom";
 
-const CoursesPreview = () => {
+interface CoursesPreviewProps {
+  profile?: any;
+}
+
+const CoursesPreview = ({ profile }: CoursesPreviewProps) => {
+  const navigate = useNavigate();
+  const isFreeUser = profile?.subscription_type === 'free';
+  const maxCoursesForFree = 3;
+  const viewedCourses = 0; // This would come from actual user data
   const recommendedCourses = [
     {
       id: 1,
@@ -51,9 +62,20 @@ const CoursesPreview = () => {
           </p>
         </div>
 
+        {/* Free User Limit Reached */}
+        {isFreeUser && viewedCourses >= maxCoursesForFree && (
+          <FreeLimitReached 
+            type="courses"
+            current={viewedCourses}
+            limit={maxCoursesForFree}
+            className="mb-6"
+          />
+        )}
+
         {/* Desktop Grid */}
         <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-          {recommendedCourses.map((course) => (
+          {/* Show limited courses for free users */}
+          {recommendedCourses.slice(0, isFreeUser && viewedCourses >= maxCoursesForFree ? 0 : (isFreeUser ? maxCoursesForFree : recommendedCourses.length)).map((course) => (
             <Card key={course.id} className="group hover:shadow-card transition-all duration-300 hover:-translate-y-1 bg-card border-primary/10">
               <div className="relative overflow-hidden rounded-t-lg">
                 <img 
@@ -64,6 +86,11 @@ const CoursesPreview = () => {
                 <div className="absolute top-3 right-3 bg-primary text-primary-foreground px-2 py-1 rounded-full text-xs font-medium">
                   {course.level}
                 </div>
+                {isFreeUser && (
+                  <div className="absolute top-3 left-3 bg-green-600 text-white px-2 py-1 rounded-full text-xs font-medium">
+                    Free
+                  </div>
+                )}
               </div>
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg group-hover:text-primary transition-colors line-clamp-2">
@@ -96,6 +123,21 @@ const CoursesPreview = () => {
               </CardContent>
             </Card>
           ))}
+
+          {/* Show locked courses for free users */}
+          {isFreeUser && (
+            <LockedContent
+              type="courses"
+              title="Kursus Premium"
+              description="Akses unlimited ke ribuan kursus berkualitas tinggi"
+              features={[
+                "Video pembelajaran HD",
+                "Sertifikat resmi",
+                "Project-based learning",
+                "Mentoring 1-on-1"
+              ]}
+            />
+          )}
         </div>
 
         {/* Mobile Carousel */}

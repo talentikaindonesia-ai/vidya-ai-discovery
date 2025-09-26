@@ -50,8 +50,10 @@ export const SubscriptionPlan = ({
     <Card 
       className={`relative overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-floating ${
         plan.type === 'individual' || isCurrentPlan
-          ? 'border-2 border-primary shadow-floating ring-2 ring-primary/20' 
-          : 'border-border hover:border-primary/50'
+          ? 'border-2 border-primary shadow-floating ring-2 ring-primary/20'
+          : isFree 
+            ? 'border-2 border-green-200 bg-green-50 dark:bg-green-950/20 dark:border-green-800'
+            : 'border-border hover:border-primary/50'
       }`}
     >
       {(plan.type === 'individual' || isCurrentPlan) && (
@@ -60,8 +62,14 @@ export const SubscriptionPlan = ({
           {isCurrentPlan ? 'Paket Aktif' : 'Paling Populer'}
         </div>
       )}
+      {isFree && !isCurrentPlan && (
+        <div className="absolute top-0 left-0 right-0 bg-green-600 text-white text-center py-2 text-sm font-semibold">
+          <Star className="w-4 h-4 inline mr-1" />
+          Mulai Gratis
+        </div>
+      )}
       
-      <CardHeader className={`text-center pb-8 ${plan.type === 'individual' || isCurrentPlan ? 'pt-12' : 'pt-8'}`}>
+      <CardHeader className={`text-center pb-8 ${plan.type === 'individual' || isCurrentPlan || isFree ? 'pt-12' : 'pt-8'}`}>
         <div className={`w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-primary flex items-center justify-center shadow-soft`}>
           <Icon className="w-8 h-8 text-white" />
         </div>

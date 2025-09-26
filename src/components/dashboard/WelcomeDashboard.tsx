@@ -3,10 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { BookOpen, Clock, Target, TrendingUp, Play, Star, Calendar, Award, Trophy, Briefcase } from "lucide-react";
+import { BookOpen, Clock, Target, TrendingUp, Play, Star, Calendar, Award, Trophy, Briefcase, Crown, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { AssessmentResultsCard } from "./AssessmentResultsCard";
+import { UpgradePrompt } from "./UpgradePrompt";
+
 interface WelcomeDashboardProps {
   user: User | null;
   profile: any;
@@ -117,17 +119,35 @@ export const WelcomeDashboard = ({
     return 'Selamat Malam';
   };
   const displayName = profile?.full_name || user?.email?.split('@')[0] || 'Pembelajar';
+  const isFreeUser = profile?.subscription_type === 'free';
+  const isPremiumUser = profile?.subscription_type === 'premium_individual' || profile?.subscription_type === 'individual';
+
   return <div className="space-y-4">
       {/* Greeting Section - Mobile First */}
-      <div className="bg-gradient-primary rounded-2xl p-4 text-white relative overflow-hidden mx-2 sm:mx-0">
+      <div className={`rounded-2xl p-4 text-white relative overflow-hidden mx-2 sm:mx-0 ${
+        isFreeUser ? 'bg-gradient-to-r from-slate-600 to-slate-700' : 'bg-gradient-primary'
+      }`}>
         <div className="absolute inset-0 bg-black/10"></div>
         <div className="relative z-10">
-          <h1 className="text-lg sm:text-xl font-bold mb-1">
-            {getGreeting()}, {displayName}! 👋
-          </h1>
-          <p className="text-white/90 text-sm leading-relaxed">
-            Mari lanjutkan perjalanan pembelajaran Anda hari ini
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-lg sm:text-xl font-bold mb-1">
+                {getGreeting()}, {displayName}! 👋
+              </h1>
+              <p className="text-white/90 text-sm leading-relaxed">
+                {isFreeUser 
+                  ? 'Selamat datang di Talentika Free! Upgrade untuk akses penuh'
+                  : 'Mari lanjutkan perjalanan pembelajaran Anda hari ini'
+                }
+              </p>
+            </div>
+            {isFreeUser && (
+              <div className="flex items-center gap-1 bg-white/20 px-2 py-1 rounded-full">
+                <Lock className="w-3 h-3" />
+                <span className="text-xs font-medium">FREE</span>
+              </div>
+            )}
+          </div>
           {userInterests.length > 0 && <div className="flex flex-wrap gap-1 mt-3">
               {userInterests.slice(0, 3).map(interest => <Badge key={interest.id} className="text-xs bg-white/20 text-white border-white/30">
                   {interest.interest_categories?.name}
@@ -136,13 +156,42 @@ export const WelcomeDashboard = ({
         </div>
       </div>
 
+      {/* Free User Upgrade Prompt */}
+      {isFreeUser && (
+        <UpgradePrompt
+          title="Unlock Premium Learning"
+          description="Dapatkan akses unlimited ke semua kursus, mentoring, dan peluang karier premium"
+          feature="Unlimited akses • Mentoring 1-on-1 • Sertifikat resmi • Priority support"
+          className="mx-2 sm:mx-0"
+        />
+      )}
+
       {/* Assessment Results */}
       <AssessmentResultsCard assessmentResults={assessmentResults} />
 
-      {/* Course Recommendations Section */}
-      <div className="bg-white rounded-2xl border mx-2 sm:mx-0">
-        
-      </div>
+      {/* Limited Progress Stats for Free Users */}
+      {isFreeUser && (
+        <Card className="mx-2 sm:mx-0 border-amber-200 bg-amber-50 dark:bg-amber-950/20">
+          <CardHeader>
+            <CardTitle className="text-amber-900 dark:text-amber-100 flex items-center gap-2">
+              <Trophy className="w-5 h-5" />
+              Progress Terbatas (Free Plan)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-amber-700 dark:text-amber-300">3</div>
+                <div className="text-xs text-amber-600 dark:text-amber-400">Kursus Tersisa</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-amber-700 dark:text-amber-300">5</div>
+                <div className="text-xs text-amber-600 dark:text-amber-400">Peluang Tersisa</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
     </div>;
 };
