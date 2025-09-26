@@ -1,9 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Calendar, Trophy, Target, ArrowRight, User, MessageCircle } from "lucide-react";
+import { Users, Calendar, Trophy, Target, ArrowRight, User, MessageCircle, Lock } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 interface CommunityPreviewProps {
   userAssessment?: any;
@@ -12,8 +13,10 @@ interface CommunityPreviewProps {
 }
 
 const CommunityPreview = ({ userAssessment, userInterests, profile }: CommunityPreviewProps) => {
+  const navigate = useNavigate();
   const [communities, setCommunities] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const isFreeUser = profile?.subscription_type === 'free' || !profile?.subscription_type;
 
   useEffect(() => {
     loadCommunityData();
@@ -174,9 +177,11 @@ const CommunityPreview = ({ userAssessment, userInterests, profile }: CommunityP
 
         {/* Communities Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-          {communities.map((community) => (
-            <Card key={community.id} className="group hover:shadow-card transition-all duration-300 hover:-translate-y-1 bg-card border-primary/10">
-              <CardHeader className="pb-3">
+          {communities.map((community, index) => {
+            const isBlurred = isFreeUser && index >= 1; // First community free, rest blurred
+            return (
+            <Card key={community.id} className="group hover:shadow-card transition-all duration-300 hover:-translate-y-1 bg-card border-primary/10 relative overflow-hidden">
+              <CardHeader className={`pb-3 ${isBlurred ? 'blur-sm' : ''}`}>
                 <div className="flex items-start justify-between mb-2">
                   <Badge variant="outline" className={`${getTypeColor(community.type)} flex items-center gap-1`}>
                     {getTypeIcon(community.type)}
@@ -195,7 +200,7 @@ const CommunityPreview = ({ userAssessment, userInterests, profile }: CommunityP
                   {community.description}
                 </p>
               </CardHeader>
-              <CardContent className="pt-0">
+              <CardContent className={`pt-0 ${isBlurred ? 'blur-sm' : ''}`}>
                 <div className="space-y-2 mb-4">
                   <div className="flex items-center justify-between text-sm text-muted-foreground">
                     <div className="flex items-center gap-2">
@@ -224,8 +229,25 @@ const CommunityPreview = ({ userAssessment, userInterests, profile }: CommunityP
                   Bergabung
                 </Button>
               </CardContent>
+              
+              {/* Lock overlay for blurred content */}
+              {isBlurred && (
+                <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center">
+                  <div className="text-center p-4">
+                    <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <Lock className="w-6 h-6 text-primary" />
+                    </div>
+                    <p className="font-medium text-foreground mb-2">Komunitas Premium</p>
+                    <p className="text-sm text-muted-foreground mb-3">Upgrade untuk bergabung</p>
+                    <Button size="sm" onClick={() => navigate('/subscription')}>
+                      Buka Kunci
+                    </Button>
+                  </div>
+                </div>
+              )}
             </Card>
-          ))}
+            );
+          })}
         </div>
 
         <div className="text-center">

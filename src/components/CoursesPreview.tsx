@@ -75,24 +75,26 @@ const CoursesPreview = ({ profile }: CoursesPreviewProps) => {
         {/* Desktop Grid */}
         <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
           {/* Show limited courses for free users */}
-          {recommendedCourses.slice(0, isFreeUser && viewedCourses >= maxCoursesForFree ? 0 : (isFreeUser ? maxCoursesForFree : recommendedCourses.length)).map((course) => (
-            <Card key={course.id} className="group hover:shadow-card transition-all duration-300 hover:-translate-y-1 bg-card border-primary/10">
+          {recommendedCourses.slice(0, isFreeUser && viewedCourses >= maxCoursesForFree ? 0 : (isFreeUser ? maxCoursesForFree : recommendedCourses.length)).map((course, index) => {
+            const isBlurred = isFreeUser && index >= 1; // First course free, rest blurred
+            return (
+            <Card key={course.id} className="group hover:shadow-card transition-all duration-300 hover:-translate-y-1 bg-card border-primary/10 relative overflow-hidden">
               <div className="relative overflow-hidden rounded-t-lg">
                 <img 
                   src={course.image} 
                   alt={course.title}
-                  className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                  className={`w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300 ${isBlurred ? 'blur-sm' : ''}`}
                 />
                 <div className="absolute top-3 right-3 bg-primary text-primary-foreground px-2 py-1 rounded-full text-xs font-medium">
                   {course.level}
                 </div>
-                {isFreeUser && (
+                {isFreeUser && !isBlurred && (
                   <div className="absolute top-3 left-3 bg-green-600 text-white px-2 py-1 rounded-full text-xs font-medium">
                     Free
                   </div>
                 )}
               </div>
-              <CardHeader className="pb-3">
+              <CardHeader className={`pb-3 ${isBlurred ? 'blur-sm' : ''}`}>
                 <CardTitle className="text-lg group-hover:text-primary transition-colors line-clamp-2">
                   {course.title}
                 </CardTitle>
@@ -100,7 +102,7 @@ const CoursesPreview = ({ profile }: CoursesPreviewProps) => {
                   {course.description}
                 </p>
               </CardHeader>
-              <CardContent className="pt-0">
+              <CardContent className={`pt-0 ${isBlurred ? 'blur-sm' : ''}`}>
                 <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
                   <div className="flex items-center gap-1">
                     <Clock className="w-4 h-4" />
@@ -121,8 +123,25 @@ const CoursesPreview = ({ profile }: CoursesPreviewProps) => {
                   </Button>
                 </div>
               </CardContent>
+              
+              {/* Lock overlay for blurred content */}
+              {isBlurred && (
+                <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center">
+                  <div className="text-center p-4">
+                    <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <Lock className="w-6 h-6 text-primary" />
+                    </div>
+                    <p className="font-medium text-foreground mb-2">Konten Premium</p>
+                    <p className="text-sm text-muted-foreground mb-3">Upgrade untuk mengakses</p>
+                    <Button size="sm" onClick={() => navigate('/subscription')}>
+                      Buka Kunci
+                    </Button>
+                  </div>
+                </div>
+              )}
             </Card>
-          ))}
+            );
+          })}
 
           {/* Show locked courses for free users */}
           {isFreeUser && (

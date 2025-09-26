@@ -3,16 +3,19 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Briefcase, Calendar, MapPin, Trophy, Users, ArrowRight } from "lucide-react";
+import { Briefcase, Calendar, MapPin, Trophy, Users, ArrowRight, Lock } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface OpportunitiesPreviewProps {
   profile?: any;
 }
 
 const OpportunitiesPreview = ({ profile }: OpportunitiesPreviewProps) => {
+  const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState("Semua");
   const [opportunities, setOpportunities] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const isFreeUser = profile?.subscription_type === 'free' || !profile?.subscription_type;
 
   useEffect(() => {
     loadOpportunities();
@@ -137,9 +140,11 @@ const OpportunitiesPreview = ({ profile }: OpportunitiesPreviewProps) => {
 
         {/* Opportunities Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-          {filteredOpportunities.map((opportunity) => (
-            <Card key={opportunity.id} className="group hover:shadow-card transition-all duration-300 hover:-translate-y-1 bg-card border-primary/10">
-              <CardHeader className="pb-3">
+          {filteredOpportunities.map((opportunity, index) => {
+            const isBlurred = isFreeUser && index >= 2; // First 2 opportunities free, rest blurred
+            return (
+            <Card key={opportunity.id} className="group hover:shadow-card transition-all duration-300 hover:-translate-y-1 bg-card border-primary/10 relative overflow-hidden">
+              <CardHeader className={`pb-3 ${isBlurred ? 'blur-sm' : ''}`}>
                 <div className="flex items-start justify-between mb-2">
                   <Badge variant="outline" className={`${getTypeColor(opportunity.category)} flex items-center gap-1`}>
                     {getTypeIcon(opportunity.category)}
@@ -157,7 +162,7 @@ const OpportunitiesPreview = ({ profile }: OpportunitiesPreviewProps) => {
                   {opportunity.description}
                 </p>
               </CardHeader>
-              <CardContent className="pt-0">
+              <CardContent className={`pt-0 ${isBlurred ? 'blur-sm' : ''}`}>
                 <div className="space-y-2 mb-4">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <MapPin className="w-4 h-4" />
@@ -189,8 +194,25 @@ const OpportunitiesPreview = ({ profile }: OpportunitiesPreviewProps) => {
                   Lihat Detail
                 </Button>
               </CardContent>
+              
+              {/* Lock overlay for blurred content */}
+              {isBlurred && (
+                <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center">
+                  <div className="text-center p-4">
+                    <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <Lock className="w-6 h-6 text-primary" />
+                    </div>
+                    <p className="font-medium text-foreground mb-2">Peluang Premium</p>
+                    <p className="text-sm text-muted-foreground mb-3">Upgrade untuk mengakses</p>
+                    <Button size="sm" onClick={() => navigate('/subscription')}>
+                      Buka Kunci
+                    </Button>
+                  </div>
+                </div>
+              )}
             </Card>
-          ))}
+            );
+          })}
         </div>
 
         {filteredOpportunities.length === 0 && !loading && (
