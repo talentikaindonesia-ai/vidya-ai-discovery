@@ -68,30 +68,42 @@ export const PaymentGateway = ({
   const handlePayment = async (methodId: string) => {
     setLoading(true);
     try {
-      // Create payment transaction
-      const { data: transactionData, error: transactionError } = await supabase.rpc('create_payment_transaction', {
-        p_user_id: (await supabase.auth.getUser()).data.user?.id,
-        p_transaction_type: 'subscription',
-        p_amount: finalAmount + (PAYMENT_METHODS.find(m => m.id === methodId)?.fee || 0),
-        p_payment_gateway: 'midtrans'
+      const user = (await supabase.auth.getUser()).data.user;
+      if (!user) throw new Error('User not authenticated');
+
+      // Create Xendit payment
+      const { data, error } = await supabase.functions.invoke('create-xendit-payment', {
+        body: {
+          planId,
+          userId: user.id,
+          amount: finalAmount + (PAYMENT_METHODS.find(m => m.id === methodId)?.fee || 0),
+          paymentMethod: methodId,
+          billingCycle,
+          voucherId
+        }
       });
 
-      if (transactionError) throw transactionError;
+      if (error) throw error;
 
-      // In a real implementation, you would redirect to the payment gateway here
-      // For now, we'll simulate a successful payment after 3 seconds
-      setTimeout(() => {
+      if (data.success) {
+        // Redirect to Xendit payment page
+        window.open(data.invoice_url, '_blank');
+        
         toast({
-          title: "Pembayaran Berhasil!",
-          description: "Subscription Anda telah diaktifkan",
+          title: "Pembayaran Dibuat",
+          description: "Silakan selesaikan pembayaran di halaman yang terbuka",
         });
-        onPaymentSuccess?.(transactionData);
-      }, 3000);
 
-      toast({
-        title: "Mengarahkan ke Pembayaran",
-        description: "Mohon tunggu sebentar...",
-      });
+        // Simulate checking payment status (in real app, you'd poll or use webhooks)
+        setTimeout(() => {
+          toast({
+            title: "Menunggu Pembayaran",
+            description: "Silakan selesaikan pembayaran untuk mengaktifkan subscription",
+          });
+        }, 2000);
+      } else {
+        throw new Error(data.error || 'Failed to create payment');
+      }
 
     } catch (error: any) {
       toast({

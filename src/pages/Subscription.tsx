@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { SubscriptionManager } from "@/components/payment/SubscriptionManager";
+import { PaymentStatusChecker } from "@/components/payment/PaymentStatusChecker";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, CreditCard } from "lucide-react";
@@ -74,7 +75,8 @@ const Subscription = () => {
         </div>
 
         {/* Subscription Manager */}
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-6xl mx-auto space-y-6">
+          {user && <PaymentStatusChecker userId={user.id} />}
           <SubscriptionManager 
             userId={user.id} 
             onSubscriptionChange={handleSubscriptionChange}
@@ -96,7 +98,7 @@ const Subscription = () => {
                   <CreditCard className="w-6 h-6 text-green-600" />
                 </div>
                 <p className="font-medium text-foreground">Pembayaran Aman</p>
-                <p>Transaksi dilindungi SSL 256-bit encryption</p>
+                <p>Transaksi dilindungi dengan Xendit</p>
               </div>
               <div className="text-center">
                 <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-2">
@@ -112,6 +114,16 @@ const Subscription = () => {
                 <p className="font-medium text-foreground">Support 24/7</p>
                 <p>Tim support siap membantu kapan saja</p>
               </div>
+            </div>
+            
+            <div className="mt-6 p-4 bg-muted rounded-lg">
+              <p className="text-xs text-muted-foreground">
+                <strong>Webhook URL untuk Xendit:</strong> <br/>
+                https://doogbcrodipaeahgbjuj.supabase.co/functions/v1/xendit-webhook
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Konfigurasi webhook ini di dashboard Xendit untuk update status pembayaran otomatis
+              </p>
             </div>
           </CardContent>
         </Card>

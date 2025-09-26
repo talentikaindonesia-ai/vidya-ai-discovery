@@ -1,4 +1,17 @@
 project_id = "doogbcrodipaeahgbjuj"
 
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
 [functions.web-scraper]
+verify_jwt = false
+
+[functions.create-xendit-payment]
+verify_jwt = true
+
+[functions.xendit-webhook]
 verify_jwt = false
