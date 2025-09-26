@@ -188,44 +188,64 @@ const MembershipDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-accent-light/30 to-secondary-light/20">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-3 md:px-4 py-4 md:py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
+        <div className="space-y-4 mb-6 md:mb-8">
+          {/* Navigation */}
+          <div className="flex items-center justify-between">
             <Button
               variant="outline"
               size="sm"
               onClick={() => navigate('/dashboard')}
+              className="text-xs md:text-sm"
             >
-              <ArrowLeft className="w-4 h-4 mr-2" />
+              <ArrowLeft className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
               Dashboard
             </Button>
+            
+            {/* Mobile subscription status */}
+            <div className="md:hidden">
+              <Badge variant="default" className="text-xs">
+                {getPlanType() === 'premium' ? (
+                  <Crown className="w-3 h-3 mr-1" />
+                ) : (
+                  <Star className="w-3 h-3 mr-1" />
+                )}
+                Active
+              </Badge>
+            </div>
+          </div>
+
+          {/* Title and Description */}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+              <h1 className="text-xl md:text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
                 Membership Dashboard
               </h1>
-              <p className="text-muted-foreground">
+              <p className="text-sm md:text-base text-muted-foreground">
                 Kelola dan kembangkan perjalanan karir Anda
               </p>
             </div>
-          </div>
-          <Card className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-primary flex items-center justify-center">
-                {getPlanType() === 'premium' ? (
-                  <Crown className="w-5 h-5 text-white" />
-                ) : (
-                  <Star className="w-5 h-5 text-white" />
-                )}
-              </div>
-              <div>
-                <div className="font-semibold">{subscription.subscription_packages.name}</div>
-                <div className="text-sm text-muted-foreground">
-                  Status: <Badge variant="default">Active</Badge>
+            
+            {/* Desktop subscription card */}
+            <Card className="hidden md:block p-4 shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-primary flex items-center justify-center">
+                  {getPlanType() === 'premium' ? (
+                    <Crown className="w-5 h-5 text-white" />
+                  ) : (
+                    <Star className="w-5 h-5 text-white" />
+                  )}
+                </div>
+                <div>
+                  <div className="font-semibold">{subscription.subscription_packages.name}</div>
+                  <div className="text-sm text-muted-foreground">
+                    Status: <Badge variant="default">Active</Badge>
+                  </div>
                 </div>
               </div>
-            </div>
-          </Card>
+            </Card>
+          </div>
         </div>
 
         {/* Progress Overview */}
@@ -247,44 +267,44 @@ const MembershipDashboard = () => {
               </div>
               <Progress value={getCompletionPercentage()} className="h-2" />
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-3 md:gap-4 mt-4 md:mt-6">
+                <div className="flex items-center gap-2 md:gap-3 p-2 md:p-3 rounded-lg bg-muted/50">
                   {assessmentResults.length > 0 ? (
-                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <CheckCircle className="w-4 h-4 md:w-5 md:h-5 text-green-500 shrink-0" />
                   ) : (
-                    <Clock className="w-5 h-5 text-muted-foreground" />
+                    <Clock className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground shrink-0" />
                   )}
-                  <div>
-                    <div className="font-medium">Assessment</div>
-                    <div className="text-sm text-muted-foreground">
+                  <div className="min-w-0">
+                    <div className="font-medium text-sm md:text-base">Assessment</div>
+                    <div className="text-xs md:text-sm text-muted-foreground">
                       {assessmentResults.length > 0 ? 'Selesai' : 'Belum dikerjakan'}
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                <div className="flex items-center gap-2 md:gap-3 p-2 md:p-3 rounded-lg bg-muted/50">
                   {portfolioStats.total > 0 ? (
-                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <CheckCircle className="w-4 h-4 md:w-5 md:h-5 text-green-500 shrink-0" />
                   ) : (
-                    <Clock className="w-5 h-5 text-muted-foreground" />
+                    <Clock className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground shrink-0" />
                   )}
-                  <div>
-                    <div className="font-medium">Portfolio</div>
-                    <div className="text-sm text-muted-foreground">
+                  <div className="min-w-0">
+                    <div className="font-medium text-sm md:text-base">Portfolio</div>
+                    <div className="text-xs md:text-sm text-muted-foreground">
                       {portfolioStats.total} item
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                <div className="flex items-center gap-2 md:gap-3 p-2 md:p-3 rounded-lg bg-muted/50">
                   {mentorshipStats.total > 0 ? (
-                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <CheckCircle className="w-4 h-4 md:w-5 md:h-5 text-green-500 shrink-0" />
                   ) : (
-                    <Clock className="w-5 h-5 text-muted-foreground" />
+                    <Clock className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground shrink-0" />
                   )}
-                  <div>
-                    <div className="font-medium">Mentorship</div>
-                    <div className="text-sm text-muted-foreground">
+                  <div className="min-w-0">
+                    <div className="font-medium text-sm md:text-base">Mentorship</div>
+                    <div className="text-xs md:text-sm text-muted-foreground">
                       {mentorshipStats.completed}/{mentorshipStats.total} sesi
                     </div>
                   </div>
@@ -295,17 +315,31 @@ const MembershipDashboard = () => {
         </Card>
 
         {/* Main Content Tabs */}
-        <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="assessment">Assessment</TabsTrigger>
-            <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
-            <TabsTrigger value="mentorship">Mentorship</TabsTrigger>
-            <TabsTrigger value="networking">Networking</TabsTrigger>
-          </TabsList>
+        <Tabs defaultValue="overview" className="space-y-4 md:space-y-6">
+          {/* Mobile: Scrollable tabs */}
+          <div className="md:hidden overflow-x-auto">
+            <TabsList className="flex w-max min-w-full">
+              <TabsTrigger value="overview" className="text-xs px-3">Overview</TabsTrigger>
+              <TabsTrigger value="assessment" className="text-xs px-3">Assessment</TabsTrigger>
+              <TabsTrigger value="portfolio" className="text-xs px-3">Portfolio</TabsTrigger>
+              <TabsTrigger value="mentorship" className="text-xs px-3">Mentorship</TabsTrigger>
+              <TabsTrigger value="networking" className="text-xs px-3">Networking</TabsTrigger>
+            </TabsList>
+          </div>
+          
+          {/* Desktop: Grid tabs */}
+          <div className="hidden md:block">
+            <TabsList className="grid w-full grid-cols-5">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="assessment">Assessment</TabsTrigger>
+              <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
+              <TabsTrigger value="mentorship">Mentorship</TabsTrigger>
+              <TabsTrigger value="networking">Networking</TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="overview">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
               {/* Stats Cards */}
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
