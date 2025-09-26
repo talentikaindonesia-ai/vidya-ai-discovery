@@ -14,9 +14,10 @@ import { formatCurrency, formatDate } from "@/lib/utils";
 interface SubscriptionManagerProps {
   userId: string;
   onSubscriptionChange?: () => void;
+  preSelectedPlanId?: string | null;
 }
 
-export const SubscriptionManager = ({ userId, onSubscriptionChange }: SubscriptionManagerProps) => {
+export const SubscriptionManager = ({ userId, onSubscriptionChange, preSelectedPlanId }: SubscriptionManagerProps) => {
   const [plans, setPlans] = useState<any[]>([]);
   const [currentSubscription, setCurrentSubscription] = useState<any>(null);
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
@@ -33,6 +34,17 @@ export const SubscriptionManager = ({ userId, onSubscriptionChange }: Subscripti
     loadCurrentSubscription();
     loadTransactions();
   }, [userId]);
+
+  // Pre-select plan when plans are loaded
+  useEffect(() => {
+    if (preSelectedPlanId && plans.length > 0) {
+      const planToSelect = plans.find(plan => plan.id === preSelectedPlanId);
+      if (planToSelect) {
+        setSelectedPlan(planToSelect);
+        setShowPaymentGateway(true);
+      }
+    }
+  }, [preSelectedPlanId, plans]);
 
   const loadPlans = async () => {
     const { data, error } = await supabase

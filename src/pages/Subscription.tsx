@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { SubscriptionManager } from "@/components/payment/SubscriptionManager";
 import { PaymentStatusChecker } from "@/components/payment/PaymentStatusChecker";
@@ -11,8 +11,13 @@ import { useToast } from "@/components/ui/use-toast";
 const Subscription = () => {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Get URL parameters for pre-selected plan
+  const preSelectedPlanId = searchParams.get('planId');
+  const preSelectedPlanName = searchParams.get('planName');
 
   useEffect(() => {
     checkUser();
@@ -66,10 +71,13 @@ const Subscription = () => {
           </Button>
           <div>
             <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-              Kelola Berlangganan
+              {preSelectedPlanName ? `Paket ${preSelectedPlanName}` : 'Kelola Berlangganan'}
             </h1>
             <p className="text-muted-foreground">
-              Pilih paket yang sesuai dengan kebutuhan Anda
+              {preSelectedPlanName 
+                ? `Lanjutkan dengan paket ${preSelectedPlanName} yang dipilih`
+                : 'Pilih paket yang sesuai dengan kebutuhan Anda'
+              }
             </p>
           </div>
         </div>
@@ -80,6 +88,7 @@ const Subscription = () => {
           <SubscriptionManager 
             userId={user.id} 
             onSubscriptionChange={handleSubscriptionChange}
+            preSelectedPlanId={preSelectedPlanId}
           />
         </div>
 

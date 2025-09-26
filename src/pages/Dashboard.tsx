@@ -161,30 +161,11 @@ const Dashboard = () => {
       const selectedPlan = subscriptionPlans.find(p => p.id === planId);
       if (!selectedPlan) return;
 
-      // Create Xendit payment
-      const { data, error } = await supabase.functions.invoke('create-xendit-payment', {
-        body: {
-          planId: selectedPlan.id,
-          planName: selectedPlan.name,
-          amount: selectedPlan.price_monthly,
-          billingCycle: 'monthly'
-        }
-      });
-
-      if (error) {
-        console.error('Error creating payment:', error);
-        toast.error("Gagal membuat pembayaran. Silakan coba lagi.");
-        return;
-      }
-
-      if (data?.invoice_url) {
-        // Redirect to Xendit payment page
-        window.open(data.invoice_url, '_blank');
-        
-        toast.success("Pembayaran dibuat! Anda akan diarahkan ke halaman pembayaran Xendit.");
-      }
+      // Navigate to subscription page with selected plan
+      navigate(`/subscription?planId=${planId}&planName=${encodeURIComponent(selectedPlan.name)}`);
+      
     } catch (error: any) {
-      console.error('Error subscribing:', error);
+      console.error('Error navigating to subscription:', error);
       toast.error("Terjadi kesalahan: " + error.message);
     }
   };
