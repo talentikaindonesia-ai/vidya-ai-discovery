@@ -156,27 +156,36 @@ const Dashboard = () => {
 
   const handleSubscribe = async (planId: string) => {
     try {
-      // Update user subscription status
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          subscription_status: 'active',
-          subscription_type: userRole === 'school' ? 'school' : 'individual',
-          subscription_end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-        })
-        .eq('user_id', user?.id);
-
-      if (error) throw error;
-
-      toast.success("Berlangganan berhasil!");
-      setShowSubscription(false);
+      if (!user) return;
       
-      // Reload profile
-      if (user) {
-        loadUserData(user.id);
+      const selectedPlan = subscriptionPlans.find(p => p.id === planId);
+      if (!selectedPlan) return;
+
+      // Create Xendit payment
+      const { data, error } = await supabase.functions.invoke('create-xendit-payment', {
+        body: {
+          planId: selectedPlan.id,
+          planName: selectedPlan.name,
+          amount: selectedPlan.price_monthly,
+          billingCycle: 'monthly'
+        }
+      });
+
+      if (error) {
+        console.error('Error creating payment:', error);
+        toast.error("Gagal membuat pembayaran. Silakan coba lagi.");
+        return;
+      }
+
+      if (data?.invoice_url) {
+        // Redirect to Xendit payment page
+        window.open(data.invoice_url, '_blank');
+        
+        toast.success("Pembayaran dibuat! Anda akan diarahkan ke halaman pembayaran Xendit.");
       }
     } catch (error: any) {
-      toast.error("Gagal berlangganan: " + error.message);
+      console.error('Error subscribing:', error);
+      toast.error("Terjadi kesalahan: " + error.message);
     }
   };
 
