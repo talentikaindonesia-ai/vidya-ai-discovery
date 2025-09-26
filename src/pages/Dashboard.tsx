@@ -104,7 +104,7 @@ const Dashboard = () => {
 
       // Load subscription plans
       const { data: plansData, error: plansError } = await supabase
-        .from('subscription_plans')
+        .from('subscription_packages')
         .select('*')
         .eq('is_active', true)
         .order('price_monthly');
@@ -257,18 +257,20 @@ const Dashboard = () => {
   // Show subscription modal if user needs to subscribe
   if (showSubscription) {
     const relevantPlans = subscriptionPlans.filter(plan => 
-      userRole === 'school' ? plan.name.toLowerCase().includes('school') : 
-      !plan.name.toLowerCase().includes('school')
+      userRole === 'school' ? plan.type === 'school' : 
+      plan.type !== 'school'
     );
 
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <Card className="w-full max-w-4xl">
+      <div className="min-h-screen bg-gradient-to-br from-background via-accent-light/30 to-secondary-light/20 flex items-center justify-center p-4">
+        <Card className="w-full max-w-4xl shadow-lg">
           <CardHeader className="text-center">
             <div className="flex justify-center mb-4">
               <Crown className="w-12 h-12 text-primary" />
             </div>
-            <CardTitle className="text-3xl">Pilih Paket Berlangganan</CardTitle>
+            <CardTitle className="text-3xl bg-gradient-primary bg-clip-text text-transparent">
+              Pilih Paket Berlangganan
+            </CardTitle>
             <CardDescription className="text-lg">
               Untuk mengakses dashboard pembelajaran, Anda perlu berlangganan terlebih dahulu
             </CardDescription>
@@ -276,15 +278,15 @@ const Dashboard = () => {
           <CardContent>
             <div className="grid gap-6 md:grid-cols-2">
               {relevantPlans.map((plan) => (
-                <Card key={plan.id} className="relative border-2 hover:border-primary transition-colors">
+                <Card key={plan.id} className="relative border-2 hover:border-primary transition-all hover:shadow-lg">
                   {plan.name.toLowerCase().includes('premium') && (
                     <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                      <Badge className="bg-primary text-primary-foreground">Terpopuler</Badge>
+                      <Badge className="bg-primary text-primary-foreground px-3 py-1">Terpopuler</Badge>
                     </div>
                   )}
                   <CardHeader>
                     <CardTitle className="text-xl">{plan.name}</CardTitle>
-                    <CardDescription>{plan.description}</CardDescription>
+                    <CardDescription className="text-muted-foreground">{plan.description}</CardDescription>
                     <div className="text-3xl font-bold text-primary">
                       Rp {(plan.price_monthly / 1000).toLocaleString('id-ID')}K
                       <span className="text-sm font-normal text-muted-foreground">/bulan</span>
@@ -294,14 +296,14 @@ const Dashboard = () => {
                     <ul className="space-y-2">
                       {Array.isArray(plan.features) && plan.features.map((feature: string, index: number) => (
                         <li key={index} className="flex items-center gap-2">
-                          <Check className="w-4 h-4 text-green-500" />
+                          <Check className="w-4 h-4 text-success flex-shrink-0" />
                           <span className="text-sm">{feature}</span>
                         </li>
                       ))}
                     </ul>
                     <Button 
                       onClick={() => handleSubscribe(plan.id)} 
-                      className="w-full"
+                      className="w-full h-12"
                       variant={plan.name.toLowerCase().includes('premium') ? 'default' : 'outline'}
                     >
                       Pilih Paket Ini
@@ -311,7 +313,7 @@ const Dashboard = () => {
               ))}
             </div>
             <div className="text-center mt-6">
-              <Button variant="ghost" onClick={() => navigate("/")}>
+              <Button variant="ghost" onClick={() => navigate("/")} className="text-muted-foreground hover:text-foreground">
                 Kembali ke Beranda
               </Button>
             </div>
