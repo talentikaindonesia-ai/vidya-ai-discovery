@@ -38,23 +38,6 @@ const Index = () => {
         <section id="partnership">
           <PartnershipCTA />
         </section>
-        
-        {/* Membership CTA Section */}
-        <section className="py-16 bg-gradient-to-r from-primary/5 to-secondary/5">
-          <div className="container mx-auto px-4 text-center">
-            <h2 className="text-3xl font-bold mb-4">Siap Mengembangkan Karir?</h2>
-            <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Bergabung dengan sistem membership Talentika untuk akses penuh ke fitur assessment, mentorship, dan networking profesional
-            </p>
-            <Button 
-              className="bg-gradient-to-r from-primary to-primary-dark hover:shadow-glow transition-all duration-300 transform hover:scale-105"
-              size="lg"
-              onClick={() => navigate('/membership')}
-            >
-              Akses Membership Dashboard
-            </Button>
-          </div>
-        </section>
       </main>
       <Footer />
     </div>
