@@ -64,9 +64,10 @@ export const VoucherInput = ({ onVoucherApplied, selectedPlan, billingCycle }: V
         .from('voucher_usage')
         .select('id')
         .eq('voucher_id', voucher.id)
-        .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
+        .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
+        .maybeSingle();
 
-      if (existingUsage && existingUsage.length > 0) {
+      if (existingUsage) {
         throw new Error('Anda sudah menggunakan kode voucher ini');
       }
 
@@ -77,7 +78,7 @@ export const VoucherInput = ({ onVoucherApplied, selectedPlan, billingCycle }: V
         
         if (voucher.discount_type === 'percentage') {
           discountAmount = Math.floor((planPrice * voucher.discount_value) / 100);
-        } else {
+        } else if (voucher.discount_type === 'amount') {
           discountAmount = Math.min(voucher.discount_value, planPrice);
         }
 

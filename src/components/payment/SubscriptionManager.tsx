@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SubscriptionPlan } from "./SubscriptionPlan";
 import { VoucherInput } from "./VoucherInput";
+import { PaymentGateway } from "./PaymentGateway";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2, CreditCard, Receipt, Users, Crown } from "lucide-react";
@@ -23,6 +24,8 @@ export const SubscriptionManager = ({ userId, onSubscriptionChange }: Subscripti
   const [transactions, setTransactions] = useState<any[]>([]);
   const [selectedVoucher, setSelectedVoucher] = useState<any>(null);
   const [discount, setDiscount] = useState(0);
+  const [showPaymentGateway, setShowPaymentGateway] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<any>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -95,8 +98,9 @@ export const SubscriptionManager = ({ userId, onSubscriptionChange }: Subscripti
         return;
       }
 
-      // Create payment session (integrate with payment gateway)
-      await createPaymentSession(planId, cycle, finalPrice);
+      // Show payment gateway
+      setSelectedPlan({ ...plan, selectedCycle: cycle, finalPrice });
+      setShowPaymentGateway(true);
       
     } catch (error: any) {
       toast({
@@ -216,6 +220,32 @@ export const SubscriptionManager = ({ userId, onSubscriptionChange }: Subscripti
     );
   };
 
+  const handlePaymentSuccess = (transactionId: string) => {
+    setShowPaymentGateway(false);
+    loadCurrentSubscription();
+    onSubscriptionChange?.();
+  };
+
+  const handlePaymentCancel = () => {
+    setShowPaymentGateway(false);
+    setSelectedPlan(null);
+  };
+
+  if (showPaymentGateway && selectedPlan) {
+    return (
+      <PaymentGateway
+        planId={selectedPlan.id}
+        planName={selectedPlan.name}
+        amount={selectedPlan.selectedCycle === 'monthly' ? selectedPlan.price_monthly : selectedPlan.price_yearly}
+        billingCycle={selectedPlan.selectedCycle}
+        discount={discount}
+        voucherId={selectedVoucher?.id}
+        onPaymentSuccess={handlePaymentSuccess}
+        onCancel={handlePaymentCancel}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6">
       {getSubscriptionStatus()}
@@ -246,7 +276,7 @@ export const SubscriptionManager = ({ userId, onSubscriptionChange }: Subscripti
 
               <VoucherInput 
                 onVoucherApplied={handleVoucherApplied}
-                selectedPlan={null}
+                selectedPlan={selectedPlan}
                 billingCycle={billingCycle}
               />
 

@@ -49,19 +49,19 @@ export const SubscriptionPlan = ({
   return (
     <Card 
       className={`relative overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-floating ${
-        plan.is_popular || isCurrentPlan
+        plan.type === 'individual' || isCurrentPlan
           ? 'border-2 border-primary shadow-floating ring-2 ring-primary/20' 
           : 'border-border hover:border-primary/50'
       }`}
     >
-      {(plan.is_popular || isCurrentPlan) && (
+      {(plan.type === 'individual' || isCurrentPlan) && (
         <div className="absolute top-0 left-0 right-0 bg-gradient-primary text-white text-center py-2 text-sm font-semibold">
           <Star className="w-4 h-4 inline mr-1" />
           {isCurrentPlan ? 'Paket Aktif' : 'Paling Populer'}
         </div>
       )}
       
-      <CardHeader className={`text-center pb-8 ${plan.is_popular || isCurrentPlan ? 'pt-12' : 'pt-8'}`}>
+      <CardHeader className={`text-center pb-8 ${plan.type === 'individual' || isCurrentPlan ? 'pt-12' : 'pt-8'}`}>
         <div className={`w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-primary flex items-center justify-center shadow-soft`}>
           <Icon className="w-8 h-8 text-white" />
         </div>
@@ -106,7 +106,7 @@ export const SubscriptionPlan = ({
           className={`w-full h-12 font-semibold transition-all duration-300 ${
             isCurrentPlan
               ? 'hero opacity-50 cursor-not-allowed'
-              : plan.is_popular 
+              : plan.type === 'individual'
                 ? 'hero' 
                 : 'outline hover:bg-primary hover:text-white'
           }`}
