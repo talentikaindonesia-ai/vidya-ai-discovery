@@ -41,7 +41,8 @@ export const SubscriptionManager = ({ userId, onSubscriptionChange, preSelectedP
       const planToSelect = plans.find(plan => plan.id === preSelectedPlanId);
       if (planToSelect) {
         setSelectedPlan(planToSelect);
-        setShowPaymentGateway(true);
+        // Don't automatically show payment gateway, let user choose billing cycle first
+        // setShowPaymentGateway(true);
       }
     }
   }, [preSelectedPlanId, plans]);
@@ -285,6 +286,14 @@ export const SubscriptionManager = ({ userId, onSubscriptionChange, preSelectedP
                   </TabsList>
                 </Tabs>
               </div>
+
+              {preSelectedPlanId && (
+                <div className="mb-6 p-4 bg-primary/10 border border-primary/20 rounded-lg">
+                  <p className="text-sm text-center text-primary font-medium">
+                    ✨ Paket terpilih dari dashboard. Pilih periode berlangganan di atas, lalu klik "Berlangganan Sekarang".
+                  </p>
+                </div>
+              )}
 
               <VoucherInput 
                 onVoucherApplied={handleVoucherApplied}
