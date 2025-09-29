@@ -2317,6 +2317,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_article_view_count: {
+        Args: { article_id: string }
+        Returns: undefined
+      }
       update_quiz_rankings: {
         Args: Record<PropertyKey, never>
         Returns: undefined

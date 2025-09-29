@@ -84,6 +84,7 @@ const Admin = () => {
                 learning: () => navigate('/admin/content/new'),
                 paths: () => setActiveTab('paths'), // Will trigger form in component
                 quizzes: () => setActiveTab('quizzes'), // Will trigger form in component
+                articles: () => setActiveTab('articles'), // Will trigger form in component
                 opportunities: () => setActiveTab('opportunities'),
                 challenges: () => setActiveTab('challenges'),
                 community: () => setActiveTab('community'),

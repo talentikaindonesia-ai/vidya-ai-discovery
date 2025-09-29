@@ -70,11 +70,7 @@ const Articles = () => {
 
   const incrementViewCount = async (articleId: string) => {
     try {
-      const { error } = await supabase
-        .from('articles')
-        .update({ view_count: supabase.sql`view_count + 1` })
-        .eq('id', articleId);
-      
+      const { error } = await supabase.rpc('increment_article_view_count', { article_id: articleId });
       if (error) throw error;
     } catch (error) {
       console.error('Error incrementing view count:', error);
@@ -172,9 +168,21 @@ const Articles = () => {
               </div>
 
               <div 
-                className="article-content"
+                className="article-content prose prose-lg max-w-none dark:prose-invert
+                          prose-headings:text-foreground prose-p:text-foreground 
+                          prose-strong:text-foreground prose-ul:text-foreground 
+                          prose-ol:text-foreground prose-li:text-foreground
+                          prose-headings:font-semibold prose-h1:text-3xl prose-h2:text-2xl 
+                          prose-h3:text-xl prose-p:leading-relaxed prose-li:leading-relaxed"
                 dangerouslySetInnerHTML={{ 
-                  __html: selectedArticle.content.replace(/\n/g, '<br>') 
+                  __html: selectedArticle.content
+                    .replace(/\n/g, '<br>')
+                    .replace(/# (.*)/g, '<h1>$1</h1>')
+                    .replace(/## (.*)/g, '<h2>$1</h2>')
+                    .replace(/### (.*)/g, '<h3>$1</h3>')
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/- (.*)/g, '<li>$1</li>')
+                    .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>')
                 }}
               />
             </article>
