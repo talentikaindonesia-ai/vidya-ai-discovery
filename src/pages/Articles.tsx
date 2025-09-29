@@ -101,51 +101,181 @@ const Articles = () => {
 
   // Article detail view
   if (selectedArticle) {
+    const processContentWithMedia = (content: string) => {
+      return content
+        // Convert newlines to breaks
+        .replace(/\n\n/g, '</p><p>')
+        .replace(/\n/g, '<br>')
+        
+        // Handle headings with better styling
+        .replace(/# (.*)/g, '<h1 class="text-4xl font-bold text-foreground mb-6 mt-12 first:mt-0 bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">$1</h1>')
+        .replace(/## (.*)/g, '<h2 class="text-3xl font-semibold text-foreground mb-4 mt-10 pb-2 border-b border-primary/20">$1</h2>')
+        .replace(/### (.*)/g, '<h3 class="text-2xl font-semibold text-foreground mb-3 mt-8">$1</h3>')
+        
+        // Enhanced text formatting
+        .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-foreground bg-primary/10 px-1 rounded">$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em class="italic text-primary">$1</em>')
+        
+        // Handle images with better styling
+        .replace(/!\[(.*?)\]\((.*?)\)/g, '<div class="my-8"><img src="$2" alt="$1" class="w-full rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 border border-border/50" loading="lazy" /></div>')
+        
+        // Handle YouTube videos
+        .replace(/\[video:(https:\/\/(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]+))\]/g, 
+          '<div class="my-8 relative"><div class="aspect-video rounded-xl overflow-hidden shadow-lg border border-border/50"><iframe src="https://www.youtube.com/embed/$2" class="w-full h-full" frameborder="0" allowfullscreen></iframe></div></div>')
+        
+        // Handle lists with better styling
+        .replace(/- (.*)/g, '<li class="flex items-start gap-3 mb-2"><span class="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></span><span>$1</span></li>')
+        .replace(/(\<li.*<\/li>)/s, '<ul class="space-y-2 my-6">$1</ul>')
+        
+        // Handle quotes
+        .replace(/> (.*)/g, '<blockquote class="border-l-4 border-primary bg-primary/5 pl-6 py-4 my-6 italic text-muted-foreground rounded-r-lg"><p class="text-lg">$1</p></blockquote>')
+        
+        // Handle code blocks
+        .replace(/```([\s\S]*?)```/g, '<pre class="bg-muted p-4 rounded-lg my-6 overflow-x-auto border border-border/50"><code class="text-sm">$1</code></pre>')
+        .replace(/`(.*?)`/g, '<code class="bg-muted px-2 py-1 rounded text-sm font-mono">$1</code>')
+        
+        // Wrap in paragraphs
+        .replace(/^(.+)$/gm, '<p class="text-lg leading-relaxed text-foreground mb-4">$1</p>')
+        
+        // Clean up multiple paragraph tags
+        .replace(/<\/p><p>/g, '</p>\n<p>')
+        .replace(/<p><h([1-6])/g, '<h$1')
+        .replace(/<\/h([1-6])><\/p>/g, '</h$1>')
+        .replace(/<p><ul/g, '<ul')
+        .replace(/<\/ul><\/p>/g, '</ul>')
+        .replace(/<p><blockquote/g, '<blockquote')
+        .replace(/<\/blockquote><\/p>/g, '</blockquote>')
+        .replace(/<p><pre/g, '<pre')
+        .replace(/<\/pre><\/p>/g, '</pre>')
+        .replace(/<p><div/g, '<div')
+        .replace(/<\/div><\/p>/g, '</div>');
+    };
+
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <main className="pt-20 pb-16">
-          <div className="container mx-auto px-4 max-w-4xl">
+        
+        {/* Hero Section */}
+        <div className="relative pt-20 pb-8 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary-glow/5"></div>
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,hsl(var(--primary)/0.1),transparent_50%)]"></div>
+          
+          <div className="container mx-auto px-4 max-w-4xl relative z-10">
             <Button 
               variant="ghost" 
               asChild 
-              className="mb-6"
+              className="mb-8 hover:bg-primary/10 transition-colors group"
             >
               <Link to="/articles">
-                <ArrowLeft className="w-4 h-4 mr-2" />
+                <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
                 Kembali ke Artikel
               </Link>
             </Button>
 
-            <article className="prose prose-lg max-w-none">
-              <div className="mb-8">
-                <div className="flex items-center gap-2 mb-4">
-                  <Badge variant="secondary">{selectedArticle.category}</Badge>
-                  {selectedArticle.tags.map((tag) => (
-                    <Badge key={tag} variant="outline">{tag}</Badge>
-                  ))}
+            {/* Article Header */}
+            <div className="text-center mb-12">
+              <div className="flex items-center justify-center gap-2 mb-6 flex-wrap">
+                <Badge className="bg-gradient-to-r from-primary to-primary-glow text-white border-0 shadow-lg">
+                  {selectedArticle.category}
+                </Badge>
+                {selectedArticle.tags.slice(0, 4).map((tag) => (
+                  <Badge key={tag} variant="outline" className="bg-background/80 hover:bg-primary/10 transition-colors">
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+              
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-primary via-primary-glow to-primary bg-clip-text text-transparent mb-6 leading-tight">
+                {selectedArticle.title}
+              </h1>
+              
+              <p className="text-xl text-muted-foreground mb-8 max-w-3xl mx-auto leading-relaxed">
+                {selectedArticle.excerpt}
+              </p>
+              
+              <div className="flex items-center justify-center gap-8 text-muted-foreground mb-8 flex-wrap">
+                <div className="flex items-center gap-2 bg-background/50 px-4 py-2 rounded-full border border-border/50">
+                  <Calendar className="w-4 h-4 text-primary" />
+                  <span className="font-medium">{new Date(selectedArticle.published_at || selectedArticle.created_at).toLocaleDateString('id-ID')}</span>
                 </div>
-                
-                <h1 className="text-4xl font-bold text-foreground mb-4">
-                  {selectedArticle.title}
-                </h1>
-                
-                <div className="flex items-center gap-6 text-muted-foreground mb-6">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4" />
-                    <span>{new Date(selectedArticle.published_at || selectedArticle.created_at).toLocaleDateString('id-ID')}</span>
+                <div className="flex items-center gap-2 bg-background/50 px-4 py-2 rounded-full border border-border/50">
+                  <Clock className="w-4 h-4 text-primary" />
+                  <span className="font-medium">{selectedArticle.reading_time_minutes} menit baca</span>
+                </div>
+                <div className="flex items-center gap-2 bg-background/50 px-4 py-2 rounded-full border border-border/50">
+                  <Eye className="w-4 h-4 text-primary" />
+                  <span className="font-medium">{selectedArticle.view_count} views</span>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="bg-background/50 border border-border/50 hover:bg-primary/10 rounded-full px-4 py-2"
+                  onClick={() => {
+                    navigator.share?.({
+                      title: selectedArticle.title,
+                      url: window.location.href
+                    }) || navigator.clipboard.writeText(window.location.href);
+                    toast.success('Link berhasil disalin!');
+                  }}
+                >
+                  <Share2 className="w-4 h-4 text-primary" />
+                  <span className="ml-2 font-medium">Bagikan</span>
+                </Button>
+              </div>
+
+              {selectedArticle.featured_image_url && (
+                <div className="relative mb-12 group">
+                  <div className="absolute -inset-1 bg-gradient-to-r from-primary to-primary-glow rounded-2xl blur-sm opacity-30 group-hover:opacity-50 transition-opacity"></div>
+                  <img 
+                    src={selectedArticle.featured_image_url} 
+                    alt={selectedArticle.title}
+                    className="relative w-full h-64 md:h-80 lg:h-96 object-cover rounded-xl shadow-2xl border border-border/50"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <main className="pb-16">
+          <div className="container mx-auto px-4 max-w-4xl">
+            {/* Article Content */}
+            <article className="mb-16">
+              <div className="bg-background/80 backdrop-blur-sm border border-border/50 rounded-2xl p-8 md:p-12 shadow-lg">
+                <div 
+                  className="article-content max-w-none 
+                            [&>p]:text-lg [&>p]:leading-relaxed [&>p]:text-foreground [&>p]:mb-6
+                            [&>h1]:scroll-mt-20 [&>h2]:scroll-mt-20 [&>h3]:scroll-mt-20
+                            [&>ul]:pl-0 [&>ul]:list-none
+                            [&>blockquote]:text-lg [&>blockquote]:leading-relaxed
+                            [&>pre]:text-sm [&>pre]:leading-relaxed
+                            [&_img]:transition-all [&_img]:duration-300 [&_img]:hover:scale-[1.02]
+                            [&_code]:text-primary [&_code]:font-medium"
+                  dangerouslySetInnerHTML={{ 
+                    __html: processContentWithMedia(selectedArticle.content)
+                  }}
+                />
+              </div>
+            </article>
+
+            {/* Author & Share Section */}
+            <div className="bg-gradient-to-r from-primary/5 to-primary-glow/5 rounded-2xl p-8 mb-16 border border-border/20">
+              <div className="flex items-center justify-between flex-wrap gap-6">
+                <div className="flex items-center gap-4">
+                  <Avatar className="w-12 h-12 border-2 border-primary/20">
+                    <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                      T
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="font-semibold text-foreground">Tim Talentika</p>
+                    <p className="text-sm text-muted-foreground">Career Development Expert</p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4" />
-                    <span>{selectedArticle.reading_time_minutes} menit baca</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Eye className="w-4 h-4" />
-                    <span>{selectedArticle.view_count} views</span>
-                  </div>
+                </div>
+                <div className="flex items-center gap-3">
                   <Button 
-                    variant="ghost" 
-                    size="sm" 
+                    variant="outline" 
+                    size="sm"
                     onClick={() => {
                       navigator.share?.({
                         title: selectedArticle.title,
@@ -154,62 +284,72 @@ const Articles = () => {
                       toast.success('Link berhasil disalin!');
                     }}
                   >
-                    <Share2 className="w-4 h-4" />
+                    <Share2 className="w-4 h-4 mr-2" />
+                    Bagikan Artikel
                   </Button>
                 </div>
-
-                {selectedArticle.featured_image_url && (
-                  <img 
-                    src={selectedArticle.featured_image_url} 
-                    alt={selectedArticle.title}
-                    className="w-full h-64 object-cover rounded-lg mb-8"
-                  />
-                )}
               </div>
+            </div>
 
-              <div 
-                className="article-content prose prose-lg max-w-none dark:prose-invert
-                          prose-headings:text-foreground prose-p:text-foreground 
-                          prose-strong:text-foreground prose-ul:text-foreground 
-                          prose-ol:text-foreground prose-li:text-foreground
-                          prose-headings:font-semibold prose-h1:text-3xl prose-h2:text-2xl 
-                          prose-h3:text-xl prose-p:leading-relaxed prose-li:leading-relaxed"
-                dangerouslySetInnerHTML={{ 
-                  __html: selectedArticle.content
-                    .replace(/\n/g, '<br>')
-                    .replace(/# (.*)/g, '<h1>$1</h1>')
-                    .replace(/## (.*)/g, '<h2>$1</h2>')
-                    .replace(/### (.*)/g, '<h3>$1</h3>')
-                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                    .replace(/- (.*)/g, '<li>$1</li>')
-                    .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>')
-                }}
-              />
-            </article>
+            <Separator className="my-16" />
 
-            <Separator className="my-12" />
-
+            {/* Related Articles */}
             <div>
-              <h3 className="text-xl font-semibold mb-6">Artikel Terkait</h3>
-              <div className="grid md:grid-cols-2 gap-6">
+              <div className="text-center mb-12">
+                <h3 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent mb-4">
+                  Artikel Terkait
+                </h3>
+                <p className="text-muted-foreground text-lg">
+                  Jelajahi artikel lainnya yang mungkin menarik untuk Anda
+                </p>
+              </div>
+              
+              <div className="grid md:grid-cols-2 gap-8">
                 {articles
                   .filter(a => a.id !== selectedArticle.id && a.category === selectedArticle.category)
-                  .slice(0, 2)
+                  .slice(0, 4)
                   .map((article) => (
-                    <Card key={article.id} className="hover:shadow-lg transition-shadow">
-                      <CardHeader>
-                        <div className="flex items-center gap-2 mb-2">
-                          <Badge variant="secondary">{article.category}</Badge>
+                    <Card key={article.id} className="group hover:shadow-xl transition-all duration-500 border-0 bg-gradient-to-br from-card to-card/80 hover:-translate-y-2 overflow-hidden">
+                      <div className="relative overflow-hidden">
+                        {article.featured_image_url ? (
+                          <img 
+                            src={article.featured_image_url} 
+                            alt={article.title}
+                            className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-500"
+                          />
+                        ) : (
+                          <div className="w-full h-48 bg-gradient-to-br from-primary/20 to-primary-glow/20 flex items-center justify-center">
+                            <div className="text-6xl text-primary/30">📄</div>
+                          </div>
+                        )}
+                        <div className="absolute top-4 left-4">
+                          <Badge className="bg-primary/90 text-white shadow-lg">{article.category}</Badge>
                         </div>
-                        <CardTitle className="line-clamp-2">
-                          <Link to={`/articles/${article.slug}`} className="hover:text-primary transition-colors">
+                      </div>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="line-clamp-2 text-lg group-hover:text-primary transition-colors">
+                          <Link to={`/articles/${article.slug}`}>
                             {article.title}
                           </Link>
                         </CardTitle>
-                        <CardDescription className="line-clamp-3">
+                        <CardDescription className="line-clamp-3 text-muted-foreground">
                           {article.excerpt}
                         </CardDescription>
                       </CardHeader>
+                      <CardContent>
+                        <div className="flex items-center justify-between text-sm text-muted-foreground">
+                          <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-1">
+                              <Clock className="w-4 h-4 text-primary" />
+                              <span>{article.reading_time_minutes} min</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Eye className="w-4 h-4 text-primary" />
+                              <span>{article.view_count}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
                     </Card>
                   ))}
               </div>
