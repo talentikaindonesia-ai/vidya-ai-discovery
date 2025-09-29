@@ -228,45 +228,81 @@ const Articles = () => {
       <main className="pt-20 pb-16">
         <div className="container mx-auto px-4">
           {/* Hero Section */}
-          <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold text-foreground mb-4">
-              Artikel Karir & Pengembangan Diri
-            </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Temukan tips, strategi, dan insight terbaru untuk mengembangkan karir dan potensi diri Anda
-            </p>
+          <div className="text-center mb-16 relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary-glow/5 rounded-3xl -z-10"></div>
+            <div className="py-16 px-8">
+              <h1 className="text-5xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent mb-6">
+                Artikel Karir & Pengembangan Diri
+              </h1>
+              <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+                Temukan tips, strategi, dan insight terbaru untuk mengembangkan karir dan potensi diri Anda dengan panduan dari para ahli
+              </p>
+              <div className="mt-8 flex items-center justify-center gap-4">
+                <div className="flex items-center gap-2 text-primary font-medium">
+                  <div className="w-2 h-2 bg-primary rounded-full"></div>
+                  <span>Artikel Berkualitas</span>
+                </div>
+                <div className="flex items-center gap-2 text-primary font-medium">
+                  <div className="w-2 h-2 bg-primary-glow rounded-full"></div>
+                  <span>Tips Praktis</span>
+                </div>
+                <div className="flex items-center gap-2 text-primary font-medium">
+                  <div className="w-2 h-2 bg-primary rounded-full"></div>
+                  <span>Insight Mendalam</span>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Featured Articles */}
           {featuredArticles.length > 0 && (
-            <section className="mb-12">
-              <h2 className="text-2xl font-semibold mb-6">Artikel Unggulan</h2>
-              <div className="grid md:grid-cols-3 gap-6">
+            <section className="mb-16">
+              <h2 className="text-3xl font-bold text-center mb-12 bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
+                Artikel Unggulan
+              </h2>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {featuredArticles.map((article) => (
-                  <Card key={article.id} className="hover:shadow-xl transition-all duration-300 border-primary/20">
-                    <CardHeader>
-                      <div className="flex items-center gap-2 mb-2">
-                        <Badge variant="default">{article.category}</Badge>
-                        <Badge variant="outline">Featured</Badge>
+                  <Card key={article.id} className="group hover:shadow-2xl transition-all duration-500 border-0 bg-gradient-to-br from-card to-card/80 hover:-translate-y-2 overflow-hidden">
+                    <div className="relative overflow-hidden">
+                      {article.featured_image_url ? (
+                        <img 
+                          src={article.featured_image_url} 
+                          alt={article.title}
+                          className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                      ) : (
+                        <div className="w-full h-48 bg-gradient-to-br from-primary/20 to-primary-glow/20 flex items-center justify-center">
+                          <div className="text-6xl text-primary/30">📄</div>
+                        </div>
+                      )}
+                      <div className="absolute top-4 left-4 flex items-center gap-2">
+                        <Badge className="bg-primary/90 text-white shadow-lg">{article.category}</Badge>
+                        <Badge className="bg-gradient-to-r from-amber-400 to-orange-400 text-white shadow-lg border-0">
+                          ⭐ Featured
+                        </Badge>
                       </div>
-                      <CardTitle className="line-clamp-2">
-                        <Link to={`/articles/${article.slug}`} className="hover:text-primary transition-colors">
+                    </div>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="line-clamp-2 text-lg group-hover:text-primary transition-colors">
+                        <Link to={`/articles/${article.slug}`}>
                           {article.title}
                         </Link>
                       </CardTitle>
-                      <CardDescription className="line-clamp-3">
+                      <CardDescription className="line-clamp-3 text-muted-foreground">
                         {article.excerpt}
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
                       <div className="flex items-center justify-between text-sm text-muted-foreground">
-                        <div className="flex items-center gap-2">
-                          <Clock className="w-4 h-4" />
-                          <span>{article.reading_time_minutes} min</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Eye className="w-4 h-4" />
-                          <span>{article.view_count}</span>
+                        <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-1">
+                            <Clock className="w-4 h-4 text-primary" />
+                            <span>{article.reading_time_minutes} min</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Eye className="w-4 h-4 text-primary" />
+                            <span>{article.view_count}</span>
+                          </div>
                         </div>
                       </div>
                     </CardContent>
@@ -310,38 +346,55 @@ const Articles = () => {
           </div>
 
           {/* Articles Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredArticles.map((article) => (
-              <Card key={article.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Badge variant="secondary">{article.category}</Badge>
+              <Card key={article.id} className="group hover:shadow-xl transition-all duration-300 border-0 bg-card/80 backdrop-blur-sm hover:-translate-y-1 overflow-hidden">
+                <div className="relative overflow-hidden">
+                  {article.featured_image_url ? (
+                    <img 
+                      src={article.featured_image_url} 
+                      alt={article.title}
+                      className="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  ) : (
+                    <div className="w-full h-40 bg-gradient-to-br from-muted to-muted/60 flex items-center justify-center">
+                      <div className="text-4xl text-muted-foreground/50">📝</div>
+                    </div>
+                  )}
+                  <div className="absolute top-3 left-3">
+                    <Badge className="bg-primary/90 text-white shadow-md">{article.category}</Badge>
+                  </div>
+                </div>
+                <CardHeader className="pb-2">
+                  <div className="flex items-center gap-2 mb-3 flex-wrap">
                     {article.tags.slice(0, 2).map((tag) => (
-                      <Badge key={tag} variant="outline" className="text-xs">{tag}</Badge>
+                      <Badge key={tag} variant="outline" className="text-xs bg-background/50 hover:bg-primary/10">
+                        {tag}
+                      </Badge>
                     ))}
                   </div>
-                  <CardTitle className="line-clamp-2">
-                    <Link to={`/articles/${article.slug}`} className="hover:text-primary transition-colors">
+                  <CardTitle className="line-clamp-2 text-lg group-hover:text-primary transition-colors leading-snug">
+                    <Link to={`/articles/${article.slug}`}>
                       {article.title}
                     </Link>
                   </CardTitle>
-                  <CardDescription className="line-clamp-3">
+                  <CardDescription className="line-clamp-3 text-muted-foreground leading-relaxed">
                     {article.excerpt}
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="pt-0">
                   <div className="flex items-center justify-between text-sm text-muted-foreground">
                     <div className="flex items-center gap-4">
                       <div className="flex items-center gap-1">
-                        <Clock className="w-4 h-4" />
+                        <Clock className="w-4 h-4 text-primary" />
                         <span>{article.reading_time_minutes} min</span>
                       </div>
                       <div className="flex items-center gap-1">
-                        <Eye className="w-4 h-4" />
+                        <Eye className="w-4 h-4 text-primary" />
                         <span>{article.view_count}</span>
                       </div>
                     </div>
-                    <span className="text-xs">
+                    <span className="text-xs font-medium">
                       {new Date(article.created_at).toLocaleDateString('id-ID')}
                     </span>
                   </div>
