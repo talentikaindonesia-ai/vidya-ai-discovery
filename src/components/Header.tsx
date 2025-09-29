@@ -9,6 +9,7 @@ const Header = () => {
     { label: "Beranda", href: "#home" },
     { label: "Fitur", href: "#features" },
     { label: "Cara Kerja", href: "#how-it-works" },
+    { label: "Artikel", href: "/articles" },
     { label: "Harga", href: "#pricing" },
     { label: "Testimoni", href: "#testimonials" },
     { label: "Talentika Junior", href: "/talentika-junior", highlight: true }

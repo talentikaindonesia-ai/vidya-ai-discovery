@@ -17,6 +17,7 @@ import { PaymentManagement } from "@/components/admin/PaymentManagement";
 import { WebScrapingAdmin } from "@/components/admin/WebScrapingAdmin";
 import { CommunityManager } from "@/components/admin/CommunityManager";
 import { ChallengesManager } from "@/components/admin/ChallengesManager";
+import { ArticlesManager } from "@/components/admin/ArticlesManager";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -99,11 +100,12 @@ const Admin = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-9 mb-8">
+          <TabsList className="grid w-full grid-cols-10 mb-8">
             <TabsTrigger value="courses">Kursus</TabsTrigger>
             <TabsTrigger value="learning">Learning Hub</TabsTrigger>
             <TabsTrigger value="paths">Learning Paths</TabsTrigger>
             <TabsTrigger value="quizzes">Quiz Explorer</TabsTrigger>
+            <TabsTrigger value="articles">Artikel</TabsTrigger>
             <TabsTrigger value="opportunities">Peluang</TabsTrigger>
             <TabsTrigger value="challenges">Tantangan</TabsTrigger>
             <TabsTrigger value="payments">Payments</TabsTrigger>
@@ -139,6 +141,11 @@ const Admin = () => {
           {/* Quiz Management */}
           <TabsContent value="quizzes" className="mt-6">
             <QuizManager />
+          </TabsContent>
+
+          {/* Articles Management */}
+          <TabsContent value="articles" className="mt-6">
+            <ArticlesManager />
           </TabsContent>
 
           {/* Opportunities Management */}
