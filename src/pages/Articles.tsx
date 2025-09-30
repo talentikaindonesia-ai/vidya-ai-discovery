@@ -47,6 +47,9 @@ const Articles = () => {
         setSelectedArticle(article);
         incrementViewCount(article.id);
       }
+    } else if (!slug) {
+      // Reset selected article when returning to articles list
+      setSelectedArticle(null);
     }
   }, [slug, articles]);
 
