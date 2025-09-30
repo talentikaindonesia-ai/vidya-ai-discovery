@@ -15,7 +15,9 @@ import {
   Palette, 
   Users, 
   Briefcase, 
-  Calculator
+  Calculator,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 
 // RIASEC Personality Types Data
@@ -149,6 +151,15 @@ const RiasecPersonalityTypes = ({
           <CarouselPrevious className="left-2" />
           <CarouselNext className="right-2" />
         </Carousel>
+
+        {/* Mobile swipe hint */}
+        <div className="md:hidden text-center mb-8 -mt-4">
+          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground animate-pulse">
+            <ChevronLeft className="w-4 h-4" />
+            <span>Geser untuk melihat lebih banyak</span>
+            <ChevronRight className="w-4 h-4" />
+          </div>
+        </div>
 
         {showButton && (
           <div className="text-center">
