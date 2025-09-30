@@ -112,16 +112,16 @@ const Articles = () => {
             return `<h1 class="text-3xl md:text-4xl font-bold text-foreground mb-6 mt-12 first:mt-0 pb-4 border-b-2 border-border/50">${text}</h1>`;
           }
           
-          // Section headings with blue color (## )
+          // Section headings (## )
           if (section.startsWith('## ')) {
             const text = section.replace(/^## /, '');
-            return `<h2 class="text-2xl md:text-3xl font-bold text-primary mb-5 mt-10">${text}</h2>`;
+            return `<h2 class="text-2xl md:text-3xl font-bold text-foreground mb-5 mt-10">${text}</h2>`;
           }
           
           // Subsection headings (### )
           if (section.startsWith('### ')) {
             const text = section.replace(/^### /, '');
-            return `<h3 class="text-xl md:text-2xl font-semibold text-primary/80 mb-4 mt-8 pl-4 border-l-4 border-primary/30">${text}</h3>`;
+            return `<h3 class="text-xl md:text-2xl font-semibold text-foreground mb-4 mt-8 pl-4 border-l-4 border-border/50">${text}</h3>`;
           }
           
           // Sub-subsection headings (#### )
@@ -139,9 +139,9 @@ const Articles = () => {
                 const processedText = text
                   .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-foreground">$1</strong>')
                   .replace(/\*(.*?)\*/g, '<em class="italic">$1</em>')
-                  .replace(/`(.*?)`/g, '<code class="bg-primary/10 text-primary px-2 py-0.5 rounded text-sm font-mono">$1</code>');
+                  .replace(/`(.*?)`/g, '<code class="bg-muted px-2 py-0.5 rounded text-sm font-mono">$1</code>');
                 return `<li class="flex items-start gap-3 py-2 group">
-                  <span class="w-1.5 h-1.5 bg-primary rounded-full mt-2.5 flex-shrink-0 group-hover:scale-125 transition-transform"></span>
+                  <span class="w-1.5 h-1.5 bg-foreground/40 rounded-full mt-2.5 flex-shrink-0"></span>
                   <span class="flex-1 text-base md:text-lg leading-relaxed text-muted-foreground">${processedText}</span>
                 </li>`;
               })
@@ -158,9 +158,9 @@ const Articles = () => {
                 const processedText = text
                   .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-foreground">$1</strong>')
                   .replace(/\*(.*?)\*/g, '<em class="italic">$1</em>')
-                  .replace(/`(.*?)`/g, '<code class="bg-primary/10 text-primary px-2 py-0.5 rounded text-sm font-mono">$1</code>');
+                  .replace(/`(.*?)`/g, '<code class="bg-muted px-2 py-0.5 rounded text-sm font-mono">$1</code>');
                 return `<li class="flex items-start gap-4 py-2 group">
-                  <span class="flex items-center justify-center w-7 h-7 bg-primary/10 text-primary rounded-full text-sm font-bold flex-shrink-0 group-hover:bg-primary/20 transition-colors">${index + 1}</span>
+                  <span class="flex items-center justify-center w-7 h-7 bg-muted text-foreground rounded-full text-sm font-bold flex-shrink-0">${index + 1}</span>
                   <span class="flex-1 text-base md:text-lg leading-relaxed text-muted-foreground pt-0.5">${processedText}</span>
                 </li>`;
               })
@@ -171,7 +171,7 @@ const Articles = () => {
           // Handle blockquotes
           if (section.startsWith('> ')) {
             const text = section.replace(/^> /, '');
-            return `<blockquote class="border-l-4 border-primary bg-gradient-to-r from-primary/10 to-transparent pl-6 pr-6 py-5 my-8 rounded-r-lg">
+            return `<blockquote class="border-l-4 border-border bg-muted/30 pl-6 pr-6 py-5 my-8 rounded-r-lg">
               <p class="text-lg md:text-xl italic text-foreground font-medium leading-relaxed">${text}</p>
             </blockquote>`;
           }
@@ -212,8 +212,8 @@ const Articles = () => {
             let text = section
               .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-foreground">$1</strong>')
               .replace(/\*(.*?)\*/g, '<em class="italic text-muted-foreground">$1</em>')
-              .replace(/`(.*?)`/g, '<code class="bg-primary/10 text-primary px-2 py-0.5 rounded text-sm font-mono">$1</code>')
-              .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="text-primary hover:underline font-medium" target="_blank" rel="noopener noreferrer">$1</a>');
+              .replace(/`(.*?)`/g, '<code class="bg-muted px-2 py-0.5 rounded text-sm font-mono">$1</code>')
+              .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="text-foreground hover:underline font-medium underline" target="_blank" rel="noopener noreferrer">$1</a>');
             
             return `<p class="text-base md:text-lg leading-relaxed text-muted-foreground mb-6">${text}</p>`;
           }
