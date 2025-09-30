@@ -462,15 +462,30 @@ const Assessment = () => {
           </Card>
 
           <div className="text-center space-y-4">
-            <div className="bg-primary/10 border border-primary/20 rounded-lg p-6 max-w-md mx-auto">
-              <h3 className="text-lg font-semibold mb-2">Siap Memulai Perjalanan Belajarmu?</h3>
-              <p className="text-muted-foreground mb-4">
-                Daftar sekarang untuk mendapatkan pembelajaran yang dipersonalisasi berdasarkan hasil assessment ini!
-              </p>
-              <Button onClick={() => navigate("/dashboard")} className="w-full mb-2">
-                Mulai Belajar Sekarang
-              </Button>
-            </div>
+            <Card className="max-w-2xl mx-auto border-primary/30 shadow-2xl bg-gradient-to-br from-primary/5 via-card to-primary/10 hover:shadow-floating transition-all duration-300 animate-fade-in">
+              <CardContent className="pt-8 pb-8 px-6">
+                <div className="mb-6">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center shadow-lg animate-pulse">
+                    <TrendingUp className="w-8 h-8 text-white" />
+                  </div>
+                  <h3 className="text-2xl md:text-3xl font-bold mb-3 text-primary">
+                    Siap Memulai Perjalanan Belajarmu?
+                  </h3>
+                  <p className="text-base md:text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed">
+                    Daftar sekarang untuk mendapatkan pembelajaran yang dipersonalisasi berdasarkan hasil assessment ini!
+                  </p>
+                </div>
+                <Button 
+                  onClick={() => navigate("/dashboard")} 
+                  size="lg"
+                  className="w-full md:w-auto px-12 py-6 text-lg bg-gradient-to-r from-primary via-primary-dark to-primary bg-[length:200%_auto] hover:bg-right-bottom hover:shadow-floating transform hover:scale-105 transition-all duration-500 font-bold shadow-lg animate-pulse hover:animate-none"
+                >
+                  <Award className="w-5 h-5 mr-2" />
+                  Mulai Belajar Sekarang
+                </Button>
+              </CardContent>
+            </Card>
+            
             <Button 
               onClick={() => {
                 setShowResults(false); 
@@ -481,6 +496,8 @@ const Assessment = () => {
                 setSelectedAnswer(null);
               }} 
               variant="outline"
+              size="lg"
+              className="hover:bg-secondary/20"
             >
               Tes Ulang
             </Button>
