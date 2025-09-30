@@ -18,7 +18,7 @@ const Hero = () => {
               Discover your full Potential
             </div>
             
-            <h1 className="text-5xl md:text-7xl font-bold text-foreground leading-[1.1] tracking-tight">
+            <h1 className="text-6xl md:text-7xl font-bold text-foreground leading-[1.1] tracking-tight">
               Temukan<br />
               <span className="text-primary">Potensi</span> &<br />
               <span className="text-secondary">Bakatmu</span>
