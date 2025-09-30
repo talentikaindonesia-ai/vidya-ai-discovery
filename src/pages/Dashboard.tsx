@@ -70,11 +70,9 @@ const Dashboard = () => {
 
   const loadUserData = async (userId: string) => {
     try {
-      // Load profile
+      // Load profile using secure function
       const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', userId)
+        .rpc('get_profile_secure', { profile_user_id: userId })
         .single();
 
       if (profileError && profileError.code !== 'PGRST116') {

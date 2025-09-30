@@ -43,10 +43,9 @@ export default function DashboardGamified() {
 
   const loadUserProfile = async (userId: string) => {
     try {
+      // Load profile using secure function
       const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', userId)
+        .rpc('get_profile_secure', { profile_user_id: userId })
         .single();
 
       if (error && error.code !== 'PGRST116') {

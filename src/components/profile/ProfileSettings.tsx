@@ -61,13 +61,21 @@ export function ProfileSettings({ user, profile, onProfileUpdate }: ProfileSetti
     
     setLoading(true);
     try {
+      // Validate and sanitize input before saving
+      const sanitizedData = {
+        user_id: user.id,
+        full_name: formData.full_name?.trim() || null,
+        email: formData.email?.trim() || user.email,
+        phone: formData.phone?.trim() || null,
+        address: formData.address?.trim() || null,
+        organization_name: formData.organization_name?.trim() || null,
+        organization_type: formData.organization_type || 'individual',
+        updated_at: new Date().toISOString()
+      };
+
       const { error } = await supabase
         .from('profiles')
-        .upsert({
-          user_id: user.id,
-          ...formData,
-          updated_at: new Date().toISOString()
-        });
+        .upsert(sanitizedData);
 
       if (error) throw error;
       
