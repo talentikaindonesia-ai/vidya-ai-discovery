@@ -312,20 +312,29 @@ const Assessment = () => {
         <div className="container mx-auto px-4 py-8">
           <RiasecPersonalityTypes showButton={false} />
           
+          {/* Question text below personality types */}
+          <div className="text-center mt-8 mb-6">
+            <h3 className="text-2xl md:text-3xl font-bold text-primary">
+              Mana Tipe Kepribadianmu? 🤔
+            </h3>
+          </div>
+          
           <div className="text-center mt-8">
-            <Card className="max-w-md mx-auto border-primary/20 shadow-lg">
-              <CardContent className="pt-6">
-                <div className="mb-4">
-                  <Brain className="w-12 h-12 mx-auto text-primary mb-2" />
-                  <h3 className="text-xl font-semibold mb-2">Temukan Tipe Kepribadianmu!</h3>
+            <Card className="max-w-2xl mx-auto border-primary/20 shadow-xl hover:shadow-2xl transition-shadow duration-300 bg-gradient-to-br from-card via-card to-primary/5">
+              <CardContent className="pt-8 pb-8 px-6">
+                <div className="mb-6 animate-pulse">
+                  <Brain className="w-20 h-20 mx-auto text-primary mb-4 drop-shadow-lg" />
+                  <h3 className="text-3xl md:text-4xl font-bold mb-3 bg-gradient-to-r from-primary via-primary-dark to-primary bg-clip-text text-transparent">
+                    Temukan Tipe Kepribadianmu!
+                  </h3>
                 </div>
-                <p className="text-muted-foreground mb-6">
+                <p className="text-lg text-muted-foreground mb-8 max-w-xl mx-auto">
                   Ikuti tes minat bakat berdasarkan teori RIASEC untuk mengetahui kepribadian dan potensi kariermu.
                 </p>
                 <Button 
                   onClick={startAssessment} 
-                  className="w-full bg-gradient-to-r from-primary to-primary-dark hover:shadow-floating transform hover:scale-[1.02] transition-all duration-300 font-semibold" 
                   size="lg"
+                  className="w-full md:w-auto px-12 py-6 text-lg bg-gradient-to-r from-primary via-primary-dark to-primary bg-[length:200%_auto] hover:bg-right-bottom hover:shadow-floating transform hover:scale-105 transition-all duration-500 font-bold animate-pulse hover:animate-none shadow-lg"
                 >
                   <Target className="w-5 h-5 mr-2" />
                   Mulai Tes Minat Bakat
