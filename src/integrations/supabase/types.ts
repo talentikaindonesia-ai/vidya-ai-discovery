@@ -2283,6 +2283,20 @@ export type Database = {
           transaction_count: number
         }[]
       }
+      get_profile_masked: {
+        Args: { profile_user_id: string }
+        Returns: {
+          created_at: string
+          email_masked: string
+          full_name: string
+          id: string
+          organization_name: string
+          organization_type: string
+          phone_masked: string
+          subscription_status: string
+          subscription_type: string
+        }[]
+      }
       get_profile_secure: {
         Args: { profile_user_id: string }
         Returns: {
