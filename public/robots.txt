@@ -1,3 +1,13 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /api/
+
+# Sitemap
+Sitemap: https://talentika.id/sitemap.xml
+
+# Allow major search engines
 User-agent: Googlebot
 Allow: /
 
@@ -10,5 +20,5 @@ Allow: /
 User-agent: facebookexternalhit
 Allow: /
 
-User-agent: *
-Allow: /
+# Crawl-delay (optional)
+Crawl-delay: 1

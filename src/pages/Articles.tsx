@@ -11,6 +11,7 @@ import { Clock, Search, Eye, Calendar, ArrowLeft, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import SEO from "@/components/SEO";
 
 interface Article {
   id: string;
@@ -26,6 +27,8 @@ interface Article {
   created_at: string;
   published_at: string;
   is_featured: boolean;
+  seo_title?: string;
+  seo_description?: string;
 }
 
 const Articles = () => {
@@ -228,6 +231,39 @@ const Articles = () => {
 
     return (
       <div className="min-h-screen bg-background">
+        <SEO 
+          title={selectedArticle.seo_title || selectedArticle.title}
+          description={selectedArticle.seo_description || selectedArticle.excerpt}
+          keywords={selectedArticle.tags.join(', ')}
+          image={selectedArticle.featured_image_url}
+          type="article"
+          canonical={`https://talentika.id/articles/${selectedArticle.slug}`}
+          structuredData={{
+            "@context": "https://schema.org",
+            "@type": "Article",
+            "headline": selectedArticle.title,
+            "description": selectedArticle.excerpt,
+            "image": selectedArticle.featured_image_url,
+            "author": {
+              "@type": "Organization",
+              "name": "Tim Talentika"
+            },
+            "publisher": {
+              "@type": "Organization",
+              "name": "Talentika",
+              "logo": {
+                "@type": "ImageObject",
+                "url": "https://talentika.id/lovable-uploads/9e67a8cf-6f81-4abc-898b-bc665dee2b57.png"
+              }
+            },
+            "datePublished": selectedArticle.published_at || selectedArticle.created_at,
+            "dateModified": selectedArticle.created_at,
+            "mainEntityOfPage": {
+              "@type": "WebPage",
+              "@id": `https://talentika.id/articles/${selectedArticle.slug}`
+            }
+          }}
+        />
         <Header />
         
         {/* Hero Section */}
@@ -440,6 +476,27 @@ const Articles = () => {
   // Articles listing view
   return (
     <div className="min-h-screen bg-background">
+      <SEO 
+        title="Artikel Karir & Pengembangan Diri | Talentika"
+        description="Kumpulan artikel terlengkap tentang pengembangan karir, tips memilih jurusan, tes minat bakat, soft skills, dan strategi sukses untuk pelajar dan mahasiswa Indonesia."
+        keywords="artikel karir, pengembangan diri, tips memilih jurusan, tes minat bakat, soft skills, strategi belajar, pengembangan potensi, konseling karir"
+        canonical="https://talentika.id/articles"
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          "name": "Artikel Karir & Pengembangan Diri",
+          "description": "Kumpulan artikel terlengkap tentang pengembangan karir dan potensi diri",
+          "url": "https://talentika.id/articles",
+          "publisher": {
+            "@type": "Organization",
+            "name": "Talentika",
+            "logo": {
+              "@type": "ImageObject",
+              "url": "https://talentika.id/lovable-uploads/9e67a8cf-6f81-4abc-898b-bc665dee2b57.png"
+            }
+          }
+        }}
+      />
       <Header />
       <main className="pt-20 pb-16">
         <div className="container mx-auto px-4">
