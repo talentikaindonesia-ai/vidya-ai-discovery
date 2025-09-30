@@ -103,60 +103,124 @@ const Articles = () => {
   if (selectedArticle) {
     const processContentWithMedia = (content: string) => {
       return content
-        // Convert newlines to breaks
-        .replace(/\n\n/g, '</p><p>')
-        .replace(/\n/g, '<br>')
-        
-        // Handle headings with better spacing and hierarchy
-        .replace(/# (.*)/g, '<h1 class="text-4xl md:text-5xl font-bold text-foreground mb-8 mt-16 first:mt-0 pb-4 border-b-2 border-primary/30">$1</h1>')
-        .replace(/## (.*)/g, '<h2 class="text-3xl md:text-4xl font-bold text-foreground mb-6 mt-14 pb-3 border-b border-primary/20">$1</h2>')
-        .replace(/### (.*)/g, '<h3 class="text-2xl md:text-3xl font-semibold text-primary mb-5 mt-10">$1</h3>')
-        .replace(/#### (.*)/g, '<h4 class="text-xl md:text-2xl font-semibold text-foreground mb-4 mt-8">$1</h4>')
-        
-        // Enhanced text formatting
-        .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-foreground">$1</strong>')
-        .replace(/\*(.*?)\*/g, '<em class="italic text-muted-foreground">$1</em>')
-        
-        // Handle images with better styling
-        .replace(/!\[(.*?)\]\((.*?)\)/g, '<figure class="my-10"><img src="$2" alt="$1" class="w-full rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 border border-border/30" loading="lazy" /><figcaption class="text-center text-sm text-muted-foreground mt-3 italic">$1</figcaption></figure>')
-        
-        // Handle YouTube videos
-        .replace(/\[video:(https:\/\/(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]+))\]/g, 
-          '<div class="my-10"><div class="aspect-video rounded-xl overflow-hidden shadow-xl border border-border/30 bg-muted"><iframe src="https://www.youtube.com/embed/$2" class="w-full h-full" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div></div>')
-        
-        // Handle lists with better styling - numbered lists
-        .replace(/(\d+)\. (.*)/g, '<li class="flex items-start gap-4 mb-4 pl-2"><span class="flex items-center justify-center w-7 h-7 bg-primary/10 text-primary rounded-full text-sm font-semibold flex-shrink-0 mt-0.5">$1</span><span class="flex-1 pt-0.5">$2</span></li>')
-        
-        // Handle lists with better styling - bullet points
-        .replace(/^- (.*)/gm, '<li class="flex items-start gap-4 mb-4 pl-2"><span class="w-2 h-2 bg-primary rounded-full flex-shrink-0 mt-3"></span><span class="flex-1">$1</span></li>')
-        
-        // Wrap lists
-        .replace(/(<li.*?<\/li>\s*)+/gs, '<ul class="space-y-3 my-8 bg-muted/30 rounded-xl p-6 border border-border/30">$&</ul>')
-        
-        // Handle quotes with enhanced styling
-        .replace(/> (.*)/g, '<blockquote class="border-l-4 border-primary bg-gradient-to-r from-primary/10 to-transparent pl-8 pr-6 py-6 my-8 rounded-r-xl shadow-sm"><p class="text-lg italic text-foreground font-medium leading-relaxed">$1</p></blockquote>')
-        
-        // Handle code blocks
-        .replace(/```([\s\S]*?)```/g, '<pre class="bg-muted/50 p-6 rounded-xl my-8 overflow-x-auto border border-border/30 shadow-sm"><code class="text-sm font-mono text-foreground leading-relaxed">$1</code></pre>')
-        .replace(/`(.*?)`/g, '<code class="bg-primary/10 text-primary px-2.5 py-1 rounded-md text-sm font-mono font-medium">$1</code>')
-        
-        // Wrap in paragraphs
-        .replace(/^(.+)$/gm, '<p class="text-base md:text-lg leading-relaxed text-muted-foreground mb-6">$1</p>')
-        
-        // Clean up multiple paragraph tags
-        .replace(/<\/p><p>/g, '</p>\n<p>')
-        .replace(/<p><h([1-6])/g, '<h$1')
-        .replace(/<\/h([1-6])><\/p>/g, '</h$1>')
-        .replace(/<p><ul/g, '<ul')
-        .replace(/<\/ul><\/p>/g, '</ul>')
-        .replace(/<p><blockquote/g, '<blockquote')
-        .replace(/<\/blockquote><\/p>/g, '</blockquote>')
-        .replace(/<p><pre/g, '<pre')
-        .replace(/<\/pre><\/p>/g, '</pre>')
-        .replace(/<p><div/g, '<div')
-        .replace(/<\/div><\/p>/g, '</div>')
-        .replace(/<p><figure/g, '<figure')
-        .replace(/<\/figure><\/p>/g, '</figure>');
+        // Split into sections first
+        .split('\n\n')
+        .map(section => {
+          // Main headings (# )
+          if (section.startsWith('# ')) {
+            const text = section.replace(/^# /, '');
+            return `<h1 class="text-3xl md:text-4xl font-bold text-foreground mb-6 mt-12 first:mt-0 pb-4 border-b-2 border-border/50">${text}</h1>`;
+          }
+          
+          // Section headings with blue color (## )
+          if (section.startsWith('## ')) {
+            const text = section.replace(/^## /, '');
+            return `<h2 class="text-2xl md:text-3xl font-bold text-primary mb-5 mt-10">${text}</h2>`;
+          }
+          
+          // Subsection headings (### )
+          if (section.startsWith('### ')) {
+            const text = section.replace(/^### /, '');
+            return `<h3 class="text-xl md:text-2xl font-semibold text-primary/80 mb-4 mt-8 pl-4 border-l-4 border-primary/30">${text}</h3>`;
+          }
+          
+          // Sub-subsection headings (#### )
+          if (section.startsWith('#### ')) {
+            const text = section.replace(/^#### /, '');
+            return `<h4 class="text-lg md:text-xl font-semibold text-foreground mb-3 mt-6">${text}</h4>`;
+          }
+          
+          // Handle bullet lists
+          if (section.includes('\n- ')) {
+            const items = section.split('\n')
+              .filter(line => line.trim().startsWith('-'))
+              .map(line => {
+                const text = line.replace(/^- /, '').trim();
+                const processedText = text
+                  .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-foreground">$1</strong>')
+                  .replace(/\*(.*?)\*/g, '<em class="italic">$1</em>')
+                  .replace(/`(.*?)`/g, '<code class="bg-primary/10 text-primary px-2 py-0.5 rounded text-sm font-mono">$1</code>');
+                return `<li class="flex items-start gap-3 py-2 group">
+                  <span class="w-1.5 h-1.5 bg-primary rounded-full mt-2.5 flex-shrink-0 group-hover:scale-125 transition-transform"></span>
+                  <span class="flex-1 text-base md:text-lg leading-relaxed text-muted-foreground">${processedText}</span>
+                </li>`;
+              })
+              .join('');
+            return `<ul class="space-y-1 my-6 pl-2">${items}</ul>`;
+          }
+          
+          // Handle numbered lists
+          if (/^\d+\.\s/.test(section)) {
+            const items = section.split('\n')
+              .filter(line => /^\d+\.\s/.test(line.trim()))
+              .map((line, index) => {
+                const text = line.replace(/^\d+\.\s/, '').trim();
+                const processedText = text
+                  .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-foreground">$1</strong>')
+                  .replace(/\*(.*?)\*/g, '<em class="italic">$1</em>')
+                  .replace(/`(.*?)`/g, '<code class="bg-primary/10 text-primary px-2 py-0.5 rounded text-sm font-mono">$1</code>');
+                return `<li class="flex items-start gap-4 py-2 group">
+                  <span class="flex items-center justify-center w-7 h-7 bg-primary/10 text-primary rounded-full text-sm font-bold flex-shrink-0 group-hover:bg-primary/20 transition-colors">${index + 1}</span>
+                  <span class="flex-1 text-base md:text-lg leading-relaxed text-muted-foreground pt-0.5">${processedText}</span>
+                </li>`;
+              })
+              .join('');
+            return `<ol class="space-y-2 my-6">${items}</ol>`;
+          }
+          
+          // Handle blockquotes
+          if (section.startsWith('> ')) {
+            const text = section.replace(/^> /, '');
+            return `<blockquote class="border-l-4 border-primary bg-gradient-to-r from-primary/10 to-transparent pl-6 pr-6 py-5 my-8 rounded-r-lg">
+              <p class="text-lg md:text-xl italic text-foreground font-medium leading-relaxed">${text}</p>
+            </blockquote>`;
+          }
+          
+          // Handle images
+          if (section.match(/!\[(.*?)\]\((.*?)\)/)) {
+            const match = section.match(/!\[(.*?)\]\((.*?)\)/);
+            if (match) {
+              return `<figure class="my-10">
+                <img src="${match[2]}" alt="${match[1]}" class="w-full rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 border border-border/30" loading="lazy" />
+                ${match[1] ? `<figcaption class="text-center text-sm text-muted-foreground mt-4 italic">${match[1]}</figcaption>` : ''}
+              </figure>`;
+            }
+          }
+          
+          // Handle YouTube videos
+          if (section.includes('[video:')) {
+            const match = section.match(/\[video:(https:\/\/(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]+))\]/);
+            if (match) {
+              return `<div class="my-10">
+                <div class="aspect-video rounded-xl overflow-hidden shadow-xl border border-border/30 bg-muted">
+                  <iframe src="https://www.youtube.com/embed/${match[2]}" class="w-full h-full" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+              </div>`;
+            }
+          }
+          
+          // Handle code blocks
+          if (section.startsWith('```')) {
+            const code = section.replace(/```\w*\n?/, '').replace(/```$/, '');
+            return `<pre class="bg-muted/50 p-6 rounded-xl my-8 overflow-x-auto border border-border/30 shadow-sm">
+              <code class="text-sm font-mono text-foreground leading-relaxed">${code}</code>
+            </pre>`;
+          }
+          
+          // Regular paragraphs
+          if (section.trim()) {
+            let text = section
+              .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-foreground">$1</strong>')
+              .replace(/\*(.*?)\*/g, '<em class="italic text-muted-foreground">$1</em>')
+              .replace(/`(.*?)`/g, '<code class="bg-primary/10 text-primary px-2 py-0.5 rounded text-sm font-mono">$1</code>')
+              .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="text-primary hover:underline font-medium" target="_blank" rel="noopener noreferrer">$1</a>');
+            
+            return `<p class="text-base md:text-lg leading-relaxed text-muted-foreground mb-6">${text}</p>`;
+          }
+          
+          return '';
+        })
+        .join('');
     };
 
     return (
@@ -249,16 +313,17 @@ const Articles = () => {
           <div className="container mx-auto px-4 max-w-4xl">
             {/* Article Content */}
             <article className="mb-16">
-              <div className="bg-background border border-border/30 rounded-2xl p-6 md:p-10 lg:p-14 shadow-lg">
+              <div className="bg-background border border-border/20 rounded-2xl p-8 md:p-12 lg:p-16 shadow-sm">
                 <div 
                   className="article-content max-w-none
                             [&>h1]:scroll-mt-24 [&>h2]:scroll-mt-24 [&>h3]:scroll-mt-24 [&>h4]:scroll-mt-24
-                            [&>ul]:pl-0 [&>ul]:list-none
-                            [&_strong]:text-foreground [&_strong]:font-semibold
-                            [&_img]:transition-all [&_img]:duration-300 [&_img]:hover:scale-[1.01]
-                            [&_li]:text-base [&_li]:md:text-lg [&_li]:leading-relaxed [&_li]:text-muted-foreground
-                            [&_blockquote_p]:mb-0
-                            [&_figcaption]:text-center [&_figcaption]:text-sm [&_figcaption]:text-muted-foreground [&_figcaption]:mt-3"
+                            [&>h2]:animate-fade-in
+                            [&>h3]:animate-fade-in
+                            [&>ul]:animate-fade-in
+                            [&>ol]:animate-fade-in
+                            [&>p]:animate-fade-in
+                            [&_li]:hover:translate-x-1 [&_li]:transition-transform [&_li]:duration-200
+                            [&_a]:transition-colors [&_a]:duration-200"
                   dangerouslySetInnerHTML={{ 
                     __html: processContentWithMedia(selectedArticle.content)
                   }}
