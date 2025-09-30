@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Brain, Menu, X } from "lucide-react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -20,7 +21,7 @@ const Header = () => {
       <div className="container px-4 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <div className="flex items-center gap-3">
+          <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
             <div className="w-10 h-10 rounded-xl overflow-hidden shadow-soft">
               <img 
                 src="/lovable-uploads/ce4aabf2-d425-472e-ada0-d085a2b285b9.png" 
@@ -32,7 +33,7 @@ const Header = () => {
               <h1 className="text-xl font-bold text-foreground">Talentika</h1>
               <p className="text-xs text-muted-foreground">Discover your full potential</p>
             </div>
-          </div>
+          </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-8">
