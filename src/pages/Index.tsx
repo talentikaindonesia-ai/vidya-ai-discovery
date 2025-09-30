@@ -9,12 +9,14 @@ import Testimonials from "@/components/Testimonials";
 import TalentikaJunior from "@/components/TalentikaJunior";
 import PartnershipCTA from "@/components/PartnershipCTA";
 import Footer from "@/components/Footer";
+import WelcomePopup from "@/components/WelcomePopup";
 
 const Index = () => {
   const navigate = useNavigate();
 
   return (
     <div className="min-h-screen">
+      <WelcomePopup />
       <Header />
       <main>
         <section id="home">
