@@ -41,7 +41,7 @@ const Hero = () => {
               <Button 
                 variant="elegant" 
                 size="hero"
-                onClick={() => window.location.href = '/assessment'}
+                onClick={() => window.open('https://www.instagram.com/talentika.id/', '_blank')}
               >
                 Pelajari Lebih Lanjut
               </Button>
