@@ -10,6 +10,7 @@ import TalentikaJunior from "@/components/TalentikaJunior";
 import PartnershipCTA from "@/components/PartnershipCTA";
 import Footer from "@/components/Footer";
 import WelcomePopup from "@/components/WelcomePopup";
+import WhatsAppButton from "@/components/WhatsAppButton";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -17,6 +18,7 @@ const Index = () => {
   return (
     <div className="min-h-screen">
       <WelcomePopup />
+      <WhatsAppButton />
       <Header />
       <main>
         <section id="home">

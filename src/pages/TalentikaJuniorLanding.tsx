@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import WhatsAppButton from "@/components/WhatsAppButton";
 import talentikaJuniorLogo from "@/assets/talentika-junior-logo.png";
 
 const TalentikaJuniorLanding = () => {
@@ -85,6 +86,7 @@ const TalentikaJuniorLanding = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <WhatsAppButton />
       <Header />
       
       {/* Hero Section */}
