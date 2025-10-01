@@ -1,7 +1,10 @@
 import { Mail, Phone, MapPin, Instagram, Youtube } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "react-i18next";
 
 const Footer = () => {
+  const { t } = useTranslation();
+  
   return (
     <footer className="bg-foreground text-white">
       <div className="container px-4 py-16">
@@ -18,7 +21,7 @@ const Footer = () => {
               </div>
             </div>
             <p className="text-white/80 leading-relaxed">
-              Talentika membantu generasi muda menemukan passion dan mengembangkan talenta melalui assessment yang komprehensif dan panduan karir yang personal.
+              {t('footer.description')}
             </p>
             <div className="flex gap-3">
               <Button 
@@ -55,15 +58,13 @@ const Footer = () => {
 
           {/* Quick Links */}
           <div className="space-y-4">
-            <h4 className="text-lg font-semibold">Tautan Cepat</h4>
+            <h4 className="text-lg font-semibold">{t('footer.quickLinks')}</h4>
             <ul className="space-y-2">
-              {["Beranda", "Fitur", "Cara Kerja", "Tentang Kami", "FAQ"].map((link) => (
-                <li key={link}>
-                  <a href="#" className="text-white/80 hover:text-white transition-colors">
-                    {link}
-                  </a>
-                </li>
-              ))}
+              <li><a href="#home" className="text-white/80 hover:text-white transition-colors">{t('nav.home')}</a></li>
+              <li><a href="#features" className="text-white/80 hover:text-white transition-colors">{t('nav.features')}</a></li>
+              <li><a href="#how-it-works" className="text-white/80 hover:text-white transition-colors">{t('nav.howItWorks')}</a></li>
+              <li><a href="#" className="text-white/80 hover:text-white transition-colors">{t('footer.links.about')}</a></li>
+              <li><a href="#" className="text-white/80 hover:text-white transition-colors">{t('footer.links.faq')}</a></li>
             </ul>
           </div>
 
@@ -104,14 +105,14 @@ const Footer = () => {
         <div className="border-t border-white/10 mt-12 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-white/60 text-sm">
-              © 2025 Talentika. Semua hak dilindungi undang-undang.
+              {t('footer.copyright')}
             </p>
             <div className="flex gap-6 text-sm">
               <a href="#" className="text-white/60 hover:text-white transition-colors">
-                Kebijakan Privasi
+                {t('footer.links.privacy')}
               </a>
               <a href="#" className="text-white/60 hover:text-white transition-colors">
-                Syarat & Ketentuan
+                {t('footer.links.terms')}
               </a>
             </div>
           </div>

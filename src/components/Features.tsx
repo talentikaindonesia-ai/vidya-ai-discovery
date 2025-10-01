@@ -9,8 +9,11 @@ import {
   Award,
   ArrowRight 
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const Features = () => {
+  const { t } = useTranslation();
+  
   const features = [
     {
       icon: Brain,
@@ -55,10 +58,10 @@ const Features = () => {
       <div className="container px-4">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-6">
-            Fitur Unggulan <span className="text-primary">Talentika</span>
+            {t('features.title')}
           </h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Temukan dan kembangkan potensimu dengan fitur-fitur canggih yang dibuat khusus untuk perjalanan eksplorasi minat dan bakatmu.
+            {t('features.subtitle')}
           </p>
         </div>
         

@@ -1,8 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles, Target, Users } from "lucide-react";
 import heroImage from "@/assets/hero-image.jpg";
+import { useTranslation } from "react-i18next";
 
 const Hero = () => {
+  const { t } = useTranslation();
+  
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-hero">
       {/* Elegant Background Elements */}
@@ -19,13 +22,13 @@ const Hero = () => {
             </div>
             
             <h1 className="text-6xl md:text-7xl font-bold text-foreground leading-[1.1] tracking-tight">
-              Temukan<br />
-              <span className="text-primary">Potensi</span> &<br />
-              <span className="text-secondary">Bakatmu</span>
+              {t('hero.title').split(' ').slice(0, 2).join(' ')}<br />
+              <span className="text-primary">{t('hero.title').split(' ')[2]}</span> &<br />
+              <span className="text-secondary">{t('hero.title').split(' ').slice(3).join(' ')}</span>
             </h1>
             
             <p className="text-xl text-muted-foreground max-w-xl leading-relaxed">
-              Talentika membantu generasi muda menemukan passion dan mengembangkan talenta melalui assessment yang komprehensif dan panduan karir yang personal.
+              {t('hero.subtitle')}
             </p>
             
             <div className="flex flex-col sm:flex-row gap-6 pt-6">
@@ -35,7 +38,7 @@ const Hero = () => {
                 className="group shadow-floating"
                 onClick={() => window.location.href = '/onboarding'}
               >
-                Mulai Assessment
+                {t('hero.cta')}
                 <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
               </Button>
               <Button 
@@ -43,7 +46,7 @@ const Hero = () => {
                 size="hero"
                 onClick={() => window.open('https://www.instagram.com/talentika.id/', '_blank')}
               >
-                Pelajari Lebih Lanjut
+                {t('hero.learnMore')}
               </Button>
             </div>
             
