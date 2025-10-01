@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User } from "@supabase/supabase-js";
 import { NotificationDropdown } from "./NotificationDropdown";
+import { useNavigate } from "react-router-dom";
 
 interface DashboardHeaderProps {
   user: User | null;
@@ -10,6 +11,8 @@ interface DashboardHeaderProps {
 }
 
 export const DashboardHeader = ({ user, profile }: DashboardHeaderProps) => {
+  const navigate = useNavigate();
+  
   const getInitials = (name: string) => {
     return name
       .split(' ')
@@ -37,7 +40,10 @@ export const DashboardHeader = ({ user, profile }: DashboardHeaderProps) => {
         <div className="flex items-center space-x-2 sm:space-x-4">
           <NotificationDropdown userId={user?.id} />
           
-          <div className="flex items-center space-x-2 sm:space-x-3">
+          <div 
+            className="flex items-center space-x-2 sm:space-x-3 cursor-pointer hover:opacity-80 transition-opacity"
+            onClick={() => navigate('/profile')}
+          >
             <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
               <AvatarImage src={profile?.avatar_url} />
               <AvatarFallback className="bg-primary text-primary-foreground text-xs sm:text-sm">
