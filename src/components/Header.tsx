@@ -2,19 +2,16 @@ import { Button } from "@/components/ui/button";
 import { Brain, Menu, X } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { useTranslation } from "react-i18next";
-import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 const Header = () => {
-  const { t } = useTranslation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const navItems = [
-    { label: t('nav.home'), href: "#home" },
-    { label: t('nav.features'), href: "#features" },
-    { label: t('nav.howItWorks'), href: "#how-it-works" },
-    { label: t('nav.pricing'), href: "#pricing" },
-    { label: t('nav.testimonials'), href: "#testimonials" },
+    { label: "Beranda", href: "#home" },
+    { label: "Fitur", href: "#features" },
+    { label: "Cara Kerja", href: "#how-it-works" },
+    { label: "Harga", href: "#pricing" },
+    { label: "Testimoni", href: "#testimonials" },
     { label: "Artikel", href: "/articles" },
     { label: "Talentika Junior", href: "/talentika-junior", highlight: true }
   ];
@@ -57,18 +54,17 @@ const Header = () => {
 
           {/* CTA Buttons */}
           <div className="hidden md:flex items-center gap-4">
-            <LanguageSwitcher variant="ghost" size="sm" />
             <Button 
               variant="ghost"
               onClick={() => window.location.href = '/auth'}
             >
-              {t('nav.login')}
+              Masuk
             </Button>
             <Button 
               variant="hero"
               onClick={() => window.location.href = '/auth'}
             >
-              {t('nav.getStarted')}
+              Daftar Gratis
             </Button>
           </div>
 
@@ -102,20 +98,19 @@ const Header = () => {
                 </a>
               ))}
               <div className="flex flex-col gap-2 mt-4">
-                <LanguageSwitcher variant="ghost" size="default" />
                 <Button 
                   variant="ghost" 
                   className="justify-start"
                   onClick={() => window.location.href = '/auth'}
                 >
-                  {t('nav.login')}
+                  Masuk
                 </Button>
                 <Button 
                   variant="hero" 
                   className="justify-start"
                   onClick={() => window.location.href = '/auth'}
                 >
-                  {t('nav.getStarted')}
+                  Daftar Gratis
                 </Button>
               </div>
             </nav>

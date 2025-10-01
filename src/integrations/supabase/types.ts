@@ -1166,7 +1166,6 @@ export type Database = {
           email: string | null
           full_name: string | null
           id: string
-          language_preference: string | null
           organization_name: string | null
           organization_type: string | null
           phone: string | null
@@ -1183,7 +1182,6 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
-          language_preference?: string | null
           organization_name?: string | null
           organization_type?: string | null
           phone?: string | null
@@ -1200,7 +1198,6 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
-          language_preference?: string | null
           organization_name?: string | null
           organization_type?: string | null
           phone?: string | null

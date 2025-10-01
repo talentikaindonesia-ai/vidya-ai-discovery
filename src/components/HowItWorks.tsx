@@ -4,10 +4,8 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import { CheckCircle, ArrowRight, PlayCircle } from "lucide-react";
 import { useState, useCallback, useEffect } from "react";
 import type { CarouselApi } from "@/components/ui/carousel";
-import { useTranslation } from "react-i18next";
 
 const HowItWorks = () => {
-  const { t } = useTranslation();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [api, setApi] = useState<CarouselApi>();
 
@@ -61,10 +59,10 @@ const HowItWorks = () => {
       <div className="container px-4">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-6">
-            {t('howItWorks.title')}
+            Bagaimana Cara <span className="text-primary">Kerjanya?</span>
           </h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            {t('howItWorks.subtitle')}
+            Proses eksplorasi minat dan bakat yang mudah, cepat, dan menyenangkan dalam 4 langkah sederhana.
           </p>
         </div>
 
