@@ -432,7 +432,16 @@ export const ArticlesManager = () => {
           {articles.map((article) => (
             <Card key={article.id} className={article.is_published ? 'border-green-200' : 'border-gray-200'}>
               <CardContent className="p-4">
-                <div className="flex items-start justify-between">
+                <div className="flex items-start gap-4">
+                  {article.featured_image_url && (
+                    <div className="flex-shrink-0">
+                      <img 
+                        src={article.featured_image_url} 
+                        alt={article.title}
+                        className="w-32 h-32 object-cover rounded-lg"
+                      />
+                    </div>
+                  )}
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
                       <Badge variant={article.is_published ? "default" : "secondary"}>
@@ -472,7 +481,7 @@ export const ArticlesManager = () => {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-start gap-2 ml-4">
                     {article.is_published && (
                       <Button
                         variant="ghost"
