@@ -430,87 +430,72 @@ export const ArticlesManager = () => {
       <CardContent>
         <div className="space-y-4">
           {articles.map((article) => (
-            <Card key={article.id} className={article.is_published ? 'border-green-200' : 'border-gray-200'}>
-              <CardContent className="p-4">
-                <div className="flex items-start gap-4">
-                  {article.featured_image_url && (
-                    <div className="flex-shrink-0">
-                      <img 
-                        src={article.featured_image_url} 
-                        alt={article.title}
-                        className="w-32 h-32 object-cover rounded-lg"
-                      />
-                    </div>
-                  )}
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Badge variant={article.is_published ? "default" : "secondary"}>
-                        {article.is_published ? "Published" : "Draft"}
-                      </Badge>
-                      {article.is_featured && (
-                        <Badge variant="outline">Featured</Badge>
-                      )}
-                      <Badge variant="outline">{article.category}</Badge>
-                    </div>
-                    
-                    <h3 className="font-semibold text-lg mb-1">{article.title}</h3>
-                    
-                    <p className="text-muted-foreground text-sm mb-3 line-clamp-2">
-                      {article.excerpt}
-                    </p>
-                    
-                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <Calendar className="w-3 h-3" />
-                        {new Date(article.created_at).toLocaleDateString('id-ID')}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        {article.reading_time_minutes} min
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Eye className="w-3 h-3" />
-                        {article.view_count} views
-                      </div>
-                    </div>
-
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {article.tags.map((tag) => (
-                        <Badge key={tag} variant="outline" className="text-xs">{tag}</Badge>
-                      ))}
-                    </div>
+            <div key={article.id} className="py-4 border-b border-border/50 last:border-0">
+              <div className="flex items-start gap-4">
+                {article.featured_image_url && (
+                  <div className="flex-shrink-0">
+                    <img 
+                      src={article.featured_image_url} 
+                      alt={article.title}
+                      className="w-32 h-32 object-cover rounded-lg"
+                    />
                   </div>
-
-                  <div className="flex items-start gap-2 ml-4">
-                    {article.is_published && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        asChild
-                      >
-                        <a href={`/articles/${article.slug}`} target="_blank" rel="noopener noreferrer">
-                          <ExternalLink className="w-4 h-4" />
-                        </a>
-                      </Button>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleEdit(article)}
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDelete(article.id)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                )}
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Badge variant={article.is_published ? "default" : "secondary"}>
+                      {article.is_published ? "Published" : "Draft"}
+                    </Badge>
+                    <Badge variant="outline">{article.category}</Badge>
+                  </div>
+                  
+                  <h3 className="font-semibold text-lg mb-2">{article.title}</h3>
+                  
+                  <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+                    {article.excerpt}
+                  </p>
+                  
+                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-1">
+                      <Calendar className="h-4 w-4" />
+                      {new Date(article.created_at).toLocaleDateString()}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Eye className="h-4 w-4" />
+                      {article.view_count || 0} views
+                    </div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+
+                <div className="flex items-start gap-2 ml-4">
+                  {article.is_published && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        window.open(`/articles/${article.slug}`, '_blank');
+                      }}
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                    </Button>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleEdit(article)}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDelete(article.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
           ))}
 
           {articles.length === 0 && (
