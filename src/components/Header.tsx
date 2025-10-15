@@ -1,10 +1,32 @@
 import { Button } from "@/components/ui/button";
 import { Brain, Menu, X } from "lucide-react";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    e.preventDefault();
+    setIsMenuOpen(false);
+    
+    if (href.startsWith('#')) {
+      if (location.pathname !== '/') {
+        navigate('/' + href);
+        setTimeout(() => {
+          const element = document.querySelector(href);
+          element?.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      } else {
+        const element = document.querySelector(href);
+        element?.scrollIntoView({ behavior: 'smooth' });
+      }
+    } else {
+      navigate(href);
+    }
+  };
 
   const navItems = [
     { label: "Beranda", href: "#home" },
@@ -41,7 +63,8 @@ const Header = () => {
               <a
                 key={item.label}
                 href={item.href}
-                className={`transition-colors font-medium ${
+                onClick={(e) => handleNavClick(e, item.href)}
+                className={`transition-colors font-medium cursor-pointer ${
                   item.highlight 
                     ? "text-primary hover:text-primary/80 bg-primary/10 px-3 py-1 rounded-lg" 
                     : "text-foreground hover:text-primary"
@@ -87,12 +110,12 @@ const Header = () => {
                 <a
                   key={item.label}
                   href={item.href}
-                  className={`transition-colors font-medium ${
+                  onClick={(e) => handleNavClick(e, item.href)}
+                  className={`transition-colors font-medium cursor-pointer ${
                     item.highlight 
                       ? "text-primary hover:text-primary/80 bg-primary/10 px-3 py-1 rounded-lg" 
                       : "text-foreground hover:text-primary"
                   }`}
-                  onClick={() => setIsMenuOpen(false)}
                 >
                   {item.label}
                 </a>
