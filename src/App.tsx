@@ -32,6 +32,7 @@ import TalentikaJuniorGames from "./pages/TalentikaJuniorGames";
 import TalentikaJuniorRewards from "./pages/TalentikaJuniorRewards";
 import MembershipDashboard from "./pages/MembershipDashboard";
 import Articles from "./pages/Articles";
+import TalentikaForSchools from "./pages/TalentikaForSchools";
 
 const queryClient = new QueryClient();
 
@@ -98,6 +99,7 @@ const App = () => {
             <Route path="/talentika-junior/learning" element={user ? <TalentikaJuniorLearning /> : <Navigate to="/auth" />} />
             <Route path="/talentika-junior/games" element={user ? <TalentikaJuniorGames /> : <Navigate to="/auth" />} />
             <Route path="/talentika-junior/rewards" element={user ? <TalentikaJuniorRewards /> : <Navigate to="/auth" />} />
+            <Route path="/for-schools" element={<TalentikaForSchools />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
