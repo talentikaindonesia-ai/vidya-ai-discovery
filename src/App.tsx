@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { Analytics } from "@vercel/analytics/react";
 import Index from "./pages/Index";
 import Assessment from "./pages/Assessment";
 import Auth from "./pages/Auth";
@@ -70,6 +71,7 @@ const App = () => {
       <TooltipProvider>
         <Toaster />
         <Sonner />
+        <Analytics />
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
