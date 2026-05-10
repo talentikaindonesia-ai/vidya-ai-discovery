@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { toast as sonnerToast } from 'sonner';
 
 export interface UserXP {
   current_xp: number;
@@ -19,7 +19,8 @@ export const useGameification = () => {
   const [userXP, setUserXP] = useState<UserXP>({ current_xp: 0, current_level: 1, total_xp_earned: 0 });
   const [streaks, setStreaks] = useState<UserStreak[]>([]);
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
+  // Cache the resolved userId — avoids calling getUser() on every XP/streak action
+  const userIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     loadGameificationData();
@@ -29,6 +30,7 @@ export const useGameification = () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+      userIdRef.current = user.id;
 
       // Load XP data
       const { data: xpData } = await supabase
@@ -85,8 +87,8 @@ export const useGameification = () => {
 
   const awardXP = async (amount: number, reason: string) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      const userId = userIdRef.current;
+      if (!userId) return;
 
       const newXP = userXP.current_xp + amount;
       const newLevel = Math.floor(newXP / 1000) + 1; // 1000 XP per level
@@ -99,7 +101,7 @@ export const useGameification = () => {
           current_level: newLevel,
           total_xp_earned: userXP.total_xp_earned + amount
         })
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .select()
         .single();
 
@@ -107,18 +109,10 @@ export const useGameification = () => {
 
       setUserXP(data);
 
-      // Show XP notification
-      toast({
-        title: `+${amount} XP`,
-        description: reason,
-        duration: 3000,
-      });
-
-      // Show level up notification
+      sonnerToast(`+${amount} XP`, { description: reason, duration: 3000 });
       if (levelUp) {
-        toast({
-          title: "🎉 Level Up!",
-          description: `Congratulations! You reached level ${newLevel}!`,
+        sonnerToast('🎉 Level Up!', {
+          description: `Selamat! Kamu mencapai level ${newLevel}!`,
           duration: 5000,
         });
       }
@@ -132,8 +126,8 @@ export const useGameification = () => {
 
   const updateStreak = async (streakType: string) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      const userId = userIdRef.current;
+      if (!userId) return;
 
       const today = new Date().toISOString().split('T')[0];
       const streak = streaks.find(s => s.streak_type === streakType);
@@ -143,7 +137,7 @@ export const useGameification = () => {
         await supabase
           .from('user_streaks')
           .insert([{
-            user_id: user.id,
+            user_id: userId,
             streak_type: streakType,
             current_streak: 1,
             longest_streak: 1,
@@ -172,7 +166,7 @@ export const useGameification = () => {
             longest_streak: newLongest,
             last_activity_date: today
           })
-          .eq('user_id', user.id)
+          .eq('user_id', userId)
           .eq('streak_type', streakType);
 
         // Update local state

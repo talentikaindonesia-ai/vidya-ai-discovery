@@ -1,14 +1,45 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Briefcase, Calendar, MapPin, Trophy, Users, ArrowRight, Lock } from "lucide-react";
+import { Briefcase, Calendar, MapPin, Trophy, Users, GraduationCap, Building2, ArrowRight, Lock, Globe, Star, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface OpportunitiesPreviewProps {
   profile?: any;
 }
+
+const SEA_KEYWORDS = [
+  'indonesia', 'malaysia', 'singapore', 'singapura', 'thailand', 'philippines', 'filipina',
+  'vietnam', 'myanmar', 'cambodia', 'asean', 'sea', 'southeast asia', 'asia tenggara',
+];
+
+const CATEGORY_META: Record<string, { label: string; gradient: string; badgeColor: string; icon: JSX.Element }> = {
+  beasiswa:       { label: "Beasiswa",       gradient: "from-blue-500 to-blue-700",    badgeColor: "bg-blue-100 text-blue-800 border-blue-200",    icon: <GraduationCap className="w-7 h-7 text-white" /> },
+  kompetisi:      { label: "Kompetisi",      gradient: "from-purple-500 to-purple-700",badgeColor: "bg-purple-100 text-purple-800 border-purple-200",icon: <Trophy className="w-7 h-7 text-white" /> },
+  magang:         { label: "Magang",         gradient: "from-orange-400 to-orange-600",badgeColor: "bg-orange-100 text-orange-800 border-orange-200",icon: <Briefcase className="w-7 h-7 text-white" /> },
+  lowongan_kerja: { label: "Lowongan Kerja", gradient: "from-green-500 to-green-700",  badgeColor: "bg-green-100 text-green-800 border-green-200",  icon: <Briefcase className="w-7 h-7 text-white" /> },
+  konferensi:     { label: "Konferensi",     gradient: "from-pink-500 to-rose-600",    badgeColor: "bg-pink-100 text-pink-800 border-pink-200",     icon: <Building2 className="w-7 h-7 text-white" /> },
+};
+
+function getRegionScore(location: string, tags: string[]): { score: number; label: string | null } {
+  const combined = `${location} ${(tags || []).join(' ')}`.toLowerCase();
+  if (combined.includes('indonesia')) return { score: 3, label: 'Indonesia' };
+  for (const kw of SEA_KEYWORDS) {
+    if (combined.includes(kw)) return { score: 2, label: 'Asia Tenggara' };
+  }
+  return { score: 0, label: null };
+}
+
+const FILTER_TABS = [
+  { label: "Semua",         cat: null },
+  { label: "Beasiswa",      cat: "beasiswa" },
+  { label: "Kompetisi",     cat: "kompetisi" },
+  { label: "Magang",        cat: "magang" },
+  { label: "Lowongan Kerja",cat: "lowongan_kerja" },
+  { label: "Konferensi",    cat: "konferensi" },
+];
 
 const OpportunitiesPreview = ({ profile }: OpportunitiesPreviewProps) => {
   const navigate = useNavigate();
@@ -23,15 +54,25 @@ const OpportunitiesPreview = ({ profile }: OpportunitiesPreviewProps) => {
 
   const loadOpportunities = async () => {
     try {
+      const now = new Date().toISOString();
       const { data, error } = await supabase
         .from('scraped_content')
-        .select('*')
+        .select('id, title, description, category, organizer, location, url, deadline, poster_url, source_website, created_at, tags')
         .eq('is_active', true)
+        .or(`deadline.is.null,deadline.gt.${now}`)
         .order('created_at', { ascending: false })
-        .limit(6);
+        .limit(24); // fetch 24 — enough headroom for scoring, display 6
 
       if (error) throw error;
-      setOpportunities(data || []);
+
+      // Score and sort: Indonesia → SEA → recent
+      const scored = (data || []).map(item => {
+        const { score: regionScore } = getRegionScore(item.location || '', item.tags || []);
+        const recency = (Date.now() - new Date(item.created_at).getTime()) / 86400000 <= 7 ? 1 : 0;
+        return { ...item, _score: regionScore * 3 + recency };
+      }).sort((a, b) => b._score - a._score || new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+      setOpportunities(scored.slice(0, 12));
     } catch (error) {
       console.error('Error loading opportunities:', error);
     } finally {
@@ -39,69 +80,27 @@ const OpportunitiesPreview = ({ profile }: OpportunitiesPreviewProps) => {
     }
   };
 
-  const getFilterTabs = () => {
-    const allCount = opportunities.length;
-    const scholarshipCount = opportunities.filter(opp => opp.category === 'SCHOLARSHIP').length;
-    const competitionCount = opportunities.filter(opp => opp.category === 'COMPETITION').length;
-    const internshipCount = opportunities.filter(opp => opp.category === 'JOB').length;
+  const filterTabs = FILTER_TABS.map(t => ({
+    ...t,
+    count: t.cat ? opportunities.filter(o => o.category === t.cat).length : opportunities.length,
+  }));
 
-    return [
-      { label: "Semua", count: allCount },
-      { label: "Beasiswa", count: scholarshipCount },
-      { label: "Kompetisi", count: competitionCount },
-      { label: "Magang", count: internshipCount }
-    ];
-  };
-
-  const filteredOpportunities = activeFilter === "Semua" 
-    ? opportunities 
+  const filteredOpportunities = activeFilter === "Semua"
+    ? opportunities
     : opportunities.filter(opp => {
-        if (activeFilter === "Beasiswa") return opp.category === 'SCHOLARSHIP';
-        if (activeFilter === "Kompetisi") return opp.category === 'COMPETITION';
-        if (activeFilter === "Magang") return opp.category === 'JOB';
-        return false;
+        const tab = filterTabs.find(t => t.label === activeFilter);
+        return tab?.cat ? opp.category === tab.cat : true;
       });
-
-  const getTypeIcon = (category: string) => {
-    switch (category) {
-      case "SCHOLARSHIP": return <Trophy className="w-4 h-4" />;
-      case "COMPETITION": return <Users className="w-4 h-4" />;
-      case "JOB": return <Briefcase className="w-4 h-4" />;
-      default: return <Briefcase className="w-4 h-4" />;
-    }
-  };
-
-  const getTypeColor = (category: string) => {
-    switch (category) {
-      case "SCHOLARSHIP": return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case "COMPETITION": return "bg-blue-100 text-blue-800 border-blue-200";
-      case "JOB": return "bg-green-100 text-green-800 border-green-200";
-      default: return "bg-gray-100 text-gray-800 border-gray-200";
-    }
-  };
-
-  const getTypeLabel = (category: string) => {
-    switch (category) {
-      case "SCHOLARSHIP": return "Beasiswa";
-      case "COMPETITION": return "Kompetisi";
-      case "JOB": return "Magang";
-      default: return category;
-    }
-  };
 
   if (loading) {
     return (
       <section className="py-12 bg-muted/30">
-        <div className="container px-4">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          </div>
+        <div className="container px-4 text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto" />
         </div>
       </section>
     );
   }
-
-  const filterTabs = getFilterTabs();
 
   return (
     <section className="py-20 bg-muted/30">
@@ -109,12 +108,10 @@ const OpportunitiesPreview = ({ profile }: OpportunitiesPreviewProps) => {
         <div className="text-center mb-12">
           <div className="flex items-center justify-center gap-2 mb-4">
             <Briefcase className="w-8 h-8 text-primary" />
-            <h2 className="text-3xl md:text-4xl font-bold">
-              Opportunity for You
-            </h2>
+            <h2 className="text-3xl md:text-4xl font-bold">Opportunity for You</h2>
           </div>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Temukan peluang beasiswa, kompetisi, dan magang yang sesuai dengan minatmu
+            Beasiswa, kompetisi, dan magang terbaik — diprioritaskan untuk Indonesia & Asia Tenggara
           </p>
         </div>
 
@@ -138,98 +135,131 @@ const OpportunitiesPreview = ({ profile }: OpportunitiesPreviewProps) => {
           </div>
         </div>
 
-        {/* Opportunities Grid */}
+        {/* Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-          {filteredOpportunities.map((opportunity, index) => {
-            const isBlurred = isFreeUser && index >= 2; // First 2 opportunities free, rest blurred
+          {filteredOpportunities.slice(0, 6).map((opp, index) => {
+            const isBlurred = isFreeUser && index >= 2;
+            const meta = CATEGORY_META[opp.category] || CATEGORY_META['beasiswa'];
+            const { label: regionLabel } = getRegionScore(opp.location || '', opp.tags || []);
+            const isNew = (Date.now() - new Date(opp.created_at).getTime()) / 86400000 <= 7;
+            const daysLeft = opp.deadline
+              ? Math.floor((new Date(opp.deadline).getTime() - Date.now()) / 86400000)
+              : null;
+
             return (
-            <Card key={opportunity.id} className="group hover:shadow-card transition-all duration-300 hover:-translate-y-1 bg-card border-primary/10 relative overflow-hidden">
-              <CardHeader className={`pb-3 ${isBlurred ? 'blur-sm' : ''}`}>
-                <div className="flex items-start justify-between mb-2">
-                  <Badge variant="outline" className={`${getTypeColor(opportunity.category)} flex items-center gap-1`}>
-                    {getTypeIcon(opportunity.category)}
-                    {getTypeLabel(opportunity.category)}
-                  </Badge>
-                  <div className="text-xs text-muted-foreground flex items-center gap-1">
-                    <Calendar className="w-3 h-3" />
-                    {opportunity.deadline ? new Date(opportunity.deadline).toLocaleDateString('id-ID') : 'TBA'}
+              <Card key={opp.id} className="group hover:shadow-card transition-all duration-300 hover:-translate-y-1 bg-card border-primary/10 relative overflow-hidden">
+                {/* Image / Gradient */}
+                <div className={`relative h-36 overflow-hidden ${isBlurred ? 'blur-sm' : ''}`}>
+                  {opp.poster_url ? (
+                    <img
+                      src={opp.poster_url}
+                      alt={opp.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className={`w-full h-full bg-gradient-to-br ${meta.gradient} flex items-center justify-center relative`}>
+                      <div className="absolute inset-0 opacity-10"
+                        style={{ backgroundImage: 'radial-gradient(circle at 25% 50%, white 1px, transparent 1px), radial-gradient(circle at 75% 20%, white 1px, transparent 1px)', backgroundSize: '28px 28px' }}
+                      />
+                      <div className="text-center relative z-10">
+                        {meta.icon}
+                        <p className="text-white/70 text-xs mt-1">{opp.source_website}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Badges */}
+                  <div className="absolute top-2 left-2 flex gap-1">
+                    <Badge variant="outline" className={`${meta.badgeColor} text-xs border shadow-sm`}>{meta.label}</Badge>
+                    {isNew && (
+                      <Badge className="bg-yellow-400 text-yellow-900 text-xs border-0 shadow-sm">
+                        <Star className="w-2.5 h-2.5 mr-0.5" />Baru
+                      </Badge>
+                    )}
                   </div>
-                </div>
-                <CardTitle className="text-lg group-hover:text-primary transition-colors line-clamp-2">
-                  {opportunity.title}
-                </CardTitle>
-                <p className="text-sm text-muted-foreground line-clamp-2">
-                  {opportunity.description}
-                </p>
-              </CardHeader>
-              <CardContent className={`pt-0 ${isBlurred ? 'blur-sm' : ''}`}>
-                <div className="space-y-2 mb-4">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <MapPin className="w-4 h-4" />
-                    <span>{opportunity.location || 'Online'}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Users className="w-4 h-4" />
-                    <span>{opportunity.organizer || 'Tidak diketahui'}</span>
-                  </div>
-                </div>
-                <div className="flex flex-wrap gap-1 mb-4">
-                  {opportunity.tags && opportunity.tags.slice(0, 2).map((tag: string, index: number) => (
-                    <Badge key={index} variant="secondary" className="text-xs">
-                      {tag}
-                    </Badge>
-                  ))}
-                  {opportunity.tags && opportunity.tags.length > 2 && (
-                    <Badge variant="secondary" className="text-xs">
-                      +{opportunity.tags.length - 2}
-                    </Badge>
+
+                  {regionLabel && (
+                    <div className="absolute top-2 right-2">
+                      <Badge className="bg-white/90 text-gray-700 text-xs border-0 shadow-sm">
+                        <Globe className="w-2.5 h-2.5 mr-0.5" />{regionLabel}
+                      </Badge>
+                    </div>
+                  )}
+
+                  {daysLeft !== null && daysLeft <= 30 && (
+                    <div className={`absolute bottom-0 left-0 right-0 px-2 py-1 text-xs font-medium flex items-center gap-1 ${daysLeft <= 7 ? 'bg-red-600 text-white' : 'bg-black/60 text-white'}`}>
+                      <Clock className="w-3 h-3" />
+                      {daysLeft <= 0 ? 'Deadline hari ini' : `${daysLeft} hari lagi`}
+                    </div>
                   )}
                 </div>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
-                  onClick={() => window.open(opportunity.url, '_blank')}
-                >
-                  Lihat Detail
-                </Button>
-              </CardContent>
-              
-              {/* Lock overlay for blurred content */}
-              {isBlurred && (
-                <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center">
-                  <div className="text-center p-4">
-                    <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <Lock className="w-6 h-6 text-primary" />
+
+                {/* Content */}
+                <div className={`p-4 ${isBlurred ? 'blur-sm' : ''}`}>
+                  <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors mb-2 leading-snug">
+                    {opp.title}
+                  </h3>
+                  <div className="space-y-1 mb-3">
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <MapPin className="w-3 h-3 shrink-0" />
+                      <span className="line-clamp-1">{opp.location || 'Online'}</span>
                     </div>
-                    <p className="font-medium text-foreground mb-2">Peluang Premium</p>
-                    <p className="text-sm text-muted-foreground mb-3">Upgrade untuk mengakses</p>
-                    <Button size="sm" onClick={() => navigate('/subscription')}>
-                      Buka Kunci
-                    </Button>
+                    {opp.deadline && !isBlurred && (
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <Calendar className="w-3 h-3 shrink-0" />
+                        <span>{new Date(opp.deadline).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                      </div>
+                    )}
                   </div>
+                  {(opp.tags || []).length > 0 && (
+                    <div className="flex flex-wrap gap-1 mb-3">
+                      {opp.tags.slice(0, 2).map((tag: string, i: number) => (
+                        <span key={i} className="text-xs bg-muted px-1.5 py-0.5 rounded-full text-muted-foreground">{tag}</span>
+                      ))}
+                    </div>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors text-xs"
+                    onClick={() => window.open(opp.url, '_blank')}
+                  >
+                    Lihat Detail
+                  </Button>
                 </div>
-              )}
-            </Card>
+
+                {/* Lock overlay */}
+                {isBlurred && (
+                  <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center">
+                    <div className="text-center p-4">
+                      <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <Lock className="w-6 h-6 text-primary" />
+                      </div>
+                      <p className="font-medium text-foreground mb-1">Peluang Premium</p>
+                      <p className="text-xs text-muted-foreground mb-3">Upgrade untuk mengakses</p>
+                      <Button size="sm" onClick={() => navigate('/subscription')}>Buka Kunci</Button>
+                    </div>
+                  </div>
+                )}
+              </Card>
             );
           })}
         </div>
 
-        {filteredOpportunities.length === 0 && !loading && (
+        {filteredOpportunities.length === 0 && (
           <div className="text-center py-12">
             <Briefcase className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
             <h3 className="text-xl font-semibold mb-2">Belum Ada Opportunity</h3>
-            <p className="text-muted-foreground">
-              Opportunity untuk kategori ini akan segera tersedia.
-            </p>
+            <p className="text-muted-foreground">Opportunity untuk kategori ini akan segera tersedia.</p>
           </div>
         )}
 
         <div className="text-center">
-          <Button 
-            size="lg" 
+          <Button
+            size="lg"
             className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium shadow-lg hover:shadow-xl transition-all duration-300 group"
-            onClick={() => window.location.href = '/opportunities'}
+            onClick={() => navigate('/opportunities')}
           >
             <Briefcase className="w-5 h-5 mr-2" />
             Explore Opportunity for You

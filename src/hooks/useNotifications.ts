@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { toast as sonnerToast } from 'sonner';
 
 export interface Notification {
   id: string;
@@ -18,7 +18,8 @@ export const useNotifications = (userId?: string) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
+  // Stable ref so we never need toast in the effect dependency array
+  const toastRef = useRef(sonnerToast);
 
   const fetchNotifications = async () => {
     if (!userId) return;
@@ -110,8 +111,9 @@ export const useNotifications = (userId?: string) => {
 
     fetchNotifications();
 
+    // Use a unique channel name per user so multiple instances never collide
     const channel = supabase
-      .channel('notifications')
+      .channel(`notifications:${userId}`)
       .on(
         'postgres_changes',
         {
@@ -124,10 +126,8 @@ export const useNotifications = (userId?: string) => {
           const newNotification = payload.new as Notification;
           setNotifications(prev => [newNotification, ...prev]);
           setUnreadCount(prev => prev + 1);
-          
-          // Show toast for new notification
-          toast({
-            title: newNotification.title,
+          // Use stable ref — avoids re-subscribing every render
+          toastRef.current(newNotification.title, {
             description: newNotification.message,
             duration: 5000,
           });
@@ -138,7 +138,7 @@ export const useNotifications = (userId?: string) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [userId, toast]);
+  }, [userId]); // toast intentionally excluded — stable via ref
 
   return {
     notifications,

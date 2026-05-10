@@ -1,0 +1,33 @@
+{
+  "name": "Talentika - Temukan Minat & Bakat",
+  "short_name": "Talentika",
+  "description": "Platform minat bakat, karir, beasiswa, dan kompetisi untuk generasi muda Indonesia",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#7E69AB",
+  "background_color": "#ffffff",
+  "lang": "id",
+  "icons": [
+    {
+      "src": "/lovable-uploads/9e67a8cf-6f81-4abc-898b-bc665dee2b57.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/lovable-uploads/9e67a8cf-6f81-4abc-898b-bc665dee2b57.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["education", "lifestyle"],
+  "screenshots": [
+    {
+      "src": "/lovable-uploads/9e67a8cf-6f81-4abc-898b-bc665dee2b57.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

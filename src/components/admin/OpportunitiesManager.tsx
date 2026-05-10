@@ -39,7 +39,7 @@ export const OpportunitiesManager = () => {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    category: "SCHOLARSHIP",
+    category: "beasiswa",
     organizer: "",
     location: "",
     url: "",
@@ -55,13 +55,11 @@ export const OpportunitiesManager = () => {
   });
 
   const categories = [
-    { value: "SCHOLARSHIP", label: "Beasiswa", color: "bg-blue-500" },
-    { value: "JOB", label: "Lowongan Kerja", color: "bg-green-500" },
-    { value: "INTERNSHIP", label: "Magang", color: "bg-purple-500" },
-    { value: "COMPETITION", label: "Kompetisi", color: "bg-orange-500" },
-    { value: "CONFERENCE", label: "Konferensi", color: "bg-pink-500" },
-    { value: "WORKSHOP", label: "Workshop", color: "bg-indigo-500" },
-    { value: "OTHER", label: "Lainnya", color: "bg-gray-500" }
+    { value: "beasiswa",       label: "Beasiswa",       color: "bg-blue-500" },
+    { value: "magang",         label: "Magang",          color: "bg-orange-500" },
+    { value: "lowongan_kerja", label: "Lowongan Kerja",  color: "bg-green-500" },
+    { value: "kompetisi",      label: "Kompetisi",       color: "bg-yellow-500" },
+    { value: "konferensi",     label: "Konferensi",      color: "bg-purple-500" },
   ];
 
   useEffect(() => {
@@ -155,7 +153,7 @@ export const OpportunitiesManager = () => {
     setFormData({
       title: "",
       description: "",
-      category: "SCHOLARSHIP",
+      category: "beasiswa",
       organizer: "",
       location: "",
       url: "",

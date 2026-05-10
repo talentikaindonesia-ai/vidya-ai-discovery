@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { User } from "@supabase/supabase-js";
 import Index from "./pages/Index";
 import Assessment from "./pages/Assessment";
 import Auth from "./pages/Auth";
@@ -34,23 +35,31 @@ import MembershipDashboard from "./pages/MembershipDashboard";
 import Articles from "./pages/Articles";
 import TalentikaForSchools from "./pages/TalentikaForSchools";
 
-const queryClient = new QueryClient();
+// Configured with proper stale/gc times to avoid unnecessary refetches
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5,    // 5 min — skip refetch if data is fresh
+      gcTime: 1000 * 60 * 10,      // 10 min — keep unused cache
+      retry: 1,
+      refetchOnWindowFocus: false,  // don't blast API on tab switch
+    },
+  },
+});
 
 const App = () => {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Get initial session
+    // One-time initial session check
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       setLoading(false);
     });
 
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    // Live auth state changes (login / logout / token refresh)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
     });
 
@@ -100,7 +109,6 @@ const App = () => {
             <Route path="/talentika-junior/games" element={user ? <TalentikaJuniorGames /> : <Navigate to="/auth" />} />
             <Route path="/talentika-junior/rewards" element={user ? <TalentikaJuniorRewards /> : <Navigate to="/auth" />} />
             <Route path="/for-schools" element={<TalentikaForSchools />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

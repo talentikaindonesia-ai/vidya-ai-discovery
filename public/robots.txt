@@ -1,24 +1,42 @@
 User-agent: *
 Allow: /
+Allow: /articles
+Allow: /assessment
+Allow: /talentika-junior
+Allow: /for-schools
+Allow: /opportunities
+Allow: /community
+Allow: /learning
+Allow: /subscription
+
+# Private / authenticated routes
 Disallow: /admin
 Disallow: /dashboard
-Disallow: /api/
+Disallow: /dashboard-gamified
+Disallow: /profile
+Disallow: /onboarding
+Disallow: /discovery
+Disallow: /portfolio
+Disallow: /explore
+Disallow: /membership
+Disallow: /talentika-junior/dashboard
+Disallow: /talentika-junior/discovery
+Disallow: /talentika-junior/learning
+Disallow: /talentika-junior/games
+Disallow: /talentika-junior/rewards
 
-# Sitemap
 Sitemap: https://talentika.id/sitemap.xml
 
-# Allow major search engines
 User-agent: Googlebot
 Allow: /
+Crawl-delay: 1
 
 User-agent: Bingbot
 Allow: /
+Crawl-delay: 2
 
 User-agent: Twitterbot
 Allow: /
 
 User-agent: facebookexternalhit
 Allow: /
-
-# Crawl-delay (optional)
-Crawl-delay: 1

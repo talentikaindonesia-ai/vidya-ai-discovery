@@ -34,6 +34,7 @@ interface Course {
 
 const LearningHub = () => {
   const [user, setUser] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(null);
   const [activeSection, setActiveSection] = useState("courses");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -376,6 +377,12 @@ const LearningHub = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
         setUser(session.user);
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('full_name, subscription_type')
+          .eq('id', session.user.id)
+          .single();
+        if (profileData) setProfile(profileData);
       }
     } catch (error) {
       console.error('Error loading data:', error);
@@ -386,7 +393,7 @@ const LearningHub = () => {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-    window.location.href = '/auth';
+    navigate('/auth');
   };
 
   const getDifficultyColor = (level: string) => {
@@ -443,8 +450,12 @@ const LearningHub = () => {
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
                 <h1 className="text-2xl sm:text-3xl font-bold">Kursus Pembelajaran</h1>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">Muhammad Dafa</span>
-                  <Badge variant="outline" className="text-xs">Individual</Badge>
+                  <span className="text-sm text-muted-foreground">
+                    {profile?.full_name || user?.email?.split('@')[0] || 'Pengguna'}
+                  </span>
+                  <Badge variant="outline" className="text-xs">
+                    {profile?.subscription_type === 'premium' ? 'Premium' : 'Individual'}
+                  </Badge>
                 </div>
               </div>
               

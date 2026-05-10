@@ -10,14 +10,15 @@ import { Globe, Play, Trash2, Download, Calendar, MapPin } from "lucide-react";
 export const WebScrapingAdmin = () => {
   const [scrapedContent, setScrapedContent] = useState<any[]>([]);
   const [isScrapingActive, setIsScrapingActive] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState("SCHOLARSHIP");
+  const [selectedCategory, setSelectedCategory] = useState("beasiswa");
   const [loading, setLoading] = useState(true);
 
   const categories = [
-    { value: "SCHOLARSHIP", label: "Beasiswa", color: "bg-blue-500" },
-    { value: "JOB", label: "Pekerjaan & Magang", color: "bg-green-500" },
-    { value: "COMPETITION", label: "Kompetisi & Lomba", color: "bg-orange-500" },
-    { value: "CONFERENCE", label: "Konferensi & Event", color: "bg-purple-500" }
+    { value: "beasiswa",      label: "Beasiswa",       color: "bg-blue-500" },
+    { value: "magang",        label: "Magang",          color: "bg-orange-500" },
+    { value: "lowongan_kerja",label: "Lowongan Kerja",  color: "bg-green-500" },
+    { value: "kompetisi",     label: "Kompetisi",       color: "bg-yellow-500" },
+    { value: "konferensi",    label: "Konferensi",      color: "bg-purple-500" },
   ];
 
   useEffect(() => {
@@ -51,7 +52,7 @@ export const WebScrapingAdmin = () => {
 
       if (error) throw error;
 
-      toast.success(`Berhasil scraping ${data.data?.length || 0} konten baru untuk kategori ${selectedCategory}!`);
+      toast.success(`Berhasil scraping ${data?.saved || 0} konten baru untuk kategori ${selectedCategory}! (${data?.scraped || 0} total ditemukan)`);
       await loadScrapedContent();
     } catch (error: any) {
       toast.error("Gagal scraping: " + error.message);
@@ -143,6 +144,7 @@ export const WebScrapingAdmin = () => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="ALL">Semua Kategori</SelectItem>
                   {categories.map((category) => (
                     <SelectItem key={category.value} value={category.value}>
                       {category.label}
@@ -173,7 +175,7 @@ export const WebScrapingAdmin = () => {
       </Card>
 
       {/* Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         {categories.map((category) => {
           const count = scrapedContent.filter(item => item.category === category.value).length;
           return (

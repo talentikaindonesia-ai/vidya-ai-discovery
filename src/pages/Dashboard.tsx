@@ -36,31 +36,24 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (!session) {
-          navigate("/auth");
-        } else {
-          // Defer profile loading to prevent potential deadlocks
-          setTimeout(() => {
-            loadUserData(session.user.id);
-          }, 0);
-        }
-      }
-    );
-
-    // Check for existing session
+    // Load initial session once — no duplicate fetch
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-      
       if (!session) {
         navigate("/auth");
       } else {
+        loadUserData(session.user.id);
+      }
+    });
+
+    // Watch for logout / token refresh only — don't re-fetch data on every event
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      if (!session) navigate("/auth");
+      // Only re-load data on explicit sign-in (e.g. login from another tab)
+      if (event === 'SIGNED_IN' && session) {
         loadUserData(session.user.id);
       }
     });
@@ -70,67 +63,53 @@ const Dashboard = () => {
 
   const loadUserData = async (userId: string) => {
     try {
-      // Load profile using secure function
-      const { data: profileData, error: profileError } = await supabase
-        .rpc('get_profile_secure', { profile_user_id: userId })
-        .single();
+      // Run all 4 queries in parallel — no waterfall
+      const [
+        { data: profileData,   error: profileError },
+        { data: roleData,      error: roleError },
+        { data: plansData,     error: plansError },
+        { data: interestsData, error: interestsError },
+      ] = await Promise.all([
+        supabase.rpc('get_profile_secure', { profile_user_id: userId }).single(),
+        supabase.from('user_roles').select('role').eq('user_id', userId).single(),
+        supabase.from('subscription_packages').select('*').eq('is_active', true).order('price_monthly'),
+        supabase.from('user_interests').select('*, interest_categories(name)').eq('user_id', userId).limit(3),
+      ]);
 
+      // Profile
       if (profileError && profileError.code !== 'PGRST116') {
         console.error('Error loading profile:', profileError);
         toast.error("Gagal memuat profil pengguna");
       } else {
         setProfile(profileData);
-        
-        // Check subscription status - allow free users in
-        if (!profileData?.subscription_status || 
+        if (!profileData?.subscription_status ||
             (profileData.subscription_status === 'inactive' && !profileData.subscription_type)) {
-          // If no subscription at all, show subscription selection
           setShowSubscription(true);
         } else if (profileData.subscription_status === 'active' || profileData.subscription_type === 'free') {
-          // Allow active subscribers and free users to access dashboard
           setShowSubscription(false);
         }
       }
 
-      // Load user role
-      const { data: roleData, error: roleError } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', userId)
-        .single();
-
+      // Role
       if (roleError && roleError.code !== 'PGRST116') {
         console.error('Error loading role:', roleError);
       } else {
         setUserRole(roleData?.role || 'individual');
       }
 
-      // Load subscription plans
-      const { data: plansData, error: plansError } = await supabase
-        .from('subscription_packages')
-        .select('*')
-        .eq('is_active', true)
-        .order('price_monthly');
-
+      // Plans
       if (plansError) {
         console.error('Error loading plans:', plansError);
       } else {
         setSubscriptionPlans(plansData || []);
       }
 
-      // Load user interests
-      const { data: interestsData, error: interestsError } = await supabase
-        .from('user_interests')
-        .select('*, interest_categories(name)')
-        .eq('user_id', userId)
-        .limit(3);
-
+      // Interests
       if (interestsError) {
         console.error('Error loading interests:', interestsError);
       } else {
         setUserInterests(interestsData || []);
       }
-
     } catch (error) {
       console.error('Error:', error);
     } finally {
@@ -256,10 +235,10 @@ const Dashboard = () => {
           </div>
         );
       case "community":
-        window.location.href = '/community';
+        navigate('/community');
         return null;
       case "timeline":
-        window.location.href = '/discovery';
+        navigate('/discovery');
         return null;
       default:
         return (
