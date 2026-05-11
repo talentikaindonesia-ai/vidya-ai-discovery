@@ -2,9 +2,11 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Loader2, CreditCard, Building, Smartphone, QrCode,
-  CheckCircle2, ExternalLink, RefreshCw, ArrowLeft,
+  CheckCircle2, ExternalLink, RefreshCw, ArrowLeft, Phone,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
@@ -63,6 +65,7 @@ export const PaymentGateway = ({
   onCancel,
 }: PaymentGatewayProps) => {
   const [selectedMethod, setSelectedMethod] = useState<string>("");
+  const [phone, setPhone] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [paymentInitiated, setPaymentInitiated] = useState(false);
   const [transactionId, setTransactionId] = useState<string | null>(null);
@@ -70,6 +73,21 @@ export const PaymentGateway = ({
   const { toast } = useToast();
 
   const finalAmount = amount - discount;
+
+  // Pre-fill phone from user profile
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return;
+      supabase
+        .from("profiles")
+        .select("phone")
+        .eq("user_id", user.id)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data?.phone) setPhone(data.phone);
+        });
+    });
+  }, []);
 
   // Auto-poll every 30 s while awaiting Xendit confirmation
   useEffect(() => {
@@ -140,6 +158,7 @@ export const PaymentGateway = ({
           paymentMethod: selectedMethod,
           billingCycle,
           voucherId,
+          phone: phone.trim(),
         },
       });
 
@@ -285,6 +304,34 @@ export const PaymentGateway = ({
         </CardContent>
       </Card>
 
+      {/* Phone number — required by Mayar */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Phone className="w-4 h-4" />
+            Nomor WhatsApp / HP
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            <Label htmlFor="phone">
+              Nomor HP aktif untuk notifikasi pembayaran <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="phone"
+              type="tel"
+              placeholder="contoh: 08123456789"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className="text-base"
+            />
+            <p className="text-xs text-muted-foreground">
+              Notifikasi status pembayaran akan dikirim ke nomor ini
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Payment methods */}
       <Card>
         <CardHeader>
@@ -330,7 +377,7 @@ export const PaymentGateway = ({
         </Button>
         <Button
           onClick={handlePayment}
-          disabled={!selectedMethod || loading}
+          disabled={!selectedMethod || !phone.trim() || loading}
           className="flex-1"
         >
           {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}

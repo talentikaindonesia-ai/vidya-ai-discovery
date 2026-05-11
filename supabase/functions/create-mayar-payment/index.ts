@@ -13,6 +13,7 @@ interface PaymentRequest {
   paymentMethod: string;
   billingCycle: string;
   voucherId?: string;
+  phone?: string;
 }
 
 serve(async (req) => {
@@ -33,6 +34,7 @@ serve(async (req) => {
       paymentMethod,
       billingCycle,
       voucherId,
+      phone,
     }: PaymentRequest = await req.json();
 
     console.log("Creating Mayar payment | user:", userId, "amount:", amount, "plan:", planId);
@@ -51,7 +53,7 @@ serve(async (req) => {
     // ── Fetch user profile for name / email ──────────────────────────────────
     const { data: profile } = await supabase
       .from("profiles")
-      .select("full_name, email")
+      .select("full_name, email, phone")
       .eq("user_id", userId)
       .maybeSingle();
 
@@ -100,7 +102,11 @@ serve(async (req) => {
       closedAmount: true,
     };
 
-    // Add optional fields only if available
+    // mobile is required by Mayar — use phone from request, fallback to profile phone
+    const mobile = phone?.trim() || profile?.phone?.trim() || "";
+    if (!mobile) throw new Error("Nomor HP wajib diisi untuk melanjutkan pembayaran.");
+    mayarBody.mobile = mobile;
+
     if (customerEmail) mayarBody.email = customerEmail;
 
     console.log("Calling Mayar API with body:", JSON.stringify(mayarBody));
