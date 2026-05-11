@@ -24,9 +24,12 @@ const Auth = () => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
   
-  // Get redirect parameter from URL
+  // Get URL params
   const urlParams = new URLSearchParams(window.location.search);
   const redirectTo = urlParams.get('redirect');
+  // Persist referral code from ?ref= so it survives the signup flow
+  const refCode = urlParams.get('ref');
+  if (refCode) sessionStorage.setItem('referral_code', refCode);
 
   useEffect(() => {
     // Check if user is already logged in
@@ -65,7 +68,15 @@ const Auth = () => {
       });
 
       if (error) throw error;
-      
+
+      // If user came via a referral link, record the referral usage
+      const savedRef = sessionStorage.getItem('referral_code');
+      if (savedRef) {
+        // We fire-and-forget; failure here should never block signup success
+        recordReferral(savedRef).catch(() => {});
+        sessionStorage.removeItem('referral_code');
+      }
+
       toast.success("Akun berhasil dibuat! Silakan login untuk melanjutkan.");
     } catch (error: any) {
       setError(error.message);
@@ -122,6 +133,53 @@ const Auth = () => {
       setError(error.message);
       toast.error("Gagal login dengan Google: " + error.message);
       setIsLoading(false);
+    }
+  };
+
+  // Record referral: look up the code → insert referral_usage → increment referrer's total + award XP
+  const recordReferral = async (code: string) => {
+    const { data: refRow } = await supabase
+      .from('referral_codes')
+      .select('id, user_id, total_referrals')
+      .eq('code', code)
+      .eq('is_active', true)
+      .maybeSingle();
+
+    if (!refRow) return; // invalid or inactive code
+
+    const { data: { user: newUser } } = await supabase.auth.getUser();
+    if (!newUser || newUser.id === refRow.user_id) return; // can't self-refer
+
+    // Record usage
+    await supabase.from('referral_usage').insert({
+      referral_code_id: refRow.id,
+      referred_user_id: newUser.id,
+      commission_earned: 0,
+    });
+
+    // Increment referrer's counter
+    await supabase
+      .from('referral_codes')
+      .update({ total_referrals: (refRow.total_referrals || 0) + 1 })
+      .eq('id', refRow.id);
+
+    // Award 100 XP to the referrer
+    const { data: xpRow } = await supabase
+      .from('user_xp')
+      .select('current_xp, total_xp_earned, current_level')
+      .eq('user_id', refRow.user_id)
+      .maybeSingle();
+
+    if (xpRow) {
+      const newXP = xpRow.current_xp + 100;
+      await supabase
+        .from('user_xp')
+        .update({
+          current_xp: newXP,
+          total_xp_earned: xpRow.total_xp_earned + 100,
+          current_level: Math.floor(newXP / 1000) + 1,
+        })
+        .eq('user_id', refRow.user_id);
     }
   };
 
@@ -305,6 +363,24 @@ const Auth = () => {
                       )}
                     </Button>
                   </div>
+                </div>
+                {/* Optional referral code input */}
+                <div className="space-y-2">
+                  <Label htmlFor="refCodeInput" className="text-sm text-muted-foreground">
+                    Kode Referral <span className="text-xs">(opsional)</span>
+                  </Label>
+                  <Input
+                    id="refCodeInput"
+                    type="text"
+                    placeholder="Contoh: TLK-ABC123"
+                    defaultValue={sessionStorage.getItem('referral_code') || ''}
+                    onChange={(e) => {
+                      const v = e.target.value.trim().toUpperCase();
+                      if (v) sessionStorage.setItem('referral_code', v);
+                      else sessionStorage.removeItem('referral_code');
+                    }}
+                    className="font-mono text-sm uppercase"
+                  />
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

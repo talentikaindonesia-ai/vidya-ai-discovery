@@ -22,6 +22,7 @@ import { Achievements } from "@/components/dashboard/Achievements";
 import { User, Session } from "@supabase/supabase-js";
 import { Crown, Check, X } from "lucide-react";
 import { toast } from "sonner";
+import WelcomeNudge from "@/components/WelcomeNudge";
 
 const Dashboard = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -183,6 +184,7 @@ const Dashboard = () => {
       case "overview":
         return (
           <div className="space-y-6">
+            {user?.id && <WelcomeNudge userId={user.id} />}
             <WelcomeDashboard user={user} profile={profile} />
             <CoursesPreview profile={profile} />
             <OpportunitiesPreview profile={profile} />
@@ -243,6 +245,7 @@ const Dashboard = () => {
       default:
         return (
           <div className="space-y-6">
+            {user?.id && <WelcomeNudge userId={user.id} />}
             <WelcomeDashboard user={user} profile={profile} />
             <CoursesPreview profile={profile} />
             <OpportunitiesPreview profile={profile} />

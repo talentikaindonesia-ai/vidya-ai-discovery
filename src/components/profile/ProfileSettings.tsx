@@ -21,6 +21,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import ReferralCard from "@/components/ReferralCard";
 
 interface ProfileSettingsProps {
   user: User | null;
@@ -102,6 +103,9 @@ export function ProfileSettings({ user, profile, onProfileUpdate }: ProfileSetti
 
   return (
     <div className="space-y-6">
+      {/* Referral Program */}
+      <ReferralCard />
+
       {/* Profile Information */}
       <Card>
         <CardHeader className="flex flex-row items-center space-y-0 pb-2">

@@ -78,6 +78,11 @@ const Articles = () => {
     try {
       const { error } = await supabase.rpc('increment_article_view_count', { article_id: articleId });
       if (error) throw error;
+      // Reflect the increment immediately in local state (no re-fetch needed)
+      setSelectedArticle(prev => prev ? { ...prev, view_count: (prev.view_count || 0) + 1 } : prev);
+      setArticles(prev => prev.map(a =>
+        a.id === articleId ? { ...a, view_count: (a.view_count || 0) + 1 } : a
+      ));
     } catch (error) {
       console.error('Error incrementing view count:', error);
     }
