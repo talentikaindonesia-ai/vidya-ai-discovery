@@ -29,27 +29,33 @@ const Admin = () => {
   }, []);
 
   const checkAdminAccess = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      navigate("/auth");
-      return;
-    }
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate("/auth");
+        return;
+      }
 
-    // Check if user has admin role
-    const { data: userRole } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', session.user.id)
-      .eq('role', 'admin')
-      .single();
+      // Check if user has admin role (.maybeSingle avoids PGRST116 for non-admins)
+      const { data: userRole } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', session.user.id)
+        .eq('role', 'admin')
+        .maybeSingle();
 
-    if (!userRole) {
-      toast.error("Akses ditolak. Anda tidak memiliki izin admin.");
+      if (!userRole) {
+        toast.error("Akses ditolak. Anda tidak memiliki izin admin.");
+        navigate("/dashboard");
+        return;
+      }
+
+      setLoading(false);
+    } catch (error) {
+      console.error('Error checking admin access:', error);
+      toast.error("Terjadi kesalahan saat memeriksa akses.");
       navigate("/dashboard");
-      return;
     }
-
-    setLoading(false);
   };
 
   if (loading) {
@@ -80,11 +86,12 @@ const Admin = () => {
             onClick={() => {
               // Add content based on active tab
               const tabActions = {
-                courses: () => navigate('/admin/courses/new'),
-                learning: () => navigate('/admin/content/new'),
-                paths: () => setActiveTab('paths'), // Will trigger form in component
-                quizzes: () => setActiveTab('quizzes'), // Will trigger form in component
-                articles: () => setActiveTab('articles'), // Will trigger form in component
+                // Inline managers handle their own add-form — just emit a custom event
+                courses: () => document.dispatchEvent(new CustomEvent('admin:add-course')),
+                learning: () => document.dispatchEvent(new CustomEvent('admin:add-learning')),
+                paths: () => setActiveTab('paths'),
+                quizzes: () => setActiveTab('quizzes'),
+                articles: () => setActiveTab('articles'),
                 opportunities: () => setActiveTab('opportunities'),
                 challenges: () => setActiveTab('challenges'),
                 community: () => setActiveTab('community'),
@@ -101,7 +108,7 @@ const Admin = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-10 mb-8">
+          <TabsList className="flex flex-wrap gap-1 h-auto mb-8 p-1">
             <TabsTrigger value="courses">Kursus</TabsTrigger>
             <TabsTrigger value="learning">Learning Hub</TabsTrigger>
             <TabsTrigger value="paths">Learning Paths</TabsTrigger>

@@ -79,13 +79,13 @@ const Header = () => {
           <div className="hidden md:flex items-center gap-4">
             <Button 
               variant="ghost"
-              onClick={() => window.location.href = '/auth'}
+              onClick={() => navigate('/auth')}
             >
               Masuk
             </Button>
             <Button 
               variant="hero"
-              onClick={() => window.location.href = '/auth'}
+              onClick={() => navigate('/auth')}
             >
               Daftar Gratis
             </Button>
@@ -124,14 +124,14 @@ const Header = () => {
                 <Button 
                   variant="ghost" 
                   className="justify-start"
-                  onClick={() => window.location.href = '/auth'}
+                  onClick={() => navigate('/auth')}
                 >
                   Masuk
                 </Button>
                 <Button 
                   variant="hero" 
                   className="justify-start"
-                  onClick={() => window.location.href = '/auth'}
+                  onClick={() => navigate('/auth')}
                 >
                   Daftar Gratis
                 </Button>

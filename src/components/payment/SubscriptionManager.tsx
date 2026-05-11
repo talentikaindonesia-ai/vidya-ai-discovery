@@ -75,7 +75,7 @@ export const SubscriptionManager = ({ userId, onSubscriptionChange, preSelectedP
       `)
       .eq('user_id', userId)
       .eq('status', 'active')
-      .single();
+      .maybeSingle();
 
     if (data) {
       setCurrentSubscription(data);
@@ -148,25 +148,6 @@ export const SubscriptionManager = ({ userId, onSubscriptionChange, preSelectedP
 
     loadCurrentSubscription();
     onSubscriptionChange?.();
-  };
-
-  const createPaymentSession = async (planId: string, cycle: "monthly" | "yearly", amount: number) => {
-    // This would integrate with payment gateway (Midtrans, Xendit, etc.)
-    // For now, we'll show a placeholder
-    toast({
-      title: "Redirect ke Pembayaran",
-      description: "Akan diarahkan ke halaman pembayaran...",
-    });
-    
-    // Create pending transaction using secure function
-    const { data, error } = await supabase.rpc('create_payment_transaction', {
-      p_user_id: userId,
-      p_transaction_type: 'subscription',
-      p_amount: amount,
-      p_payment_gateway: 'midtrans'
-    });
-
-    if (error) throw error;
   };
 
   const handleVoucherApplied = (voucher: any, discountAmount: number) => {

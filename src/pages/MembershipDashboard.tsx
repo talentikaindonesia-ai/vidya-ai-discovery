@@ -87,9 +87,12 @@ const MembershipDashboard = () => {
         ...data,
         subscription_packages: {
           ...data.subscription_packages,
-          features: Array.isArray(data.subscription_packages.features) 
-            ? data.subscription_packages.features 
-            : JSON.parse(data.subscription_packages.features as string)
+          features: Array.isArray(data.subscription_packages.features)
+            ? data.subscription_packages.features
+            : (() => {
+                try { return JSON.parse(data.subscription_packages.features as string); }
+                catch { return []; }
+              })()
         }
       };
       setSubscription(subscriptionData);

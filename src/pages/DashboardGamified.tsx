@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { User } from "@supabase/supabase-js";
 import { GamifiedDashboard } from "@/components/dashboard/GamifiedDashboard";
 import { useToast } from "@/hooks/use-toast";
 
 export default function DashboardGamified() {
-  const [user, setUser] = useState(null);
-  const [profile, setProfile] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -61,6 +62,7 @@ function getRecencyBoost(createdAt: string): number {
 }
 
 const OpportunityBoard = () => {
+  const navigate = useNavigate();
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -139,7 +141,7 @@ const OpportunityBoard = () => {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-    window.location.href = '/auth';
+    navigate('/auth');
   };
 
   return (

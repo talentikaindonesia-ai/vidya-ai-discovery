@@ -1,16 +1,18 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { 
-  Brain, 
-  Compass, 
-  Target, 
-  Users, 
-  TrendingUp, 
+import { useNavigate } from "react-router-dom";
+import {
+  Brain,
+  Compass,
+  Target,
+  Users,
+  TrendingUp,
   Award,
-  ArrowRight 
+  ArrowRight
 } from "lucide-react";
 
 const Features = () => {
+  const navigate = useNavigate();
   const features = [
     {
       icon: Brain,
@@ -118,7 +120,7 @@ const Features = () => {
             variant="floating" 
             size="hero" 
             className="group"
-            onClick={() => window.location.href = '/assessment'}
+            onClick={() => navigate('/assessment')}
           >
             Mulai Test Minat Bakat
             <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />

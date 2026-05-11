@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,7 @@ interface TimelineItem {
 }
 
 const DiscoveryTimeline = () => {
+  const navigate = useNavigate();
   const [timelineItems, setTimelineItems] = useState<TimelineItem[]>([]);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -49,7 +51,7 @@ const DiscoveryTimeline = () => {
         .from('profiles')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       setUserProfile(profile);
 
@@ -120,7 +122,7 @@ const DiscoveryTimeline = () => {
       <div className="container mx-auto px-4 pt-6">
         <Button 
           variant="outline" 
-          onClick={() => window.location.href = '/dashboard'}
+          onClick={() => navigate('/dashboard')}
           className="mb-4"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
@@ -168,7 +170,7 @@ const DiscoveryTimeline = () => {
             </div>
             <div className="hidden lg:block">
               <img loading="lazy" decoding="async" 
-                src="/src/assets/timeline-hero.jpg" 
+                src="/lovable-uploads/029928be-11a9-49ba-9a70-7dd69aff1316.png" 
                 alt="Discovery Timeline" 
                 className="rounded-2xl shadow-2xl transform -rotate-3 hover:rotate-0 transition-transform duration-500"
               />

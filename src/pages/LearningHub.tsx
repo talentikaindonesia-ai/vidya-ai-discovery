@@ -380,8 +380,8 @@ const LearningHub = () => {
         const { data: profileData } = await supabase
           .from('profiles')
           .select('full_name, subscription_type')
-          .eq('id', session.user.id)
-          .single();
+          .eq('user_id', session.user.id)
+          .maybeSingle();
         if (profileData) setProfile(profileData);
       }
     } catch (error) {
@@ -564,7 +564,7 @@ const LearningHub = () => {
           </div>
         </main>
         
-        <BottomNavigationBar />
+        <BottomNavigationBar activeSection={activeSection} onSectionChange={setActiveSection} />
       </div>
     </SidebarProvider>
   );

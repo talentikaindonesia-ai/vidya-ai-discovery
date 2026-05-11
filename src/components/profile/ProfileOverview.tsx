@@ -4,6 +4,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Award, TrendingUp, Download, Lock, Crown, User as UserIcon } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { getSubscriptionLimits } from "@/lib/subscription";
 
 interface ProfileOverviewProps {
@@ -20,6 +21,7 @@ interface ProfileOverviewProps {
 }
 
 export function ProfileOverview({ user, profile, stats }: ProfileOverviewProps) {
+  const navigate = useNavigate();
   // Get subscription limits
   const subscriptionLimits = getSubscriptionLimits(profile?.subscription_status, profile?.subscription_type);
   
@@ -99,7 +101,7 @@ export function ProfileOverview({ user, profile, stats }: ProfileOverviewProps) 
             )}
 
             {profile?.subscription_status !== 'active' && (
-              <Button className="w-full" onClick={() => window.location.href = '/subscription'}>
+              <Button className="w-full" onClick={() => navigate('/subscription')}>
                 Upgrade ke Premium
               </Button>
             )}

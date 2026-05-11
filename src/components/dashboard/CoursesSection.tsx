@@ -100,10 +100,12 @@ export const CoursesSection = () => {
         contentQuery = contentQuery.in('category_id', interestCategoryIds);
       } else if (careerRecommendations.length > 0) {
         // Fallback to career recommendations from assessment
+        // Use an OR filter — .ilike() does NOT support | inside a pattern
+        const orFilter = careerRecommendations.map(r => `name.ilike.%${r}%`).join(',');
         const { data: categoryData } = await supabase
           .from('learning_categories')
           .select('id, name')
-          .ilike('name', `%${careerRecommendations.join('%|%')}%`);
+          .or(orFilter);
         
         if (categoryData && categoryData.length > 0) {
           const categoryIds = categoryData.map(c => c.id);
@@ -358,9 +360,7 @@ export const CoursesSection = () => {
                     <Heart className="w-3 h-3 mr-1" />
                     Tipe: {assessmentResults.personality_type}
                   </Badge>
-                  <Badge variant="outline" className="text-xs">
-                    Gaya Belajar: {assessmentResults.learning_style}
-                  </Badge>
+                  {/* learning_style is not in the assessment_results schema — removed */}
                   {assessmentResults.talent_areas?.map((talent: string, idx: number) => (
                     <Badge key={idx} variant="outline" className="text-xs">
                       {talent}

@@ -41,7 +41,7 @@ const Auth = () => {
       }
     };
     checkUser();
-  }, [navigate]);
+  }, [navigate, redirectTo]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -263,8 +263,7 @@ const Auth = () => {
                     disabled={isLoading} 
                     className="w-full"
                   >
-                    <Chrome className="mr-2 h-4 w-4" />
-                    {isLoading && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
+                    {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Chrome className="mr-2 h-4 w-4" />}
                     Masuk dengan Google
                   </Button>
                 </div>
@@ -395,8 +394,7 @@ const Auth = () => {
                     disabled={isLoading} 
                     className="w-full"
                   >
-                    <Chrome className="mr-2 h-4 w-4" />
-                    {isLoading && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
+                    {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Chrome className="mr-2 h-4 w-4" />}
                     Daftar dengan Google
                   </Button>
                 </div>

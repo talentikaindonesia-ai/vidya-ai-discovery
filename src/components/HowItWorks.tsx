@@ -3,9 +3,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { CheckCircle, ArrowRight, PlayCircle } from "lucide-react";
 import { useState, useCallback, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import type { CarouselApi } from "@/components/ui/carousel";
 
 const HowItWorks = () => {
+  const navigate = useNavigate();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [api, setApi] = useState<CarouselApi>();
 
@@ -129,7 +131,7 @@ const HowItWorks = () => {
 
         <div className="text-center mt-16">
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button variant="hero" size="hero" className="group" onClick={() => window.location.href = '/onboarding'}>
+            <Button variant="hero" size="hero" className="group" onClick={() => navigate('/onboarding')}>
               Mulai Sekarang
               <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
             </Button>

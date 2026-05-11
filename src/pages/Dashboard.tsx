@@ -71,8 +71,8 @@ const Dashboard = () => {
         { data: plansData,     error: plansError },
         { data: interestsData, error: interestsError },
       ] = await Promise.all([
-        supabase.rpc('get_profile_secure', { profile_user_id: userId }).single(),
-        supabase.from('user_roles').select('role').eq('user_id', userId).single(),
+        supabase.rpc('get_profile_secure', { profile_user_id: userId }).maybeSingle(),
+        supabase.from('user_roles').select('role').eq('user_id', userId).maybeSingle(),
         supabase.from('subscription_packages').select('*').eq('is_active', true).order('price_monthly'),
         supabase.from('user_interests').select('*, interest_categories(name)').eq('user_id', userId).limit(3),
       ]);
@@ -236,11 +236,9 @@ const Dashboard = () => {
             </div>
           </div>
         );
+      // "community" and "timeline" navigate to their own pages (handled in handleSectionChange)
       case "community":
-        navigate('/community');
-        return null;
       case "timeline":
-        navigate('/discovery');
         return null;
       default:
         return (
@@ -339,12 +337,19 @@ const Dashboard = () => {
     );
   }
 
+  // Navigation-like sections should call navigate() in an event handler, NOT during render
+  const handleSectionChange = (section: string) => {
+    if (section === 'community') { navigate('/community'); return; }
+    if (section === 'timeline')  { navigate('/discovery');  return; }
+    setActiveSection(section);
+  };
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
-        <DashboardSidebar 
-          activeSection={activeSection} 
-          setActiveSection={setActiveSection}
+        <DashboardSidebar
+          activeSection={activeSection}
+          setActiveSection={handleSectionChange}
           onSignOut={handleSignOut}
           userRole={userRole}
         />
@@ -383,9 +388,9 @@ const Dashboard = () => {
             </div>
           </main>
           
-          <BottomNavigationBar 
+          <BottomNavigationBar
             activeSection={activeSection}
-            onSectionChange={setActiveSection}
+            onSectionChange={handleSectionChange}
           />
         </div>
       </div>

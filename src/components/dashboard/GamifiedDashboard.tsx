@@ -41,7 +41,8 @@ export const GamifiedDashboard = ({ user, profile }: GamifiedDashboardProps) => 
     if (user) {
       updateStreak('login');
     }
-  }, [user]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]); // updateStreak intentionally excluded — it's stable after mount and including it causes re-fires
 
   const handleLearningActivity = async () => {
     await updateStreak('learning');

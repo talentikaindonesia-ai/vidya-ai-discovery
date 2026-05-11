@@ -148,7 +148,7 @@ const PortfolioBuilder = () => {
   };
 
   const sharePortfolio = () => {
-    const url = `${window.location.origin}/portfolio/${profile?.id}`;
+    const url = `${window.location.origin}/portfolio/${profile?.user_id}`;
     navigator.clipboard.writeText(url);
     toast.success("Link portfolio berhasil disalin!");
   };

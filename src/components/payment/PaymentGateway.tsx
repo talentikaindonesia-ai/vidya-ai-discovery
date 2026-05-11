@@ -94,13 +94,7 @@ export const PaymentGateway = ({
           description: "Silakan selesaikan pembayaran di halaman yang terbuka",
         });
 
-        // Simulate checking payment status (in real app, you'd poll or use webhooks)
-        setTimeout(() => {
-          toast({
-            title: "Menunggu Pembayaran",
-            description: "Silakan selesaikan pembayaran untuk mengaktifkan subscription",
-          });
-        }, 2000);
+        // Payment status is confirmed via Xendit webhook — no polling needed here
       } else {
         throw new Error(data.error || 'Failed to create payment');
       }

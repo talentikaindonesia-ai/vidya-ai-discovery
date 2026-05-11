@@ -95,10 +95,13 @@ export const useNotifications = (userId?: string) => {
 
       if (error) throw error;
 
-      setNotifications(prev => prev.filter(n => n.id !== notificationId));
-      setUnreadCount(prev => {
-        const notification = notifications.find(n => n.id === notificationId);
-        return notification && !notification.is_read ? prev - 1 : prev;
+      // Update both states atomically to avoid stale-closure reading old notifications array
+      setNotifications(prev => {
+        const deleted = prev.find(n => n.id === notificationId);
+        if (deleted && !deleted.is_read) {
+          setUnreadCount(uc => Math.max(0, uc - 1));
+        }
+        return prev.filter(n => n.id !== notificationId);
       });
     } catch (error) {
       console.error('Error deleting notification:', error);

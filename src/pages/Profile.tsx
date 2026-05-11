@@ -82,7 +82,7 @@ const Profile = () => {
         .from('quiz_leaderboard')
         .select('*')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
 
       // Calculate stats
       const completedCourses = progressData?.filter(p => p.status === 'completed').length || 0;

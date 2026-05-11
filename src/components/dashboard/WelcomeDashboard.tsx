@@ -52,10 +52,12 @@ export const WelcomeDashboard = ({
       } = await supabase.from('user_interests').select('*, interest_categories(*)').eq('user_id', user?.id);
 
       // Load personalized course recommendations based on interests
-      const categoryIds = interestsData?.map(i => i.category_id) || [];
-      const {
-        data: coursesData
-      } = await supabase.from('courses').select('*, interest_categories(*)').in('category_id', categoryIds.length > 0 ? categoryIds : []).limit(6);
+      const categoryIds = interestsData?.map(i => i.category_id).filter(Boolean) || [];
+      // If no interests yet, fetch popular courses instead of an empty IN() query
+      const coursesQuery = supabase.from('courses').select('*, interest_categories(*)').limit(6);
+      const { data: coursesData } = categoryIds.length > 0
+        ? await coursesQuery.in('category_id', categoryIds)
+        : await coursesQuery;
 
       // Mock challenges (would come from challenges table)
       const mockChallenges = [{
@@ -96,7 +98,7 @@ export const WelcomeDashboard = ({
         data: assessmentData
       } = await supabase.from('assessment_results').select('*').eq('user_id', user?.id).order('created_at', {
         ascending: false
-      }).limit(1).single();
+      }).limit(1).maybeSingle();
       setStats({
         coursesEnrolled: progressData?.length || 0,
         coursesCompleted: progressData?.filter(p => p.progress_percentage === 100).length || 0,

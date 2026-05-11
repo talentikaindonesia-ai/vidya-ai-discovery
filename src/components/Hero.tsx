@@ -1,8 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles, Target, Users } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import heroImage from "@/assets/hero-image.jpg";
 
 const Hero = () => {
+  const navigate = useNavigate();
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-hero">
       {/* Elegant Background Elements */}
@@ -33,7 +35,7 @@ const Hero = () => {
                 variant="hero" 
                 size="hero" 
                 className="group shadow-floating"
-                onClick={() => window.location.href = '/onboarding'}
+                onClick={() => navigate('/onboarding')}
               >
                 Mulai Assessment
                 <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />

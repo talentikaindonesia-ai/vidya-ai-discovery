@@ -1,9 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Star, Sparkles, Heart, Palette } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import talentikaJuniorLogo from "@/assets/talentika-junior-logo.png";
 
 const TalentikaJunior = () => {
+  const navigate = useNavigate();
   const features = [
     {
       icon: Star,
@@ -88,7 +90,7 @@ const TalentikaJunior = () => {
               <Button 
                 size="lg" 
                 className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground font-medium shadow-lg hover:shadow-xl transition-all duration-300"
-                onClick={() => window.location.href = '/auth?redirect=talentika-junior'}
+                onClick={() => navigate('/auth?redirect=talentika-junior')}
               >
                 Mulai Eksplorasi Gratis
               </Button>

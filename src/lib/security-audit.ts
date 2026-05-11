@@ -55,7 +55,7 @@ export const checkAdminRole = async (): Promise<boolean> => {
       .from('user_roles')
       .select('role')
       .eq('user_id', user.id)
-      .single();
+      .maybeSingle();
 
     return userRole?.role === 'admin';
   } catch (error) {

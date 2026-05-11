@@ -24,19 +24,22 @@ import {
   Camera,
   ArrowRight
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import talentikaJuniorLogo from "@/assets/talentika-junior-logo.png";
 
 const TalentikaJuniorLanding = () => {
+  const navigate = useNavigate();
+
   const handleWhatsAppPartner = () => {
     const whatsappUrl = `https://wa.me/6285148434141?text=Halo%20Talentika,%20saya%20ingin%20bergabung%20sebagai%20mitra.`;
     window.open(whatsappUrl, '_blank');
   };
 
   const handleRegister = () => {
-    window.location.href = '/talentika-junior/dashboard';
+    navigate('/talentika-junior/dashboard');
   };
 
   const fields = [

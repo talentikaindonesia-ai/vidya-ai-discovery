@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -59,6 +60,7 @@ interface Event {
 }
 
 const CommunityForum = () => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
 
@@ -192,7 +194,7 @@ const CommunityForum = () => {
       <div className="container mx-auto px-4 pt-6">
         <Button 
           variant="outline" 
-          onClick={() => window.location.href = '/dashboard'}
+          onClick={() => navigate('/dashboard')}
           className="mb-4"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
@@ -239,9 +241,9 @@ const CommunityForum = () => {
               </div>
             </div>
             <div className="hidden lg:block">
-              <img loading="lazy" decoding="async" 
-                src="/src/assets/community-hero.jpg" 
-                alt="Community Forum" 
+              <img loading="lazy" decoding="async"
+                src="/lovable-uploads/029928be-11a9-49ba-9a70-7dd69aff1316.png"
+                alt="Community Forum"
                 className="rounded-2xl shadow-2xl transform rotate-3 hover:rotate-0 transition-transform duration-500"
               />
             </div>
@@ -315,7 +317,17 @@ const CommunityForum = () => {
             </div>
 
             <div className="space-y-4">
-              {forumPosts.map((post) => {
+              {forumPosts
+                .filter((post) => {
+                  const q = searchQuery.toLowerCase();
+                  const matchesSearch = !q ||
+                    post.title.toLowerCase().includes(q) ||
+                    post.content.toLowerCase().includes(q) ||
+                    post.author.toLowerCase().includes(q);
+                  const matchesCategory = selectedCategory === "all" || post.category === selectedCategory;
+                  return matchesSearch && matchesCategory;
+                })
+                .map((post) => {
                 const CategoryIcon = getCategoryIcon(post.category);
                 return (
                   <Card key={post.id} className="shadow-card hover:shadow-floating transition-shadow cursor-pointer">

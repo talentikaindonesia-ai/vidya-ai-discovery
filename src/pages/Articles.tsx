@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useParams, Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -37,6 +37,8 @@ const Articles = () => {
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  // Guard: only increment view count once per slug navigation
+  const viewCountedSlugRef = useRef<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState("all");
 
   useEffect(() => {
@@ -48,11 +50,16 @@ const Articles = () => {
       const article = articles.find(a => a.slug === slug);
       if (article) {
         setSelectedArticle(article);
-        incrementViewCount(article.id);
+        // Only fire once per slug to prevent double-counting on re-renders
+        if (viewCountedSlugRef.current !== slug) {
+          viewCountedSlugRef.current = slug;
+          incrementViewCount(article.id);
+        }
       }
     } else if (!slug) {
       // Reset selected article when returning to articles list
       setSelectedArticle(null);
+      viewCountedSlugRef.current = null;
     }
   }, [slug, articles]);
 
@@ -327,11 +334,14 @@ const Articles = () => {
                   size="sm" 
                   className="bg-background/50 border border-border/50 hover:bg-primary/10 rounded-full px-4 py-2"
                   onClick={() => {
-                    navigator.share?.({
-                      title: selectedArticle.title,
-                      url: window.location.href
-                    }) || navigator.clipboard.writeText(window.location.href);
-                    toast.success('Link berhasil disalin!');
+                    if (navigator.share) {
+                      navigator.share({ title: selectedArticle.title, url: window.location.href })
+                        .then(() => toast.success('Artikel berhasil dibagikan!'))
+                        .catch(() => {/* user dismissed share dialog */});
+                    } else {
+                      navigator.clipboard.writeText(window.location.href);
+                      toast.success('Link berhasil disalin!');
+                    }
                   }}
                 >
                   <Share2 className="w-4 h-4 text-primary" />
@@ -394,11 +404,14 @@ const Articles = () => {
                     variant="outline" 
                     size="sm"
                     onClick={() => {
-                      navigator.share?.({
-                        title: selectedArticle.title,
-                        url: window.location.href
-                      }) || navigator.clipboard.writeText(window.location.href);
-                      toast.success('Link berhasil disalin!');
+                      if (navigator.share) {
+                        navigator.share({ title: selectedArticle.title, url: window.location.href })
+                          .then(() => toast.success('Artikel berhasil dibagikan!'))
+                          .catch(() => {});
+                      } else {
+                        navigator.clipboard.writeText(window.location.href);
+                        toast.success('Link berhasil disalin!');
+                      }
                     }}
                   >
                     <Share2 className="w-4 h-4 mr-2" />

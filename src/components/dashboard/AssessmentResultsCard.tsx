@@ -2,18 +2,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { 
-  Brain, 
-  Target, 
+import {
+  Brain,
+  Target,
   Award,
-  Wrench, 
-  Microscope, 
-  Palette, 
-  Users, 
-  Briefcase, 
+  Wrench,
+  Microscope,
+  Palette,
+  Users,
+  Briefcase,
   Calculator,
   RefreshCw
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import personalitySocial from "@/assets/personality-social.png";
 import personalityRealistic from "@/assets/personality-realistic.png";
 import personalityInvestigative from "@/assets/personality-investigative.png";
@@ -77,6 +78,7 @@ const riasecTypes = {
 };
 
 export const AssessmentResultsCard = ({ assessmentResults }: AssessmentResultsCardProps) => {
+  const navigate = useNavigate();
   if (!assessmentResults) {
     return (
       <Card className="shadow-card border-primary/20 mobile-card">
@@ -95,7 +97,7 @@ export const AssessmentResultsCard = ({ assessmentResults }: AssessmentResultsCa
             Ikuti tes minat bakat untuk mendapatkan rekomendasi pembelajaran yang dipersonalisasi
           </p>
           <Button 
-            onClick={() => window.location.href = '/assessment'}
+            onClick={() => navigate('/assessment')}
             className="w-full sm:w-auto"
           >
             Mulai Tes Sekarang
@@ -223,14 +225,14 @@ export const AssessmentResultsCard = ({ assessmentResults }: AssessmentResultsCa
               <Button 
                 variant="outline" 
                 className="flex-1 text-sm border-gray-300"
-                onClick={() => window.location.href = '/assessment'}
+                onClick={() => navigate('/assessment')}
               >
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Tes Ulang
               </Button>
               <Button 
                 className="flex-1 text-sm bg-blue-600 hover:bg-blue-700"
-                onClick={() => window.location.href = '/learning'}
+                onClick={() => navigate('/learning')}
               >
                 Lihat Kursus
               </Button>
