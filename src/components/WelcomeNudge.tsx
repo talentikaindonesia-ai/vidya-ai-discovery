@@ -83,10 +83,11 @@ const WelcomeNudge = ({ userId }: WelcomeNudgeProps) => {
   const determineNudge = async (uid: string) => {
     try {
       // Parallel: load profile + latest assessment result
+      // maybeSingle() returns null instead of throwing when profile doesn't exist yet
       const [{ data: profile }, { data: assessments }] = await Promise.all([
         supabase
           .rpc("get_profile_secure", { profile_user_id: uid })
-          .single(),
+          .maybeSingle(),
         supabase
           .from("assessment_results")
           .select("id")

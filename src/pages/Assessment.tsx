@@ -211,7 +211,7 @@ const Assessment = () => {
 
         let { data } = await supabase
           .from('scraped_content')
-          .select('id, title, description, tags, deadline, source_url, image_url')
+          .select('id, title, description, tags, deadline, url, poster_url')
           .or(orFilter)
           .limit(3);
 
@@ -219,7 +219,7 @@ const Assessment = () => {
         if (!data || data.length === 0) {
           const fallback = await supabase
             .from('scraped_content')
-            .select('id, title, description, tags, deadline, source_url, image_url')
+            .select('id, title, description, tags, deadline, url, poster_url')
             .limit(3);
           data = fallback.data;
         }
@@ -552,11 +552,20 @@ const Assessment = () => {
                           </p>
                         )}
                         {opp.tags && opp.tags.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-1">
+                          <div className="flex flex-wrap gap-1 mt-auto pt-1">
                             {opp.tags.slice(0, 2).map((tag: string, i: number) => (
                               <Badge key={i} variant="outline" className="text-[10px] px-1.5 py-0">{tag}</Badge>
                             ))}
                           </div>
+                        )}
+                        {opp.url && (
+                          <button
+                            onClick={() => window.open(opp.url, '_blank', 'noopener,noreferrer')}
+                            className="mt-2 text-xs text-primary hover:underline font-medium flex items-center gap-1 self-start"
+                          >
+                            <ExternalLink className="w-3 h-3" />
+                            Lihat detail →
+                          </button>
                         )}
                       </div>
                     ))}

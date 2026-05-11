@@ -53,7 +53,7 @@ const Auth = () => {
         `${window.location.origin}/talentika-junior` : 
         `${window.location.origin}/dashboard`;
       
-      const { error } = await supabase.auth.signUp({
+      const { data: signUpData, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -70,10 +70,11 @@ const Auth = () => {
       if (error) throw error;
 
       // If user came via a referral link, record the referral usage
+      // Use user ID from signUp response directly — avoids getUser() timing issue
+      // when email confirmation is required and session isn't established yet
       const savedRef = sessionStorage.getItem('referral_code');
-      if (savedRef) {
-        // We fire-and-forget; failure here should never block signup success
-        recordReferral(savedRef).catch(() => {});
+      if (savedRef && signUpData?.user?.id) {
+        recordReferral(savedRef, signUpData.user.id).catch(() => {});
         sessionStorage.removeItem('referral_code');
       }
 
@@ -137,7 +138,8 @@ const Auth = () => {
   };
 
   // Record referral: look up the code → insert referral_usage → increment referrer's total + award XP
-  const recordReferral = async (code: string) => {
+  // newUserId comes from the signUp response to avoid getUser() timing issues
+  const recordReferral = async (code: string, newUserId: string) => {
     const { data: refRow } = await supabase
       .from('referral_codes')
       .select('id, user_id, total_referrals')
@@ -146,14 +148,12 @@ const Auth = () => {
       .maybeSingle();
 
     if (!refRow) return; // invalid or inactive code
-
-    const { data: { user: newUser } } = await supabase.auth.getUser();
-    if (!newUser || newUser.id === refRow.user_id) return; // can't self-refer
+    if (newUserId === refRow.user_id) return; // can't self-refer
 
     // Record usage
     await supabase.from('referral_usage').insert({
       referral_code_id: refRow.id,
-      referred_user_id: newUser.id,
+      referred_user_id: newUserId,
       commission_earned: 0,
     });
 
