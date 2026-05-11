@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <!-- This static sitemap is a fallback. The live version is served dynamically
      via the Supabase edge function and includes all published articles. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
@@ -7,7 +7,7 @@
   <!-- Homepage -->
   <url>
     <loc>https://talentika.id/</loc>
-    <lastmod>2026-05-02</lastmod>
+    <lastmod>2026-05-11</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
@@ -15,21 +15,21 @@
   <!-- High-value public pages -->
   <url>
     <loc>https://talentika.id/articles</loc>
-    <lastmod>2026-05-02</lastmod>
+    <lastmod>2026-05-11</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
     <loc>https://talentika.id/assessment</loc>
-    <lastmod>2026-05-02</lastmod>
+    <lastmod>2026-05-11</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
     <loc>https://talentika.id/auth</loc>
-    <lastmod>2026-05-02</lastmod>
+    <lastmod>2026-05-11</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -37,21 +37,21 @@
   <!-- Product landing pages -->
   <url>
     <loc>https://talentika.id/talentika-junior</loc>
-    <lastmod>2026-05-02</lastmod>
+    <lastmod>2026-05-11</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
     <loc>https://talentika.id/for-schools</loc>
-    <lastmod>2026-05-02</lastmod>
+    <lastmod>2026-05-11</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
     <loc>https://talentika.id/subscription</loc>
-    <lastmod>2026-05-02</lastmod>
+    <lastmod>2026-05-11</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -59,21 +59,21 @@
   <!-- Feature pages (auth-gated but still indexed for discovery) -->
   <url>
     <loc>https://talentika.id/opportunities</loc>
-    <lastmod>2026-05-02</lastmod>
+    <lastmod>2026-05-11</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
 
   <url>
     <loc>https://talentika.id/community</loc>
-    <lastmod>2026-05-02</lastmod>
+    <lastmod>2026-05-11</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
 
   <url>
     <loc>https://talentika.id/learning</loc>
-    <lastmod>2026-05-02</lastmod>
+    <lastmod>2026-05-11</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -81,42 +81,42 @@
   <!-- Article pages (key slugs) -->
   <url>
     <loc>https://talentika.id/articles/cara-menemukan-minat-bakat-sejak-dini</loc>
-    <lastmod>2026-05-02</lastmod>
+    <lastmod>2026-05-11</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
     <loc>https://talentika.id/articles/7-langkah-mengembangkan-potensi-diri</loc>
-    <lastmod>2026-05-02</lastmod>
+    <lastmod>2026-05-11</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
     <loc>https://talentika.id/articles/memilih-jurusan-kuliah-sesuai-minat</loc>
-    <lastmod>2026-05-02</lastmod>
+    <lastmod>2026-05-11</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
     <loc>https://talentika.id/articles/soft-skills-wajib-generasi-muda</loc>
-    <lastmod>2026-05-02</lastmod>
+    <lastmod>2026-05-11</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
     <loc>https://talentika.id/articles/tes-riasec-holland-kepribadian-karir</loc>
-    <lastmod>2026-05-02</lastmod>
+    <lastmod>2026-05-11</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
     <loc>https://talentika.id/articles/strategi-produktif-belajar-pelajar-mahasiswa</loc>
-    <lastmod>2026-05-02</lastmod>
+    <lastmod>2026-05-11</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
