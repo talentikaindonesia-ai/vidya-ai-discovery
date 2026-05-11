@@ -125,15 +125,6 @@ const Subscription = () => {
               </div>
             </div>
             
-            <div className="mt-6 p-4 bg-muted rounded-lg">
-              <p className="text-xs text-muted-foreground">
-                <strong>Webhook URL untuk Xendit:</strong> <br/>
-                https://doogbcrodipaeahgbjuj.supabase.co/functions/v1/xendit-webhook
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Konfigurasi webhook ini di dashboard Xendit untuk update status pembayaran otomatis
-              </p>
-            </div>
           </CardContent>
         </Card>
       </div>

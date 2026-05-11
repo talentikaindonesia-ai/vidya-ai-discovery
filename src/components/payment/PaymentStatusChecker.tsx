@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -7,55 +7,103 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { formatCurrency, formatDate } from "@/lib/utils";
 
+interface PendingPayment {
+  id: string;
+  status: string;
+  amount: number;
+  created_at: string;
+  user_subscriptions: {
+    subscription_packages: { name: string; type: string } | null;
+  } | null;
+}
+
 interface PaymentStatusCheckerProps {
   userId: string;
   onPaymentCompleted?: () => void;
 }
 
-export const PaymentStatusChecker = ({ userId, onPaymentCompleted }: PaymentStatusCheckerProps) => {
-  const [pendingPayments, setPendingPayments] = useState<any[]>([]);
+export const PaymentStatusChecker = ({
+  userId,
+  onPaymentCompleted,
+}: PaymentStatusCheckerProps) => {
+  const [pendingPayments, setPendingPayments] = useState<PendingPayment[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  useEffect(() => {
-    loadPendingPayments();
-    // Poll every 30 seconds for updates
-    const interval = setInterval(loadPendingPayments, 30000);
-    return () => clearInterval(interval);
-  }, [userId]);
+  // Track IDs that were pending last time so we can detect status flips
+  const prevPendingIds = useRef<Set<string>>(new Set());
 
   const loadPendingPayments = async () => {
     try {
+      // Correct join: payment_transactions → user_subscriptions → subscription_packages
       const { data, error } = await supabase
-        .from('payment_transactions')
+        .from("payment_transactions")
         .select(`
-          *,
-          subscription_packages (name, type)
+          id,
+          status,
+          amount,
+          created_at,
+          user_subscriptions (
+            subscription_packages (name, type)
+          )
         `)
-        .eq('user_id', userId)
-        .in('status', ['pending'])
-        .order('created_at', { ascending: false })
+        .eq("user_id", userId)
+        .in("status", ["pending"])
+        .order("created_at", { ascending: false })
         .limit(5);
 
       if (error) throw error;
-      setPendingPayments(data || []);
+
+      const rows = (data ?? []) as PendingPayment[];
+
+      // Detect payments that were pending and are now gone (completed/failed externally)
+      const newIds = new Set(rows.map((r) => r.id));
+      const disappeared = [...prevPendingIds.current].filter((id) => !newIds.has(id));
+      prevPendingIds.current = newIds;
+
+      if (disappeared.length > 0) {
+        // Check if any of the disappeared ones are now "completed"
+        const { data: resolved } = await supabase
+          .from("payment_transactions")
+          .select("id, status")
+          .in("id", disappeared);
+
+        const anyCompleted = resolved?.some((r) => r.status === "completed");
+        if (anyCompleted) {
+          toast({
+            title: "Pembayaran Berhasil! 🎉",
+            description: "Langganan Anda telah aktif.",
+          });
+          onPaymentCompleted?.();
+        }
+      }
+
+      setPendingPayments(rows);
     } catch (error: any) {
-      console.error('Error loading pending payments:', error);
+      console.error("Error loading pending payments:", error);
     }
   };
 
-  const refreshPaymentStatus = async (transactionId: string) => {
+  useEffect(() => {
+    if (!userId) return;
+    loadPendingPayments();
+    // Poll every 30 s for Xendit webhook updates
+    const interval = setInterval(loadPendingPayments, 30_000);
+    return () => clearInterval(interval);
+  }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleRefresh = async (transactionId: string) => {
     setLoading(true);
     try {
       await loadPendingPayments();
       toast({
         title: "Status Diperbarui",
-        description: "Status pembayaran telah diperbarui",
+        description: "Status pembayaran telah diperbarui.",
       });
-    } catch (error: any) {
+    } catch {
       toast({
         title: "Error",
-        description: "Gagal memperbarui status pembayaran",
+        description: "Gagal memperbarui status pembayaran.",
         variant: "destructive",
       });
     } finally {
@@ -65,31 +113,43 @@ export const PaymentStatusChecker = ({ userId, onPaymentCompleted }: PaymentStat
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'completed':
+      case "completed":
         return <CheckCircle className="w-5 h-5 text-green-600" />;
-      case 'failed':
+      case "failed":
+      case "expired":
         return <XCircle className="w-5 h-5 text-red-600" />;
-      case 'pending':
       default:
         return <Clock className="w-5 h-5 text-yellow-600" />;
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusVariant = (
+    status: string
+  ): "default" | "secondary" | "destructive" | "outline" => {
     switch (status) {
-      case 'completed':
-        return 'default';
-      case 'failed':
-        return 'destructive';
-      case 'pending':
+      case "completed":
+        return "default";
+      case "failed":
+      case "expired":
+        return "destructive";
       default:
-        return 'secondary';
+        return "secondary";
     }
   };
 
-  if (pendingPayments.length === 0) {
-    return null;
-  }
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case "completed": return "Berhasil";
+      case "failed":    return "Gagal";
+      case "expired":   return "Kedaluwarsa";
+      default:          return "Menunggu";
+    }
+  };
+
+  const getPlanName = (payment: PendingPayment) =>
+    payment.user_subscriptions?.subscription_packages?.name ?? "Subscription";
+
+  if (pendingPayments.length === 0) return null;
 
   return (
     <Card>
@@ -101,8 +161,9 @@ export const PaymentStatusChecker = ({ userId, onPaymentCompleted }: PaymentStat
             size="sm"
             onClick={() => loadPendingPayments()}
             disabled={loading}
+            aria-label="Refresh status"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
           </Button>
         </CardTitle>
       </CardHeader>
@@ -115,26 +176,24 @@ export const PaymentStatusChecker = ({ userId, onPaymentCompleted }: PaymentStat
             <div className="flex items-center gap-3">
               {getStatusIcon(payment.status)}
               <div>
-                <p className="font-medium">
-                  {payment.subscription_packages?.name || 'Subscription'}
-                </p>
+                <p className="font-medium">{getPlanName(payment)}</p>
                 <p className="text-sm text-muted-foreground">
-                  {formatCurrency(payment.amount)} • {formatDate(payment.created_at)}
+                  {formatCurrency(payment.amount)} •{" "}
+                  {formatDate(payment.created_at)}
                 </p>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-2">
-              <Badge variant={getStatusColor(payment.status)}>
-                {payment.status === 'pending' ? 'Menunggu' : 
-                 payment.status === 'completed' ? 'Berhasil' : 'Gagal'}
+              <Badge variant={getStatusVariant(payment.status)}>
+                {getStatusLabel(payment.status)}
               </Badge>
-              
-              {payment.status === 'pending' && (
+
+              {payment.status === "pending" && (
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => refreshPaymentStatus(payment.id)}
+                  onClick={() => handleRefresh(payment.id)}
                   disabled={loading}
                 >
                   Cek Status
@@ -143,10 +202,10 @@ export const PaymentStatusChecker = ({ userId, onPaymentCompleted }: PaymentStat
             </div>
           </div>
         ))}
-        
-        <div className="text-xs text-muted-foreground text-center pt-2">
-          Status akan diperbarui otomatis setiap 30 detik
-        </div>
+
+        <p className="text-xs text-muted-foreground text-center pt-2">
+          Status diperbarui otomatis setiap 30 detik
+        </p>
       </CardContent>
     </Card>
   );

@@ -1,8 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, CreditCard, Building, Smartphone, QrCode } from "lucide-react";
+import {
+  Loader2, CreditCard, Building, Smartphone, QrCode,
+  CheckCircle2, ExternalLink, RefreshCw, ArrowLeft,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { formatCurrency } from "@/lib/utils";
@@ -20,89 +23,139 @@ interface PaymentGatewayProps {
 
 const PAYMENT_METHODS = [
   {
-    id: 'bank_transfer',
-    name: 'Transfer Bank',
+    id: "bank_transfer",
+    name: "Transfer Bank",
     icon: <Building className="w-5 h-5" />,
-    description: 'BCA, Mandiri, BNI, BRI',
+    description: "BCA, Mandiri, BNI, BRI",
     fee: 0,
   },
   {
-    id: 'e_wallet',
-    name: 'E-Wallet',
+    id: "e_wallet",
+    name: "E-Wallet",
     icon: <Smartphone className="w-5 h-5" />,
-    description: 'GoPay, OVO, Dana, LinkAja',
+    description: "GoPay, OVO, Dana, LinkAja",
     fee: 0,
   },
   {
-    id: 'credit_card',
-    name: 'Kartu Kredit',
+    id: "credit_card",
+    name: "Kartu Kredit",
     icon: <CreditCard className="w-5 h-5" />,
-    description: 'Visa, Mastercard, JCB',
+    description: "Visa, Mastercard, JCB",
     fee: 3000,
   },
   {
-    id: 'qr_code',
-    name: 'QRIS',
+    id: "qr_code",
+    name: "QRIS",
     icon: <QrCode className="w-5 h-5" />,
-    description: 'Scan QR untuk bayar',
+    description: "Scan QR untuk bayar",
     fee: 0,
   },
 ];
 
-export const PaymentGateway = ({ 
-  planId, 
-  planName, 
-  amount, 
-  billingCycle, 
+export const PaymentGateway = ({
+  planId,
+  planName,
+  amount,
+  billingCycle,
   discount = 0,
   voucherId,
   onPaymentSuccess,
-  onCancel 
+  onCancel,
 }: PaymentGatewayProps) => {
-  const [selectedMethod, setSelectedMethod] = useState<string>('');
+  const [selectedMethod, setSelectedMethod] = useState<string>("");
   const [loading, setLoading] = useState(false);
+  const [paymentInitiated, setPaymentInitiated] = useState(false);
+  const [transactionId, setTransactionId] = useState<string | null>(null);
+  const [checkingStatus, setCheckingStatus] = useState(false);
   const { toast } = useToast();
 
   const finalAmount = amount - discount;
 
-  const handlePayment = async (methodId: string) => {
+  // Auto-poll every 30 s while awaiting Xendit confirmation
+  useEffect(() => {
+    if (!paymentInitiated || !transactionId) return;
+    const interval = setInterval(() => checkPaymentStatus(false), 30_000);
+    return () => clearInterval(interval);
+  }, [paymentInitiated, transactionId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const checkPaymentStatus = async (showToast = true) => {
+    if (!transactionId) return;
+    setCheckingStatus(true);
+    try {
+      const { data, error } = await supabase
+        .from("payment_transactions")
+        .select("status")
+        .eq("id", transactionId)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (data?.status === "completed") {
+        toast({
+          title: "Pembayaran Berhasil! 🎉",
+          description: "Selamat! Langganan Anda sudah aktif.",
+        });
+        onPaymentSuccess?.(transactionId);
+      } else if (data?.status === "failed" || data?.status === "expired") {
+        toast({
+          title: "Pembayaran Gagal",
+          description: "Silakan coba lagi dengan metode lain.",
+          variant: "destructive",
+        });
+        setPaymentInitiated(false);
+        setTransactionId(null);
+      } else if (showToast) {
+        toast({
+          title: "Masih Menunggu",
+          description: "Pembayaran belum dikonfirmasi. Selesaikan di halaman Xendit.",
+        });
+      }
+    } catch {
+      if (showToast) {
+        toast({
+          title: "Error",
+          description: "Gagal memeriksa status pembayaran.",
+          variant: "destructive",
+        });
+      }
+    } finally {
+      setCheckingStatus(false);
+    }
+  };
+
+  const handlePayment = async () => {
+    if (!selectedMethod) return;
     setLoading(true);
     try {
       const user = (await supabase.auth.getUser()).data.user;
-      if (!user) throw new Error('User not authenticated');
+      if (!user) throw new Error("User not authenticated");
 
-      // Create Xendit payment
-      const { data, error } = await supabase.functions.invoke('create-xendit-payment', {
+      const methodFee = PAYMENT_METHODS.find((m) => m.id === selectedMethod)?.fee ?? 0;
+
+      const { data, error } = await supabase.functions.invoke("create-xendit-payment", {
         body: {
           planId,
           userId: user.id,
-          amount: finalAmount + (PAYMENT_METHODS.find(m => m.id === methodId)?.fee || 0),
-          paymentMethod: methodId,
+          amount: finalAmount + methodFee,
+          paymentMethod: selectedMethod,
           billingCycle,
-          voucherId
-        }
+          voucherId,
+        },
       });
 
       if (error) throw error;
 
       if (data.success) {
-        // Redirect to Xendit payment page
-        window.open(data.invoice_url, '_blank');
-        
-        toast({
-          title: "Pembayaran Dibuat",
-          description: "Silakan selesaikan pembayaran di halaman yang terbuka",
-        });
-
-        // Payment status is confirmed via Xendit webhook — no polling needed here
+        window.open(data.invoice_url, "_blank");
+        setTransactionId(data.transaction_id ?? null);
+        setPaymentInitiated(true);
       } else {
-        throw new Error(data.error || 'Failed to create payment');
+        throw new Error(data.error || "Failed to create payment");
       }
-
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message || "Terjadi kesalahan saat memproses pembayaran",
+        description: error.message || "Terjadi kesalahan saat memproses pembayaran.",
         variant: "destructive",
       });
     } finally {
@@ -110,25 +163,111 @@ export const PaymentGateway = ({
     }
   };
 
+  // ─── POST-PAYMENT AWAITING STATE ──────────────────────────────────────────
+  if (paymentInitiated) {
+    return (
+      <div className="space-y-6">
+        <Card className="border-amber-200 bg-amber-50/50 dark:border-amber-800 dark:bg-amber-950/20">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
+              <RefreshCw className="w-5 h-5 animate-spin" />
+              Menunggu Konfirmasi Pembayaran
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Halaman pembayaran Xendit telah dibuka di tab baru. Ikuti langkah-langkah berikut:
+            </p>
+
+            <ol className="space-y-3">
+              {[
+                {
+                  step: "1",
+                  text: "Selesaikan pembayaran di tab Xendit yang terbuka",
+                  icon: <ExternalLink className="w-4 h-4 text-primary flex-shrink-0" />,
+                },
+                {
+                  step: "2",
+                  text: "Kembali ke halaman ini setelah pembayaran selesai",
+                  icon: <ArrowLeft className="w-4 h-4 text-primary flex-shrink-0" />,
+                },
+                {
+                  step: "3",
+                  text: 'Klik tombol "Cek Status Pembayaran" di bawah',
+                  icon: <CheckCircle2 className="w-4 h-4 text-primary flex-shrink-0" />,
+                },
+              ].map(({ step, text, icon }) => (
+                <li
+                  key={step}
+                  className="flex items-center gap-3 p-3 bg-background rounded-lg border"
+                >
+                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">
+                    {step}
+                  </span>
+                  {icon}
+                  <span className="text-sm">{text}</span>
+                </li>
+              ))}
+            </ol>
+
+            <p className="text-xs text-muted-foreground text-center">
+              Status diperbarui otomatis setiap 30 detik
+            </p>
+          </CardContent>
+        </Card>
+
+        <div className="flex gap-3">
+          <Button
+            variant="outline"
+            onClick={() => {
+              setPaymentInitiated(false);
+              setTransactionId(null);
+            }}
+            className="flex-1"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Kembali ke Pilihan Metode
+          </Button>
+          <Button
+            onClick={() => checkPaymentStatus(true)}
+            disabled={checkingStatus}
+            className="flex-1"
+          >
+            {checkingStatus ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <RefreshCw className="w-4 h-4 mr-2" />
+            )}
+            Cek Status Pembayaran
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── PAYMENT METHOD SELECTION STATE ──────────────────────────────────────
   return (
     <div className="space-y-6">
+      {/* Order summary */}
       <Card>
         <CardHeader>
           <CardTitle>Ringkasan Pembayaran</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex justify-between">
-            <span>{planName} ({billingCycle === 'monthly' ? 'Bulanan' : 'Tahunan'})</span>
+            <span>
+              {planName} ({billingCycle === "monthly" ? "Bulanan" : "Tahunan"})
+            </span>
             <span>{formatCurrency(amount)}</span>
           </div>
-          
+
           {discount > 0 && (
             <div className="flex justify-between text-green-600">
               <span>Diskon Voucher</span>
               <span>-{formatCurrency(discount)}</span>
             </div>
           )}
-          
+
           <div className="border-t pt-2">
             <div className="flex justify-between font-bold text-lg">
               <span>Total Pembayaran</span>
@@ -138,6 +277,7 @@ export const PaymentGateway = ({
         </CardContent>
       </Card>
 
+      {/* Payment methods */}
       <Card>
         <CardHeader>
           <CardTitle>Pilih Metode Pembayaran</CardTitle>
@@ -148,8 +288,8 @@ export const PaymentGateway = ({
               key={method.id}
               className={`p-4 border rounded-lg cursor-pointer transition-colors ${
                 selectedMethod === method.id
-                  ? 'border-primary bg-primary/5'
-                  : 'border-border hover:border-primary/50'
+                  ? "border-primary bg-primary/5"
+                  : "border-border hover:border-primary/50"
               }`}
               onClick={() => setSelectedMethod(method.id)}
             >
@@ -161,11 +301,9 @@ export const PaymentGateway = ({
                     <p className="text-sm text-muted-foreground">{method.description}</p>
                   </div>
                 </div>
-                <div className="text-right">
-                  {method.fee > 0 && (
-                    <Badge variant="secondary">+{formatCurrency(method.fee)}</Badge>
-                  )}
-                </div>
+                {method.fee > 0 && (
+                  <Badge variant="secondary">+{formatCurrency(method.fee)}</Badge>
+                )}
               </div>
             </div>
           ))}
@@ -173,16 +311,17 @@ export const PaymentGateway = ({
       </Card>
 
       <div className="flex gap-4">
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           onClick={onCancel}
           disabled={loading}
           className="flex-1"
         >
-          Batal
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Kembali
         </Button>
-        <Button 
-          onClick={() => handlePayment(selectedMethod)}
+        <Button
+          onClick={handlePayment}
           disabled={!selectedMethod || loading}
           className="flex-1"
         >
