@@ -6,10 +6,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-/**
- * Map Mayar payment status → our internal status.
- * Mayar statuses: "paid" | "expired" | "cancelled" | "pending"
- */
 function mapMayarStatus(mayarStatus: string): string {
   switch (mayarStatus?.toLowerCase()) {
     case "paid":       return "completed";
@@ -27,12 +23,11 @@ serve(async (req) => {
   }
 
   try {
-    // ── Verify Mayar callback token ─────────────────────────────────────────
+    // ── Verify Mayar callback token ──────────────────────────────────────────
     const callbackToken = req.headers.get("x-callback-token");
     const expectedToken = Deno.env.get("MAYAR_WEBHOOK_TOKEN");
-
     if (expectedToken && callbackToken !== expectedToken) {
-      console.warn("Invalid Mayar callback token");
+      console.warn("Invalid Mayar callback token received");
       return new Response("Unauthorized", { status: 401 });
     }
 
@@ -42,52 +37,41 @@ serve(async (req) => {
     );
 
     const payload = await req.json();
-    console.log("Received Mayar webhook:", JSON.stringify(payload, null, 2));
+    console.log("Mayar webhook received:", JSON.stringify(payload, null, 2));
 
-    // Mayar webhook payload fields
+    // Mayar webhook fields
     const {
-      id: mayarPaymentId,     // Mayar payment link ID
+      id: mayarPaymentId,   // Mayar's payment link ID — our primary match key
       status: mayarStatus,
-      externalId,             // our transaction UUID (set when creating payment)
       amount: paidAmount,
     } = payload;
 
-    if (!externalId) {
-      console.error("Missing externalId in Mayar webhook payload");
-      return new Response("Missing externalId", { status: 400 });
+    // ── If no payment ID it's a test / ping — accept it ─────────────────────
+    if (!mayarPaymentId) {
+      console.log("No payment ID in payload — treating as test ping, returning 200");
+      return new Response("OK", { headers: corsHeaders, status: 200 });
     }
 
-    // ── Find our transaction ────────────────────────────────────────────────
-    // externalId = our transaction UUID (passed as externalId when creating payment)
-    const { data: transaction, error: findError } = await supabase
+    const newStatus = mapMayarStatus(mayarStatus);
+    console.log(`Mayar payment ${mayarPaymentId}: status ${mayarStatus} -> ${newStatus}`);
+
+    // ── Find our transaction by external_transaction_id = Mayar payment ID ───
+    // (we stored this via update_transaction_status after creating the Mayar link)
+    const { data: tx, error: findError } = await supabase
       .from("payment_transactions")
       .select("*")
-      .eq("id", externalId)
+      .eq("external_transaction_id", mayarPaymentId)
       .maybeSingle();
 
-    if (findError || !transaction) {
-      // Fallback: match by external_transaction_id (Mayar payment ID)
-      const { data: txByExternal } = await supabase
-        .from("payment_transactions")
-        .select("*")
-        .eq("external_transaction_id", mayarPaymentId)
-        .maybeSingle();
-
-      if (!txByExternal) {
-        console.error("Transaction not found for externalId:", externalId);
-        return new Response("Transaction not found", { status: 404 });
-      }
-
-      // Use the fallback match — continue with txByExternal below
-      Object.assign(transaction ?? {}, txByExternal);
+    if (findError || !tx) {
+      // For test calls Mayar sends a dummy payment ID that won't match — that's OK
+      console.log("Transaction not found for Mayar payment ID:", mayarPaymentId, "— may be a test event");
+      return new Response("OK", { headers: corsHeaders, status: 200 });
     }
 
-    const tx = transaction!;
-    const newStatus = mapMayarStatus(mayarStatus);
+    console.log("Matched transaction:", tx.id, "user:", tx.user_id);
 
-    console.log(`Transaction ${tx.id}: ${mayarStatus} → ${newStatus}`);
-
-    // ── Update transaction status ───────────────────────────────────────────
+    // ── Update transaction status ────────────────────────────────────────────
     const { error: updateError } = await supabase.rpc("update_transaction_status", {
       p_transaction_id: tx.id,
       p_new_status: newStatus,
@@ -99,11 +83,10 @@ serve(async (req) => {
       return new Response("Error updating transaction", { status: 500 });
     }
 
-    // ── If paid, activate subscription ─────────────────────────────────────
+    // ── If paid, activate subscription ───────────────────────────────────────
     if (newStatus === "completed") {
-      console.log("Payment completed – activating subscription for user:", tx.user_id);
+      console.log("Payment completed — activating subscription for user:", tx.user_id);
 
-      // Read billing_cycle from the notes JSON we stored at payment creation
       let billingCycle = "monthly";
       let planId = tx.subscription_id;
 
@@ -114,10 +97,9 @@ serve(async (req) => {
           planId = notes.planId ?? planId;
         }
       } catch {
-        console.warn("Could not parse transaction notes, defaulting to monthly");
+        console.warn("Could not parse transaction notes — defaulting to monthly");
       }
 
-      // Fetch subscription plan
       const { data: plan, error: planError } = await supabase
         .from("subscription_packages")
         .select("*")
@@ -125,21 +107,18 @@ serve(async (req) => {
         .maybeSingle();
 
       if (planError || !plan) {
-        console.error("Subscription plan not found:", planId, planError);
+        console.error("Plan not found:", planId, planError);
         return new Response("Plan not found", { status: 404 });
       }
 
-      // Calculate expiry date
       const startsAt = new Date();
       const expiresAt = new Date(startsAt);
-
       if (billingCycle === "yearly") {
         expiresAt.setFullYear(expiresAt.getFullYear() + 1);
       } else {
         expiresAt.setMonth(expiresAt.getMonth() + 1);
       }
 
-      // Create / update user_subscriptions record
       const { error: subError } = await supabase
         .from("user_subscriptions")
         .upsert(
@@ -162,7 +141,6 @@ serve(async (req) => {
         return new Response("Error activating subscription", { status: 500 });
       }
 
-      // Mirror subscription status onto profiles for fast reads
       await supabase
         .from("profiles")
         .update({
@@ -172,15 +150,12 @@ serve(async (req) => {
         })
         .eq("user_id", tx.user_id);
 
-      console.log("Subscription activated:", plan.name, billingCycle, "for", tx.user_id);
+      console.log("Subscription activated:", plan.name, billingCycle, "expires:", expiresAt.toISOString());
     }
 
     return new Response("OK", { headers: corsHeaders, status: 200 });
   } catch (error) {
-    console.error("Error processing Mayar webhook:", error);
-    return new Response("Internal server error", {
-      headers: corsHeaders,
-      status: 500,
-    });
+    console.error("Mayar webhook error:", error);
+    return new Response("Internal server error", { headers: corsHeaders, status: 500 });
   }
 });

@@ -143,7 +143,15 @@ export const PaymentGateway = ({
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        // Extract the actual error message from the edge function response body
+        let message = "Terjadi kesalahan saat memproses pembayaran.";
+        try {
+          const body = await (error as any).context?.json?.();
+          if (body?.error) message = body.error;
+        } catch {}
+        throw new Error(message);
+      }
 
       if (data.success) {
         window.open(data.invoice_url, "_blank");

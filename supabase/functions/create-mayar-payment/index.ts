@@ -35,9 +35,9 @@ serve(async (req) => {
       voucherId,
     }: PaymentRequest = await req.json();
 
-    console.log("Creating Mayar payment for user:", userId, "amount:", amount);
+    console.log("Creating Mayar payment | user:", userId, "amount:", amount, "plan:", planId);
 
-    // ── Validate subscription plan ──────────────────────────────────────────
+    // ── Validate subscription plan ───────────────────────────────────────────
     const { data: plan, error: planError } = await supabase
       .from("subscription_packages")
       .select("*")
@@ -45,10 +45,10 @@ serve(async (req) => {
       .maybeSingle();
 
     if (planError || !plan) {
-      throw new Error("Invalid subscription plan");
+      throw new Error("Invalid subscription plan: " + (planError?.message ?? "not found"));
     }
 
-    // ── Fetch user profile (for name / email) ───────────────────────────────
+    // ── Fetch user profile for name / email ──────────────────────────────────
     const { data: profile } = await supabase
       .from("profiles")
       .select("full_name, email")
@@ -58,48 +58,52 @@ serve(async (req) => {
     const customerName = profile?.full_name ?? "Customer";
     const customerEmail = profile?.email ?? "";
 
-    // ── Create pending transaction record ───────────────────────────────────
+    // ── Create pending transaction record ────────────────────────────────────
     const { data: transactionId, error: txError } = await supabase.rpc(
       "create_payment_transaction",
       {
         p_user_id: userId,
         p_transaction_type: "subscription",
-        p_amount: amount,
+        p_amount: Math.round(amount),   // ensure integer
         p_payment_gateway: "mayar",
         p_currency: "IDR",
       }
     );
 
     if (txError || !transactionId) {
-      throw new Error("Failed to create transaction: " + txError?.message);
+      throw new Error("Failed to create transaction: " + (txError?.message ?? "unknown"));
     }
 
-    // Store billingCycle + planId in notes so the webhook can read them
+    console.log("Transaction created:", transactionId);
+
+    // Store billingCycle + planId in notes so webhook can activate correctly
     await supabase
       .from("payment_transactions")
-      .update({ notes: JSON.stringify({ billingCycle, planId, paymentMethod }) })
+      .update({ notes: JSON.stringify({ billingCycle, planId, paymentMethod, transactionId }) })
       .eq("id", transactionId);
 
-    // ── Call Mayar API ──────────────────────────────────────────────────────
+    // ── Call Mayar API ───────────────────────────────────────────────────────
     const mayarApiKey = Deno.env.get("MAYAR_API_KEY");
     if (!mayarApiKey) throw new Error("Mayar API key not configured");
 
-    const baseUrl =
-      Deno.env.get("APP_URL") ??
-      Deno.env.get("SUPABASE_URL")?.replace(".supabase.co", ".lovable.app") ??
-      "https://app.talentika.id";
+    // APP_URL secret → custom domain; fallback to talentika.id
+    const baseUrl = Deno.env.get("APP_URL") ?? "https://talentika.id";
 
-    const mayarBody = {
-      name: customerName,
-      amount,
-      description: `${plan.name} – ${billingCycle === "monthly" ? "Bulanan" : "Tahunan"}`,
-      redirectUrl: `${baseUrl}/subscription?payment=success`,
+    const description = `${plan.name} – ${billingCycle === "monthly" ? "Bulanan" : "Tahunan"} | Ref: ${transactionId.slice(0, 8)}`;
+
+    // Mayar create payment link body — only include supported fields
+    const mayarBody: Record<string, unknown> = {
+      name: plan.name,                // product name (required)
+      amount: Math.round(amount),
+      description,
+      redirectUrl: `${baseUrl}/subscription?payment=success&ref=${transactionId}`,
       closedAmount: true,
-      externalId: transactionId,        // echoed back in webhook payload
-      ...(customerEmail && { email: customerEmail }),
     };
 
-    console.log("Calling Mayar API:", JSON.stringify(mayarBody, null, 2));
+    // Add optional fields only if available
+    if (customerEmail) mayarBody.email = customerEmail;
+
+    console.log("Calling Mayar API with body:", JSON.stringify(mayarBody));
 
     const mayarResponse = await fetch("https://api.mayar.id/hl/v1/payment/create", {
       method: "POST",
@@ -110,22 +114,29 @@ serve(async (req) => {
       body: JSON.stringify(mayarBody),
     });
 
+    const mayarText = await mayarResponse.text();
+    console.log("Mayar API response status:", mayarResponse.status, "body:", mayarText);
+
     if (!mayarResponse.ok) {
-      const errorText = await mayarResponse.text();
-      console.error("Mayar API error:", errorText);
-      throw new Error(`Mayar API error: ${mayarResponse.status} – ${errorText}`);
+      throw new Error(`Mayar API error ${mayarResponse.status}: ${mayarText}`);
     }
 
-    const mayarData = await mayarResponse.json();
-    const payment = mayarData.data;
+    let mayarData: any;
+    try {
+      mayarData = JSON.parse(mayarText);
+    } catch {
+      throw new Error("Mayar returned non-JSON response: " + mayarText);
+    }
 
+    const payment = mayarData?.data;
     if (!payment?.link) {
-      throw new Error("Mayar did not return a payment link: " + JSON.stringify(mayarData));
+      throw new Error("Mayar did not return a payment link: " + mayarText);
     }
 
-    console.log("Mayar payment created:", payment.id, "link:", payment.link);
+    console.log("Mayar payment link created:", payment.id, "->", payment.link);
 
-    // ── Store Mayar payment ID as external_transaction_id ───────────────────
+    // ── Store Mayar payment link ID as external_transaction_id ───────────────
+    // This is the primary key we use to match the webhook later
     await supabase.rpc("update_transaction_status", {
       p_transaction_id: transactionId,
       p_new_status: "pending",
@@ -135,7 +146,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        invoice_url: payment.link,   // PaymentGateway opens this in a new tab
+        invoice_url: payment.link,
         invoice_id: payment.id,
         transaction_id: transactionId,
       }),
@@ -145,12 +156,10 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error("Error creating Mayar payment:", error);
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("create-mayar-payment error:", message);
     return new Response(
-      JSON.stringify({
-        success: false,
-        error: error instanceof Error ? error.message : "Unknown error",
-      }),
+      JSON.stringify({ success: false, error: message }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 400,
