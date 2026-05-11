@@ -45,6 +45,7 @@ const OpportunitiesPreview = ({ profile }: OpportunitiesPreviewProps) => {
   const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState("Semua");
   const [opportunities, setOpportunities] = useState<any[]>([]);
+  const [totalCount, setTotalCount] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const isFreeUser = profile?.subscription_type === 'free' || !profile?.subscription_type;
 
@@ -55,15 +56,25 @@ const OpportunitiesPreview = ({ profile }: OpportunitiesPreviewProps) => {
   const loadOpportunities = async () => {
     try {
       const now = new Date().toISOString();
-      const { data, error } = await supabase
-        .from('scraped_content')
-        .select('id, title, description, category, organizer, location, url, deadline, poster_url, source_website, created_at, tags')
-        .eq('is_active', true)
-        .or(`deadline.is.null,deadline.gt.${now}`)
-        .order('created_at', { ascending: false })
-        .limit(24); // fetch 24 — enough headroom for scoring, display 6
+
+      // Parallel: fetch items + total count
+      const [{ data, error }, { count }] = await Promise.all([
+        supabase
+          .from('scraped_content')
+          .select('id, title, description, category, organizer, location, url, deadline, poster_url, source_website, created_at, tags')
+          .eq('is_active', true)
+          .or(`deadline.is.null,deadline.gt.${now}`)
+          .order('created_at', { ascending: false })
+          .limit(24), // fetch 24 — enough headroom for scoring, display 6
+        supabase
+          .from('scraped_content')
+          .select('*', { count: 'exact', head: true })
+          .eq('is_active', true)
+          .or(`deadline.is.null,deadline.gt.${now}`),
+      ]);
 
       if (error) throw error;
+      if (count !== null) setTotalCount(count);
 
       // Score and sort: Indonesia → SEA → recent
       const scored = (data || []).map(item => {
@@ -138,7 +149,7 @@ const OpportunitiesPreview = ({ profile }: OpportunitiesPreviewProps) => {
         {/* Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
           {filteredOpportunities.slice(0, 6).map((opp, index) => {
-            const isBlurred = isFreeUser && index >= 2;
+            const isBlurred = isFreeUser && index >= 5;
             const meta = CATEGORY_META[opp.category] || CATEGORY_META['beasiswa'];
             const { label: regionLabel } = getRegionScore(opp.location || '', opp.tags || []);
             const isNew = (Date.now() - new Date(opp.created_at).getTime()) / 86400000 <= 7;
@@ -255,16 +266,33 @@ const OpportunitiesPreview = ({ profile }: OpportunitiesPreviewProps) => {
           </div>
         )}
 
-        <div className="text-center">
-          <Button
-            size="lg"
-            className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium shadow-lg hover:shadow-xl transition-all duration-300 group"
-            onClick={() => navigate('/opportunities')}
-          >
-            <Briefcase className="w-5 h-5 mr-2" />
-            Explore Opportunity for You
-            <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-          </Button>
+        {/* Count badge + CTA */}
+        <div className="text-center space-y-4">
+          {isFreeUser && totalCount !== null && totalCount > 6 && (
+            <div className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-primary/10 border border-primary/20 text-primary font-semibold text-sm mx-auto mb-2">
+              <Lock className="w-4 h-4" />
+              {totalCount - 6}+ peluang lainnya tersedia untuk member premium
+            </div>
+          )}
+          <div>
+            <Button
+              size="lg"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium shadow-lg hover:shadow-xl transition-all duration-300 group"
+              onClick={() => navigate('/opportunities')}
+            >
+              <Briefcase className="w-5 h-5 mr-2" />
+              Explore Opportunity for You
+              <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+            </Button>
+          </div>
+          {isFreeUser && (
+            <p className="text-xs text-muted-foreground">
+              Akses semua peluang dengan{' '}
+              <button onClick={() => navigate('/subscription')} className="text-primary underline underline-offset-2 font-medium hover:text-primary/80">
+                upgrade ke Premium
+              </button>
+            </p>
+          )}
         </div>
       </div>
     </section>

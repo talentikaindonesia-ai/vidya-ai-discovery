@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,17 +6,19 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { 
-  Wrench, 
-  Microscope, 
-  Palette, 
-  Users, 
-  Briefcase, 
+import {
+  Wrench,
+  Microscope,
+  Palette,
+  Users,
+  Briefcase,
   Calculator,
   Brain,
   Target,
   Award,
-  TrendingUp
+  TrendingUp,
+  ExternalLink,
+  Sparkles
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import RiasecPersonalityTypes from "@/components/RiasecPersonalityTypes";
@@ -181,6 +183,58 @@ const Assessment = () => {
   const [answers, setAnswers] = useState<{[key: number]: number}>({});
   const [scores, setScores] = useState<{[key: string]: number}>({});
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+  const [relatedOpportunities, setRelatedOpportunities] = useState<any[]>([]);
+  const [loadingOpps, setLoadingOpps] = useState(false);
+
+  // Map RIASEC type → title keywords for opportunity matching
+  const riasecKeywords: Record<string, string[]> = {
+    realistic:     ['teknik', 'engineering', 'konstruksi', 'teknologi', 'mekanik'],
+    investigative: ['riset', 'sains', 'penelitian', 'data', 'science', 'kedokteran', 'ilmiah'],
+    artistic:      ['desain', 'kreatif', 'seni', 'media', 'komunikasi', 'content'],
+    social:        ['sosial', 'pendidikan', 'kesehatan', 'komunitas', 'mengajar'],
+    enterprising:  ['bisnis', 'wirausaha', 'leadership', 'kompetisi', 'manajemen', 'startup'],
+    conventional:  ['akuntansi', 'keuangan', 'administrasi', 'hukum', 'audit'],
+  };
+
+  // Fetch relevant opportunities once results are ready
+  useEffect(() => {
+    if (!showResults) return;
+
+    const fetchOpportunities = async () => {
+      setLoadingOpps(true);
+      try {
+        const type = getPrimaryRiasecType();
+        const keywords = riasecKeywords[type] || [];
+
+        // Build OR filter across title using the type's keywords
+        const orFilter = keywords.map(k => `title.ilike.%${k}%`).join(',');
+
+        let { data } = await supabase
+          .from('scraped_content')
+          .select('id, title, description, tags, deadline, source_url, image_url')
+          .or(orFilter)
+          .limit(3);
+
+        // Fallback: if no matches, return first 3 from any category
+        if (!data || data.length === 0) {
+          const fallback = await supabase
+            .from('scraped_content')
+            .select('id, title, description, tags, deadline, source_url, image_url')
+            .limit(3);
+          data = fallback.data;
+        }
+
+        setRelatedOpportunities(data || []);
+      } catch (err) {
+        console.error('Error fetching related opportunities:', err);
+      } finally {
+        setLoadingOpps(false);
+      }
+    };
+
+    fetchOpportunities();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showResults]);
 
   const handleAnswer = (answerIndex: number) => {
     setSelectedAnswer(answerIndex);
@@ -461,6 +515,80 @@ const Assessment = () => {
             </CardContent>
           </Card>
 
+          {/* ── Personalized Opportunities ─────────────────── */}
+          <Card className="mb-8 border-secondary/30">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Sparkles className="w-6 h-6 text-secondary" />
+                Peluang untuk Tipe {personalityData.name}
+              </CardTitle>
+              <CardDescription>
+                Beasiswa, magang & kompetisi yang cocok dengan kepribadianmu
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loadingOpps ? (
+                <div className="grid gap-4 md:grid-cols-3">
+                  {[0, 1, 2].map(i => (
+                    <div key={i} className="h-36 rounded-lg bg-muted animate-pulse" />
+                  ))}
+                </div>
+              ) : relatedOpportunities.length > 0 ? (
+                <>
+                  <div className="grid gap-4 md:grid-cols-3">
+                    {relatedOpportunities.map((opp) => (
+                      <div
+                        key={opp.id}
+                        className="flex flex-col gap-2 p-4 rounded-lg border border-border bg-card hover:border-primary/40 hover:shadow-md transition-all duration-200"
+                      >
+                        <div className={`w-full h-2 rounded-full bg-gradient-to-r ${personalityData.color} mb-1`} />
+                        <p className="font-semibold text-sm line-clamp-2 leading-snug">{opp.title}</p>
+                        {opp.description && (
+                          <p className="text-xs text-muted-foreground line-clamp-2">{opp.description}</p>
+                        )}
+                        {opp.deadline && (
+                          <p className="text-xs text-orange-600 font-medium mt-auto">
+                            📅 Deadline: {new Date(opp.deadline).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                          </p>
+                        )}
+                        {opp.tags && opp.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {opp.tags.slice(0, 2).map((tag: string, i: number) => (
+                              <Badge key={i} variant="outline" className="text-[10px] px-1.5 py-0">{tag}</Badge>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="text-center mt-6">
+                    <Button
+                      onClick={() => navigate('/opportunities')}
+                      variant="outline"
+                      className="border-primary text-primary hover:bg-primary hover:text-primary-foreground font-semibold gap-2"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      Lihat semua peluang untukmu →
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-6">
+                  <p className="text-muted-foreground mb-4">
+                    Temukan beasiswa, magang, dan kompetisi yang cocok untukmu.
+                  </p>
+                  <Button
+                    onClick={() => navigate('/opportunities')}
+                    className="gap-2"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    Jelajahi Semua Peluang
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           <div className="text-center space-y-4">
             <Card className="max-w-2xl mx-auto border-primary/30 shadow-2xl bg-gradient-to-br from-primary/5 via-card to-primary/10 hover:shadow-floating transition-all duration-300 animate-fade-in">
               <CardContent className="pt-8 pb-8 px-6">
@@ -472,11 +600,11 @@ const Assessment = () => {
                     Siap Memulai Perjalanan Belajarmu?
                   </h3>
                   <p className="text-base md:text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed">
-                    Daftar sekarang untuk mendapatkan pembelajaran yang dipersonalisasi berdasarkan hasil assessment ini!
+                    Dapatkan pembelajaran yang dipersonalisasi berdasarkan tipe {personalityData.name} milikmu!
                   </p>
                 </div>
-                <Button 
-                  onClick={() => navigate("/dashboard")} 
+                <Button
+                  onClick={() => navigate("/dashboard")}
                   size="lg"
                   className="w-full md:w-auto px-12 py-6 text-lg bg-gradient-to-r from-primary via-primary-dark to-primary bg-[length:200%_auto] hover:bg-right-bottom hover:shadow-floating transform hover:scale-105 transition-all duration-500 font-bold shadow-lg animate-pulse hover:animate-none"
                 >
