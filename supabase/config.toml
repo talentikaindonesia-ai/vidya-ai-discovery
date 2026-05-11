@@ -15,3 +15,9 @@ verify_jwt = true
 
 [functions.xendit-webhook]
 verify_jwt = false
+
+[functions.create-mayar-payment]
+verify_jwt = true
+
+[functions.mayar-webhook]
+verify_jwt = false

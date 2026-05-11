@@ -132,7 +132,7 @@ export const PaymentGateway = ({
 
       const methodFee = PAYMENT_METHODS.find((m) => m.id === selectedMethod)?.fee ?? 0;
 
-      const { data, error } = await supabase.functions.invoke("create-xendit-payment", {
+      const { data, error } = await supabase.functions.invoke("create-mayar-payment", {
         body: {
           planId,
           userId: user.id,
