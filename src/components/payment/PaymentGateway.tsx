@@ -68,6 +68,7 @@ export const PaymentGateway = ({
   const [phone, setPhone] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [paymentInitiated, setPaymentInitiated] = useState(false);
+  const [invoiceUrl, setInvoiceUrl] = useState<string | null>(null);
   const [transactionId, setTransactionId] = useState<string | null>(null);
   const [checkingStatus, setCheckingStatus] = useState(false);
   const { toast } = useToast();
@@ -173,7 +174,7 @@ export const PaymentGateway = ({
       }
 
       if (data.success) {
-        window.open(data.invoice_url, "_blank");
+        setInvoiceUrl(data.invoice_url ?? null);
         setTransactionId(data.transaction_id ?? null);
         setPaymentInitiated(true);
       } else {
@@ -202,26 +203,39 @@ export const PaymentGateway = ({
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Halaman pembayaran Xendit telah dibuka di tab baru. Ikuti langkah-langkah berikut:
+            {/* Primary CTA — manual link avoids popup blocker */}
+            {invoiceUrl && (
+              <a
+                href={invoiceUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 w-full h-12 rounded-lg bg-primary text-primary-foreground font-semibold text-base hover:bg-primary/90 transition-colors"
+              >
+                <ExternalLink className="w-5 h-5" />
+                Buka Halaman Pembayaran Mayar
+              </a>
+            )}
+
+            <p className="text-sm text-muted-foreground text-center">
+              Setelah membayar, ikuti langkah berikut:
             </p>
 
             <ol className="space-y-3">
               {[
                 {
                   step: "1",
-                  text: "Selesaikan pembayaran di tab Xendit yang terbuka",
+                  text: "Klik tombol di atas untuk membuka halaman pembayaran Mayar",
                   icon: <ExternalLink className="w-4 h-4 text-primary flex-shrink-0" />,
                 },
                 {
                   step: "2",
-                  text: "Kembali ke halaman ini setelah pembayaran selesai",
-                  icon: <ArrowLeft className="w-4 h-4 text-primary flex-shrink-0" />,
+                  text: "Selesaikan pembayaran di halaman Mayar",
+                  icon: <CheckCircle2 className="w-4 h-4 text-primary flex-shrink-0" />,
                 },
                 {
                   step: "3",
-                  text: 'Klik tombol "Cek Status Pembayaran" di bawah',
-                  icon: <CheckCircle2 className="w-4 h-4 text-primary flex-shrink-0" />,
+                  text: 'Kembali ke sini lalu klik "Cek Status Pembayaran"',
+                  icon: <ArrowLeft className="w-4 h-4 text-primary flex-shrink-0" />,
                 },
               ].map(({ step, text, icon }) => (
                 <li
@@ -249,6 +263,7 @@ export const PaymentGateway = ({
             onClick={() => {
               setPaymentInitiated(false);
               setTransactionId(null);
+              setInvoiceUrl(null);
             }}
             className="flex-1"
           >
