@@ -1,4 +1,4 @@
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
@@ -15,7 +15,6 @@ interface DbPlan {
   price_monthly: number;
   price_yearly: number | null;
   features: string[] | string | null;
-  description: string | null;
   is_active: boolean;
 }
 
@@ -25,7 +24,6 @@ interface DisplayPlan {
   type: string;
   price: string;
   period: string;
-  description: string;
   features: string[];
   popular: boolean;
   isSchool: boolean;
@@ -62,7 +60,6 @@ function toDisplayPlan(db: DbPlan): DisplayPlan {
     type: db.type,
     price,
     period,
-    description: db.description ?? "",
     features: parseFeatures(db.features),
     popular,
     isSchool,
@@ -86,7 +83,7 @@ const Pricing = () => {
   useEffect(() => {
     supabase
       .from("subscription_packages")
-      .select("id, name, type, price_monthly, price_yearly, features, description, is_active")
+      .select("id, name, type, price_monthly, price_yearly, features, is_active")
       .eq("is_active", true)
       .not("type", "eq", "free")
       .order("price_monthly")
@@ -199,11 +196,6 @@ const Pricing = () => {
                               <span className="text-3xl font-bold text-primary">{plan.price}</span>
                               <span className="text-muted-foreground">{plan.period}</span>
                             </div>
-                            {plan.description && (
-                              <CardDescription className="text-base leading-relaxed">
-                                {plan.description}
-                              </CardDescription>
-                            )}
                           </CardHeader>
 
                           <CardContent className="space-y-3 flex-1">
