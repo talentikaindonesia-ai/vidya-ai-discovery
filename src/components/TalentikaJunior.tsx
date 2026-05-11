@@ -49,7 +49,7 @@ const TalentikaJunior = () => {
           {/* Image Section - First on mobile, second on desktop */}
           <div className="relative order-1 lg:order-2">
             <div className="relative rounded-3xl overflow-hidden shadow-2xl transform rotate-2 hover:rotate-0 transition-transform duration-500 hover-scale">
-              <img 
+              <img loading="lazy" decoding="async" 
                 src="/lovable-uploads/95b023ea-1670-4b3c-bf9d-caf7b5c2cef1.png" 
                 alt="Happy child discovering talents with Talentika Junior"
                 className="w-full h-auto object-cover animate-fade-in"
@@ -67,7 +67,7 @@ const TalentikaJunior = () => {
           {/* Content Section - Second on mobile, first on desktop */}
           <div className="space-y-8 order-2 lg:order-1">
             <div className="space-y-4">
-              <img 
+              <img loading="lazy" decoding="async" 
                 src={talentikaJuniorLogo} 
                 alt="Talentika Junior Logo" 
                 className="h-24 w-auto mb-4"

@@ -80,7 +80,7 @@ const CoursesPreview = ({ profile }: CoursesPreviewProps) => {
             return (
             <Card key={course.id} className="group hover:shadow-card transition-all duration-300 hover:-translate-y-1 bg-card border-primary/10 relative overflow-hidden">
               <div className="relative overflow-hidden rounded-t-lg">
-                <img 
+                <img loading="lazy" decoding="async" 
                   src={course.image} 
                   alt={course.title}
                   className={`w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300 ${isBlurred ? 'blur-sm' : ''}`}
@@ -165,7 +165,7 @@ const CoursesPreview = ({ profile }: CoursesPreviewProps) => {
             {recommendedCourses.map((course) => (
               <Card key={course.id} className="min-w-[280px] w-[280px] flex-shrink-0 snap-start group hover:shadow-card transition-all duration-300 bg-card border-primary/10">
                 <div className="relative overflow-hidden rounded-t-lg">
-                  <img 
+                  <img loading="lazy" decoding="async" 
                     src={course.image} 
                     alt={course.title}
                     className="w-full h-32 object-cover group-hover:scale-105 transition-transform duration-300"
@@ -207,7 +207,7 @@ const CoursesPreview = ({ profile }: CoursesPreviewProps) => {
           <Button 
             size="lg" 
             className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium shadow-lg hover:shadow-xl transition-all duration-300 group"
-            onClick={() => window.location.href = '/learning'}
+            onClick={() => navigate('/learning')}
           >
             <BookOpen className="w-5 h-5 mr-2" />
             Jelajahi Semua Kursus

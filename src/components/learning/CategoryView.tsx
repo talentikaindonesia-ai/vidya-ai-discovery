@@ -125,7 +125,7 @@ export const CategoryView = () => {
                 {/* Thumbnail */}
                 <div className="aspect-video bg-muted rounded-t-lg flex items-center justify-center overflow-hidden">
                   {item.thumbnail_url ? (
-                    <img 
+                    <img loading="lazy" decoding="async" 
                       src={item.thumbnail_url} 
                       alt={item.title}
                       className="w-full h-full object-cover"

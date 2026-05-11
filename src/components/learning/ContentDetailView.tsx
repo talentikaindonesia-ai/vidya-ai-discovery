@@ -278,7 +278,7 @@ export const ContentDetailView = () => {
               <div className="lg:w-1/3">
                 <div className="aspect-video bg-muted rounded-lg flex items-center justify-center overflow-hidden">
                   {content.thumbnail_url ? (
-                    <img 
+                    <img loading="lazy" decoding="async" 
                       src={content.thumbnail_url} 
                       alt={content.title}
                       className="w-full h-full object-cover"

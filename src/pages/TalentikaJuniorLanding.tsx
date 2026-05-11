@@ -103,7 +103,7 @@ const TalentikaJuniorLanding = () => {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-8">
               <div className="space-y-4">
-                <img 
+                <img loading="lazy" decoding="async" 
                   src={talentikaJuniorLogo} 
                   alt="Talentika Junior Logo" 
                   className="h-24 w-auto mb-4"
@@ -140,7 +140,7 @@ const TalentikaJuniorLanding = () => {
             
             <div className="relative">
               <div className="relative rounded-3xl overflow-hidden shadow-2xl transform rotate-2 hover:rotate-0 transition-transform duration-500">
-                <img 
+                <img loading="lazy" decoding="async" 
                   src="/lovable-uploads/95b023ea-1670-4b3c-bf9d-caf7b5c2cef1.png" 
                   alt="Happy child discovering talents with Talentika Junior"
                   className="w-full h-auto object-cover animate-fade-in"

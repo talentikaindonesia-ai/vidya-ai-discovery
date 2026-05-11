@@ -239,7 +239,7 @@ const CommunityForum = () => {
               </div>
             </div>
             <div className="hidden lg:block">
-              <img 
+              <img loading="lazy" decoding="async" 
                 src="/src/assets/community-hero.jpg" 
                 alt="Community Forum" 
                 className="rounded-2xl shadow-2xl transform rotate-3 hover:rotate-0 transition-transform duration-500"

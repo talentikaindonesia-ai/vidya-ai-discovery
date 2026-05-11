@@ -342,7 +342,7 @@ const Articles = () => {
               {selectedArticle.featured_image_url && (
                 <div className="relative mb-12 group">
                   <div className="absolute -inset-1 bg-gradient-to-r from-primary to-primary-glow rounded-2xl blur-sm opacity-30 group-hover:opacity-50 transition-opacity"></div>
-                  <img 
+                  <img loading="lazy" decoding="async" 
                     src={selectedArticle.featured_image_url} 
                     alt={selectedArticle.title}
                     className="relative w-full h-64 md:h-80 lg:h-96 object-cover rounded-xl shadow-2xl border border-border/50"
@@ -429,7 +429,7 @@ const Articles = () => {
                     <Card key={article.id} className="group hover:shadow-xl transition-all duration-500 border-0 bg-gradient-to-br from-card to-card/80 hover:-translate-y-2 overflow-hidden">
                       <div className="relative overflow-hidden">
                         {article.featured_image_url ? (
-                          <img 
+                          <img loading="lazy" decoding="async" 
                             src={article.featured_image_url} 
                             alt={article.title}
                             className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-500"
@@ -543,7 +543,7 @@ const Articles = () => {
                   <Card key={article.id} className="group hover:shadow-2xl transition-all duration-500 border-0 bg-gradient-to-br from-card to-card/80 hover:-translate-y-2 overflow-hidden">
                     <div className="relative overflow-hidden">
                       {article.featured_image_url ? (
-                        <img 
+                        <img loading="lazy" decoding="async" 
                           src={article.featured_image_url} 
                           alt={article.title}
                           className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-500"
@@ -629,7 +629,7 @@ const Articles = () => {
               <Card key={article.id} className="group hover:shadow-xl transition-all duration-300 border-0 bg-card/80 backdrop-blur-sm hover:-translate-y-1 overflow-hidden">
                 <div className="relative overflow-hidden">
                   {article.featured_image_url ? (
-                    <img 
+                    <img loading="lazy" decoding="async" 
                       src={article.featured_image_url} 
                       alt={article.title}
                       className="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-300"

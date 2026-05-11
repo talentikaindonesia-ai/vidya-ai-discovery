@@ -162,7 +162,7 @@ export const QuizCard: React.FC<QuizCardProps> = ({ quiz, onSubmit, loading }) =
       <CardContent className="space-y-6">
         {quiz.media_url && (
           <div className="flex justify-center">
-            <img 
+            <img loading="lazy" decoding="async" 
               src={quiz.media_url} 
               alt="Quiz media" 
               className="max-w-full h-auto rounded-lg shadow-md"

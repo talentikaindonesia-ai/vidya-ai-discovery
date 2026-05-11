@@ -3,37 +3,50 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
-import Index from "./pages/Index";
-import Assessment from "./pages/Assessment";
-import Auth from "./pages/Auth";
-import Dashboard from "./pages/Dashboard";
-import Admin from "./pages/Admin";
+import ErrorBoundary from "@/components/ErrorBoundary";
+
+// ── Eager (hit on very first load or needed for error/auth states) ──────────
+import Index   from "./pages/Index";
+import Auth    from "./pages/Auth";
 import NotFound from "./pages/NotFound";
-import DiscoveryTimeline from "./pages/DiscoveryTimeline";
-import LearningHub from "./pages/LearningHub";
-import PortfolioBuilder from "./pages/PortfolioBuilder";
-import OpportunityBoard from "./pages/OpportunityBoard";
-import CommunityForum from "./pages/CommunityForum";
-import Onboarding from "./pages/Onboarding";
-import DashboardGamified from "./pages/DashboardGamified";
-import Subscription from "./pages/Subscription";
-import QuizExplore from "./pages/QuizExplore";
-import Profile from "./pages/Profile";
-import { ContentDetailView } from "./components/learning/ContentDetailView";
-import { CategoryView } from "./components/learning/CategoryView";
-import { ContentEditor } from "./components/admin/ContentEditor";
-import TalentikaJuniorLanding from "./pages/TalentikaJuniorLanding";
-import TalentikaJuniorDashboard from "./pages/TalentikaJuniorDashboard";
-import TalentikaJuniorDiscovery from "./pages/TalentikaJuniorDiscovery";
-import TalentikaJuniorLearning from "./pages/TalentikaJuniorLearning";
-import TalentikaJuniorGames from "./pages/TalentikaJuniorGames";
-import TalentikaJuniorRewards from "./pages/TalentikaJuniorRewards";
-import MembershipDashboard from "./pages/MembershipDashboard";
-import Articles from "./pages/Articles";
-import TalentikaForSchools from "./pages/TalentikaForSchools";
+
+// ── Lazy (loaded only when the user navigates to that route) ────────────────
+const Assessment            = lazy(() => import("./pages/Assessment"));
+const Dashboard             = lazy(() => import("./pages/Dashboard"));
+const Admin                 = lazy(() => import("./pages/Admin"));
+const DiscoveryTimeline     = lazy(() => import("./pages/DiscoveryTimeline"));
+const LearningHub           = lazy(() => import("./pages/LearningHub"));
+const PortfolioBuilder      = lazy(() => import("./pages/PortfolioBuilder"));
+const OpportunityBoard      = lazy(() => import("./pages/OpportunityBoard"));
+const CommunityForum        = lazy(() => import("./pages/CommunityForum"));
+const Onboarding            = lazy(() => import("./pages/Onboarding"));
+const DashboardGamified     = lazy(() => import("./pages/DashboardGamified"));
+const Subscription          = lazy(() => import("./pages/Subscription"));
+const QuizExplore           = lazy(() => import("./pages/QuizExplore"));
+const Profile               = lazy(() => import("./pages/Profile"));
+const TalentikaJuniorLanding  = lazy(() => import("./pages/TalentikaJuniorLanding"));
+const TalentikaJuniorDashboard = lazy(() => import("./pages/TalentikaJuniorDashboard"));
+const TalentikaJuniorDiscovery = lazy(() => import("./pages/TalentikaJuniorDiscovery"));
+const TalentikaJuniorLearning  = lazy(() => import("./pages/TalentikaJuniorLearning"));
+const TalentikaJuniorGames     = lazy(() => import("./pages/TalentikaJuniorGames"));
+const TalentikaJuniorRewards   = lazy(() => import("./pages/TalentikaJuniorRewards"));
+const MembershipDashboard   = lazy(() => import("./pages/MembershipDashboard"));
+const Articles              = lazy(() => import("./pages/Articles"));
+const TalentikaForSchools   = lazy(() => import("./pages/TalentikaForSchools"));
+
+// Named-export components wrapped for lazy()
+const ContentDetailView = lazy(() =>
+  import("./components/learning/ContentDetailView").then(m => ({ default: m.ContentDetailView }))
+);
+const CategoryView = lazy(() =>
+  import("./components/learning/CategoryView").then(m => ({ default: m.CategoryView }))
+);
+const ContentEditor = lazy(() =>
+  import("./components/admin/ContentEditor").then(m => ({ default: m.ContentEditor }))
+);
 
 // Configured with proper stale/gc times to avoid unnecessary refetches
 const queryClient = new QueryClient({
@@ -74,12 +87,24 @@ const App = () => {
     );
   }
 
+  // Shared loading fallback for lazy routes
+  const RouteFallback = (
+    <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="flex flex-col items-center gap-3">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary" />
+        <p className="text-sm text-muted-foreground">Memuat halaman...</p>
+      </div>
+    </div>
+  );
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <ErrorBoundary>
+          <Suspense fallback={RouteFallback}>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/articles" element={<Articles />} />
@@ -111,6 +136,8 @@ const App = () => {
             <Route path="/for-schools" element={<TalentikaForSchools />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </Suspense>
+          </ErrorBoundary>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>

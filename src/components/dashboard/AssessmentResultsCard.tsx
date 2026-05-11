@@ -133,10 +133,12 @@ export const AssessmentResultsCard = ({ assessmentResults }: AssessmentResultsCa
             {/* Personality Character Image */}
             <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-pink-100 flex items-center justify-center overflow-hidden">
               {personalityData?.image ? (
-                <img 
-                  src={personalityData.image} 
+                <img
+                  src={personalityData.image}
                   alt={personalityData.name}
                   className="w-full h-full object-cover"
+                  loading="lazy"
+                  decoding="async"
                 />
               ) : (
                 <div className="w-12 h-12 bg-pink-200 rounded-full flex items-center justify-center">

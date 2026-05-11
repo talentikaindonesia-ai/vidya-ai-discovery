@@ -306,7 +306,7 @@ const PortfolioBuilder = () => {
                   <Card key={project.id} className="shadow-card hover:shadow-floating transition-all">
                     {project.image_url && (
                       <div className="aspect-video bg-gradient-soft rounded-t-lg overflow-hidden">
-                        <img 
+                        <img loading="lazy" decoding="async" 
                           src={project.image_url} 
                           alt={project.title}
                           className="w-full h-full object-cover"

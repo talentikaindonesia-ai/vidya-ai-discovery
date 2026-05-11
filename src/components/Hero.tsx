@@ -66,10 +66,12 @@ const Hero = () => {
           
           {/* Professional Hero Image */}
           <div className="relative">
-            <img 
-              src="/lovable-uploads/029928be-11a9-49ba-9a70-7dd69aff1316.png" 
-              alt="Professional young woman with laptop - Career development and talent discovery" 
+            <img
+              src="/lovable-uploads/029928be-11a9-49ba-9a70-7dd69aff1316.png"
+              alt="Professional young woman with laptop - Career development and talent discovery"
               className="w-full max-w-3xl mx-auto rounded-2xl relative z-10"
+              fetchPriority="high"
+              decoding="async"
             />
             <div className="absolute inset-0 bg-gradient-secondary opacity-20 rounded-3xl blur-2xl transform scale-110"></div>
           </div>

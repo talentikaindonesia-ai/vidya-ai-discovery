@@ -52,7 +52,7 @@ export const checkRateLimit = (key: string, maxAttempts: number = 5, windowMs: n
 // Secure error handling that doesn't leak sensitive information
 export const handleSecureError = (error: any, userMessage: string = "Terjadi kesalahan sistem") => {
   // Log the full error for debugging (in development)
-  if (process.env.NODE_ENV === 'development') {
+  if (import.meta.env.MODE === 'development') {
     console.error('Security Error:', error);
   }
   
@@ -122,7 +122,7 @@ export const clearSecureSession = () => {
 export const logSecurityEvent = async (event: string, details?: any) => {
   try {
     // Only log in development or if explicitly enabled
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.MODE === 'development') {
       console.log(`[SECURITY] ${event}:`, details);
     }
     

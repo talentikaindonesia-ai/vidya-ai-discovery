@@ -104,7 +104,7 @@ const Testimonials = () => {
                     <CardContent className="p-8">
                       <div className="flex items-center gap-4 mb-6">
                         <div className="relative">
-                          <img 
+                          <img loading="lazy" decoding="async" 
                             src={testimonial.image} 
                             alt={testimonial.name}
                             className="w-16 h-16 rounded-full object-cover border-2 border-primary/20"
