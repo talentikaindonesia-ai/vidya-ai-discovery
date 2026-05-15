@@ -306,6 +306,7 @@ const Profile = () => {
                 </p>
               </div>
               <button
+                onClick={() => navigate("/settings")}
                 style={{
                   display: "flex",
                   alignItems: "center",
@@ -489,6 +490,7 @@ const Profile = () => {
 
                 {/* Edit button */}
                 <button
+                  onClick={() => navigate("/settings")}
                   style={{
                     width: "100%",
                     display: "flex",
@@ -535,19 +537,29 @@ const Profile = () => {
                   >
                     Tentang Saya
                   </h3>
-                  <p
-                    style={{
-                      fontFamily: "var(--tk-font-sans)",
-                      fontSize: 14,
-                      color: "var(--tk-gray-600,#4B5563)",
-                      lineHeight: 1.7,
-                      margin: 0,
-                    }}
-                  >
-                    {profile?.bio ||
-                      profile?.description ||
-                      "Pelajar yang antusias mengeksplorasi dunia digital, desain, dan inovasi. Saat ini fokus mengasah skill untuk masa depan yang lebih cerah."}
-                  </p>
+                  {/* M-03: show empty state instead of fake fallback bio */}
+                  {profile?.bio || profile?.description ? (
+                    <p style={{ fontFamily: "var(--tk-font-sans)", fontSize: 14, color: "var(--tk-gray-600,#4B5563)", lineHeight: 1.7, margin: 0 }}>
+                      {profile.bio || profile.description}
+                    </p>
+                  ) : (
+                    <div style={{ textAlign: "center", padding: "8px 0" }}>
+                      <p style={{ fontFamily: "var(--tk-font-sans)", fontSize: 13, color: "var(--tk-gray-400)", margin: "0 0 10px" }}>
+                        Belum ada bio. Tambahkan bio untuk memperkenalkan dirimu.
+                      </p>
+                      <button
+                        onClick={() => navigate("/settings")}
+                        style={{
+                          background: "var(--tk-blue-50)", color: "var(--tk-blue-600)",
+                          border: "1px solid var(--tk-blue-200,#BFDBFE)", borderRadius: 8,
+                          padding: "6px 14px", fontSize: 13, fontWeight: 600,
+                          fontFamily: "var(--tk-font-sans)", cursor: "pointer",
+                        }}
+                      >
+                        + Tambah Bio
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Card: Minat & Tujuan */}
@@ -764,19 +776,19 @@ const Profile = () => {
                     {
                       icon: <UserIcon size={18} style={{ color: "var(--tk-blue-600)" }} />,
                       label: "Informasi Akun",
-                      onClick: () => {},
+                      onClick: () => navigate("/settings"),
                       danger: false,
                     },
                     {
                       icon: <Lock size={18} style={{ color: "var(--tk-blue-600)" }} />,
                       label: "Keamanan & Password",
-                      onClick: () => {},
+                      onClick: () => navigate("/settings"),
                       danger: false,
                     },
                     {
                       icon: <Bell size={18} style={{ color: "var(--tk-blue-600)" }} />,
                       label: "Notifikasi",
-                      onClick: () => {},
+                      onClick: () => navigate("/settings"),
                       danger: false,
                     },
                     {
