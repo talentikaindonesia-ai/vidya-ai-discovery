@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Clock, Activity, TrendingUp, Star } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -107,6 +108,7 @@ function StatCard({ icon, iconBg, value, label, sub }: StatCardProps) {
 
 /* ─── Component ──────────────────────────────────────────── */
 export const ProgressTracker = () => {
+  const navigate = useNavigate();
   const [totalHours, setTotalHours] = useState<number>(0);
   const [courseProgress, setCourseProgress] = useState<CourseProgressRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -406,18 +408,17 @@ export const ProgressTracker = () => {
           >
             Progress per Kursus
           </h3>
-          <a
-            href="#"
+          <button
+            onClick={() => navigate("/learning-hub")}
             style={{
-              fontSize: 13,
-              fontWeight: 600,
+              background: "none", border: "none", cursor: "pointer",
+              fontSize: 13, fontWeight: 600,
               color: "var(--tk-blue-600)",
-              textDecoration: "none",
-              fontFamily: "var(--tk-font-sans)",
+              fontFamily: "var(--tk-font-sans)", padding: 0,
             }}
           >
             Lihat Semua
-          </a>
+          </button>
         </div>
 
         {loading ? (

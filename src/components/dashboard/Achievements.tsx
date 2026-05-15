@@ -53,14 +53,7 @@ const BadgeHex = ({ icon: Icon, color, size = 68, earned = true }: BadgeHexProps
   );
 };
 
-// ─── Mock data ─────────────────────────────────────────────────────────────────
-
-const EARNED_BADGES = [
-  { icon: Star,     color: "green",  name: "Consistent Learner",   desc: "Belajar 7 hari berturut-turut",       when: "2 hari lalu" },
-  { icon: BookOpen, color: "blue",   name: "First Steps",          desc: "Menyelesaikan kursus pertama",         when: "1 minggu lalu" },
-  { icon: Trophy,   color: "yellow", name: "Challenge Champion",   desc: "Menyelesaikan 3 tantangan berurutan",  when: "2 minggu lalu" },
-  { icon: Target,   color: "orange", name: "Goal Setter",          desc: "Menetapkan 5 tujuan belajar",          when: "3 minggu lalu" },
-];
+// L-03: LOCKED_BADGES stays as aspirational goals; EARNED_BADGES replaced by real DB data
 
 const LOCKED_BADGES = [
   { icon: Zap,    color: "purple", name: "Speed Learner",       desc: "Selesaikan kursus dalam 48 jam" },
@@ -69,10 +62,31 @@ const LOCKED_BADGES = [
   { icon: Award,  color: "orange", name: "Top Performer",       desc: "Masuk top 10 leaderboard" },
 ];
 
+// badge_icon in DB is an emoji string; map type → lucide icon as fallback
+const TYPE_ICON: Record<string, React.ElementType> = {
+  course:     BookOpen,
+  challenge:  Trophy,
+  streak:     Star,
+  goal:       Target,
+  community:  Users,
+  assessment: Award,
+};
+
+interface DBBadge {
+  id: string;
+  title: string;
+  description: string | null;
+  badge_icon: string | null;
+  earned_at: string;
+  type: string;
+}
+
 // ─── Achievements component ────────────────────────────────────────────────────
 
 export const Achievements = () => {
-  const [earnedFromDB, setEarnedFromDB] = useState(0);
+  // L-03: load real achievements from DB instead of showing fake EARNED_BADGES
+  const [earnedBadges, setEarnedBadges] = useState<DBBadge[]>([]);
+  const [loadingBadges, setLoadingBadges] = useState(true);
 
   useEffect(() => {
     const load = async () => {
@@ -81,18 +95,21 @@ export const Achievements = () => {
         if (!user) return;
         const { data, error } = await supabase
           .from("achievements")
-          .select("id")
-          .eq("user_id", user.id);
-        if (!error) setEarnedFromDB(data?.length ?? 0);
+          .select("id, title, description, badge_icon, earned_at, type")
+          .eq("user_id", user.id)
+          .order("earned_at", { ascending: false });
+        if (!error) setEarnedBadges(data ?? []);
       } catch (err) {
         console.error("Error loading achievements:", err);
+      } finally {
+        setLoadingBadges(false);
       }
     };
     load();
   }, []);
 
-  const earned = EARNED_BADGES.length;
-  const total  = EARNED_BADGES.length + LOCKED_BADGES.length;
+  const earned = earnedBadges.length;
+  const total  = earned + LOCKED_BADGES.length;
 
   // ── Shared card style ──
   const cardBase: React.CSSProperties = {
@@ -226,19 +243,6 @@ export const Achievements = () => {
               }}
             >
               {earned} dari {total} badge
-              {earnedFromDB > 0 && (
-                <span
-                  style={{
-                    fontSize: 14,
-                    fontWeight: 500,
-                    color: "var(--tk-gray-500, #6B7280)",
-                    marginLeft: 10,
-                    fontFamily: "var(--tk-font-sans, 'Inter', sans-serif)",
-                  }}
-                >
-                  (+{earnedFromDB} dari aktivitas nyata)
-                </span>
-              )}
             </h2>
             <p
               style={{
@@ -268,68 +272,54 @@ export const Achievements = () => {
         Sudah Diraih
       </h3>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
-          gap: 16,
-        }}
-      >
-        {EARNED_BADGES.map((b, i) => (
-          <div
-            key={i}
-            className="tk-card"
-            style={cardBase}
-            onMouseEnter={e => {
-              (e.currentTarget as HTMLDivElement).style.boxShadow =
-                "0 8px 24px rgba(0,0,0,.10)";
-            }}
-            onMouseLeave={e => {
-              (e.currentTarget as HTMLDivElement).style.boxShadow = "none";
-            }}
-          >
-            <div style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}>
-              <BadgeHex icon={b.icon} color={b.color} size={68} earned />
-            </div>
-            <h4
-              style={{
-                fontFamily: "var(--tk-font-display, 'Poppins', sans-serif)",
-                fontWeight: 600,
-                fontSize: 14,
-                color: "var(--tk-ink, #0B1D3A)",
-                margin: "0 0 4px",
-              }}
-            >
-              {b.name}
-            </h4>
-            <p
-              style={{
-                fontSize: 11.5,
-                color: "var(--tk-gray-500, #6B7280)",
-                lineHeight: 1.4,
-                margin: "0 0 10px",
-                fontFamily: "var(--tk-font-sans, 'Inter', sans-serif)",
-              }}
-            >
-              {b.desc}
-            </p>
-            <span
-              style={{
-                display: "inline-block",
-                background: "var(--tk-mint, #D1FAE5)",
-                color: "var(--tk-green-dark, #0F7A3E)",
-                borderRadius: 99,
-                fontSize: 11.5,
-                fontWeight: 600,
-                padding: "3px 10px",
-                fontFamily: "var(--tk-font-sans, 'Inter', sans-serif)",
-              }}
-            >
-              ✓ {b.when}
-            </span>
-          </div>
-        ))}
-      </div>
+      {/* L-03: Real earned badges from DB */}
+      {loadingBadges ? (
+        <div style={{ textAlign: "center", padding: "24px 0", color: "var(--tk-gray-400)" }}>Memuat...</div>
+      ) : earnedBadges.length === 0 ? (
+        <div className="tk-card" style={{ ...cardBase, padding: 32, gridColumn: "1/-1" }}>
+          <div style={{ fontSize: 36, marginBottom: 10 }}>🏆</div>
+          <p style={{ fontFamily: "var(--tk-font-sans)", fontSize: 14, color: "var(--tk-gray-400)", margin: 0 }}>
+            Belum ada badge diraih. Selesaikan kursus dan tantangan untuk mendapatkan badge pertamamu!
+          </p>
+        </div>
+      ) : (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 16 }}>
+          {earnedBadges.map((b) => {
+            const IconComp = TYPE_ICON[b.type] ?? Award;
+            const earnedDate = new Date(b.earned_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
+            return (
+              <div
+                key={b.id}
+                className="tk-card"
+                style={cardBase}
+                onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = "0 8px 24px rgba(0,0,0,.10)"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = "none"; }}
+              >
+                <div style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}>
+                  {b.badge_icon ? (
+                    <div style={{ width: 68, height: 68, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 36, background: "#FFF8E1", borderRadius: "50%" }}>
+                      {b.badge_icon}
+                    </div>
+                  ) : (
+                    <BadgeHex icon={IconComp} color="yellow" size={68} earned />
+                  )}
+                </div>
+                <h4 style={{ fontFamily: "var(--tk-font-display, 'Poppins', sans-serif)", fontWeight: 600, fontSize: 14, color: "var(--tk-ink, #0B1D3A)", margin: "0 0 4px" }}>
+                  {b.title}
+                </h4>
+                {b.description && (
+                  <p style={{ fontSize: 11.5, color: "var(--tk-gray-500)", lineHeight: 1.4, margin: "0 0 10px", fontFamily: "var(--tk-font-sans)" }}>
+                    {b.description}
+                  </p>
+                )}
+                <span style={{ display: "inline-block", background: "var(--tk-mint, #D1FAE5)", color: "var(--tk-green-dark, #0F7A3E)", borderRadius: 99, fontSize: 11.5, fontWeight: 600, padding: "3px 10px", fontFamily: "var(--tk-font-sans)" }}>
+                  ✓ {earnedDate}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* ── Section: Belum Terbuka ────────────────────────────────────── */}
       <h3

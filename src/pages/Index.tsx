@@ -928,12 +928,12 @@ const Footer = ({ navigate }: { navigate: ReturnType<typeof useNavigate> }) => (
         </p>
         <div className="lp-socials">
           {[
-            { label: "Instagram", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.5" cy="6.5" r="1" fill="currentColor" /></svg> },
-            { label: "YouTube", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M22 8a3 3 0 00-2-2c-2-.5-8-.5-8-.5s-6 0-8 .5a3 3 0 00-2 2c-.5 2-.5 4-.5 4s0 2 .5 4a3 3 0 002 2c2 .5 8 .5 8 .5s6 0 8-.5a3 3 0 002-2c.5-2 .5-4 .5-4s0-2-.5-4zM10 15V9l5 3-5 3z" /></svg> },
-            { label: "TikTok", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M16 3a5 5 0 005 5v3a8 8 0 01-5-1.7V16a6 6 0 11-6-6v3.2A2.8 2.8 0 1013 16V3z" /></svg> },
-            { label: "LinkedIn", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="9" width="4" height="12" /><circle cx="4" cy="4" r="2" /><path d="M10 9h4v2c.5-1 2-2 4-2 3 0 4 2 4 5v7h-4v-6c0-1 0-2-2-2s-2 1-2 2v6h-4z" /></svg> },
+            { label: "Instagram", href: "https://www.instagram.com/talentika.id/", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.5" cy="6.5" r="1" fill="currentColor" /></svg> },
+            { label: "YouTube", href: "https://www.youtube.com/@talentikaid", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M22 8a3 3 0 00-2-2c-2-.5-8-.5-8-.5s-6 0-8 .5a3 3 0 00-2 2c-.5 2-.5 4-.5 4s0 2 .5 4a3 3 0 002 2c2 .5 8 .5 8 .5s6 0 8-.5a3 3 0 002-2c.5-2 .5-4 .5-4s0-2-.5-4zM10 15V9l5 3-5 3z" /></svg> },
+            { label: "TikTok", href: "https://www.tiktok.com/@talentika.id", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M16 3a5 5 0 005 5v3a8 8 0 01-5-1.7V16a6 6 0 11-6-6v3.2A2.8 2.8 0 1013 16V3z" /></svg> },
+            { label: "LinkedIn", href: "https://www.linkedin.com/company/talentika", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="9" width="4" height="12" /><circle cx="4" cy="4" r="2" /><path d="M10 9h4v2c.5-1 2-2 4-2 3 0 4 2 4 5v7h-4v-6c0-1 0-2-2-2s-2 1-2 2v6h-4z" /></svg> },
           ].map((s) => (
-            <a key={s.label} aria-label={s.label}>{s.icon}</a>
+            <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer" aria-label={s.label}>{s.icon}</a>
           ))}
         </div>
       </div>
@@ -942,8 +942,14 @@ const Footer = ({ navigate }: { navigate: ReturnType<typeof useNavigate> }) => (
       <div>
         <h5>Tautan Cepat</h5>
         <ul>
-          {["Beranda", "Fitur", "Cara Kerja", "Tentang Kami", "FAQ"].map((item) => (
-            <li key={item}><a onClick={() => {}}>{item}</a></li>
+          {[
+            { label: "Beranda",     href: "/" },
+            { label: "Fitur",       href: "/#fitur" },
+            { label: "Cara Kerja",  href: "/#cara-kerja" },
+            { label: "Harga",       href: "/#harga" },
+            { label: "Kontak",      href: "mailto:Discover@Talentika.id" },
+          ].map(({ label, href }) => (
+            <li key={label}><a href={href}>{label}</a></li>
           ))}
         </ul>
       </div>
@@ -952,8 +958,14 @@ const Footer = ({ navigate }: { navigate: ReturnType<typeof useNavigate> }) => (
       <div>
         <h5>Layanan</h5>
         <ul>
-          {["Tes Minat & Bakat", "Eksplorasi Karir", "Rekomendasi Skill", "Komunitas Belajar", "Progress Tracking"].map((item) => (
-            <li key={item}><a>{item}</a></li>
+          {[
+            { label: "Tes Minat & Bakat",   href: "/assessment" },
+            { label: "Eksplorasi Karir",     href: "/opportunities" },
+            { label: "Learning Hub",         href: "/learning-hub" },
+            { label: "Komunitas Belajar",    href: "/community" },
+            { label: "Portfolio Builder",    href: "/portfolio" },
+          ].map(({ label, href }) => (
+            <li key={label}><a href={href}>{label}</a></li>
           ))}
         </ul>
       </div>
@@ -991,9 +1003,9 @@ const Footer = ({ navigate }: { navigate: ReturnType<typeof useNavigate> }) => (
     <div className="lp-foot-bottom">
       <span>© 2026 Talentika. All rights reserved.</span>
       <div className="lp-foot-links">
-        <a>Kebijakan Privasi</a>
-        <a>Syarat & Ketentuan</a>
-        <a>Cookie</a>
+        <a href="https://wa.me/6285148434141?text=Halo%20Talentika%2C%20saya%20ingin%20menanyakan%20Kebijakan%20Privasi" target="_blank" rel="noopener noreferrer">Kebijakan Privasi</a>
+        <a href="https://wa.me/6285148434141?text=Halo%20Talentika%2C%20saya%20ingin%20menanyakan%20Syarat%20%26%20Ketentuan" target="_blank" rel="noopener noreferrer">Syarat & Ketentuan</a>
+        <a href="mailto:Discover@Talentika.id">Cookie</a>
       </div>
     </div>
   </footer>

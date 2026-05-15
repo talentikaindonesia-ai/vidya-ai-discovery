@@ -317,10 +317,10 @@ const PortfolioBuilder = () => {
               <div className="grid md:grid-cols-2 gap-6">
                 {projects.map((project) => (
                   <Card key={project.id} className="shadow-card hover:shadow-floating transition-all">
-                    {project.image_url && (
+                    {project.file_url && (
                       <div className="aspect-video bg-gradient-soft rounded-t-lg overflow-hidden">
-                        <img loading="lazy" decoding="async" 
-                          src={project.image_url} 
+                        <img loading="lazy" decoding="async"
+                          src={project.file_url}
                           alt={project.title}
                           className="w-full h-full object-cover"
                         />
@@ -329,9 +329,9 @@ const PortfolioBuilder = () => {
                     <CardHeader>
                       <CardTitle className="flex items-center justify-between">
                         {project.title}
-                        {project.project_url && (
+                        {project.external_url && (
                           <Button variant="ghost" size="sm" asChild>
-                            <a href={project.project_url} target="_blank" rel="noopener noreferrer">
+                            <a href={project.external_url} target="_blank" rel="noopener noreferrer">
                               <ExternalLink className="w-4 h-4" />
                             </a>
                           </Button>
