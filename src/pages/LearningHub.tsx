@@ -1,11 +1,20 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Input } from "@/components/ui/input";
-import { Play, Clock, BookOpen, Search, Filter, MessageSquare, Briefcase, Leaf, Globe, Cpu, TreePine, Lightbulb, Heart, ArrowRight, Users, Code, TrendingUp } from "lucide-react";
+import {
+  Search,
+  Clock,
+  Heart,
+  Code,
+  Briefcase,
+  TrendingUp,
+  TreePine,
+  Users,
+  Cpu,
+  Globe,
+  ArrowRight,
+  ChevronLeft,
+  Lightbulb,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { getUserSubscriptionInfo } from "@/lib/subscription";
@@ -13,11 +22,13 @@ import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { BottomNavigationBar } from "@/components/dashboard/BottomNavigationBar";
 
+// ─── Interfaces ──────────────────────────────────────────────────────────────
+
 interface CourseCategory {
   id: string;
   title: string;
   description: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
   color: string;
   courses: Course[];
 }
@@ -28,9 +39,50 @@ interface Course {
   description: string;
   project: string;
   duration: string;
-  difficulty: 'beginner' | 'intermediate' | 'advanced';
+  difficulty: "beginner" | "intermediate" | "advanced";
   isRecommended?: boolean;
 }
+
+// ─── Category colour palette ──────────────────────────────────────────────────
+// Each entry: { iconBg (gradient), iconFg, cardAccent }
+const CATEGORY_PALETTE: Record<
+  string,
+  { gradStart: string; gradEnd: string; fg: string; soft: string }
+> = {
+  "life-skills":       { gradStart: "#FB7185", gradEnd: "#F43F5E", fg: "#fff", soft: "#FFF1F2" },
+  "digital-skills":    { gradStart: "#3B82F6", gradEnd: "#2563EB", fg: "#fff", soft: "var(--tk-blue-50,#EFF6FF)" },
+  "vocational-skills": { gradStart: "#FB923C", gradEnd: "#EA580C", fg: "#fff", soft: "var(--tk-orange-soft,#FFEDE2)" },
+  "entrepreneurship":  { gradStart: "#22C55E", gradEnd: "#16A34A", fg: "#fff", soft: "#F0FDF4" },
+  "green-skills":      { gradStart: "#10B981", gradEnd: "#059669", fg: "#fff", soft: "var(--tk-mint,#D1FAE5)" },
+  "soft-skills":       { gradStart: "#A78BFA", gradEnd: "#7C3AED", fg: "#fff", soft: "#F5F3FF" },
+  "steam-skills":      { gradStart: "#6366F1", gradEnd: "#4338CA", fg: "#fff", soft: "#EEF2FF" },
+  "community-skills":  { gradStart: "#14B8A6", gradEnd: "#0F766E", fg: "#fff", soft: "#F0FDFA" },
+};
+
+function palette(id: string) {
+  return (
+    CATEGORY_PALETTE[id] ?? {
+      gradStart: "#64748B",
+      gradEnd: "#475569",
+      fg: "#fff",
+      soft: "#F8FAFC",
+    }
+  );
+}
+
+// ─── Difficulty helpers ───────────────────────────────────────────────────────
+
+const DIFFICULTY_STYLE: Record<string, { bg: string; color: string; label: string }> = {
+  beginner:     { bg: "var(--tk-mint,#D1FAE5)",    color: "var(--tk-green-dark,#0F7A3E)", label: "Pemula" },
+  intermediate: { bg: "var(--tk-orange-soft,#FFEDE2)", color: "var(--tk-orange,#FF6A00)",   label: "Menengah" },
+  advanced:     { bg: "#FEE2E2",                    color: "#DC2626",                      label: "Lanjutan" },
+};
+
+function diffStyle(level: string) {
+  return DIFFICULTY_STYLE[level] ?? { bg: "#F1F5F9", color: "#64748B", label: "Tidak Diketahui" };
+}
+
+// ─── Component ───────────────────────────────────────────────────────────────
 
 const LearningHub = () => {
   const [user, setUser] = useState<any>(null);
@@ -41,6 +93,7 @@ const LearningHub = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  // ── Course data ──────────────────────────────────────────────────────────────
   const courseCategories: CourseCategory[] = [
     {
       id: "life-skills",
@@ -56,7 +109,7 @@ const LearningHub = () => {
           project: "Membuat podcast/video 5 menit tentang isu sosial",
           duration: "2 minggu",
           difficulty: "beginner",
-          isRecommended: true
+          isRecommended: true,
         },
         {
           id: "leadership",
@@ -64,7 +117,7 @@ const LearningHub = () => {
           description: "Mengembangkan jiwa kepemimpinan dan kolaborasi",
           project: "Simulasi community project (kegiatan bakti sosial sekolah)",
           duration: "3 minggu",
-          difficulty: "intermediate"
+          difficulty: "intermediate",
         },
         {
           id: "financial-literacy",
@@ -72,7 +125,7 @@ const LearningHub = () => {
           description: "Mengelola keuangan dengan bijak sejak dini",
           project: "Simulasi membuat anggaran keluarga/UKM mini",
           duration: "2 minggu",
-          difficulty: "beginner"
+          difficulty: "beginner",
         },
         {
           id: "problem-solving",
@@ -80,9 +133,9 @@ const LearningHub = () => {
           description: "Mengasah kemampuan berpikir kritis dan memecahkan masalah",
           project: "Studi kasus: mengurangi sampah plastik di sekolah",
           duration: "2 minggu",
-          difficulty: "intermediate"
-        }
-      ]
+          difficulty: "intermediate",
+        },
+      ],
     },
     {
       id: "digital-skills",
@@ -98,7 +151,7 @@ const LearningHub = () => {
           project: "Buat poster digital untuk kampanye sekolah/lingkungan",
           duration: "3 minggu",
           difficulty: "beginner",
-          isRecommended: true
+          isRecommended: true,
         },
         {
           id: "coding-basics",
@@ -106,7 +159,7 @@ const LearningHub = () => {
           description: "Pengenalan pemrograman dengan bahasa yang mudah dipahami",
           project: "Bikin game sederhana dengan Scratch/Python",
           duration: "4 minggu",
-          difficulty: "beginner"
+          difficulty: "beginner",
         },
         {
           id: "digital-marketing",
@@ -114,7 +167,7 @@ const LearningHub = () => {
           description: "Strategi pemasaran digital untuk generasi Z",
           project: "Jalankan mini campaign IG/TikTok untuk produk/jasa lokal",
           duration: "3 minggu",
-          difficulty: "intermediate"
+          difficulty: "intermediate",
         },
         {
           id: "data-literacy",
@@ -122,9 +175,9 @@ const LearningHub = () => {
           description: "Memahami dan menganalisis data dengan mudah",
           project: "Analisis data sederhana: survei minat siswa di sekolah",
           duration: "2 minggu",
-          difficulty: "intermediate"
-        }
-      ]
+          difficulty: "intermediate",
+        },
+      ],
     },
     {
       id: "vocational-skills",
@@ -139,7 +192,7 @@ const LearningHub = () => {
           description: "Seni memasak dan mengelola bisnis kuliner",
           project: "Buka pop-up cafe di sekolah untuk sehari",
           duration: "4 minggu",
-          difficulty: "beginner"
+          difficulty: "beginner",
         },
         {
           id: "fashion-design",
@@ -147,7 +200,7 @@ const LearningHub = () => {
           description: "Merancang dan membuat busana dengan kreativitas",
           project: "Lomba upcycle pakaian bekas jadi produk baru",
           duration: "5 minggu",
-          difficulty: "intermediate"
+          difficulty: "intermediate",
         },
         {
           id: "agribusiness",
@@ -155,7 +208,7 @@ const LearningHub = () => {
           description: "Bisnis pertanian modern dan berkelanjutan",
           project: "Buat kebun hidroponik mini & jual hasil panen",
           duration: "6 minggu",
-          difficulty: "beginner"
+          difficulty: "beginner",
         },
         {
           id: "automotive",
@@ -163,9 +216,9 @@ const LearningHub = () => {
           description: "Pemahaman dasar sistem kendaraan bermotor",
           project: "Simulasi bengkel kecil (service sepeda motor sekolah)",
           duration: "4 minggu",
-          difficulty: "intermediate"
-        }
-      ]
+          difficulty: "intermediate",
+        },
+      ],
     },
     {
       id: "entrepreneurship",
@@ -181,7 +234,7 @@ const LearningHub = () => {
           project: "Susun BMC untuk ide usaha siswa",
           duration: "2 minggu",
           difficulty: "beginner",
-          isRecommended: true
+          isRecommended: true,
         },
         {
           id: "product-innovation",
@@ -189,7 +242,7 @@ const LearningHub = () => {
           description: "Mengembangkan produk inovatif dari ide hingga prototype",
           project: "Kembangkan prototipe produk dengan barang sederhana",
           duration: "4 minggu",
-          difficulty: "intermediate"
+          difficulty: "intermediate",
         },
         {
           id: "pitching",
@@ -197,7 +250,7 @@ const LearningHub = () => {
           description: "Mempresentasikan ide bisnis dengan meyakinkan",
           project: "Presentasi ide bisnis ke 'investor' (guru, orang tua, komunitas)",
           duration: "2 minggu",
-          difficulty: "intermediate"
+          difficulty: "intermediate",
         },
         {
           id: "export-business",
@@ -205,9 +258,9 @@ const LearningHub = () => {
           description: "Memahami pasar global dan strategi ekspor",
           project: "Riset produk lokal & buat export readiness plan",
           duration: "3 minggu",
-          difficulty: "advanced"
-        }
-      ]
+          difficulty: "advanced",
+        },
+      ],
     },
     {
       id: "green-skills",
@@ -222,7 +275,7 @@ const LearningHub = () => {
           description: "Mengelola sampah dengan prinsip reduce, reuse, recycle",
           project: "Mendirikan bank sampah di sekolah/komunitas",
           duration: "3 minggu",
-          difficulty: "beginner"
+          difficulty: "beginner",
         },
         {
           id: "renewable-energy",
@@ -230,7 +283,7 @@ const LearningHub = () => {
           description: "Memahami dan memanfaatkan energi ramah lingkungan",
           project: "Membuat panel surya mini/lampu tenaga surya sederhana",
           duration: "4 minggu",
-          difficulty: "intermediate"
+          difficulty: "intermediate",
         },
         {
           id: "urban-farming",
@@ -238,7 +291,7 @@ const LearningHub = () => {
           description: "Bertani di lahan terbatas dengan teknik modern",
           project: "Kebun vertikal di sekolah",
           duration: "5 minggu",
-          difficulty: "beginner"
+          difficulty: "beginner",
         },
         {
           id: "eco-entrepreneurship",
@@ -246,9 +299,9 @@ const LearningHub = () => {
           description: "Bisnis yang menguntungkan dan ramah lingkungan",
           project: "Membuat produk ramah lingkungan & dijual di bazaar sekolah",
           duration: "4 minggu",
-          difficulty: "intermediate"
-        }
-      ]
+          difficulty: "intermediate",
+        },
+      ],
     },
     {
       id: "soft-skills",
@@ -264,7 +317,7 @@ const LearningHub = () => {
           project: "Buat CV, LinkedIn, & mock interview",
           duration: "2 minggu",
           difficulty: "beginner",
-          isRecommended: true
+          isRecommended: true,
         },
         {
           id: "networking-branding",
@@ -272,7 +325,7 @@ const LearningHub = () => {
           description: "Membangun jaringan dan personal branding yang kuat",
           project: "Susun portfolio online",
           duration: "3 minggu",
-          difficulty: "intermediate"
+          difficulty: "intermediate",
         },
         {
           id: "project-management",
@@ -280,7 +333,7 @@ const LearningHub = () => {
           description: "Mengelola proyek dari perencanaan hingga eksekusi",
           project: "Jalankan event nyata (pameran, lomba, expo kecil)",
           duration: "4 minggu",
-          difficulty: "intermediate"
+          difficulty: "intermediate",
         },
         {
           id: "service-excellence",
@@ -288,9 +341,9 @@ const LearningHub = () => {
           description: "Memberikan pelayanan terbaik kepada pelanggan",
           project: "Simulasi melayani pelanggan (role-play restoran/hotel)",
           duration: "2 minggu",
-          difficulty: "beginner"
-        }
-      ]
+          difficulty: "beginner",
+        },
+      ],
     },
     {
       id: "steam-skills",
@@ -305,7 +358,7 @@ const LearningHub = () => {
           description: "Pengenalan dunia robotika dan automasi",
           project: "Membuat robot line follower sederhana",
           duration: "5 minggu",
-          difficulty: "intermediate"
+          difficulty: "intermediate",
         },
         {
           id: "game-based-learning",
@@ -313,7 +366,7 @@ const LearningHub = () => {
           description: "Belajar melalui permainan yang edukatif",
           project: "Membuat boardgame edukasi",
           duration: "3 minggu",
-          difficulty: "beginner"
+          difficulty: "beginner",
         },
         {
           id: "ar-vr-education",
@@ -321,7 +374,7 @@ const LearningHub = () => {
           description: "Teknologi immersive untuk pembelajaran",
           project: "Buat AR sederhana pakai Assemblr",
           duration: "4 minggu",
-          difficulty: "advanced"
+          difficulty: "advanced",
         },
         {
           id: "steam-interdisciplinary",
@@ -329,9 +382,9 @@ const LearningHub = () => {
           description: "Menggabungkan berbagai disiplin ilmu dalam proyek",
           project: "Pameran karya gabungan sains, seni, teknologi",
           duration: "6 minggu",
-          difficulty: "advanced"
-        }
-      ]
+          difficulty: "advanced",
+        },
+      ],
     },
     {
       id: "community-skills",
@@ -346,7 +399,7 @@ const LearningHub = () => {
           description: "Mengorganisir dan memobilisasi komunitas",
           project: "Buat program sosial lokal (literasi anak kecil di sekitar sekolah)",
           duration: "4 minggu",
-          difficulty: "intermediate"
+          difficulty: "intermediate",
         },
         {
           id: "disaster-preparedness",
@@ -354,7 +407,7 @@ const LearningHub = () => {
           description: "Kesiapsiagaan menghadapi bencana alam",
           project: "Simulasi tanggap bencana di sekolah",
           duration: "2 minggu",
-          difficulty: "beginner"
+          difficulty: "beginner",
         },
         {
           id: "youth-empowerment",
@@ -362,11 +415,13 @@ const LearningHub = () => {
           description: "Memberdayakan generasi muda untuk perubahan positif",
           project: "Adakan youth talkshow atau webinar SDGs",
           duration: "3 minggu",
-          difficulty: "intermediate"
-        }
-      ]
-    }
+          difficulty: "intermediate",
+        },
+      ],
+    },
   ];
+
+  // ── Auth / profile load ───────────────────────────────────────────────────
 
   useEffect(() => {
     checkAuthAndLoadData();
@@ -374,18 +429,20 @@ const LearningHub = () => {
 
   const checkAuthAndLoadData = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (session?.user) {
         setUser(session.user);
         const { data: profileData } = await supabase
-          .from('profiles')
-          .select('full_name, subscription_type')
-          .eq('user_id', session.user.id)
+          .from("profiles")
+          .select("full_name, subscription_type")
+          .eq("user_id", session.user.id)
           .maybeSingle();
         if (profileData) setProfile(profileData);
       }
     } catch (error) {
-      console.error('Error loading data:', error);
+      console.error("Error loading data:", error);
     } finally {
       setLoading(false);
     }
@@ -393,178 +450,652 @@ const LearningHub = () => {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-    navigate('/auth');
+    navigate("/auth");
   };
 
-  const getDifficultyColor = (level: string) => {
-    switch (level) {
-      case 'beginner': return 'bg-green-100 text-green-800';
-      case 'intermediate': return 'bg-yellow-100 text-yellow-800';
-      case 'advanced': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
+  // ── Derived data ──────────────────────────────────────────────────────────
 
-  const getDifficultyLabel = (level: string) => {
-    switch (level) {
-      case 'beginner': return 'Pemula';
-      case 'intermediate': return 'Menengah';
-      case 'advanced': return 'Lanjutan';
-      default: return 'Tidak Diketahui';
-    }
-  };
-
-  const filteredCategories = courseCategories.filter(category => 
-    category.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    category.courses.some(course => 
-      course.title.toLowerCase().includes(searchTerm.toLowerCase())
-    )
+  const filteredCategories = courseCategories.filter(
+    (cat) =>
+      cat.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      cat.courses.some((c) =>
+        c.title.toLowerCase().includes(searchTerm.toLowerCase())
+      )
   );
 
-  const recommendedCourses = courseCategories.flatMap(category => 
-    category.courses.filter(course => course.isRecommended)
-      .map(course => ({ ...course, categoryTitle: category.title, categoryColor: category.color }))
-  );
+  const activeCategoryObj = selectedCategory
+    ? courseCategories.find((c) => c.id === selectedCategory) ?? null
+    : null;
+
+  const filteredCourses = activeCategoryObj
+    ? activeCategoryObj.courses.filter(
+        (c) =>
+          c.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          c.description.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : [];
+
+  // ── Loading spinner ───────────────────────────────────────────────────────
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "var(--tk-gray-50,#F8FAFC)",
+        }}
+      >
+        <div
+          style={{
+            width: 48,
+            height: 48,
+            borderRadius: "50%",
+            border: "3px solid var(--tk-blue-600,#2563EB)",
+            borderTopColor: "transparent",
+            animation: "spin 0.8s linear infinite",
+          }}
+        />
       </div>
     );
   }
 
+  // ── Shared style helpers ──────────────────────────────────────────────────
+
+  const cardBase: React.CSSProperties = {
+    background: "#fff",
+    borderRadius: 16,
+    border: "1px solid var(--tk-gray-200,#E2E8F0)",
+    padding: 24,
+    transition: "box-shadow 0.2s, transform 0.2s",
+  };
+
+  const pillBase: React.CSSProperties = {
+    display: "inline-flex",
+    alignItems: "center",
+    borderRadius: 999,
+    padding: "4px 12px",
+    fontSize: 12,
+    fontWeight: 600,
+    fontFamily: "var(--tk-font-sans,Inter,sans-serif)",
+    whiteSpace: "nowrap",
+  };
+
+  // ── Render ────────────────────────────────────────────────────────────────
+
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen bg-background">
+      <div
+        style={{
+          display: "flex",
+          minHeight: "100vh",
+          background: "var(--tk-gray-50,#F8FAFC)",
+        }}
+      >
         <DashboardSidebar
           activeSection={activeSection}
           setActiveSection={setActiveSection}
           onSignOut={handleSignOut}
         />
-        
-        <main className="flex-1 overflow-hidden pb-20 md:pb-0">
-          <div className="w-full max-w-none px-4 md:px-6">
-            {/* Header */}
-            <div className="mb-6 md:mb-8 pt-4">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
-                <h1 className="text-2xl sm:text-3xl font-bold">Kursus Pembelajaran</h1>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">
-                    {profile?.full_name || user?.email?.split('@')[0] || 'Pengguna'}
-                  </span>
-                  <Badge variant="outline" className="text-xs">
-                    {profile?.subscription_type === 'premium' ? 'Premium' : 'Individual'}
-                  </Badge>
-                </div>
-              </div>
-              
-              {/* Search Bar */}
-              <div className="flex items-center gap-2 md:gap-4 mb-6">
-                <div className="flex-1 relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                  <Input
-                    placeholder="Cari kursus atau kategori..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-                <Button variant="outline" size="icon">
-                  <Filter className="w-4 h-4" />
-                </Button>
-              </div>
 
-              {/* Recommended Courses */}
-              {recommendedCourses.length > 0 && (
-                <Card className="mb-6">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Lightbulb className="w-5 h-5 text-yellow-500" />
-                      Rekomendasi untuk Anda
-                    </CardTitle>
-                    <CardDescription>
-                      Kursus yang dipersonalisasi berdasarkan minat dan kemampuan Anda
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {recommendedCourses.map((course) => (
-                        <Card 
-                          key={course.id} 
-                          className="cursor-pointer hover:shadow-md transition-shadow"
-                          onClick={() => navigate(`/learning/content/${course.id}`)}
+        <main
+          className="tk-page-in"
+          style={{
+            flex: 1,
+            overflowY: "auto",
+            paddingBottom: 80,
+            paddingTop: 0,
+          }}
+        >
+          <div style={{ maxWidth: 1100, margin: "0 auto", padding: "28px 28px 0" }}>
+
+            {/* ── Page Header ───────────────────────────────────────────── */}
+            <div style={{ marginBottom: 28 }}>
+              <h1
+                style={{
+                  fontFamily: "var(--tk-font-display,Poppins,sans-serif)",
+                  fontWeight: 800,
+                  fontSize: 30,
+                  color: "var(--tk-ink,#0F172A)",
+                  margin: 0,
+                  lineHeight: 1.2,
+                }}
+              >
+                Kursus Saya
+              </h1>
+              <p
+                style={{
+                  fontFamily: "var(--tk-font-sans,Inter,sans-serif)",
+                  fontSize: 15,
+                  color: "var(--tk-gray-600,#475569)",
+                  margin: "6px 0 0",
+                }}
+              >
+                Kelola dan lanjutkan pembelajaran untuk mencapai tujuan terbaik.
+              </p>
+
+              {/* User badge */}
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 12 }}>
+                <span
+                  style={{
+                    fontFamily: "var(--tk-font-sans,Inter,sans-serif)",
+                    fontSize: 13,
+                    color: "var(--tk-gray-500,#64748B)",
+                  }}
+                >
+                  {profile?.full_name || user?.email?.split("@")[0] || "Pengguna"}
+                </span>
+                <span
+                  style={{
+                    ...pillBase,
+                    background:
+                      profile?.subscription_type === "premium"
+                        ? "var(--tk-blue-50,#EFF6FF)"
+                        : "#F1F5F9",
+                    color:
+                      profile?.subscription_type === "premium"
+                        ? "var(--tk-blue-700,#1D4ED8)"
+                        : "var(--tk-gray-600,#475569)",
+                    border:
+                      profile?.subscription_type === "premium"
+                        ? "1px solid var(--tk-blue-300,#93C5FD)"
+                        : "1px solid var(--tk-gray-200,#E2E8F0)",
+                  }}
+                >
+                  {profile?.subscription_type === "premium" ? "Premium" : "Individual"}
+                </span>
+              </div>
+            </div>
+
+            {/* ── Search Bar ────────────────────────────────────────────── */}
+            <div
+              style={{
+                background: "#fff",
+                borderRadius: 16,
+                border: "1px solid var(--tk-gray-200,#E2E8F0)",
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                padding: "10px 16px",
+                marginBottom: 20,
+                boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+              }}
+            >
+              <Search
+                style={{
+                  width: 18,
+                  height: 18,
+                  color: "var(--tk-gray-400,#94A3B8)",
+                  flexShrink: 0,
+                }}
+              />
+              <input
+                type="text"
+                placeholder="Cari kursus atau kategori..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={{
+                  border: "none",
+                  outline: "none",
+                  flex: 1,
+                  fontFamily: "var(--tk-font-sans,Inter,sans-serif)",
+                  fontSize: 14,
+                  color: "var(--tk-ink,#0F172A)",
+                  background: "transparent",
+                }}
+              />
+            </div>
+
+            {/* ── Category Pill Filters ──────────────────────────────────── */}
+            <div
+              style={{
+                display: "flex",
+                gap: 8,
+                overflowX: "auto",
+                paddingBottom: 4,
+                marginBottom: 28,
+                scrollbarWidth: "none",
+              }}
+            >
+              {/* "Semua" pill */}
+              <button
+                onClick={() => setSelectedCategory(null)}
+                style={{
+                  ...pillBase,
+                  padding: "8px 18px",
+                  fontSize: 13,
+                  cursor: "pointer",
+                  border: selectedCategory === null
+                    ? "none"
+                    : "1px solid var(--tk-gray-200,#E2E8F0)",
+                  background: selectedCategory === null
+                    ? "var(--tk-blue-600,#2563EB)"
+                    : "#fff",
+                  color: selectedCategory === null ? "#fff" : "var(--tk-gray-600,#475569)",
+                  fontWeight: 600,
+                  transition: "background 0.15s, color 0.15s",
+                }}
+              >
+                Semua
+              </button>
+              {courseCategories.map((cat) => {
+                const active = selectedCategory === cat.id;
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => setSelectedCategory(cat.id)}
+                    style={{
+                      ...pillBase,
+                      padding: "8px 18px",
+                      fontSize: 13,
+                      cursor: "pointer",
+                      border: active
+                        ? "none"
+                        : "1px solid var(--tk-gray-200,#E2E8F0)",
+                      background: active
+                        ? "var(--tk-blue-600,#2563EB)"
+                        : "#fff",
+                      color: active ? "#fff" : "var(--tk-gray-600,#475569)",
+                      fontWeight: 600,
+                      transition: "background 0.15s, color 0.15s",
+                    }}
+                  >
+                    {cat.title}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* ═══════════════════════════════════════════════════════════════
+                VIEW A: No category selected — show category grid
+            ═══════════════════════════════════════════════════════════════ */}
+            {!selectedCategory && (
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))",
+                  gap: 20,
+                }}
+              >
+                {filteredCategories.map((cat) => {
+                  const p = palette(cat.id);
+                  const Icon = cat.icon;
+                  return (
+                    <div
+                      key={cat.id}
+                      style={{ ...cardBase, cursor: "pointer" }}
+                      onMouseEnter={(e) => {
+                        (e.currentTarget as HTMLDivElement).style.boxShadow =
+                          "0 8px 24px rgba(0,0,0,0.10)";
+                        (e.currentTarget as HTMLDivElement).style.transform =
+                          "translateY(-2px)";
+                      }}
+                      onMouseLeave={(e) => {
+                        (e.currentTarget as HTMLDivElement).style.boxShadow = "none";
+                        (e.currentTarget as HTMLDivElement).style.transform = "none";
+                      }}
+                      onClick={() => setSelectedCategory(cat.id)}
+                    >
+                      {/* Icon badge */}
+                      <div
+                        style={{
+                          width: 52,
+                          height: 52,
+                          borderRadius: 14,
+                          background: `linear-gradient(135deg,${p.gradStart},${p.gradEnd})`,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          marginBottom: 16,
+                        }}
+                      >
+                        <Icon style={{ width: 26, height: 26, color: p.fg }} />
+                      </div>
+
+                      {/* Title */}
+                      <h3
+                        style={{
+                          fontFamily: "var(--tk-font-display,Poppins,sans-serif)",
+                          fontWeight: 700,
+                          fontSize: 18,
+                          color: "var(--tk-ink,#0F172A)",
+                          margin: "0 0 6px",
+                        }}
+                      >
+                        {cat.title}
+                      </h3>
+
+                      {/* Description */}
+                      <p
+                        style={{
+                          fontFamily: "var(--tk-font-sans,Inter,sans-serif)",
+                          fontSize: 13,
+                          color: "var(--tk-gray-600,#475569)",
+                          margin: "0 0 14px",
+                          lineHeight: 1.5,
+                        }}
+                      >
+                        {cat.description}
+                      </p>
+
+                      {/* Footer row */}
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                        }}
+                      >
+                        {/* Course count pill */}
+                        <span
+                          style={{
+                            ...pillBase,
+                            background: p.soft,
+                            color: p.gradEnd,
+                            border: `1px solid ${p.gradStart}33`,
+                          }}
                         >
-                          <CardContent className="p-4">
-                            <div className="flex items-start justify-between mb-2">
-                              <Badge className={course.categoryColor + " text-white text-xs"}>
-                                {course.categoryTitle}
-                              </Badge>
-                              <Badge variant="secondary" className="text-xs">
-                                Rekomendasi
-                              </Badge>
+                          {cat.courses.length} kursus
+                        </span>
+
+                        {/* Jelajahi button */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedCategory(cat.id);
+                          }}
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 4,
+                            padding: "6px 14px",
+                            borderRadius: 999,
+                            background: "var(--tk-blue-600,#2563EB)",
+                            color: "#fff",
+                            fontSize: 13,
+                            fontWeight: 600,
+                            fontFamily: "var(--tk-font-sans,Inter,sans-serif)",
+                            border: "none",
+                            cursor: "pointer",
+                          }}
+                        >
+                          Jelajahi
+                          <ArrowRight style={{ width: 14, height: 14 }} />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* ═══════════════════════════════════════════════════════════════
+                VIEW B: Category selected — show course list
+            ═══════════════════════════════════════════════════════════════ */}
+            {selectedCategory && activeCategoryObj && (
+              <div>
+                {/* Back button */}
+                <button
+                  onClick={() => setSelectedCategory(null)}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    padding: "8px 16px",
+                    borderRadius: 999,
+                    background: "#fff",
+                    border: "1px solid var(--tk-gray-200,#E2E8F0)",
+                    color: "var(--tk-gray-600,#475569)",
+                    fontSize: 14,
+                    fontWeight: 600,
+                    fontFamily: "var(--tk-font-sans,Inter,sans-serif)",
+                    cursor: "pointer",
+                    marginBottom: 24,
+                  }}
+                >
+                  <ChevronLeft style={{ width: 16, height: 16 }} />
+                  Kembali
+                </button>
+
+                {/* Category heading */}
+                {(() => {
+                  const p = palette(activeCategoryObj.id);
+                  const Icon = activeCategoryObj.icon;
+                  return (
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 16,
+                        marginBottom: 24,
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 56,
+                          height: 56,
+                          borderRadius: 14,
+                          background: `linear-gradient(135deg,${p.gradStart},${p.gradEnd})`,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexShrink: 0,
+                        }}
+                      >
+                        <Icon style={{ width: 28, height: 28, color: "#fff" }} />
+                      </div>
+                      <div>
+                        <h2
+                          style={{
+                            fontFamily: "var(--tk-font-display,Poppins,sans-serif)",
+                            fontWeight: 700,
+                            fontSize: 22,
+                            color: "var(--tk-ink,#0F172A)",
+                            margin: 0,
+                          }}
+                        >
+                          {activeCategoryObj.title}
+                        </h2>
+                        <p
+                          style={{
+                            fontFamily: "var(--tk-font-sans,Inter,sans-serif)",
+                            fontSize: 14,
+                            color: "var(--tk-gray-600,#475569)",
+                            margin: "4px 0 0",
+                          }}
+                        >
+                          {activeCategoryObj.description}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Course cards */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                  {filteredCourses.map((course) => {
+                    const p = palette(activeCategoryObj.id);
+                    const Icon = activeCategoryObj.icon;
+                    const diff = diffStyle(course.difficulty);
+                    return (
+                      <div
+                        key={course.id}
+                        style={{ ...cardBase, padding: 20 }}
+                        onMouseEnter={(e) => {
+                          (e.currentTarget as HTMLDivElement).style.boxShadow =
+                            "0 6px 20px rgba(0,0,0,0.08)";
+                        }}
+                        onMouseLeave={(e) => {
+                          (e.currentTarget as HTMLDivElement).style.boxShadow = "none";
+                        }}
+                      >
+                        <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
+                          {/* Icon badge */}
+                          <div
+                            style={{
+                              width: 48,
+                              height: 48,
+                              borderRadius: 14,
+                              background: `linear-gradient(135deg,${p.gradStart},${p.gradEnd})`,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              flexShrink: 0,
+                            }}
+                          >
+                            <Icon style={{ width: 22, height: 22, color: "#fff" }} />
+                          </div>
+
+                          {/* Content */}
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            {/* Title + recommended */}
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 8,
+                                flexWrap: "wrap",
+                                marginBottom: 6,
+                              }}
+                            >
+                              <h3
+                                style={{
+                                  fontFamily:
+                                    "var(--tk-font-display,Poppins,sans-serif)",
+                                  fontWeight: 700,
+                                  fontSize: 16,
+                                  color: "var(--tk-ink,#0F172A)",
+                                  margin: 0,
+                                }}
+                              >
+                                {course.title}
+                              </h3>
+                              {course.isRecommended && (
+                                <span
+                                  style={{
+                                    ...pillBase,
+                                    background: "var(--tk-blue-50,#EFF6FF)",
+                                    color: "var(--tk-blue-700,#1D4ED8)",
+                                    border: "1px solid var(--tk-blue-300,#93C5FD)",
+                                  }}
+                                >
+                                  Direkomendasikan
+                                </span>
+                              )}
                             </div>
-                            <h3 className="font-semibold text-sm mb-2">{course.title}</h3>
-                            <p className="text-xs text-muted-foreground mb-3 line-clamp-2">
+
+                            {/* Description */}
+                            <p
+                              style={{
+                                fontFamily: "var(--tk-font-sans,Inter,sans-serif)",
+                                fontSize: 14,
+                                color: "var(--tk-gray-600,#475569)",
+                                margin: "0 0 12px",
+                                lineHeight: 1.55,
+                              }}
+                            >
                               {course.description}
                             </p>
-                            <div className="flex items-center justify-between text-xs text-muted-foreground">
-                              <div className="flex items-center gap-1">
-                                <Clock className="w-3 h-3" />
-                                <span>{course.duration}</span>
-                              </div>
-                              <Badge className={getDifficultyColor(course.difficulty)}>
-                                {getDifficultyLabel(course.difficulty)}
-                              </Badge>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
 
-            {/* Course Categories Overview */}
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-xl">Kategori Pembelajaran</CardTitle>
-                  <CardDescription>
-                    Pilih kategori yang sesuai dengan minat dan tujuan karirmu
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {courseCategories.map((category) => (
-                      <Card 
-                        key={category.id} 
-                        className="cursor-pointer hover:shadow-md transition-all hover:-translate-y-1 text-center"
-                        onClick={() => navigate(`/learning/category/${category.id}`)}
-                      >
-                        <CardContent className="p-4">
-                          <div className={`p-3 rounded-lg ${category.color} text-white w-fit mx-auto mb-3`}>
-                            <category.icon className="w-6 h-6" />
+                            {/* Meta row */}
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                flexWrap: "wrap",
+                                gap: 8,
+                                marginBottom: 14,
+                              }}
+                            >
+                              {/* Duration badge */}
+                              <span
+                                style={{
+                                  ...pillBase,
+                                  background: "#F1F5F9",
+                                  color: "var(--tk-gray-600,#475569)",
+                                  gap: 4,
+                                }}
+                              >
+                                <Clock style={{ width: 12, height: 12 }} />
+                                {course.duration}
+                              </span>
+                              {/* Difficulty badge */}
+                              <span
+                                style={{
+                                  ...pillBase,
+                                  background: diff.bg,
+                                  color: diff.color,
+                                }}
+                              >
+                                {diff.label}
+                              </span>
+                            </div>
+
+                            {/* CTA */}
+                            <button
+                              onClick={() =>
+                                navigate(`/learning/content/${course.id}`)
+                              }
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: 6,
+                                width: "100%",
+                                padding: "10px 0",
+                                borderRadius: 12,
+                                background: "var(--tk-blue-600,#2563EB)",
+                                color: "#fff",
+                                fontSize: 14,
+                                fontWeight: 600,
+                                fontFamily: "var(--tk-font-sans,Inter,sans-serif)",
+                                border: "none",
+                                cursor: "pointer",
+                                transition: "background 0.15s",
+                              }}
+                              onMouseEnter={(e) => {
+                                (e.currentTarget as HTMLButtonElement).style.background =
+                                  "var(--tk-blue-700,#1D4ED8)";
+                              }}
+                              onMouseLeave={(e) => {
+                                (e.currentTarget as HTMLButtonElement).style.background =
+                                  "var(--tk-blue-600,#2563EB)";
+                              }}
+                            >
+                              Mulai Kursus
+                              <ArrowRight style={{ width: 16, height: 16 }} />
+                            </button>
                           </div>
-                          <h3 className="font-semibold text-sm mb-2">{category.title}</h3>
-                          <p className="text-xs text-muted-foreground line-clamp-2">
-                            {category.description}
-                          </p>
-                          <div className="mt-3 text-xs text-muted-foreground">
-                            {category.courses.length} kursus tersedia
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  {filteredCourses.length === 0 && (
+                    <div
+                      style={{
+                        textAlign: "center",
+                        padding: "48px 0",
+                        color: "var(--tk-gray-400,#94A3B8)",
+                        fontFamily: "var(--tk-font-sans,Inter,sans-serif)",
+                        fontSize: 15,
+                      }}
+                    >
+                      Tidak ada kursus yang cocok dengan pencarian.
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </main>
-        
-        <BottomNavigationBar activeSection={activeSection} onSectionChange={setActiveSection} />
+
+        <BottomNavigationBar
+          activeSection={activeSection}
+          onSectionChange={setActiveSection}
+        />
       </div>
     </SidebarProvider>
   );

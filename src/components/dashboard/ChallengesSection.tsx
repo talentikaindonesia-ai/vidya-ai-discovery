@@ -1,276 +1,544 @@
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trophy, Users, Calendar, Gift, Search, Filter, Clock } from "lucide-react";
-import { toast } from "sonner";
+import { useState } from "react";
+import { Trophy, Star, Shield, Users, ArrowRight, Check } from "lucide-react";
 
 interface Challenge {
   id: string;
-  title: string;
-  description: string;
-  category: string;
-  difficulty: string;
-  deadline: string;
-  participants: number;
-  prize: string;
-  status: 'upcoming' | 'active' | 'ended';
-  requirements: string[];
+  name: string;
+  desc: string;
+  days: number;
+  grad: string;
+  progress: number;
+  joined: number;
+  reward: string;
+  active: boolean;
 }
 
+const CHALLENGES: Challenge[] = [
+  {
+    id: "1",
+    name: "30 Hari Belajar Coding",
+    desc: "Belajar coding minimal 1 jam sehari selama 30 hari berturut-turut.",
+    days: 30,
+    grad: "linear-gradient(135deg,#2563EB,#1D4ED8)",
+    progress: 73,
+    joined: 1247,
+    reward: "500 XP + Badge",
+    active: true,
+  },
+  {
+    id: "2",
+    name: "Design Sprint Week",
+    desc: "Selesaikan 1 challenge desain UI/UX setiap hari selama seminggu.",
+    days: 7,
+    grad: "linear-gradient(135deg,#F97316,#EA580C)",
+    progress: 40,
+    joined: 892,
+    reward: "300 XP + Sertifikat",
+    active: true,
+  },
+  {
+    id: "3",
+    name: "Data Science Bootcamp",
+    desc: "Ikuti bootcamp intensif analisis data dan machine learning selama 2 minggu.",
+    days: 14,
+    grad: "linear-gradient(135deg,#7C3AED,#6D28D9)",
+    progress: 0,
+    joined: 445,
+    reward: "800 XP + Badge",
+    active: false,
+  },
+  {
+    id: "4",
+    name: "English Speaking Challenge",
+    desc: "Latih kemampuan berbicara Bahasa Inggris dengan native speakers setiap hari.",
+    days: 21,
+    grad: "linear-gradient(135deg,#16A34A,#15803D)",
+    progress: 0,
+    joined: 2031,
+    reward: "400 XP + Sertifikat",
+    active: false,
+  },
+];
+
 export const ChallengesSection = () => {
-  const [challenges, setChallenges] = useState<Challenge[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("all");
-  const [selectedStatus, setSelectedStatus] = useState("all");
-
-  useEffect(() => {
-    loadChallenges();
-  }, []);
-
-  const loadChallenges = () => {
-    // Mock data - in real app, fetch from Supabase
-    const mockChallenges: Challenge[] = [
-      {
-        id: '1',
-        title: 'Data Science Hackathon 2024',
-        description: 'Analisis dataset e-commerce untuk prediksi penjualan menggunakan machine learning',
-        category: 'Data Science',
-        difficulty: 'intermediate',
-        deadline: '2024-12-31T23:59:59',
-        participants: 156,
-        prize: 'Rp 10,000,000',
-        status: 'active',
-        requirements: ['Python', 'Pandas', 'Scikit-learn', 'Portfolio data science']
-      },
-      {
-        id: '2',
-        title: 'UI/UX Design Contest',
-        description: 'Redesign aplikasi mobile untuk meningkatkan user experience',
-        category: 'Design',
-        difficulty: 'beginner',
-        deadline: '2024-12-25T23:59:59',
-        participants: 89,
-        prize: 'Rp 5,000,000',
-        status: 'active',
-        requirements: ['Figma', 'Adobe XD', 'Portfolio design']
-      },
-      {
-        id: '3',
-        title: 'Web Development Challenge',
-        description: 'Buat aplikasi web full-stack dengan React dan Node.js',
-        category: 'Programming',
-        difficulty: 'advanced',
-        deadline: '2024-12-20T23:59:59',
-        participants: 67,
-        prize: 'Rp 7,500,000',
-        status: 'upcoming',
-        requirements: ['React', 'Node.js', 'Database', 'GitHub']
-      },
-      {
-        id: '4',
-        title: 'Business Case Competition',
-        description: 'Solusi bisnis untuk sustainability dalam industri fashion',
-        category: 'Business',
-        difficulty: 'intermediate',
-        deadline: '2024-12-15T23:59:59',
-        participants: 45,
-        prize: 'Rp 3,000,000',
-        status: 'ended',
-        requirements: ['Business plan', 'Presentation', 'Market research']
-      }
-    ];
-    setChallenges(mockChallenges);
-  };
-
-  const filteredChallenges = challenges.filter(challenge => {
-    const matchesSearch = challenge.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         challenge.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === "all" || challenge.category === selectedCategory;
-    const matchesStatus = selectedStatus === "all" || challenge.status === selectedStatus;
-    
-    return matchesSearch && matchesCategory && matchesStatus;
+  const [tab, setTab] = useState<"active" | "explore">("active");
+  const [joinedMap, setJoinedMap] = useState<Record<string, boolean>>({
+    "1": true,
+    "2": true,
+    "3": false,
+    "4": false,
   });
 
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'beginner': return 'bg-green-100 text-green-800';
-      case 'intermediate': return 'bg-orange-100 text-orange-800';
-      case 'advanced': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
+  const joinedChallenges = CHALLENGES.filter((c) => joinedMap[c.id]);
+  const exploreChallenges = CHALLENGES.filter((c) => !joinedMap[c.id]);
+  const visibleChallenges = tab === "active" ? joinedChallenges : exploreChallenges;
+
+  const handleJoin = (id: string) => {
+    setJoinedMap((prev) => ({ ...prev, [id]: true }));
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return 'bg-green-100 text-green-800';
-      case 'upcoming': return 'bg-blue-100 text-blue-800';
-      case 'ended': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getDaysRemaining = (deadline: string) => {
-    const now = new Date();
-    const deadlineDate = new Date(deadline);
-    const diffTime = deadlineDate.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
-  };
-
-  const handleJoinChallenge = (challengeId: string) => {
-    toast.success("Berhasil mendaftar challenge!");
-  };
+  const formatJoined = (n: number) =>
+    n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n);
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold">Tantangan & Kompetisi</h1>
-        <p className="text-muted-foreground mt-2">
-          Adu skill dengan peserta lain dan menangkan hadiah menarik
-        </p>
+    <div className="tk-page-in" style={{ padding: "0 0 40px" }}>
+      {/* Page Header */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "flex-start",
+          justifyContent: "space-between",
+          paddingBottom: 24,
+        }}
+      >
+        <div>
+          <h1
+            style={{
+              fontFamily: "var(--tk-font-display)",
+              fontWeight: 700,
+              fontSize: 30,
+              color: "var(--tk-ink)",
+              margin: 0,
+              lineHeight: 1.2,
+            }}
+          >
+            Tantangan
+          </h1>
+          <p
+            style={{
+              marginTop: 6,
+              color: "var(--tk-gray-500)",
+              fontSize: 15,
+              fontFamily: "var(--tk-font-sans)",
+            }}
+          >
+            Ikuti tantangan harian dan mingguan untuk tingkatkan skill dan raih badge.
+          </p>
+        </div>
       </div>
 
-      {/* Filters */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  placeholder="Cari tantangan..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className="w-full sm:w-[180px]">
-                <SelectValue placeholder="Kategori" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Semua Kategori</SelectItem>
-                <SelectItem value="Data Science">Data Science</SelectItem>
-                <SelectItem value="Design">Design</SelectItem>
-                <SelectItem value="Programming">Programming</SelectItem>
-                <SelectItem value="Business">Business</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-              <SelectTrigger className="w-full sm:w-[180px]">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Semua Status</SelectItem>
-                <SelectItem value="active">Aktif</SelectItem>
-                <SelectItem value="upcoming">Akan Datang</SelectItem>
-                <SelectItem value="ended">Selesai</SelectItem>
-              </SelectContent>
-            </Select>
+      {/* Stat Cards */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(3, 1fr)",
+          gap: 16,
+          marginBottom: 24,
+        }}
+      >
+        {/* Trophy / Active */}
+        <div
+          className="tk-card"
+          style={{ padding: "20px 24px", display: "flex", alignItems: "center", gap: 16 }}
+        >
+          <div
+            style={{
+              width: 48,
+              height: 48,
+              borderRadius: 14,
+              background: "var(--tk-orange-soft)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}
+          >
+            <Trophy size={22} color="var(--tk-orange)" />
           </div>
-        </CardContent>
-      </Card>
+          <div>
+            <div
+              style={{
+                fontSize: 26,
+                fontWeight: 700,
+                color: "var(--tk-ink)",
+                fontFamily: "var(--tk-font-display)",
+                lineHeight: 1,
+              }}
+            >
+              {joinedChallenges.length}
+            </div>
+            <div
+              style={{ fontSize: 13, fontWeight: 600, color: "var(--tk-ink)", marginTop: 2 }}
+            >
+              Tantangan Aktif
+            </div>
+            <div style={{ fontSize: 12, color: "var(--tk-gray-500)" }}>Sedang berjalan</div>
+          </div>
+        </div>
 
-      {/* Challenges Grid */}
-      <div className="grid gap-6 md:grid-cols-2">
-        {filteredChallenges.map((challenge) => (
-          <Card key={challenge.id} className="hover:shadow-lg transition-all">
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <Trophy className="w-8 h-8 text-primary" />
-                <div className="flex gap-2">
-                  <Badge className={getStatusColor(challenge.status)}>
-                    {challenge.status === 'active' ? 'Aktif' : 
-                     challenge.status === 'upcoming' ? 'Akan Datang' : 'Selesai'}
-                  </Badge>
-                  <Badge className={getDifficultyColor(challenge.difficulty)}>
-                    {challenge.difficulty === 'beginner' ? 'Pemula' :
-                     challenge.difficulty === 'intermediate' ? 'Menengah' : 'Lanjutan'}
-                  </Badge>
+        {/* Star / Streak */}
+        <div
+          className="tk-card"
+          style={{ padding: "20px 24px", display: "flex", alignItems: "center", gap: 16 }}
+        >
+          <div
+            style={{
+              width: 48,
+              height: 48,
+              borderRadius: 14,
+              background: "var(--tk-yellow-soft)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}
+          >
+            <Star size={22} color="var(--tk-yellow)" />
+          </div>
+          <div>
+            <div
+              style={{
+                fontSize: 26,
+                fontWeight: 700,
+                color: "var(--tk-ink)",
+                fontFamily: "var(--tk-font-display)",
+                lineHeight: 1,
+              }}
+            >
+              7 hari
+            </div>
+            <div
+              style={{ fontSize: 13, fontWeight: 600, color: "var(--tk-ink)", marginTop: 2 }}
+            >
+              Streak Terbaik
+            </div>
+            <div style={{ fontSize: 12, color: "var(--tk-gray-500)" }}>Pertahankan!</div>
+          </div>
+        </div>
+
+        {/* Shield / Badge */}
+        <div
+          className="tk-card"
+          style={{ padding: "20px 24px", display: "flex", alignItems: "center", gap: 16 }}
+        >
+          <div
+            style={{
+              width: 48,
+              height: 48,
+              borderRadius: 14,
+              background: "var(--tk-lilac)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}
+          >
+            <Shield size={22} color="#7C3AED" />
+          </div>
+          <div>
+            <div
+              style={{
+                fontSize: 26,
+                fontWeight: 700,
+                color: "var(--tk-ink)",
+                fontFamily: "var(--tk-font-display)",
+                lineHeight: 1,
+              }}
+            >
+              4
+            </div>
+            <div
+              style={{ fontSize: 13, fontWeight: 600, color: "var(--tk-ink)", marginTop: 2 }}
+            >
+              Badge dari Tantangan
+            </div>
+            <div style={{ fontSize: 12, color: "var(--tk-gray-500)" }}>Total badge</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Tab Switcher */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 18 }}>
+        {(["active", "explore"] as const).map((t) => {
+          const label = t === "active" ? "Aktif" : "Jelajahi";
+          const count = t === "active" ? joinedChallenges.length : exploreChallenges.length;
+          const isActive = tab === t;
+          return (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 7,
+                padding: "8px 18px",
+                borderRadius: 999,
+                border: isActive
+                  ? "2px solid var(--tk-blue-600)"
+                  : "2px solid var(--tk-gray-200)",
+                background: isActive ? "var(--tk-blue-50)" : "white",
+                color: isActive ? "var(--tk-blue-600)" : "var(--tk-gray-600)",
+                fontWeight: 600,
+                fontSize: 14,
+                fontFamily: "var(--tk-font-sans)",
+                cursor: "pointer",
+                transition: "all .18s",
+              }}
+            >
+              {label}
+              <span
+                style={{
+                  background: isActive ? "var(--tk-blue-600)" : "var(--tk-gray-200)",
+                  color: isActive ? "white" : "var(--tk-gray-600)",
+                  borderRadius: 999,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  padding: "1px 7px",
+                }}
+              >
+                {count}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Challenge Cards Grid */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(2, 1fr)",
+          gap: 20,
+        }}
+      >
+        {visibleChallenges.map((c) => {
+          const isJoined = joinedMap[c.id];
+          return (
+            <div
+              key={c.id}
+              className="tk-card"
+              style={{ overflow: "hidden", display: "flex", flexDirection: "column" }}
+            >
+              {/* Gradient Header */}
+              <div
+                style={{
+                  background: c.grad,
+                  height: 96,
+                  position: "relative",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                {/* Sparkle top-left area */}
+                <span
+                  className="tk-sparkle"
+                  style={{
+                    position: "absolute",
+                    top: 10,
+                    right: 14,
+                    fontSize: 14,
+                    opacity: 0.7,
+                  }}
+                >
+                  ✦
+                </span>
+                <span
+                  className="tk-sparkle"
+                  style={{
+                    position: "absolute",
+                    bottom: 12,
+                    right: 36,
+                    fontSize: 10,
+                    opacity: 0.5,
+                  }}
+                >
+                  ✦
+                </span>
+                {/* Days pill */}
+                <div
+                  style={{
+                    position: "absolute",
+                    top: 10,
+                    left: 14,
+                    background: "rgba(255,255,255,0.22)",
+                    backdropFilter: "blur(4px)",
+                    borderRadius: 999,
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: "white",
+                    padding: "3px 10px",
+                    fontFamily: "var(--tk-font-sans)",
+                  }}
+                >
+                  {c.days} hari
                 </div>
-              </div>
-              <CardTitle className="text-xl">{challenge.title}</CardTitle>
-              <CardDescription className="text-sm">
-                {challenge.description}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between text-sm">
-                <div className="flex items-center gap-2">
-                  <Users className="w-4 h-4 text-muted-foreground" />
-                  <span>{challenge.participants} peserta</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Gift className="w-4 h-4 text-muted-foreground" />
-                  <span className="font-semibold text-primary">{challenge.prize}</span>
-                </div>
+                <Trophy size={36} color="white" style={{ opacity: 0.9 }} />
               </div>
 
-              {challenge.status !== 'ended' && (
-                <div className="flex items-center gap-2 text-sm">
-                  <Clock className="w-4 h-4 text-muted-foreground" />
-                  <span>
-                    {getDaysRemaining(challenge.deadline) > 0 
-                      ? `${getDaysRemaining(challenge.deadline)} hari lagi`
-                      : 'Deadline terlewat'}
+              {/* Card Body */}
+              <div style={{ padding: 22, flex: 1, display: "flex", flexDirection: "column" }}>
+                <h3
+                  style={{
+                    fontFamily: "var(--tk-font-display)",
+                    fontWeight: 700,
+                    fontSize: 16,
+                    color: "var(--tk-ink)",
+                    margin: "0 0 6px",
+                  }}
+                >
+                  {c.name}
+                </h3>
+                <p
+                  style={{
+                    fontSize: 13,
+                    color: "var(--tk-gray-600)",
+                    lineHeight: 1.5,
+                    margin: "0 0 14px",
+                  }}
+                >
+                  {c.desc}
+                </p>
+
+                {/* Progress bar — only if joined */}
+                {isJoined && (
+                  <div style={{ marginBottom: 14 }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        fontSize: 12,
+                        fontWeight: 600,
+                        color: "var(--tk-gray-600)",
+                        marginBottom: 6,
+                      }}
+                    >
+                      <span>Progress harimu</span>
+                      <span style={{ color: "var(--tk-blue-600)" }}>{c.progress}%</span>
+                    </div>
+                    <div
+                      style={{
+                        height: 7,
+                        borderRadius: 999,
+                        background: "var(--tk-gray-100)",
+                        overflow: "hidden",
+                      }}
+                    >
+                      <div
+                        style={{
+                          height: "100%",
+                          width: `${c.progress}%`,
+                          borderRadius: 999,
+                          background:
+                            "linear-gradient(90deg, var(--tk-blue-600), #3B82F6)",
+                          transition: "width .4s",
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Meta row */}
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    fontSize: 13,
+                    marginBottom: 16,
+                    marginTop: "auto",
+                  }}
+                >
+                  <span
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 5,
+                      color: "var(--tk-gray-500)",
+                    }}
+                  >
+                    <Users size={14} />
+                    {formatJoined(c.joined)} peserta
+                  </span>
+                  <span
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 5,
+                      color: "var(--tk-orange)",
+                      fontWeight: 600,
+                    }}
+                  >
+                    <Star size={13} fill="var(--tk-orange)" />
+                    {c.reward}
                   </span>
                 </div>
-              )}
 
-              <div>
-                <p className="text-sm font-medium mb-2">Persyaratan:</p>
-                <div className="flex flex-wrap gap-1">
-                  {challenge.requirements.map((req, index) => (
-                    <Badge key={index} variant="outline" className="text-xs">
-                      {req}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex gap-2 pt-2">
-                {challenge.status === 'active' && (
-                  <Button 
-                    onClick={() => handleJoinChallenge(challenge.id)}
-                    className="flex-1"
+                {/* CTA Button */}
+                {isJoined ? (
+                  <button
+                    disabled
+                    style={{
+                      width: "100%",
+                      padding: "11px 0",
+                      borderRadius: 10,
+                      border: "2px solid var(--tk-gray-200)",
+                      background: "white",
+                      color: "var(--tk-gray-500)",
+                      fontWeight: 600,
+                      fontSize: 14,
+                      fontFamily: "var(--tk-font-sans)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 7,
+                      cursor: "not-allowed",
+                    }}
                   >
-                    Ikut Tantangan
-                  </Button>
+                    <Check size={15} />
+                    Sedang Diikuti
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => handleJoin(c.id)}
+                    style={{
+                      width: "100%",
+                      padding: "11px 0",
+                      borderRadius: 10,
+                      border: "none",
+                      background:
+                        "linear-gradient(135deg, var(--tk-blue-600), var(--tk-blue-700))",
+                      color: "white",
+                      fontWeight: 600,
+                      fontSize: 14,
+                      fontFamily: "var(--tk-font-sans)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 7,
+                      cursor: "pointer",
+                      boxShadow: "0 4px 12px rgba(29,78,216,.25)",
+                      transition: "opacity .15s",
+                    }}
+                    onMouseEnter={(e) =>
+                      ((e.currentTarget as HTMLButtonElement).style.opacity = "0.88")
+                    }
+                    onMouseLeave={(e) =>
+                      ((e.currentTarget as HTMLButtonElement).style.opacity = "1")
+                    }
+                  >
+                    Ikuti Tantangan
+                    <ArrowRight size={15} />
+                  </button>
                 )}
-                {challenge.status === 'upcoming' && (
-                  <Button variant="outline" className="flex-1">
-                    Ingatkan Saya
-                  </Button>
-                )}
-                {challenge.status === 'ended' && (
-                  <Button variant="outline" className="flex-1">
-                    Lihat Hasil
-                  </Button>
-                )}
-                <Button variant="outline" size="sm">
-                  Detail
-                </Button>
               </div>
-            </CardContent>
-          </Card>
-        ))}
+            </div>
+          );
+        })}
       </div>
 
-      {filteredChallenges.length === 0 && (
-        <Card>
-          <CardContent className="text-center py-12">
-            <Trophy className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Tidak ada tantangan ditemukan</h3>
-            <p className="text-muted-foreground">
-              Coba ubah filter pencarian atau tunggu tantangan baru
-            </p>
-          </CardContent>
-        </Card>
+      {visibleChallenges.length === 0 && (
+        <div
+          className="tk-card"
+          style={{ padding: 48, textAlign: "center", color: "var(--tk-gray-400)" }}
+        >
+          <Trophy size={40} style={{ margin: "0 auto 12px", opacity: 0.4 }} />
+          <p style={{ fontWeight: 600, fontSize: 15 }}>
+            {tab === "active"
+              ? "Belum ada tantangan yang diikuti."
+              : "Semua tantangan sudah diikuti!"}
+          </p>
+        </div>
       )}
     </div>
   );

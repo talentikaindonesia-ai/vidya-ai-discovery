@@ -5,13 +5,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Sidebar, SidebarContent, SidebarProvider } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { NotificationDropdown } from "@/components/dashboard/NotificationDropdown";
 import { WelcomeDashboard } from "@/components/dashboard/WelcomeDashboard";
 import CoursesPreview from "@/components/CoursesPreview";
-import OpportunitiesPreview from "@/components/OpportunitiesPreview"; 
+import OpportunitiesPreview from "@/components/OpportunitiesPreview";
 import CommunityPreview from "@/components/CommunityPreview";
 import { BottomNavigationBar } from "@/components/dashboard/BottomNavigationBar";
 import { CoursesSection } from "@/components/dashboard/CoursesSection";
@@ -345,56 +344,72 @@ const Dashboard = () => {
   };
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background">
-        <DashboardSidebar
-          activeSection={activeSection}
-          setActiveSection={handleSectionChange}
-          onSignOut={handleSignOut}
-          userRole={userRole}
-        />
-        <div className="flex-1 flex flex-col w-full">
-          <DashboardHeader user={user} profile={profile} />
-          
-          {/* Mobile Header - shown only on mobile */}
-          <div className="md:hidden bg-background border-b border-border px-4 py-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <img 
-                  src="/lovable-uploads/eb8d335b-30bc-4402-af4d-de439c638a0b.png" 
-                  alt="Talentika Logo" 
-                  className="w-8 h-8 object-contain"
-                />
-                <span className="font-bold text-lg bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                  Talentika
-                </span>
-              </div>
-              
-              <div className="flex items-center space-x-3">
-                <NotificationDropdown userId={user?.id} />
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={profile?.avatar_url} />
-                  <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                    {getInitials(displayName)}
-                  </AvatarFallback>
-                </Avatar>
-              </div>
-            </div>
-          </div>
+    <div
+      className="min-h-screen flex w-full"
+      style={{ background: "var(--tk-gray-50)" }}
+    >
+      {/* ── Sidebar ───────────────────────────────────────────── */}
+      <DashboardSidebar
+        activeSection={activeSection}
+        setActiveSection={handleSectionChange}
+        onSignOut={handleSignOut}
+        userRole={userRole}
+      />
 
-          <main className="flex-1 p-3 sm:p-4 md:p-6 overflow-auto pb-20 md:pb-6 mobile-container">
-            <div className="max-w-full mx-auto">
-              {renderActiveSection()}
-            </div>
-          </main>
-          
-          <BottomNavigationBar
-            activeSection={activeSection}
-            onSectionChange={handleSectionChange}
-          />
+      {/* ── Main area ─────────────────────────────────────────── */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Desktop header */}
+        <DashboardHeader user={user} profile={profile} onSignOut={handleSignOut} />
+
+        {/* Mobile header */}
+        <div
+          className="md:hidden flex items-center justify-between px-4 py-3 border-b"
+          style={{ background: "var(--tk-gray-0)", borderColor: "var(--tk-gray-200)" }}
+        >
+          <div className="flex items-center gap-2.5">
+            <img
+              src="/lovable-uploads/9e67a8cf-6f81-4abc-898b-bc665dee2b57.png"
+              alt="Talentika"
+              className="w-8 h-8 object-contain"
+            />
+            <span
+              style={{
+                fontFamily: "var(--tk-font-display)",
+                fontWeight: 700,
+                fontSize: 18,
+                color: "var(--tk-blue-600)",
+              }}
+            >
+              Talentika
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <NotificationDropdown userId={user?.id} />
+            <Avatar className="h-8 w-8">
+              <AvatarImage src={profile?.avatar_url} />
+              <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                {getInitials(displayName)}
+              </AvatarFallback>
+            </Avatar>
+          </div>
         </div>
+
+        {/* Page content */}
+        <main
+          className="flex-1 overflow-auto pb-20 md:pb-6 tk-page-in"
+          style={{ padding: "0 28px 60px" }}
+        >
+          <div className="max-w-full mx-auto pt-2">
+            {renderActiveSection()}
+          </div>
+        </main>
+
+        <BottomNavigationBar
+          activeSection={activeSection}
+          onSectionChange={handleSectionChange}
+        />
       </div>
-    </SidebarProvider>
+    </div>
   );
 };
 

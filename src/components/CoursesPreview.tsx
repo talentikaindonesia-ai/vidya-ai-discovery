@@ -4,6 +4,7 @@ import { BookOpen, Clock, Star, Users, ArrowRight, Lock } from "lucide-react";
 import { FreeLimitReached, LockedContent } from "./dashboard/LockedContent";
 import { UpgradePrompt } from "./dashboard/UpgradePrompt";
 import { useNavigate } from "react-router-dom";
+import { useUpgradeModal } from "@/contexts/UpgradeModalContext";
 
 interface CoursesPreviewProps {
   profile?: any;
@@ -11,6 +12,7 @@ interface CoursesPreviewProps {
 
 const CoursesPreview = ({ profile }: CoursesPreviewProps) => {
   const navigate = useNavigate();
+  const { openUpgradeModal } = useUpgradeModal();
   const isFreeUser = profile?.subscription_type === 'free';
   const maxCoursesForFree = 3;
   const viewedCourses = 0; // This would come from actual user data
@@ -133,7 +135,7 @@ const CoursesPreview = ({ profile }: CoursesPreviewProps) => {
                     </div>
                     <p className="font-medium text-foreground mb-2">Konten Premium</p>
                     <p className="text-sm text-muted-foreground mb-3">Upgrade untuk mengakses</p>
-                    <Button size="sm" onClick={() => navigate('/subscription')}>
+                    <Button size="sm" onClick={() => openUpgradeModal()}>
                       Buka Kunci
                     </Button>
                   </div>

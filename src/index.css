@@ -127,6 +127,169 @@ All colors MUST be HSL.
   }
 }
 
+/* ═══════════════════════════════════════════════════════
+   TALENTIKA DESIGN SYSTEM — v2 tokens
+   Matches the Claude Design handoff (talentika-dashboard)
+   ═══════════════════════════════════════════════════════ */
+:root {
+  /* Brand blues */
+  --tk-blue-50: #E8F1FF;
+  --tk-blue-100: #D6E4FF;
+  --tk-blue-200: #A9C5FF;
+  --tk-blue-500: #2563EB;
+  --tk-blue-600: #1D4ED8;
+  --tk-blue-700: #1E40AF;
+  --tk-blue-900: #0B1D3A;
+
+  /* Brand accent */
+  --tk-orange: #FF6A00;
+  --tk-orange-soft: #FFEDE2;
+  --tk-yellow: #FFC107;
+  --tk-yellow-soft: #FFF6E0;
+
+  /* Semantic */
+  --tk-green: #16A34A;
+  --tk-green-dark: #0F7A3E;
+  --tk-mint: #E6F7EF;
+  --tk-purple: #7C3AED;
+  --tk-lilac: #F0E8FF;
+  --tk-pink-soft: #FFE6F0;
+  --tk-ink: #0B1D3A;
+
+  /* Grays */
+  --tk-gray-0: #FFFFFF;
+  --tk-gray-50: #F8FAFC;
+  --tk-gray-100: #F5F7FA;
+  --tk-gray-150: #EEF1F6;
+  --tk-gray-200: #E6EAF0;
+  --tk-gray-300: #CBD5E1;
+  --tk-gray-400: #94A3B8;
+  --tk-gray-500: #64748B;
+  --tk-gray-600: #475569;
+  --tk-gray-700: #334155;
+  --tk-gray-900: #0F172A;
+
+  /* Radii */
+  --tk-radius-sm: 8px;
+  --tk-radius: 14px;
+  --tk-radius-lg: 20px;
+  --tk-radius-xl: 28px;
+
+  /* Shadows */
+  --tk-shadow-sm: 0 1px 2px rgba(11,29,58,.05);
+  --tk-shadow: 0 6px 22px -8px rgba(11,29,58,.10), 0 2px 6px -2px rgba(11,29,58,.05);
+  --tk-shadow-lg: 0 24px 60px -20px rgba(29,78,216,.22), 0 8px 20px -10px rgba(11,29,58,.08);
+
+  /* Easing */
+  --tk-ease-lift: cubic-bezier(.16,1,.3,1);
+  --tk-ease-snap: cubic-bezier(.4,0,.2,1);
+  --tk-ease-soft: cubic-bezier(.2,.7,.2,1);
+
+  /* Typography */
+  --tk-font-display: 'Poppins', system-ui, sans-serif;
+  --tk-font-sans: 'Inter', system-ui, sans-serif;
+  --tk-font-mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+/* Talentika utility classes for dashboard */
+@layer components {
+  /* Card */
+  .tk-card {
+    background: white;
+    border: 1px solid var(--tk-gray-200);
+    border-radius: var(--tk-radius);
+    padding: 20px;
+    transition: transform .2s var(--tk-ease-lift), box-shadow .2s var(--tk-ease-lift);
+  }
+  .tk-card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--tk-shadow-lg);
+  }
+
+  /* Pill badges */
+  .tk-pill {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold;
+    background: var(--tk-blue-50);
+    color: var(--tk-blue-700);
+  }
+  .tk-pill-orange { background: var(--tk-orange-soft); color: #C04400; }
+  .tk-pill-yellow { background: var(--tk-yellow-soft); color: #A47000; }
+  .tk-pill-green  { background: var(--tk-mint);        color: var(--tk-green-dark); }
+  .tk-pill-lilac  { background: var(--tk-lilac);       color: #5B21B6; }
+  .tk-pill-gray   { background: var(--tk-gray-100);   color: var(--tk-gray-700); }
+  .tk-pill-blue   { background: var(--tk-blue-600);   color: #fff; }
+
+  /* Progress bar */
+  .tk-progress {
+    height: 6px;
+    background: var(--tk-gray-150);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .tk-progress-fill {
+    height: 100%;
+    background: var(--tk-blue-600);
+    border-radius: 99px;
+    transition: width .8s var(--tk-ease-lift);
+  }
+  .tk-progress-fill-orange { background: linear-gradient(90deg, var(--tk-orange), #FF8A33); }
+  .tk-progress-fill-green  { background: linear-gradient(90deg, var(--tk-green), #22C55E); }
+
+  /* Avatar */
+  .tk-avatar {
+    @apply flex-shrink-0 flex items-center justify-center font-bold text-white rounded-full;
+    background: linear-gradient(135deg, var(--tk-blue-500), var(--tk-blue-700));
+    font-family: var(--tk-font-display);
+  }
+
+  /* Sparkle animation */
+  .tk-sparkle {
+    animation: tk-sparkle 4s ease-in-out infinite;
+  }
+  @keyframes tk-sparkle {
+    0%,100% { opacity:.6; transform: scale(.9) rotate(0deg); }
+    50%      { opacity:1;  transform: scale(1.1) rotate(15deg); }
+  }
+
+  /* Wave animation */
+  .tk-wave {
+    display: inline-block;
+    transform-origin: 70% 70%;
+    animation: tk-wave 2.4s ease-in-out infinite;
+  }
+  @keyframes tk-wave {
+    0%,100% { transform: rotate(0deg); }
+    25%     { transform: rotate(15deg); }
+    75%     { transform: rotate(-10deg); }
+  }
+
+  /* Page slide-in */
+  .tk-page-in {
+    animation: tk-pageIn .35s var(--tk-ease-lift) both;
+  }
+  @keyframes tk-pageIn {
+    from { opacity:0; transform: translateY(8px); }
+    to   { opacity:1; transform: none; }
+  }
+
+  /* Tabs */
+  .tk-tabs {
+    @apply flex gap-1 rounded-xl p-1;
+    background: var(--tk-gray-100);
+  }
+  .tk-tab-btn {
+    @apply px-4 py-2 rounded-lg text-sm font-semibold cursor-pointer border-none transition-all;
+    font-family: var(--tk-font-display);
+    color: var(--tk-gray-600);
+    background: transparent;
+  }
+  .tk-tab-btn.active {
+    background: var(--tk-blue-600);
+    color: white;
+    box-shadow: 0 4px 12px -4px rgba(29,78,216,.4);
+  }
+}
+
 @layer base {
   * {
     @apply border-border;

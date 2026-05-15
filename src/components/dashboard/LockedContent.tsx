@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Lock, Crown, Star, BookOpen, Trophy, Users, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useUpgradeModal } from "@/contexts/UpgradeModalContext";
 
 interface LockedContentProps {
   type: 'courses' | 'opportunities' | 'mentors' | 'premium-content' | 'certificates' | 'networking';
@@ -14,6 +15,7 @@ interface LockedContentProps {
 
 export const LockedContent = ({ type, title, description, features, className = "" }: LockedContentProps) => {
   const navigate = useNavigate();
+  const { openUpgradeModal } = useUpgradeModal();
 
   const getIcon = () => {
     switch (type) {
@@ -67,7 +69,7 @@ export const LockedContent = ({ type, title, description, features, className = 
 
         <div className="pt-4 border-t border-primary/20">
           <Button 
-            onClick={() => navigate('/subscription')} 
+            onClick={() => openUpgradeModal()}
             className="w-full h-12"
             size="lg"
           >
@@ -110,7 +112,7 @@ export const FreeLimitReached = ({ type, current, limit, className = "" }: FreeL
           </div>
           <Button 
             size="sm" 
-            onClick={() => navigate('/subscription')}
+            onClick={() => openUpgradeModal()}
             className="bg-amber-600 hover:bg-amber-700"
           >
             Upgrade

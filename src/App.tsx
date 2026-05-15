@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { UpgradeModalProvider } from "@/contexts/UpgradeModalContext";
 
 // ── Eager (hit on very first load or needed for error/auth states) ──────────
 import Index   from "./pages/Index";
@@ -35,6 +36,7 @@ const TalentikaJuniorLearning  = lazy(() => import("./pages/TalentikaJuniorLearn
 const TalentikaJuniorGames     = lazy(() => import("./pages/TalentikaJuniorGames"));
 const TalentikaJuniorRewards   = lazy(() => import("./pages/TalentikaJuniorRewards"));
 const MembershipDashboard   = lazy(() => import("./pages/MembershipDashboard"));
+const Settings              = lazy(() => import("./pages/Settings"));
 const Articles              = lazy(() => import("./pages/Articles"));
 const TalentikaForSchools   = lazy(() => import("./pages/TalentikaForSchools"));
 
@@ -53,10 +55,10 @@ const ContentEditor = lazy(() =>
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5,    // 5 min — skip refetch if data is fresh
-      gcTime: 1000 * 60 * 10,      // 10 min — keep unused cache
+      staleTime: 1000 * 60 * 5,
+      gcTime: 1000 * 60 * 10,
       retry: 1,
-      refetchOnWindowFocus: false,  // don't blast API on tab switch
+      refetchOnWindowFocus: false,
     },
   },
 });
@@ -66,13 +68,11 @@ const App = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // One-time initial session check
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       setLoading(false);
     });
 
-    // Live auth state changes (login / logout / token refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
     });
@@ -88,7 +88,6 @@ const App = () => {
     );
   }
 
-  // Shared loading fallback for lazy routes
   const RouteFallback = (
     <div className="min-h-screen bg-background flex items-center justify-center">
       <div className="flex flex-col items-center gap-3">
@@ -105,6 +104,7 @@ const App = () => {
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <UpgradeModalProvider>
           <ErrorBoundary>
           <Suspense fallback={RouteFallback}>
           <Routes>
@@ -126,6 +126,7 @@ const App = () => {
             <Route path="/dashboard-gamified" element={user ? <DashboardGamified /> : <Navigate to="/auth" />} />
             <Route path="/subscription" element={user ? <Subscription /> : <Navigate to="/auth" />} />
             <Route path="/profile" element={user ? <Profile /> : <Navigate to="/auth" />} />
+            <Route path="/settings" element={user ? <Settings /> : <Navigate to="/auth" />} />
             <Route path="/admin" element={user ? <Admin /> : <Navigate to="/auth" />} />
             <Route path="/admin/content/edit/:contentId" element={user ? <ContentEditor /> : <Navigate to="/auth" />} />
             <Route path="/membership" element={user ? <MembershipDashboard /> : <Navigate to="/auth" />} />
@@ -140,6 +141,7 @@ const App = () => {
           </Routes>
           </Suspense>
           </ErrorBoundary>
+          </UpgradeModalProvider>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
