@@ -27,12 +27,16 @@ interface Achievement {
   type: string;
 }
 
+// C-07: Use portfolio_items table schema instead of mock data
 interface Project {
   id: string;
   title: string;
   description: string;
-  image_url?: string;
-  project_url?: string;
+  file_url?: string;       // maps to portfolio_items.file_url
+  external_url?: string;   // maps to portfolio_items.external_url
+  item_type: string;
+  tags?: string[];
+  is_featured?: boolean;
   created_at: string;
 }
 
@@ -80,23 +84,17 @@ const PortfolioBuilder = () => {
       if (achievementsError) throw achievementsError;
       setAchievements(achievementsData || []);
 
-      // Mock projects data (you can create a projects table later)
-      setProjects([
-        {
-          id: "1",
-          title: "Website Portfolio Pribadi",
-          description: "Membuat website portfolio menggunakan React dan Tailwind CSS untuk menampilkan karya-karya saya.",
-          image_url: "/placeholder.svg",
-          project_url: "https://example.com",
-          created_at: new Date().toISOString()
-        },
-        {
-          id: "2", 
-          title: "Aplikasi To-Do List",
-          description: "Aplikasi manajemen tugas sederhana dengan fitur tambah, edit, dan hapus tugas.",
-          created_at: new Date().toISOString()
-        }
-      ]);
+      // C-07: Load real portfolio items from portfolio_items table
+      const { data: portfolioItems, error: portfolioError } = await supabase
+        .from('portfolio_items')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (portfolioError && portfolioError.code !== 'PGRST116') {
+        console.error('Error loading portfolio items:', portfolioError);
+      }
+      setProjects((portfolioItems || []) as Project[]);
 
     } catch (error: any) {
       toast.error("Gagal memuat data portfolio: " + error.message);
@@ -127,24 +125,39 @@ const PortfolioBuilder = () => {
     }
   };
 
-  const handleAddProject = () => {
+  const handleAddProject = async () => {
     if (!newProject.title || !newProject.description) {
       toast.error("Judul dan deskripsi project harus diisi!");
       return;
     }
 
-    const project: Project = {
-      id: Date.now().toString(),
-      title: newProject.title,
-      description: newProject.description,
-      project_url: newProject.project_url,
-      created_at: new Date().toISOString()
-    };
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-    setProjects(prev => [project, ...prev]);
-    setNewProject({ title: "", description: "", project_url: "" });
-    setShowAddProject(false);
-    toast.success("Project berhasil ditambahkan!");
+      // C-07: Save to real portfolio_items table
+      const { data: inserted, error } = await supabase
+        .from('portfolio_items')
+        .insert({
+          user_id: user.id,
+          title: newProject.title,
+          description: newProject.description,
+          external_url: newProject.project_url || null,
+          item_type: 'project',
+          is_public: true,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setProjects(prev => [inserted as Project, ...prev]);
+      setNewProject({ title: "", description: "", project_url: "" });
+      setShowAddProject(false);
+      toast.success("Project berhasil ditambahkan!");
+    } catch (error: any) {
+      toast.error("Gagal menambahkan project: " + error.message);
+    }
   };
 
   const sharePortfolio = () => {

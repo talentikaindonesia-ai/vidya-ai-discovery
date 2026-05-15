@@ -1,649 +1,853 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  BookOpen, 
-  Clock, 
-  Play, 
-  Search,
-  Filter,
-  Star,
-  Users,
-  Target,
-  Trophy,
-  Briefcase,
-  Heart,
-  Video,
-  FileText,
-  Headphones
+import {
+  BookOpen, Clock, Activity, Shield, Star, ChevronRight,
+  ChevronLeft, Bookmark, MoreHorizontal, Play, Video, FileText, Headphones,
+  Trophy, Target, Brain,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
-export const CoursesSection = () => {
-  const [learningContent, setLearningContent] = useState([]);
-  const [enrolledContent, setEnrolledContent] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("all");
-  const [categories, setCategories] = useState([]);
-  const [personalizedContent, setPersonalizedContent] = useState([]);
-  const [userInterests, setUserInterests] = useState([]);
-  const [assessmentResults, setAssessmentResults] = useState(null);
-  const [personalizedChallenges, setPersonalizedChallenges] = useState([]);
-  const [personalizedOpportunities, setPersonalizedOpportunities] = useState([]);
+// ─── colour tints map ────────────────────────────────────────────────────────
+const TINTS: Record<string, [string, string]> = {
+  blue:   ["var(--tk-blue-50)",    "var(--tk-blue-700)"],
+  green:  ["var(--tk-mint)",       "var(--tk-green-dark)"],
+  orange: ["var(--tk-orange-soft)","var(--tk-orange)"],
+  yellow: ["var(--tk-yellow-soft)","#A47000"],
+  purple: ["var(--tk-lilac)",      "#5B21B6"],
+  pink:   ["#FCE7F3",              "#B83280"],
+};
 
+// ─── Stat card ───────────────────────────────────────────────────────────────
+function StatCard({
+  icon: Icon, color, label, value, sub,
+}: {
+  icon: React.ElementType; color: string; label: string; value: string; sub: string;
+}) {
+  const [bg, fg] = TINTS[color] ?? TINTS.blue;
+  return (
+    <div
+      className="rounded-2xl flex items-center gap-4 transition-shadow hover:shadow-md"
+      style={{
+        background: "white",
+        border: "1px solid var(--tk-gray-200)",
+        padding: 18,
+      }}
+    >
+      <div
+        className="flex items-center justify-center rounded-2xl flex-shrink-0"
+        style={{ width: 48, height: 48, background: bg, color: fg }}
+      >
+        <Icon size={22} />
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 12, color: "var(--tk-gray-500)", fontWeight: 500 }}>{label}</div>
+        <div
+          style={{
+            fontFamily: "var(--tk-font-display)",
+            fontWeight: 700,
+            fontSize: 26,
+            color: "var(--tk-ink)",
+            lineHeight: 1.15,
+          }}
+        >
+          {value}
+        </div>
+        <div style={{ fontSize: 11.5, color: "var(--tk-gray-500)" }}>{sub}</div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Course thumbnail ────────────────────────────────────────────────────────
+const COURSE_GRADS: Record<string, string> = {
+  blue:   "linear-gradient(135deg,#DBEAFE,#93C5FD)",
+  green:  "linear-gradient(135deg,#D1FAE5,#6EE7B7)",
+  orange: "linear-gradient(135deg,#FFEDE2,#FDB97D)",
+  purple: "linear-gradient(135deg,#EDE9FE,#C4B5FD)",
+  yellow: "linear-gradient(135deg,#FFF6E0,#FDE68A)",
+};
+
+function CourseThumb({ color = "blue", icon = "📚", sm = false }: { color?: string; icon?: string; sm?: boolean }) {
+  const size = sm ? 44 : 56;
+  return (
+    <div
+      className="flex items-center justify-center flex-shrink-0 rounded-xl"
+      style={{
+        width: size,
+        height: size,
+        background: COURSE_GRADS[color] ?? COURSE_GRADS.blue,
+        fontSize: sm ? 20 : 26,
+      }}
+    >
+      {icon}
+    </div>
+  );
+}
+
+// ─── Mini calendar ───────────────────────────────────────────────────────────
+function MiniCalendar() {
+  const now = new Date();
+  const today = now.getDate();
+  const [month, setMonth] = useState(now.getMonth());
+  const [year,  setYear]  = useState(now.getFullYear());
+  // C-08: real activity days loaded from learning_progress
+  const [scheduled, setScheduled] = useState<Set<number>>(new Set());
+
+  const DAYS  = ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"];
+  const MONTHS = [
+    "Januari","Februari","Maret","April","Mei","Juni",
+    "Juli","Agustus","September","Oktober","November","Desember",
+  ];
+
+  // Load activity days from DB whenever the calendar month changes
   useEffect(() => {
-    loadUserData();
-    loadLearningContent();
-    loadCategories();
-    loadEnrolledContent();
-  }, []);
-
-  const loadUserData = async () => {
-    try {
+    (async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Load user interests
-      const { data: interests, error: interestsError } = await supabase
-        .from('user_interests')
-        .select(`
-          *,
-          interest_categories(*)
-        `)
-        .eq('user_id', user.id);
+      const startOfMonth = new Date(year, month, 1).toISOString();
+      const endOfMonth   = new Date(year, month + 1, 0, 23, 59, 59).toISOString();
 
-      if (interestsError) throw interestsError;
-      setUserInterests(interests || []);
+      const { data } = await supabase
+        .from("learning_progress")
+        .select("completed_at")
+        .eq("user_id", user.id)
+        .not("completed_at", "is", null)
+        .gte("completed_at", startOfMonth)
+        .lte("completed_at", endOfMonth);
 
-      // Load latest assessment results
-      const { data: assessment, error: assessmentError } = await supabase
-        .from('assessment_results')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
+      const days = new Set<number>(
+        (data ?? []).map(r => new Date(r.completed_at!).getDate())
+      );
+      setScheduled(days);
+    })();
+  }, [month, year]);
 
-      if (assessment) {
-        setAssessmentResults(assessment);
-      }
+  // first weekday of month (Mon=0)
+  const firstDay = (new Date(year, month, 1).getDay() + 6) % 7; // convert Sun=0 to Mon=0
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-      // Load personalized content after getting user data
-      await loadPersonalizedContent(interests, assessment);
-    } catch (error) {
-      console.error('Error loading user data:', error);
-    }
-  };
+  const cells: (number | null)[] = [
+    ...Array(firstDay).fill(null),
+    ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
+  ];
 
-  const loadPersonalizedContent = async (interests: any[], assessment: any) => {
-    try {
-      // Get user's interest category IDs
-      const interestCategoryIds = interests?.map(i => i.category_id) || [];
-      const talentAreas = assessment?.talent_areas || [];
-      const personalityType = assessment?.personality_type;
-      const careerRecommendations = assessment?.career_recommendations || [];
-
-      // Load personalized learning content based on interests, assessment and personality type
-      let contentQuery = supabase
-        .from('learning_content')
-        .select(`
-          *,
-          learning_categories(name, icon, color)
-        `);
-
-      // Filter by interest categories if available
-      if (interestCategoryIds.length > 0) {
-        contentQuery = contentQuery.in('category_id', interestCategoryIds);
-      } else if (careerRecommendations.length > 0) {
-        // Fallback to career recommendations from assessment
-        // Use an OR filter — .ilike() does NOT support | inside a pattern
-        const orFilter = careerRecommendations.map(r => `name.ilike.%${r}%`).join(',');
-        const { data: categoryData } = await supabase
-          .from('learning_categories')
-          .select('id, name')
-          .or(orFilter);
-        
-        if (categoryData && categoryData.length > 0) {
-          const categoryIds = categoryData.map(c => c.id);
-          contentQuery = contentQuery.in('category_id', categoryIds);
-        }
-      }
-
-      const { data: personalizedContentData, error: contentError } = await contentQuery
-        .eq('is_featured', true)
-        .eq('is_active', true)
-        .limit(8);
-
-      if (contentError) throw contentError;
-      setPersonalizedContent(personalizedContentData || []);
-
-      // Load personalized challenges based on user profile
-      loadPersonalizedChallenges(interests, talentAreas, personalityType);
-      
-      // Load personalized opportunities based on user profile  
-      loadPersonalizedOpportunities(interests, talentAreas, personalityType, careerRecommendations);
-    } catch (error) {
-      console.error('Error loading personalized content:', error);
-    }
-  };
-
-  const loadPersonalizedChallenges = (interests: any[], talentAreas: string[], personalityType?: string) => {
-    // Personalized challenges based on RIASEC personality type and interests
-    const riasecChallenges = {
-      realistic: [
-        { title: 'Engineering Design Challenge', category: 'Teknik', reason: 'Sesuai dengan kepribadian Realistic Anda' },
-        { title: 'Robotics Competition', category: 'Teknologi', reason: 'Cocok untuk yang suka hands-on projects' }
-      ],
-      investigative: [
-        { title: 'Data Science Challenge', category: 'Data Science', reason: 'Sesuai dengan kepribadian Investigative Anda' },
-        { title: 'Research Innovation Contest', category: 'Penelitian', reason: 'Cocok untuk analytical thinking' }
-      ],
-      artistic: [
-        { title: 'UI/UX Design Sprint', category: 'Design', reason: 'Sesuai dengan kepribadian Artistic Anda' },
-        { title: 'Creative Content Challenge', category: 'Media', reason: 'Cocok untuk creative expression' }
-      ],
-      social: [
-        { title: 'Community Impact Challenge', category: 'Sosial', reason: 'Sesuai dengan kepribadian Social Anda' },
-        { title: 'Education Innovation Contest', category: 'Pendidikan', reason: 'Cocok untuk helping others' }
-      ],
-      enterprising: [
-        { title: 'Startup Pitch Competition', category: 'Bisnis', reason: 'Sesuai dengan kepribadian Enterprising Anda' },
-        { title: 'Marketing Strategy Challenge', category: 'Marketing', reason: 'Cocok untuk leadership skills' }
-      ],
-      conventional: [
-        { title: 'Financial Analysis Challenge', category: 'Keuangan', reason: 'Sesuai dengan kepribadian Conventional Anda' },
-        { title: 'Operations Optimization Contest', category: 'Administrasi', reason: 'Cocok untuk systematic thinking' }
-      ]
-    };
-
-    const personalizedChallenges = personalityType && riasecChallenges[personalityType as keyof typeof riasecChallenges] 
-      ? riasecChallenges[personalityType as keyof typeof riasecChallenges]
-      : riasecChallenges.investigative; // default
-
-    const challenges = personalizedChallenges.map((challenge, index) => ({
-      id: (index + 1).toString(),
-      ...challenge,
-      deadline: '2024-12-31',
-      participants: 45 + index * 10,
-      prize: `Rp ${(5 - index)},000,000`,
-      isPersonalized: true
-    }));
-
-    setPersonalizedChallenges(challenges);
-  };
-
-  const loadPersonalizedOpportunities = (interests: any[], talentAreas: string[], personalityType?: string, careerRecommendations?: string[]) => {
-    // Personalized opportunities based on RIASEC personality type and career recommendations
-    const riasecOpportunities = {
-      realistic: [
-        { title: 'Engineering Intern - Manufacturing', company: 'TechCorp', type: 'internship', field: 'Teknik' },
-        { title: 'Civil Engineering Scholarship', company: 'Infrastructure Fund', type: 'scholarship', field: 'Konstruksi' }
-      ],
-      investigative: [
-        { title: 'Data Analyst Intern - Tech Startup', company: 'DataCorp', type: 'internship', field: 'Data Science' },
-        { title: 'Research Assistant Position', company: 'National Research Lab', type: 'job', field: 'Penelitian' }
-      ],
-      artistic: [
-        { title: 'UI/UX Designer Intern', company: 'Creative Studio', type: 'internship', field: 'Design' },
-        { title: 'Graphic Design Competition', company: 'Art Foundation', type: 'competition', field: 'Seni' }
-      ],
-      social: [
-        { title: 'Education Program Coordinator', company: 'NGO Foundation', type: 'job', field: 'Pendidikan' },
-        { title: 'Community Development Intern', company: 'Social Impact Org', type: 'internship', field: 'Sosial' }
-      ],
-      enterprising: [
-        { title: 'Business Development Intern', company: 'Growth Corp', type: 'internship', field: 'Bisnis' },
-        { title: 'Startup Accelerator Program', company: 'Venture Capital', type: 'competition', field: 'Kewirausahaan' }
-      ],
-      conventional: [
-        { title: 'Financial Analyst Intern', company: 'Finance Corp', type: 'internship', field: 'Keuangan' },
-        { title: 'Administrative Excellence Award', company: 'Government Org', type: 'scholarship', field: 'Administrasi' }
-      ]
-    };
-
-    const personalizedOpps = personalityType && riasecOpportunities[personalityType as keyof typeof riasecOpportunities] 
-      ? riasecOpportunities[personalityType as keyof typeof riasecOpportunities]
-      : riasecOpportunities.investigative; // default
-
-    const opportunities = personalizedOpps.map((opp, index) => ({
-      id: (index + 1).toString(),
-      ...opp,
-      location: ['Jakarta', 'Bandung', 'Surabaya'][index % 3],
-      deadline: '2024-12-30',
-      isPersonalized: true,
-      reason: `Sesuai dengan kepribadian ${personalityType} dan minat di bidang ${opp.field}`
-    }));
-
-    setPersonalizedOpportunities(opportunities);
-  };
-
-  const loadLearningContent = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('learning_content')
-        .select(`
-          *,
-          learning_categories(name, icon, color)
-        `)
-        .eq('is_active', true)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setLearningContent(data || []);
-    } catch (error) {
-      console.error('Error loading learning content:', error);
-    }
-  };
-
-  const loadCategories = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('learning_categories')
-        .select('*')
-        .eq('is_active', true)
-        .order('name');
-
-      if (error) throw error;
-      setCategories(data || []);
-    } catch (error) {
-      console.error('Error loading categories:', error);
-    }
-  };
-
-  const loadEnrolledContent = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data, error } = await supabase
-        .from('learning_progress')
-        .select(`
-          *,
-          learning_content(
-            *,
-            learning_categories(name, icon, color)
-          )
-        `)
-        .eq('user_id', user.id);
-
-      if (error) throw error;
-      setEnrolledContent(data || []);
-    } catch (error) {
-      console.error('Error loading enrolled content:', error);
-    }
-  };
-
-  const filteredContent = learningContent.filter((content: any) => {
-    const matchesSearch = content.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         content.description?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === "all" || content.category_id === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
-
-  const startLearning = async (contentId: string) => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { error } = await supabase
-        .from('learning_progress')
-        .upsert({
-          user_id: user.id,
-          content_id: contentId,
-          progress_percentage: 0,
-          status: 'in_progress'
-        });
-
-      if (error) throw error;
-      loadEnrolledContent();
-    } catch (error) {
-      console.error('Error starting learning:', error);
-    }
-  };
-
-  const getContentIcon = (contentType: string) => {
-    switch (contentType) {
-      case 'video': return Video;
-      case 'article': return FileText;
-      case 'audio': case 'podcast': return Headphones;
-      case 'course': return BookOpen;
-      default: return BookOpen;
-    }
-  };
+  const prev = () => { if (month === 0) { setMonth(11); setYear(y => y - 1); } else setMonth(m => m - 1); };
+  const next = () => { if (month === 11) { setMonth(0); setYear(y => y + 1); } else setMonth(m => m + 1); };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Konten Pembelajaran</h1>
-        <div className="flex items-center space-x-2">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <Input 
-              placeholder="Cari konten..." 
-              className="pl-10 w-64"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          <Button variant="outline" size="icon">
-            <Filter className="h-4 w-4" />
-          </Button>
+    <div>
+      {/* Header */}
+      <div
+        className="flex items-center justify-between mb-3"
+        style={{ padding: "0 4px" }}
+      >
+        <button
+          onClick={prev}
+          className="flex items-center justify-center w-7 h-7 rounded-lg transition-colors"
+          style={{ border: "none", background: "transparent", cursor: "pointer", color: "var(--tk-gray-600)" }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "var(--tk-gray-100)"; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+        >
+          <ChevronLeft size={14} />
+        </button>
+        <div style={{ fontFamily: "var(--tk-font-display)", fontWeight: 600, fontSize: 13.5 }}>
+          {MONTHS[month]} {year}
         </div>
+        <button
+          onClick={next}
+          className="flex items-center justify-center w-7 h-7 rounded-lg transition-colors"
+          style={{ border: "none", background: "transparent", cursor: "pointer", color: "var(--tk-gray-600)" }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "var(--tk-gray-100)"; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+        >
+          <ChevronRight size={14} />
+        </button>
       </div>
 
-      <Tabs defaultValue="personalized" className="w-full">
-        <TabsList>
-          <TabsTrigger value="personalized">Rekomendasi Personal</TabsTrigger>
-          <TabsTrigger value="all-courses">Semua Konten</TabsTrigger>
-          <TabsTrigger value="my-courses">Konten Saya</TabsTrigger>
-          <TabsTrigger value="completed">Selesai</TabsTrigger>
-        </TabsList>
+      {/* Day labels */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(7, 1fr)",
+          gap: 4,
+          fontSize: 11,
+          color: "var(--tk-gray-500)",
+          textAlign: "center",
+          marginBottom: 6,
+        }}
+      >
+        {DAYS.map(d => <div key={d}>{d}</div>)}
+      </div>
 
-        <TabsContent value="personalized" className="space-y-6">
-          {/* Personalized Header */}
-          <Card className="bg-gradient-subtle border-primary/20">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3 mb-4">
-                <Target className="w-6 h-6 text-primary" />
-                <h2 className="text-xl font-semibold">Rekomendasi Personal Anda</h2>
-              </div>
-              <p className="text-sm text-muted-foreground mb-4">
-                Berdasarkan hasil assessment dan minat Anda: {userInterests.map(i => i.interest_categories?.name).join(', ')}
-              </p>
-              {assessmentResults && (
-                <div className="flex flex-wrap gap-2">
-                  <Badge variant="outline" className="text-xs">
-                    <Heart className="w-3 h-3 mr-1" />
-                    Tipe: {assessmentResults.personality_type}
-                  </Badge>
-                  {/* learning_style is not in the assessment_results schema — removed */}
-                  {assessmentResults.talent_areas?.map((talent: string, idx: number) => (
-                    <Badge key={idx} variant="outline" className="text-xs">
-                      {talent}
-                    </Badge>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Personalized Content */}
-          <div>
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <BookOpen className="w-5 h-5" />
-              Konten yang Direkomendasikan
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {personalizedContent.map((content: any) => (
-                <Card key={content.id} className="overflow-hidden hover:shadow-lg transition-shadow border-primary/20">
-                  <div className="aspect-video bg-gradient-primary relative">
-                    <Badge className="absolute top-3 left-3 bg-primary text-primary-foreground">
-                      Rekomendasi
-                    </Badge>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="text-center text-white">
-                        <span className="text-4xl mb-2 block">
-                          {content.learning_categories?.icon || '📚'}
-                        </span>
-                        <Badge variant="secondary" className="bg-white/20 text-white">
-                          {content.difficulty_level}
-                        </Badge>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <CardContent className="p-4">
-                    <div className="space-y-3">
-                      <div>
-                        <h4 className="font-semibold text-lg line-clamp-2">{content.title}</h4>
-                        <p className="text-sm text-muted-foreground line-clamp-2">
-                          {content.description}
-                        </p>
-                      </div>
-                      
-                      <div className="flex items-center justify-between text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Clock className="w-4 h-4" />
-                          <span>{Math.round(content.duration_minutes / 60)}h {content.duration_minutes % 60}m</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                          <span>4.8</span>
-                        </div>
-                      </div>
-                      
-                      <Button 
-                        className="w-full" 
-                        onClick={() => startLearning(content.id)}
-                      >
-                        <Play className="w-4 h-4 mr-2" />
-                        Mulai Belajar
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-
-          {/* Personalized Challenges */}
-          <div>
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <Trophy className="w-5 h-5" />
-              Tantangan untuk Anda
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {personalizedChallenges.map((challenge: any) => (
-                <Card key={challenge.id} className="hover:shadow-lg transition-shadow border-orange-200">
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between mb-3">
-                      <Trophy className="w-6 h-6 text-orange-500" />
-                      <Badge className="bg-orange-100 text-orange-800">Rekomendasi</Badge>
-                    </div>
-                    <h4 className="font-semibold mb-2">{challenge.title}</h4>
-                    <p className="text-xs text-muted-foreground mb-3">{challenge.reason}</p>
-                    <div className="flex items-center justify-between text-sm text-muted-foreground">
-                      <span>{challenge.participants} peserta</span>
-                      <span className="font-semibold text-orange-600">{challenge.prize}</span>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-
-          {/* Personalized Opportunities */}
-          <div>
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <Briefcase className="w-5 h-5" />
-              Peluang untuk Anda
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {personalizedOpportunities.map((opportunity: any) => (
-                <Card key={opportunity.id} className="hover:shadow-lg transition-shadow border-blue-200">
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between mb-3">
-                      <Briefcase className="w-6 h-6 text-blue-500" />
-                      <Badge className="bg-blue-100 text-blue-800">
-                        {opportunity.type === 'job' ? 'Pekerjaan' : 
-                         opportunity.type === 'internship' ? 'Magang' : 
-                         opportunity.type === 'scholarship' ? 'Beasiswa' : 'Kompetisi'}
-                      </Badge>
-                    </div>
-                    <h4 className="font-semibold mb-1">{opportunity.title}</h4>
-                    <p className="text-sm text-muted-foreground mb-2">{opportunity.company}</p>
-                    <p className="text-xs text-muted-foreground mb-3">{opportunity.reason}</p>
-                    <div className="flex items-center justify-between text-sm text-muted-foreground">
-                      <span>{opportunity.location}</span>
-                      <span>{opportunity.field}</span>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="all-courses" className="space-y-4">
-          {/* Category Filter */}
-          <div className="flex flex-wrap gap-2 mb-4">
-            <Badge 
-              variant={selectedCategory === "all" ? "default" : "outline"}
-              className="cursor-pointer"
-              onClick={() => setSelectedCategory("all")}
+      {/* Dates grid */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4 }}>
+        {cells.map((d, i) => {
+          if (!d) return <div key={i} />;
+          const isToday = d === today && month === now.getMonth() && year === now.getFullYear();
+          const isSch   = scheduled.has(d);
+          return (
+            <div
+              key={i}
+              style={{
+                aspectRatio: "1/1",
+                display: "grid",
+                placeItems: "center",
+                borderRadius: "50%",
+                fontSize: 12.5,
+                fontFamily: "var(--tk-font-display)",
+                fontWeight: isToday || isSch ? 700 : 500,
+                background: isToday ? "var(--tk-blue-600)" : isSch ? "var(--tk-blue-50)" : "transparent",
+                color: isToday ? "#fff" : isSch ? "var(--tk-blue-700)" : "var(--tk-gray-700)",
+                cursor: "pointer",
+              }}
             >
-              Semua
-            </Badge>
-            {categories.map((category: any) => (
-              <Badge 
-                key={category.id}
-                variant={selectedCategory === category.id ? "default" : "outline"}
-                className="cursor-pointer"
-                onClick={() => setSelectedCategory(category.id)}
-              >
-                {category.name}
-              </Badge>
-            ))}
+              {d}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ─── Badge / hexagon icon ────────────────────────────────────────────────────
+function BadgeHex({ icon: Icon, color, size = 52 }: { icon: React.ElementType; color: string; size?: number }) {
+  const [bg, fg] = TINTS[color] ?? TINTS.blue;
+  return (
+    <div
+      style={{
+        width: size, height: size,
+        background: `radial-gradient(circle at 30% 30%, ${bg}, ${fg})`,
+        clipPath: "polygon(50% 0%, 95% 25%, 95% 75%, 50% 100%, 5% 75%, 5% 25%)",
+        display: "grid",
+        placeItems: "center",
+        color: "#fff",
+        flexShrink: 0,
+      }}
+    >
+      <Icon size={size * 0.4} />
+    </div>
+  );
+}
+
+// ─── Filter dropdown ─────────────────────────────────────────────────────────
+const STATUS_OPTS = ["Semua Status", "Sedang Berjalan", "Selesai", "Belum Dimulai"];
+
+function FilterDropdown({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ position: "relative" }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="flex items-center gap-2 rounded-xl transition-colors"
+        style={{
+          padding: "8px 14px",
+          background: "white",
+          border: "1px solid var(--tk-gray-200)",
+          cursor: "pointer",
+          fontFamily: "var(--tk-font-display)",
+          fontWeight: 600,
+          fontSize: 13,
+          color: "var(--tk-gray-700)",
+        }}
+      >
+        {value}
+        <ChevronRight
+          size={14}
+          style={{ transform: open ? "rotate(90deg)" : "rotate(0deg)", transition: ".15s" }}
+        />
+      </button>
+      {open && (
+        <div
+          className="tk-page-in"
+          style={{
+            position: "absolute",
+            right: 0,
+            top: "calc(100% + 6px)",
+            background: "white",
+            borderRadius: 12,
+            boxShadow: "var(--tk-shadow-lg)",
+            border: "1px solid var(--tk-gray-200)",
+            minWidth: 200,
+            padding: 6,
+            zIndex: 30,
+          }}
+          onMouseLeave={() => setOpen(false)}
+        >
+          {STATUS_OPTS.map(o => (
+            <div
+              key={o}
+              onClick={() => { onChange(o); setOpen(false); }}
+              style={{
+                padding: "8px 12px",
+                borderRadius: 8,
+                cursor: "pointer",
+                fontSize: 13.5,
+                color: o === value ? "var(--tk-blue-700)" : "var(--tk-gray-700)",
+                background: o === value ? "var(--tk-blue-50)" : "transparent",
+                fontWeight: o === value ? 600 : 500,
+                fontFamily: "var(--tk-font-sans)",
+              }}
+              onMouseEnter={e => {
+                if (o !== value) (e.currentTarget as HTMLElement).style.background = "var(--tk-gray-50)";
+              }}
+              onMouseLeave={e => {
+                if (o !== value) (e.currentTarget as HTMLElement).style.background = "transparent";
+              }}
+            >
+              {o}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+const COURSE_COLORS = ["blue", "green", "orange", "purple", "yellow"];
+const COURSE_ICONS  = ["📚", "🎨", "💻", "🔬", "🎯", "✏️", "🏆", "🌐"];
+
+function courseColor(idx: number) { return COURSE_COLORS[idx % COURSE_COLORS.length]; }
+function courseIcon(idx: number)  { return COURSE_ICONS[idx  % COURSE_ICONS.length];  }
+
+function getContentIcon(t: string) {
+  switch (t) {
+    case "video":   return Video;
+    case "article": return FileText;
+    case "podcast": return Headphones;
+    default:        return BookOpen;
+  }
+}
+
+// ─── Main component ──────────────────────────────────────────────────────────
+const PAGE_SIZE = 5;
+
+export const CoursesSection = () => {
+  const navigate = useNavigate();
+
+  const [enrolledContent,   setEnrolledContent]   = useState<any[]>([]);
+  const [personalizedContent, setPersonalizedContent] = useState<any[]>([]);
+  const [assessmentResults, setAssessmentResults] = useState<any>(null);
+  const [userInterests,     setUserInterests]     = useState<any[]>([]);
+  const [filter,            setFilter]            = useState("Semua Status");
+  const [page,              setPage]              = useState(1);
+  const [loading,           setLoading]           = useState(true);
+
+  // derived stats
+  const totalHours = Math.round(
+    enrolledContent.reduce((s: number, e: any) =>
+      s + (e.learning_content?.duration_minutes ?? 0), 0
+    ) / 60
+  );
+  const avgProgress = enrolledContent.length
+    ? Math.round(
+        enrolledContent.reduce((s: number, e: any) => s + (e.progress_percentage ?? 0), 0) /
+        enrolledContent.length
+      )
+    : 0;
+  const certCount = enrolledContent.filter((e: any) => e.status === "completed").length;
+
+  // filter applied
+  const filtered = enrolledContent.filter((e: any) => {
+    if (filter === "Semua Status") return true;
+    if (filter === "Selesai")        return e.status === "completed";
+    if (filter === "Belum Dimulai")  return e.status === "not_started" || !e.status;
+    return e.status === "in_progress";
+  });
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const pageItems  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const [
+          { data: enrolled },
+          { data: interests },
+          { data: assessment },
+        ] = await Promise.all([
+          supabase
+            .from("learning_progress")
+            .select("*, learning_content(*, learning_categories(name, icon, color))")
+            .eq("user_id", user.id),
+          supabase
+            .from("user_interests")
+            .select("*, interest_categories(*)")
+            .eq("user_id", user.id),
+          supabase
+            .from("assessment_results")
+            .select("*")
+            .eq("user_id", user.id)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle(),
+        ]);
+
+        setEnrolledContent(enrolled  ?? []);
+        setUserInterests(interests   ?? []);
+        setAssessmentResults(assessment);
+
+        // load recommendations
+        const catIds = (interests ?? []).map((i: any) => i.category_id);
+        const query = supabase
+          .from("learning_content")
+          .select("*, learning_categories(name, icon, color)")
+          .eq("is_active", true)
+          .limit(4);
+
+        const { data: recs } = catIds.length
+          ? await query.in("category_id", catIds)
+          : await query;
+        setPersonalizedContent(recs ?? []);
+      } catch (err) {
+        console.error("CoursesSection load error:", err);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  const handleContinue = (contentId: string) => {
+    navigate(`/learning?content=${contentId}`);
+  };
+
+  // reset page when filter changes
+  const handleFilter = (v: string) => { setFilter(v); setPage(1); };
+
+  return (
+    <div className="tk-page-in" style={{ paddingTop: 8 }}>
+      {/* ── Page header ────────────────────────────────────────── */}
+      <div
+        className="flex items-end justify-between flex-wrap gap-4"
+        style={{ padding: "8px 0 24px" }}
+      >
+        <div>
+          <h1
+            style={{
+              fontFamily: "var(--tk-font-display)",
+              fontWeight: 700,
+              fontSize: 30,
+              color: "var(--tk-ink)",
+              marginBottom: 6,
+              letterSpacing: "-.02em",
+            }}
+          >
+            Kursus Saya
+          </h1>
+          <p style={{ color: "var(--tk-gray-500)", margin: 0, fontSize: 14 }}>
+            Kelola dan lanjutkan pembelajaranmu untuk mencapai tujuan terbaik.
+          </p>
+        </div>
+        <FilterDropdown value={filter} onChange={handleFilter} />
+      </div>
+
+      {/* ── 4-col stat cards ───────────────────────────────────── */}
+      <div
+        className="grid gap-4 mb-5"
+        style={{ gridTemplateColumns: "repeat(4, 1fr)" }}
+      >
+        <StatCard icon={BookOpen} color="blue"   label="Kursus Aktif"       value={String(enrolledContent.length)} sub="Lanjutkan belajar!" />
+        <StatCard icon={Clock}    color="green"  label="Jam Belajar"         value={String(totalHours)}             sub="Jam" />
+        <StatCard icon={Activity} color="yellow" label="Progress Rata-rata"  value={`${avgProgress}%`}              sub="Semangat!" />
+        <StatCard icon={Shield}   color="purple" label="Sertifikat"          value={String(certCount)}              sub="Sertifikat diperoleh" />
+      </div>
+
+      {/* ── Main 2-col area ────────────────────────────────────── */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 360px", gap: 20 }}>
+        {/* LEFT: course list */}
+        <div
+          className="rounded-2xl overflow-hidden"
+          style={{
+            background: "white",
+            border: "1px solid var(--tk-gray-200)",
+          }}
+        >
+          {/* Card header */}
+          <div
+            className="flex items-center justify-between"
+            style={{ padding: "20px 22px 14px" }}
+          >
+            <h3
+              style={{
+                fontFamily: "var(--tk-font-display)",
+                fontWeight: 700,
+                fontSize: 16,
+                color: "var(--tk-ink)",
+              }}
+            >
+              Kursus Aktif
+            </h3>
+            <button
+              style={{
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                color: "var(--tk-blue-600)",
+                fontFamily: "var(--tk-font-display)",
+                fontWeight: 600,
+                fontSize: 13,
+              }}
+            >
+              Lihat Semua
+            </button>
           </div>
 
-          {/* Content Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredContent.map((content: any) => {
-              const ContentIcon = getContentIcon(content.content_type);
-              
+          {loading ? (
+            <div style={{ padding: "32px 22px", textAlign: "center", color: "var(--tk-gray-400)" }}>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2" />
+              Memuat kursus…
+            </div>
+          ) : pageItems.length === 0 ? (
+            <div style={{ padding: "40px 22px", textAlign: "center" }}>
+              <BookOpen size={40} style={{ color: "var(--tk-gray-300)", margin: "0 auto 12px" }} />
+              <div style={{ fontFamily: "var(--tk-font-display)", fontWeight: 600, color: "var(--tk-gray-500)" }}>
+                Belum ada kursus
+              </div>
+              <div style={{ fontSize: 13, color: "var(--tk-gray-400)", marginTop: 4 }}>
+                Mulai belajar sekarang!
+              </div>
+            </div>
+          ) : (
+            pageItems.map((enrollment: any, idx: number) => {
+              const content  = enrollment.learning_content ?? {};
+              const progress = enrollment.progress_percentage ?? 0;
+              const color    = courseColor(idx + (page - 1) * PAGE_SIZE);
+              const icon     = content.learning_categories?.icon ?? courseIcon(idx);
+              const modules  = Math.ceil((content.duration_minutes ?? 60) / 12);
+
               return (
-                <Card key={content.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                  <div className="aspect-video bg-muted relative flex items-center justify-center">
-                    <ContentIcon className="w-12 h-12 text-muted-foreground" />
-                    <div className="absolute top-3 left-3">
-                      <Badge variant="secondary">
-                        {content.content_type}
-                      </Badge>
+                <div
+                  key={enrollment.id}
+                  className="flex items-center gap-4"
+                  style={{
+                    padding: "18px 22px",
+                    borderTop: "1px solid var(--tk-gray-150)",
+                  }}
+                >
+                  <CourseThumb color={color} icon={icon} />
+
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div
+                      style={{
+                        fontFamily: "var(--tk-font-display)",
+                        fontWeight: 600,
+                        fontSize: 15,
+                        color: "var(--tk-ink)",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}
+                    >
+                      {content.title ?? "Kursus"}
                     </div>
-                    <div className="absolute top-3 right-3">
-                      <Badge variant="outline">
-                        {content.difficulty_level}
-                      </Badge>
+                    <div style={{ fontSize: 12.5, color: "var(--tk-gray-500)", marginTop: 2 }}>
+                      {content.learning_categories?.name ?? "Umum"} · {modules} Modul
                     </div>
-                  </div>
-                  
-                  <CardContent className="p-4">
-                    <div className="space-y-3">
-                      <div>
-                        <h4 className="font-semibold line-clamp-2">{content.title}</h4>
-                        <p className="text-sm text-muted-foreground line-clamp-2">
-                          {content.description}
-                        </p>
-                      </div>
-                      
-                      <div className="flex items-center justify-between text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Clock className="w-4 h-4" />
-                          <span>{content.duration_minutes}m</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Users className="w-4 h-4" />
-                          <span>{content.total_enrollments || 0}</span>
-                        </div>
-                      </div>
-                      
-                      <Button 
-                        className="w-full" 
-                        onClick={() => startLearning(content.id)}
+                    {/* progress bar */}
+                    <div className="flex items-center gap-3 mt-2.5">
+                      <div
+                        className="flex-1 rounded-full"
+                        style={{ height: 6, background: "var(--tk-gray-150)", maxWidth: 280 }}
                       >
-                        <Play className="w-4 h-4 mr-2" />
-                        Mulai Belajar
-                      </Button>
+                        <div
+                          className="rounded-full"
+                          style={{
+                            height: "100%",
+                            width: `${progress}%`,
+                            background: "var(--tk-blue-600)",
+                            transition: "width .8s var(--tk-ease-lift, ease)",
+                          }}
+                        />
+                      </div>
+                      <span
+                        style={{
+                          fontFamily: "var(--tk-font-display)",
+                          fontWeight: 700,
+                          color: "var(--tk-blue-700)",
+                          fontSize: 13,
+                        }}
+                      >
+                        {progress}%
+                      </span>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+
+                  {/* Continue button */}
+                  <button
+                    onClick={() => handleContinue(content.id)}
+                    className="flex items-center gap-1.5 rounded-xl transition-colors"
+                    style={{
+                      padding: "7px 14px",
+                      background: "var(--tk-gray-50)",
+                      border: "1px solid var(--tk-gray-200)",
+                      cursor: "pointer",
+                      fontFamily: "var(--tk-font-display)",
+                      fontWeight: 600,
+                      fontSize: 13,
+                      color: "var(--tk-gray-700)",
+                      whiteSpace: "nowrap",
+                    }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "var(--tk-gray-100)"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "var(--tk-gray-50)"; }}
+                  >
+                    <Play size={13} /> Lanjutkan
+                  </button>
+
+                  {/* More options */}
+                  <button
+                    className="flex items-center justify-center w-8 h-8 rounded-lg transition-colors"
+                    style={{ border: "none", background: "transparent", cursor: "pointer", color: "var(--tk-gray-400)" }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "var(--tk-gray-100)"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+                  >
+                    <MoreHorizontal size={16} />
+                  </button>
+                </div>
               );
-            })}
-          </div>
-        </TabsContent>
+            })
+          )}
 
-        <TabsContent value="my-courses" className="space-y-4">
-          <div className="grid gap-4">
-            {enrolledContent.map((enrollment: any) => (
-              <Card key={enrollment.id} className="overflow-hidden">
-                <div className="flex">
-                  <div className="w-24 h-24 bg-muted flex items-center justify-center">
-                    <span className="text-2xl">
-                      {enrollment.learning_content?.learning_categories?.icon || '📚'}
-                    </span>
-                  </div>
-                  <div className="flex-1 p-4">
-                    <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <h4 className="font-semibold">
-                          {enrollment.learning_content?.title}
-                        </h4>
-                        <p className="text-sm text-muted-foreground">
-                          {enrollment.learning_content?.description}
-                        </p>
-                      </div>
-                      <Badge variant="outline">
-                        {enrollment.status || 'in_progress'}
-                      </Badge>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>Progress</span>
-                        <span>{enrollment.progress_percentage}%</span>
-                      </div>
-                      <Progress value={enrollment.progress_percentage} className="h-2" />
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            ))}
+          {/* Pagination */}
+          <div
+            className="flex items-center justify-between"
+            style={{
+              padding: "14px 22px",
+              borderTop: "1px solid var(--tk-gray-150)",
+            }}
+          >
+            <span style={{ fontSize: 12.5, color: "var(--tk-gray-500)" }}>
+              Menampilkan {filtered.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1}–
+              {Math.min(page * PAGE_SIZE, filtered.length)} dari {filtered.length} kursus
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="flex items-center justify-center w-8 h-8 rounded-lg transition-colors"
+                style={{
+                  border: "1px solid var(--tk-gray-200)",
+                  background: "transparent",
+                  cursor: page === 1 ? "default" : "pointer",
+                  color: page === 1 ? "var(--tk-gray-300)" : "var(--tk-gray-600)",
+                }}
+              >
+                <ChevronLeft size={14} />
+              </button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+                <button
+                  key={p}
+                  onClick={() => setPage(p)}
+                  style={{
+                    width: 32, height: 32, borderRadius: 8, border: "none",
+                    cursor: "pointer",
+                    fontFamily: "var(--tk-font-display)", fontWeight: 700, fontSize: 13,
+                    background: p === page ? "var(--tk-blue-600)" : "transparent",
+                    color: p === page ? "#fff" : "var(--tk-gray-700)",
+                  }}
+                >
+                  {p}
+                </button>
+              ))}
+              <button
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className="flex items-center justify-center w-8 h-8 rounded-lg transition-colors"
+                style={{
+                  border: "1px solid var(--tk-gray-200)",
+                  background: "transparent",
+                  cursor: page === totalPages ? "default" : "pointer",
+                  color: page === totalPages ? "var(--tk-gray-300)" : "var(--tk-gray-600)",
+                }}
+              >
+                <ChevronRight size={14} />
+              </button>
+            </div>
           </div>
-        </TabsContent>
+        </div>
 
-        <TabsContent value="completed" className="space-y-4">
-          <div className="grid gap-4">
-            {enrolledContent
-              .filter((enrollment: any) => enrollment.status === 'completed')
-              .map((enrollment: any) => (
-              <Card key={enrollment.id} className="overflow-hidden">
-                <div className="flex">
-                  <div className="w-24 h-24 bg-muted flex items-center justify-center">
-                    <span className="text-2xl">
-                      {enrollment.learning_content?.learning_categories?.icon || '📚'}
-                    </span>
-                  </div>
-                  <div className="flex-1 p-4">
-                    <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <h4 className="font-semibold">
-                          {enrollment.learning_content?.title}
-                        </h4>
-                        <p className="text-sm text-muted-foreground">
-                          Diselesaikan pada {new Date(enrollment.completed_at).toLocaleDateString('id-ID')}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge className="bg-green-100 text-green-800">
-                          Selesai
-                        </Badge>
-                        <div className="flex items-center gap-1">
-                          <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                          <span className="text-sm">{enrollment.rating || 'Belum dinilai'}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <Progress value={100} className="h-2" />
-                  </div>
-                </div>
-              </Card>
-            ))}
+        {/* RIGHT: sidebar */}
+        <div className="flex flex-col gap-4">
+          {/* Mini calendar */}
+          <div
+            className="rounded-2xl"
+            style={{
+              background: "white",
+              border: "1px solid var(--tk-gray-200)",
+              padding: "18px 20px",
+            }}
+          >
+            <h3
+              style={{
+                fontFamily: "var(--tk-font-display)",
+                fontWeight: 700,
+                fontSize: 15,
+                color: "var(--tk-ink)",
+                marginBottom: 14,
+              }}
+            >
+              Kalender <span style={{ color: "var(--tk-gray-500)", fontWeight: 600 }}>Belajar</span>
+            </h3>
+            <MiniCalendar />
           </div>
-        </TabsContent>
-      </Tabs>
+
+          {/* Recommendations */}
+          <div
+            className="rounded-2xl"
+            style={{
+              background: "white",
+              border: "1px solid var(--tk-gray-200)",
+              padding: "18px 20px",
+            }}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <h3
+                style={{
+                  fontFamily: "var(--tk-font-display)",
+                  fontWeight: 700,
+                  fontSize: 15,
+                  color: "var(--tk-ink)",
+                }}
+              >
+                Rekomendasi <span style={{ color: "var(--tk-gray-500)", fontWeight: 600 }}>Untukmu</span>
+              </h3>
+              <button
+                style={{
+                  background: "none", border: "none", cursor: "pointer",
+                  color: "var(--tk-blue-600)", fontFamily: "var(--tk-font-display)",
+                  fontWeight: 600, fontSize: 13,
+                }}
+              >
+                Lihat Semua
+              </button>
+            </div>
+
+            {personalizedContent.length === 0 ? (
+              <div style={{ padding: "16px 0", textAlign: "center", color: "var(--tk-gray-400)", fontSize: 13 }}>
+                Belum ada rekomendasi
+              </div>
+            ) : (
+              personalizedContent.map((rec: any, idx: number) => (
+                <div
+                  key={rec.id}
+                  className="flex items-center gap-3"
+                  style={{
+                    padding: "10px 0",
+                    borderTop: idx === 0 ? "none" : "1px solid var(--tk-gray-150)",
+                  }}
+                >
+                  <CourseThumb color={courseColor(idx)} icon={rec.learning_categories?.icon ?? courseIcon(idx)} sm />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div
+                      style={{
+                        fontFamily: "var(--tk-font-display)",
+                        fontWeight: 600,
+                        fontSize: 13.5,
+                        color: "var(--tk-ink)",
+                        lineHeight: 1.25,
+                        display: "-webkit-box",
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
+                      }}
+                    >
+                      {rec.title}
+                    </div>
+                    <div style={{ fontSize: 11.5, color: "var(--tk-gray-500)", marginTop: 2 }}>
+                      {rec.learning_categories?.name ?? "Umum"}
+                    </div>
+                    <div className="flex items-center gap-1 mt-1" style={{ fontSize: 11.5, color: "var(--tk-gray-700)" }}>
+                      <Star size={12} style={{ color: "var(--tk-yellow)", fill: "var(--tk-yellow)" }} />
+                      4.8
+                    </div>
+                  </div>
+                  <button
+                    className="flex items-center justify-center w-8 h-8 rounded-lg transition-colors"
+                    style={{ border: "none", background: "transparent", cursor: "pointer", color: "var(--tk-gray-400)" }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "var(--tk-gray-100)"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+                  >
+                    <Bookmark size={14} />
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Latest achievement */}
+          <div
+            className="rounded-2xl"
+            style={{
+              background: "white",
+              border: "1px solid var(--tk-gray-200)",
+              padding: "18px 20px",
+              position: "relative",
+              overflow: "hidden",
+            }}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <h3
+                style={{
+                  fontFamily: "var(--tk-font-display)",
+                  fontWeight: 700,
+                  fontSize: 15,
+                  color: "var(--tk-ink)",
+                }}
+              >
+                Pencapaian <span style={{ color: "var(--tk-gray-500)", fontWeight: 600 }}>Terbaru</span>
+              </h3>
+              <button
+                style={{
+                  background: "none", border: "none", cursor: "pointer",
+                  color: "var(--tk-blue-600)", fontFamily: "var(--tk-font-display)",
+                  fontWeight: 600, fontSize: 13,
+                }}
+              >
+                Lihat Semua
+              </button>
+            </div>
+
+            <div className="flex items-center gap-3" style={{ padding: "8px 0" }}>
+              <BadgeHex icon={Star} color="green" size={52} />
+              <div>
+                <div
+                  style={{
+                    fontFamily: "var(--tk-font-display)",
+                    fontWeight: 700,
+                    color: "var(--tk-ink)",
+                    fontSize: 14,
+                  }}
+                >
+                  Consistent Learner
+                </div>
+                <div style={{ fontSize: 12, color: "var(--tk-gray-500)" }}>
+                  Belajar selama 7 hari berturut-turut
+                </div>
+                <div style={{ fontSize: 11.5, color: "var(--tk-gray-400)", marginTop: 2 }}>
+                  Diperoleh 2 hari lalu
+                </div>
+              </div>
+              <span
+                className="tk-sparkle"
+                style={{
+                  position: "absolute",
+                  top: 12,
+                  right: 16,
+                  fontSize: 16,
+                  color: "var(--tk-yellow)",
+                }}
+              >
+                ✦
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

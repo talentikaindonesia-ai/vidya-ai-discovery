@@ -1,356 +1,571 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  User, 
-  Trophy, 
-  Target, 
-  Calendar, 
-  TrendingUp, 
-  Award,
-  BookOpen,
-  Users,
-  Lightbulb,
-  Share2,
-  ArrowLeft
-} from "lucide-react";
+import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
+import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
+import { BottomNavigationBar } from "@/components/dashboard/BottomNavigationBar";
+import { User } from "@supabase/supabase-js";
 import { toast } from "sonner";
+import {
+  BookOpen, Trophy, Star, TrendingUp, Award,
+} from "lucide-react";
+
+// ─── Types ─────────────────────────────────────────────────────────────────────
+
+type ColorKey = "blue" | "green" | "orange" | "yellow" | "purple";
 
 interface TimelineItem {
-  id: string;
-  type: 'assessment' | 'course' | 'achievement' | 'opportunity';
+  icon: React.ElementType;
+  color: ColorKey;
+  time: string;
   title: string;
-  description: string;
-  date: string;
-  badge?: string;
-  progress?: number;
+  meta: string;
 }
+
+interface TimelineGroup {
+  date: string;
+  items: TimelineItem[];
+}
+
+// ─── Color tints ───────────────────────────────────────────────────────────────
+
+const TINTS: Record<ColorKey, [string, string]> = {
+  blue:   ["var(--tk-blue-50,#E8F1FF)",      "var(--tk-blue-700,#1E40AF)"],
+  green:  ["var(--tk-mint,#D1FAE5)",          "var(--tk-green-dark,#0F7A3E)"],
+  orange: ["var(--tk-orange-soft,#FFEDE2)",   "var(--tk-orange,#FF6A00)"],
+  yellow: ["var(--tk-yellow-soft,#FFF6E0)",   "#A47000"],
+  purple: ["var(--tk-lilac,#EDE9FE)",         "#5B21B6"],
+};
+
+// ─── Helpers ───────────────────────────────────────────────────────────────────
+
+/** Group an array of items by a date-string key */
+function groupByDate(items: Array<{ dateKey: string; item: TimelineItem }>): TimelineGroup[] {
+  const map = new Map<string, TimelineItem[]>();
+  for (const { dateKey, item } of items) {
+    if (!map.has(dateKey)) map.set(dateKey, []);
+    map.get(dateKey)!.push(item);
+  }
+  return Array.from(map.entries()).map(([date, items]) => ({ date, items }));
+}
+
+function friendlyDate(iso: string): string {
+  const d = new Date(iso);
+  const now = new Date();
+  const todayStr = now.toDateString();
+  const yest = new Date(now); yest.setDate(yest.getDate() - 1);
+  if (d.toDateString() === todayStr) return "Hari Ini";
+  if (d.toDateString() === yest.toDateString()) return "Kemarin";
+  return d.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
+}
+
+function formatTime(iso: string): string {
+  return new Date(iso).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+}
+
+// ─── Filter options ────────────────────────────────────────────────────────────
+
+const FILTERS = ["Semua aktivitas", "Belajar", "Pencapaian", "Komunitas"];
+
+// ─── Sub-components ────────────────────────────────────────────────────────────
+
+const FilterDropdown = ({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+}) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  return (
+    <div ref={ref} style={{ position: "relative" }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          background: "#fff",
+          border: "1.5px solid var(--tk-gray-200, #E5E7EB)",
+          borderRadius: 10,
+          padding: "8px 14px",
+          fontSize: 13.5,
+          fontFamily: "var(--tk-font-sans, 'Inter', sans-serif)",
+          color: "var(--tk-ink, #0B1D3A)",
+          cursor: "pointer",
+          fontWeight: 500,
+        }}
+      >
+        {value}
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </button>
+      {open && (
+        <div
+          style={{
+            position: "absolute",
+            top: "calc(100% + 6px)",
+            right: 0,
+            background: "#fff",
+            border: "1.5px solid var(--tk-gray-200, #E5E7EB)",
+            borderRadius: 12,
+            overflow: "hidden",
+            boxShadow: "0 8px 24px rgba(0,0,0,.10)",
+            zIndex: 50,
+            minWidth: 190,
+          }}
+        >
+          {FILTERS.map(f => (
+            <button
+              key={f}
+              onClick={() => { onChange(f); setOpen(false); }}
+              style={{
+                display: "block",
+                width: "100%",
+                textAlign: "left",
+                padding: "10px 16px",
+                fontSize: 13.5,
+                fontFamily: "var(--tk-font-sans, 'Inter', sans-serif)",
+                color: f === value ? "var(--tk-blue-600, #1D4ED8)" : "var(--tk-ink, #0B1D3A)",
+                fontWeight: f === value ? 600 : 400,
+                background: f === value ? "var(--tk-blue-50, #E8F1FF)" : "transparent",
+                border: "none",
+                cursor: "pointer",
+              }}
+            >
+              {f}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const TimelineDot = ({
+  icon: Icon,
+  color,
+}: {
+  icon: React.ElementType;
+  color: ColorKey;
+}) => {
+  const [bg, fg] = TINTS[color];
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: -32,
+        width: 32,
+        height: 32,
+        borderRadius: "50%",
+        background: bg,
+        color: fg,
+        border: "3px solid #fff",
+        display: "grid",
+        placeItems: "center",
+        boxShadow: "0 2px 8px rgba(0,0,0,.10)",
+        flexShrink: 0,
+      }}
+    >
+      <Icon size={14} color={fg} strokeWidth={2.5} />
+    </div>
+  );
+};
+
+// ─── Main page ─────────────────────────────────────────────────────────────────
 
 const DiscoveryTimeline = () => {
   const navigate = useNavigate();
-  const [timelineItems, setTimelineItems] = useState<TimelineItem[]>([]);
-  const [userProfile, setUserProfile] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [activeSection, setActiveSection] = useState("timeline");
+  const [filter, setFilter] = useState("Semua aktivitas");
+  const [timelineData, setTimelineData] = useState<TimelineGroup[]>([]);
 
+  // ── Auth guard + real data fetch ──
   useEffect(() => {
-    loadUserData();
-  }, []);
-
-  const loadUserData = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      // Load user profile
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      setUserProfile(profile);
-
-      // Load timeline data (achievements, assessments, etc.)
-      const { data: achievements } = await supabase
-        .from('achievements')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('earned_at', { ascending: false });
-
-      const { data: assessments } = await supabase
-        .from('assessment_results')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('completed_at', { ascending: false });
-
-      // Format timeline items
-      const items: TimelineItem[] = [
-        ...(achievements || []).map(achievement => ({
-          id: achievement.id,
-          type: 'achievement' as const,
-          title: achievement.title,
-          description: achievement.description || '',
-          date: achievement.earned_at,
-          badge: achievement.badge_icon
-        })),
-        ...(assessments || []).map(assessment => ({
-          id: assessment.id,
-          type: 'assessment' as const,
-          title: 'Tes Minat Bakat Diselesaikan',
-          description: `Tipe kepribadian: ${assessment.personality_type || 'Tidak diketahui'}`,
-          date: assessment.completed_at,
-        }))
-      ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
-      setTimelineItems(items);
-    } catch (error: any) {
-      toast.error("Gagal memuat data: " + error.message);
-    } finally {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session) {
+        navigate("/auth");
+        return;
+      }
+      setUser(session.user);
+      await loadTimelineData(session.user.id);
       setLoading(false);
+    });
+  }, [navigate]);
+
+  // C-06: Load real timeline from achievements + assessment_results
+  const loadTimelineData = async (userId: string) => {
+    try {
+      const rawItems: Array<{ dateKey: string; item: TimelineItem }> = [];
+
+      // Load achievements (badges earned)
+      const { data: achievements } = await supabase
+        .from("achievements")
+        .select("title, description, type, earned_at")
+        .eq("user_id", userId)
+        .order("earned_at", { ascending: false })
+        .limit(20);
+
+      for (const a of achievements ?? []) {
+        rawItems.push({
+          dateKey: friendlyDate(a.earned_at),
+          item: {
+            icon: a.type === "assessment" ? Star : Trophy,
+            color: "yellow",
+            time: formatTime(a.earned_at),
+            title: "Badge Diperoleh",
+            meta: `${a.title}${a.description ? ` — ${a.description}` : ""}`,
+          },
+        });
+      }
+
+      // Load assessment completions
+      const { data: assessments } = await supabase
+        .from("assessment_results")
+        .select("assessment_type, personality_type, completed_at")
+        .eq("user_id", userId)
+        .order("completed_at", { ascending: false })
+        .limit(10);
+
+      for (const r of assessments ?? []) {
+        rawItems.push({
+          dateKey: friendlyDate(r.completed_at),
+          item: {
+            icon: Award,
+            color: "purple",
+            time: formatTime(r.completed_at),
+            title: "Tes Selesai",
+            meta: `${r.assessment_type === "personality_interest" ? "Tes Minat & Bakat" : r.assessment_type}${r.personality_type ? ` — Tipe ${r.personality_type}` : ""}`,
+          },
+        });
+      }
+
+      // Load learning progress updates
+      const { data: progress } = await supabase
+        .from("learning_progress")
+        .select("completed_at, content_id")
+        .eq("user_id", userId)
+        .not("completed_at", "is", null)
+        .order("completed_at", { ascending: false })
+        .limit(15);
+
+      for (const p of progress ?? []) {
+        if (!p.completed_at) continue;
+        rawItems.push({
+          dateKey: friendlyDate(p.completed_at),
+          item: {
+            icon: BookOpen,
+            color: "blue",
+            time: formatTime(p.completed_at),
+            title: "Kursus Diselesaikan",
+            meta: "Materi pembelajaran selesai",
+          },
+        });
+      }
+
+      // Sort all items newest-first within each group
+      rawItems.sort((a, b) => {
+        // put "Hari Ini" first, "Kemarin" second, rest by actual date desc
+        const order = (s: string) => s === "Hari Ini" ? 0 : s === "Kemarin" ? 1 : 2;
+        return order(a.dateKey) - order(b.dateKey);
+      });
+
+      setTimelineData(groupByDate(rawItems));
+    } catch (err) {
+      console.error("Error loading timeline:", err);
+      setTimelineData([]);
     }
   };
 
-  const getTimelineIcon = (type: string) => {
-    switch (type) {
-      case 'achievement': return <Trophy className="w-5 h-5 text-secondary" />;
-      case 'assessment': return <Target className="w-5 h-5 text-primary" />;
-      case 'course': return <BookOpen className="w-5 h-5 text-accent" />;
-      case 'opportunity': return <Lightbulb className="w-5 h-5 text-primary" />;
-      default: return <Calendar className="w-5 h-5 text-muted-foreground" />;
+  // ── Sign-out ──
+  const handleSignOut = async () => {
+    try {
+      await supabase.auth.signOut();
+      toast.success("Berhasil logout");
+      navigate("/");
+    } catch (error: any) {
+      toast.error("Gagal logout: " + error.message);
     }
   };
 
+  // ── Navigation handler ──
+  const handleNav = (section: string) => {
+    if (section === "community")    { navigate("/community");  return; }
+    if (section === "overview")     { navigate("/dashboard");  return; }
+    if (section === "courses")      { navigate("/learning");   return; }
+    if (section === "opportunities"){ navigate("/opportunities"); return; }
+    if (section === "profile")      { navigate("/profile");    return; }
+    if (section === "timeline")     { navigate("/discovery");  return; }
+    // fallback: go to dashboard with the section
+    navigate("/dashboard");
+    setActiveSection(section);
+  };
+
+  // ── Filter logic ──
+  const filterGroup = (group: TimelineGroup): TimelineGroup => {
+    if (filter === "Semua aktivitas") return group;
+    const keywords: Record<string, string[]> = {
+      "Belajar":    ["Kursus", "Sertifikat", "Progress", "Diselesaikan", "Dimulai"],
+      "Pencapaian": ["Badge", "Tantangan", "Diperoleh", "Tes Selesai"],
+      "Komunitas":  ["Komunitas", "Diskusi"],
+    };
+    const kw = keywords[filter] ?? [];
+    return {
+      ...group,
+      items: group.items.filter(item =>
+        kw.some(k => item.title.includes(k) || item.meta.includes(k))
+      ),
+    };
+  };
+
+  const visibleGroups = timelineData
+    .map(filterGroup)
+    .filter(g => g.items.length > 0);
+
+  // ── Loading state ──
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ background: "var(--tk-gray-50, #F9FAFB)" }}
+      >
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Memuat timeline...</p>
+          <div
+            className="animate-spin rounded-full border-b-2 border-primary mx-auto mb-4"
+            style={{ width: 44, height: 44, borderColor: "var(--tk-blue-600, #1D4ED8)" }}
+          />
+          <p style={{ color: "var(--tk-gray-500, #6B7280)", fontFamily: "var(--tk-font-sans, 'Inter', sans-serif)" }}>
+            Memuat timeline...
+          </p>
         </div>
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen bg-background">
-      {/* Back to Dashboard Button */}
-      <div className="container mx-auto px-4 pt-6">
-        <Button 
-          variant="outline" 
-          onClick={() => navigate('/dashboard')}
-          className="mb-4"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Kembali ke Dashboard
-        </Button>
-      </div>
+  if (!user) return null;
 
-      {/* Hero Section */}
-      <div className="relative bg-gradient-primary overflow-hidden">
-        <div className="absolute inset-0 bg-black/20"></div>
-        <div className="container mx-auto px-4 py-24 relative z-10">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="text-white">
-              <h1 className="text-5xl font-bold mb-6 leading-tight">
-                Discovery Timeline
-              </h1>
-              <p className="text-xl text-white/90 mb-8 leading-relaxed">
-                Jelajahi passion map dan perjalanan belajar Anda. Visualisasi pencapaian, 
-                milestone, dan progress dalam timeline interaktif yang memotivasi.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Button size="lg" className="bg-white text-primary hover:bg-white/90 shadow-floating">
-                  <Calendar className="w-5 h-5 mr-2" />
-                  Lihat Timeline
-                </Button>
-                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
-                  <Target className="w-5 h-5 mr-2" />
-                  Passion Map
-                </Button>
-              </div>
-              <div className="flex items-center gap-8 mt-8 text-white/80">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-white">100%</div>
-                  <div className="text-sm">Personal</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-white">AI</div>
-                  <div className="text-sm">Powered</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-white">Real-time</div>
-                  <div className="text-sm">Updates</div>
-                </div>
-              </div>
-            </div>
-            <div className="hidden lg:block">
-              <img loading="lazy" decoding="async" 
-                src="/lovable-uploads/029928be-11a9-49ba-9a70-7dd69aff1316.png" 
-                alt="Discovery Timeline" 
-                className="rounded-2xl shadow-2xl transform -rotate-3 hover:rotate-0 transition-transform duration-500"
-              />
-            </div>
+  return (
+    <div
+      className="min-h-screen flex w-full"
+      style={{ background: "var(--tk-gray-50, #F9FAFB)" }}
+    >
+      {/* ── Sidebar ── */}
+      <DashboardSidebar
+        activeSection={activeSection}
+        setActiveSection={handleNav}
+        onSignOut={handleSignOut}
+      />
+
+      {/* ── Main area ── */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Desktop header */}
+        <DashboardHeader user={user} profile={null} onSignOut={handleSignOut} />
+
+        {/* Mobile header */}
+        <div
+          className="md:hidden flex items-center justify-between px-4 py-3 border-b"
+          style={{ background: "#fff", borderColor: "var(--tk-gray-200, #E5E7EB)" }}
+        >
+          <div className="flex items-center gap-2.5">
+            <img
+              src="/lovable-uploads/9e67a8cf-6f81-4abc-898b-bc665dee2b57.png"
+              alt="Talentika"
+              className="w-8 h-8 object-contain"
+            />
+            <span
+              style={{
+                fontFamily: "var(--tk-font-display, 'Poppins', sans-serif)",
+                fontWeight: 700,
+                fontSize: 18,
+                color: "var(--tk-blue-600, #1D4ED8)",
+              }}
+            >
+              Talentika
+            </span>
           </div>
         </div>
-      </div>
 
-      <div className="container mx-auto px-4 py-16">
-        {/* Header Profile Card */}
-        <Card className="shadow-card mb-8">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-6">
-              <Avatar className="w-20 h-20">
-                <AvatarImage src={userProfile?.avatar_url} />
-                <AvatarFallback className="bg-primary text-primary-foreground text-2xl">
-                  {userProfile?.full_name?.charAt(0) || 'U'}
-                </AvatarFallback>
-              </Avatar>
-              
-              <div className="flex-1">
-                <h1 className="text-3xl font-bold text-foreground mb-2">
-                  {userProfile?.full_name || 'Pengguna Talentika'}
+        {/* Page content */}
+        <main
+          className="flex-1 overflow-auto pb-20 md:pb-6 tk-page-in"
+          style={{ padding: "0 28px 60px" }}
+        >
+          <div className="max-w-full mx-auto pt-2">
+
+            {/* ── Page header ── */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "flex-start",
+                justifyContent: "space-between",
+                paddingBottom: 28,
+                paddingTop: 8,
+                flexWrap: "wrap",
+                gap: 12,
+              }}
+            >
+              <div>
+                <h1
+                  style={{
+                    fontFamily: "var(--tk-font-display, 'Poppins', sans-serif)",
+                    fontWeight: 700,
+                    fontSize: 30,
+                    color: "var(--tk-ink, #0B1D3A)",
+                    margin: 0,
+                    lineHeight: 1.2,
+                  }}
+                >
+                  Timeline
                 </h1>
-                <p className="text-muted-foreground mb-4">
-                  Jelajahi passion map dan perjalanan belajar Anda
+                <p
+                  style={{
+                    marginTop: 6,
+                    color: "var(--tk-gray-500, #6B7280)",
+                    fontSize: 14,
+                    fontFamily: "var(--tk-font-sans, 'Inter', sans-serif)",
+                  }}
+                >
+                  Riwayat aktivitas, pencapaian, dan pengingat penting.
                 </p>
-                
-                <div className="flex items-center gap-4">
-                  <Badge variant="outline" className="bg-primary/10 text-primary border-primary">
-                    <TrendingUp className="w-3 h-3 mr-1" />
-                    Pelajar Aktif
-                  </Badge>
-                  <Badge variant="outline" className="bg-secondary/10 text-secondary-foreground border-secondary">
-                    <Award className="w-3 h-3 mr-1" />
-                    {timelineItems.filter(item => item.type === 'achievement').length} Pencapaian
-                  </Badge>
-                  <Button variant="outline" size="sm">
-                    <Share2 className="w-4 h-4 mr-2" />
-                    Bagikan Profil
-                  </Button>
-                </div>
               </div>
+
+              <FilterDropdown value={filter} onChange={setFilter} />
             </div>
-          </CardContent>
-        </Card>
 
-        <Tabs defaultValue="timeline" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="timeline">
-              <Calendar className="w-4 h-4 mr-2" />
-              Timeline
-            </TabsTrigger>
-            <TabsTrigger value="passions">
-              <Target className="w-4 h-4 mr-2" />
-              Passion Map
-            </TabsTrigger>
-            <TabsTrigger value="achievements">
-              <Trophy className="w-4 h-4 mr-2" />
-              Pencapaian
-            </TabsTrigger>
-            <TabsTrigger value="connections">
-              <Users className="w-4 h-4 mr-2" />
-              Koneksi
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="timeline" className="mt-6">
-            <div className="space-y-6">
-              {timelineItems.length === 0 ? (
-                <Card className="text-center py-12">
-                  <CardContent>
-                    <Calendar className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">Timeline Kosong</h3>
-                    <p className="text-muted-foreground mb-4">
-                      Mulai perjalanan belajar Anda untuk melihat aktivitas di timeline
-                    </p>
-                    <Button className="bg-primary text-primary-foreground">
-                      Ikuti Tes Minat Bakat
-                    </Button>
-                  </CardContent>
-                </Card>
-              ) : (
-                <div className="relative">
-                  <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-border"></div>
-                  
-                  {timelineItems.map((item, index) => (
-                    <div key={item.id} className="relative flex items-start gap-6 pb-6">
-                      <div className="relative z-10 flex items-center justify-center w-16 h-16 bg-card border-2 border-border rounded-full shadow-soft">
-                        {getTimelineIcon(item.type)}
-                      </div>
-                      
-                      <Card className="flex-1 shadow-card hover:shadow-floating transition-shadow">
-                        <CardContent className="p-6">
-                          <div className="flex items-start justify-between mb-3">
-                            <h3 className="font-semibold text-foreground">{item.title}</h3>
-                            <span className="text-sm text-muted-foreground">
-                              {new Date(item.date).toLocaleDateString('id-ID')}
-                            </span>
-                          </div>
-                          
-                          <p className="text-muted-foreground mb-3">{item.description}</p>
-                          
-                          {item.badge && (
-                            <Badge className="bg-secondary/10 text-secondary-foreground border-secondary">
-                              {item.badge}
-                            </Badge>
-                          )}
-                          
-                          {item.progress && (
-                            <div className="mt-3">
-                              <div className="flex items-center justify-between text-sm mb-1">
-                                <span>Progress</span>
-                                <span>{item.progress}%</span>
-                              </div>
-                              <div className="w-full bg-muted rounded-full h-2">
-                                <div 
-                                  className="bg-primary rounded-full h-2 transition-all"
-                                  style={{ width: `${item.progress}%` }}
-                                ></div>
-                              </div>
-                            </div>
-                          )}
-                        </CardContent>
-                      </Card>
-                    </div>
-                  ))}
+            {/* ── Timeline card ── */}
+            <div
+              style={{
+                background: "#fff",
+                borderRadius: "var(--tk-radius-lg, 20px)",
+                border: "1.5px solid var(--tk-gray-200, #E5E7EB)",
+                padding: "28px 32px",
+                maxWidth: 780,
+              }}
+            >
+              {visibleGroups.length === 0 ? (
+                <div
+                  style={{
+                    textAlign: "center",
+                    padding: "48px 0",
+                    color: "var(--tk-gray-400, #9CA3AF)",
+                    fontFamily: "var(--tk-font-sans, 'Inter', sans-serif)",
+                  }}
+                >
+                  <p style={{ fontSize: 15 }}>Tidak ada aktivitas untuk filter ini.</p>
                 </div>
+              ) : visibleGroups.length === 0 && !loading ? (
+                <div style={{ textAlign: "center", padding: "48px 0", color: "var(--tk-gray-400,#9CA3AF)", fontFamily: "var(--tk-font-sans,'Inter',sans-serif)" }}>
+                  <TrendingUp size={40} style={{ margin: "0 auto 12px", opacity: .35 }} />
+                  <p style={{ fontSize: 15, margin: 0 }}>Belum ada aktivitas.</p>
+                  <p style={{ fontSize: 13, marginTop: 6 }}>Selesaikan tes atau kursus untuk melihat riwayat di sini.</p>
+                </div>
+              ) : (
+                visibleGroups.map((group, gi) => (
+                  <div key={gi} style={{ marginBottom: gi < visibleGroups.length - 1 ? 32 : 0 }}>
+                    {/* Group date label */}
+                    <p
+                      style={{
+                        fontFamily: "var(--tk-font-display, 'Poppins', sans-serif)",
+                        fontWeight: 700,
+                        fontSize: 13,
+                        color: "var(--tk-gray-500, #6B7280)",
+                        textTransform: "uppercase",
+                        letterSpacing: ".1em",
+                        marginBottom: 14,
+                        marginTop: 0,
+                      }}
+                    >
+                      {group.date}
+                    </p>
+
+                    {/* Items container */}
+                    <div style={{ position: "relative", paddingLeft: 32 }}>
+                      {/* Vertical line */}
+                      <div
+                        style={{
+                          position: "absolute",
+                          left: 15,
+                          top: 8,
+                          bottom: 8,
+                          width: 2,
+                          background: "var(--tk-gray-200, #E5E7EB)",
+                          borderRadius: 2,
+                        }}
+                      />
+
+                      {/* Timeline items */}
+                      {group.items.map((item, ii) => (
+                        <div
+                          key={ii}
+                          style={{
+                            display: "flex",
+                            gap: 14,
+                            paddingBottom: ii < group.items.length - 1 ? 18 : 0,
+                            position: "relative",
+                          }}
+                        >
+                          <TimelineDot icon={item.icon} color={item.color} />
+
+                          {/* Text block */}
+                          <div style={{ minWidth: 0, flex: 1 }}>
+                            <p
+                              style={{
+                                fontSize: 11.5,
+                                color: "var(--tk-gray-500, #6B7280)",
+                                fontFamily: "var(--tk-font-mono, 'JetBrains Mono', monospace)",
+                                margin: "0 0 2px",
+                              }}
+                            >
+                              {item.time}
+                            </p>
+                            <p
+                              style={{
+                                fontFamily: "var(--tk-font-display, 'Poppins', sans-serif)",
+                                fontWeight: 600,
+                                fontSize: 14.5,
+                                color: "var(--tk-ink, #0B1D3A)",
+                                margin: "0 0 2px",
+                                lineHeight: 1.25,
+                              }}
+                            >
+                              {item.title}
+                            </p>
+                            <p
+                              style={{
+                                fontSize: 13,
+                                color: "var(--tk-gray-600, #4B5563)",
+                                margin: 0,
+                                fontFamily: "var(--tk-font-sans, 'Inter', sans-serif)",
+                              }}
+                            >
+                              {item.meta}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))
               )}
             </div>
-          </TabsContent>
 
-          <TabsContent value="passions" className="mt-6">
-            <Card className="text-center py-12">
-              <CardContent>
-                <Target className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Passion Map</h3>
-                <p className="text-muted-foreground mb-4">
-                  Visualisasi minat dan bakat Anda berdasarkan hasil tes
-                </p>
-                <Button className="bg-primary text-primary-foreground">
-                  Lihat Passion Map
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
+          </div>
+        </main>
 
-          <TabsContent value="achievements" className="mt-6">
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {timelineItems
-                .filter(item => item.type === 'achievement')
-                .map((achievement) => (
-                <Card key={achievement.id} className="shadow-card hover:shadow-floating transition-shadow">
-                  <CardContent className="p-6 text-center">
-                    <div className="w-16 h-16 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Trophy className="w-8 h-8 text-secondary" />
-                    </div>
-                    <h3 className="font-semibold mb-2">{achievement.title}</h3>
-                    <p className="text-sm text-muted-foreground">{achievement.description}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="connections" className="mt-6">
-            <Card className="text-center py-12">
-              <CardContent>
-                <Users className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Koneksi & Mentor</h3>
-                <p className="text-muted-foreground mb-4">
-                  Terhubung dengan teman, mentor, dan industry experts
-                </p>
-                <Button className="bg-primary text-primary-foreground">
-                  Temukan Koneksi
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+        <BottomNavigationBar activeSection="timeline" onSectionChange={handleNav} />
       </div>
     </div>
   );

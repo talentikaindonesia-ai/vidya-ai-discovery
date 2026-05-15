@@ -54,6 +54,8 @@ const Admin = () => {
     } catch (error) {
       console.error('Error checking admin access:', error);
       toast.error("Terjadi kesalahan saat memeriksa akses.");
+      // C-04: always resolve loading so the spinner doesn't hang forever
+      setLoading(false);
       navigate("/dashboard");
     }
   };

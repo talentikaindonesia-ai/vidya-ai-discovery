@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': 'https://talentika.id',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
@@ -42,6 +42,16 @@ serve(async (req) => {
       throw new Error('Invalid subscription plan');
     }
 
+    // ── C-03: Fetch real user email & name from profiles ─────────────────
+    const { data: userProfile } = await supabase
+      .from('profiles')
+      .select('full_name, email')
+      .eq('user_id', userId)
+      .maybeSingle();
+    const customerName  = userProfile?.full_name ?? 'Customer';
+    const customerEmail = userProfile?.email ?? '';
+    // ─────────────────────────────────────────────────────────────────────
+
     // Create transaction record
     const { data: transaction, error: transactionError } = await supabase.rpc('create_payment_transaction', {
       p_user_id: userId,
@@ -67,8 +77,8 @@ serve(async (req) => {
       description: `${plan.name} - ${billingCycle === 'monthly' ? 'Bulanan' : 'Tahunan'}`,
       invoice_duration: 86400, // 24 hours
       customer: {
-        given_names: "Customer",
-        email: "customer@example.com" // In production, get from user profile
+        given_names: customerName,
+        email: customerEmail,
       },
       customer_notification_preference: {
         invoice_created: ["email"],
@@ -76,8 +86,10 @@ serve(async (req) => {
         invoice_paid: ["email"],
         invoice_expired: ["email"]
       },
-      success_redirect_url: `${Deno.env.get('SUPABASE_URL')?.replace('supabase.co', 'lovable.app')}/subscription?payment=success`,
-      failure_redirect_url: `${Deno.env.get('SUPABASE_URL')?.replace('supabase.co', 'lovable.app')}/subscription?payment=failed`,
+      // ── C-02: Fixed redirect URLs — must point to talentika.id ──────────
+      success_redirect_url: 'https://talentika.id/subscription?payment=success',
+      failure_redirect_url: 'https://talentika.id/subscription?payment=failed',
+      // ─────────────────────────────────────────────────────────────────────
       currency: "IDR",
       items: [
         {

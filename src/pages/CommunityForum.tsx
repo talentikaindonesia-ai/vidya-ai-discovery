@@ -1,31 +1,26 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
-import { 
-  MessageSquare, 
-  Users, 
-  Calendar, 
+import { supabase } from "@/integrations/supabase/client";
+import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
+import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
+import { BottomNavigationBar } from "@/components/dashboard/BottomNavigationBar";
+import {
+  MessageSquare,
+  Users,
+  Calendar,
   Search,
   Plus,
   Heart,
   MessageCircle,
   BookOpen,
-  Lightbulb,
   Code,
   Palette,
   FlaskConical,
   Briefcase,
   Leaf,
-  TrendingUp,
-  Star,
-  ArrowLeft
 } from "lucide-react";
 
+/* ─── Types ─────────────────────────────────────────────── */
 interface ForumPost {
   id: string;
   title: string;
@@ -49,459 +44,1013 @@ interface StudyGroup {
   isActive: boolean;
 }
 
+// C-05: Real event type from community_events table
 interface Event {
   id: string;
   title: string;
-  type: 'workshop' | 'webinar' | 'meetup' | 'bootcamp';
-  date: string;
-  time: string;
-  participants: number;
-  isOnline: boolean;
+  event_type: string;
+  event_date: string;
+  duration_minutes: number;
+  max_participants: number | null;
+  current_participants: number;
+  location: string | null;
+  is_premium_only: boolean;
+  is_active: boolean;
 }
 
+/* ─── Token shortcuts (local constants for readability) ─── */
+const TK = {
+  ink: "var(--tk-ink)",
+  blue50: "var(--tk-blue-50)",
+  blue600: "var(--tk-blue-600)",
+  blue700: "var(--tk-blue-700)",
+  gray0: "var(--tk-gray-0)",
+  gray50: "var(--tk-gray-50)",
+  gray100: "var(--tk-gray-100)",
+  gray200: "var(--tk-gray-200)",
+  gray400: "var(--tk-gray-400)",
+  gray500: "var(--tk-gray-500)",
+  gray600: "var(--tk-gray-600)",
+  gray700: "var(--tk-gray-700)",
+  orange: "var(--tk-orange)",
+  orangeSoft: "var(--tk-orange-soft)",
+  display: "var(--tk-font-display)",
+  sans: "var(--tk-font-sans)",
+  shadowSm: "var(--tk-shadow-sm)",
+  shadow: "var(--tk-shadow)",
+  radius: "var(--tk-radius)",
+  radiusLg: "var(--tk-radius-lg)",
+};
+
+/* ─── Helpers ────────────────────────────────────────────── */
+const avatarGradients = [
+  "linear-gradient(135deg,#1D4ED8,#3B82F6)",
+  "linear-gradient(135deg,#7C3AED,#A855F7)",
+  "linear-gradient(135deg,#059669,#34D399)",
+  "linear-gradient(135deg,#FF6A00,#FF8A33)",
+];
+
+const getAvatarGradient = (name: string) =>
+  avatarGradients[name.charCodeAt(0) % avatarGradients.length];
+
+/* ═══════════════════════════════════════════════════════════
+   Main Component
+═══════════════════════════════════════════════════════════ */
 const CommunityForum = () => {
   const navigate = useNavigate();
+  const [activeSection, setActiveSection] = useState("community");
+  const [activeTab, setActiveTab] = useState<
+    "discussions" | "study-groups" | "mentorship" | "events"
+  >("discussions");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  // C-05: Real data states
+  const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
+  const [eventsLoading, setEventsLoading] = useState(false);
 
-  // Mock data - replace with real API calls
-  const forumPosts: ForumPost[] = [
-    {
-      id: "1",
-      title: "Tips Belajar Machine Learning untuk Pemula",
-      content: "Halo teman-teman! Mau sharing tips belajar ML yang efektif...",
-      author: "Sarah Coding",
-      avatar: "",
-      category: "tech",
-      replies: 24,
-      likes: 45,
-      timestamp: "2 jam lalu",
-      isHot: true
-    },
-    {
-      id: "2",
-      title: "Berbagi Pengalaman Ikut Kompetisi UI/UX",
-      content: "Kemarin baru selesai ikut kompetisi design thinking...",
-      author: "Alex Design",
-      avatar: "",
-      category: "art",
-      replies: 12,
-      likes: 28,
-      timestamp: "5 jam lalu"
-    },
-    {
-      id: "3",
-      title: "Scholarship Opportunities 2024",
-      content: "List beasiswa yang masih buka pendaftaran tahun ini...",
-      author: "Dina Scholar",
-      avatar: "",
-      category: "science",
-      replies: 67,
-      likes: 123,
-      timestamp: "1 hari lalu",
-      isHot: true
-    }
-  ];
+  /* ── Sign-out ────────────────────────────────────────── */
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    navigate("/auth");
+  };
 
-  const studyGroups: StudyGroup[] = [
-    {
-      id: "1",
-      name: "Python Study Circle",
-      description: "Belajar Python bareng dari basic sampai advanced",
-      members: 45,
-      category: "tech",
-      nextMeeting: "Senin, 20 Jan 2024",
-      isActive: true
-    },
-    {
-      id: "2",
-      name: "Design Thinking Workshop",
-      description: "Praktik design thinking untuk solve real problems",
-      members: 28,
-      category: "art",
-      nextMeeting: "Rabu, 22 Jan 2024",
-      isActive: true
-    },
-    {
-      id: "3",
-      name: "Business Plan Competition Prep",
-      description: "Persiapan lomba business plan bareng mentor",
-      members: 15,
-      category: "business",
-      nextMeeting: "Jumat, 24 Jan 2024",
-      isActive: true
-    }
-  ];
+  /* ── Section navigation (sidebar) ───────────────────── */
+  const handleSectionChange = (section: string) => {
+    if (section === "community") return;
+    if (section === "timeline") { navigate("/discovery"); return; }
+    navigate("/dashboard");
+  };
 
-  const upcomingEvents: Event[] = [
-    {
-      id: "1",
-      title: "AI & Future of Work",
-      type: "webinar",
-      date: "25 Jan 2024",
-      time: "19:00 WIB",
-      participants: 234,
-      isOnline: true
-    },
-    {
-      id: "2",
-      title: "Coding Bootcamp: React Fundamentals",
-      type: "bootcamp",
-      date: "27 Jan 2024",
-      time: "09:00 WIB",
-      participants: 45,
-      isOnline: false
-    },
-    {
-      id: "3",
-      title: "Startup Meetup Jakarta",
-      type: "meetup",
-      date: "30 Jan 2024",
-      time: "18:00 WIB",
-      participants: 89,
-      isOnline: false
-    }
-  ];
+  /* ── C-05: Load real events from community_events table ── */
+  useEffect(() => {
+    if (activeTab !== "events") return;
+    setEventsLoading(true);
+    supabase
+      .from("community_events")
+      .select("id,title,event_type,event_date,duration_minutes,max_participants,current_participants,location,is_premium_only,is_active")
+      .eq("is_active", true)
+      .gte("event_date", new Date().toISOString())
+      .order("event_date", { ascending: true })
+      .limit(10)
+      .then(({ data }) => {
+        setUpcomingEvents((data || []) as Event[]);
+        setEventsLoading(false);
+      });
+  }, [activeTab]);
+
+  /* ── Forum posts: no table yet — empty state ── */
+  const forumPosts: ForumPost[] = [];
+
+  /* ── Study groups: no table yet — empty state ── */
+  const studyGroups: StudyGroup[] = [];
 
   const categories = [
-    { id: "all", name: "Semua", icon: MessageSquare, color: "text-foreground" },
-    { id: "tech", name: "Teknologi", icon: Code, color: "text-primary" },
-    { id: "art", name: "Seni & Kreativitas", icon: Palette, color: "text-accent" },
-    { id: "science", name: "Sains", icon: FlaskConical, color: "text-secondary" },
-    { id: "business", name: "Bisnis", icon: Briefcase, color: "text-primary" },
-    { id: "sustainability", name: "Sustainability", icon: Leaf, color: "text-accent" }
+    { id: "all",            name: "Semua",           icon: MessageSquare },
+    { id: "tech",           name: "Teknologi",       icon: Code          },
+    { id: "art",            name: "Seni & Kreativitas", icon: Palette    },
+    { id: "science",        name: "Sains",           icon: FlaskConical  },
+    { id: "business",       name: "Bisnis",          icon: Briefcase     },
+    { id: "sustainability", name: "Sustainability",  icon: Leaf          },
   ];
 
   const getCategoryIcon = (category: string) => {
-    const cat = categories.find(c => c.id === category);
-    if (!cat) return MessageSquare;
-    return cat.icon;
+    const cat = categories.find((c) => c.id === category);
+    return cat ? cat.icon : MessageSquare;
   };
 
-  const getEventTypeColor = (type: string) => {
+  const getEventTypeColor = (
+    type: string
+  ): { bg: string; color: string } => {
     switch (type) {
-      case 'workshop': return 'bg-primary/10 text-primary border-primary';
-      case 'webinar': return 'bg-secondary/10 text-secondary-foreground border-secondary';
-      case 'meetup': return 'bg-accent/10 text-accent-foreground border-accent';
-      case 'bootcamp': return 'bg-primary/10 text-primary border-primary';
-      default: return 'bg-muted/10 text-muted-foreground border-muted';
+      case "workshop":
+        return { bg: TK.blue50, color: TK.blue700 };
+      case "webinar":
+        return { bg: "var(--tk-mint)", color: "var(--tk-green-dark)" };
+      case "meetup":
+        return { bg: "var(--tk-lilac)", color: "#5B21B6" };
+      case "bootcamp":
+        return { bg: TK.orangeSoft, color: "#C04400" };
+      default:
+        return { bg: TK.gray100, color: TK.gray700 };
     }
   };
 
-  return (
-    <div className="min-h-screen bg-background">
-      {/* Back to Dashboard Button */}
-      <div className="container mx-auto px-4 pt-6">
-        <Button 
-          variant="outline" 
-          onClick={() => navigate('/dashboard')}
-          className="mb-4"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Kembali ke Dashboard
-        </Button>
-      </div>
+  /* ── Filtered posts ──────────────────────────────────── */
+  const filteredPosts = forumPosts.filter((post) => {
+    const q = searchQuery.toLowerCase();
+    const matchesSearch =
+      !q ||
+      post.title.toLowerCase().includes(q) ||
+      post.content.toLowerCase().includes(q) ||
+      post.author.toLowerCase().includes(q);
+    const matchesCategory =
+      selectedCategory === "all" || post.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
 
-      {/* Hero Section */}
-      <div className="relative bg-gradient-secondary overflow-hidden">
-        <div className="absolute inset-0 bg-black/20"></div>
-        <div className="container mx-auto px-4 py-24 relative z-10">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="text-white">
-              <h1 className="text-5xl font-bold mb-6 leading-tight">
-                Community Forum
-              </h1>
-              <p className="text-xl text-white/90 mb-8 leading-relaxed">
-                Tempat berkumpul, belajar, dan berkolaborasi dengan sesama learners. 
-                Bangun network, share knowledge, dan tumbuh bersama komunitas.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Button size="lg" className="bg-white text-secondary hover:bg-white/90 shadow-floating">
-                  <MessageSquare className="w-5 h-5 mr-2" />
-                  Mulai Diskusi
-                </Button>
-                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
-                  <Users className="w-5 h-5 mr-2" />
-                  Gabung Group
-                </Button>
+  /* ── Tab config ──────────────────────────────────────── */
+  const tabs = [
+    { id: "discussions",  label: "Diskusi",       icon: MessageSquare },
+    { id: "study-groups", label: "Study Groups",  icon: BookOpen      },
+    { id: "mentorship",   label: "Mentorship",    icon: Users         },
+    { id: "events",       label: "Events",        icon: Calendar      },
+  ] as const;
+
+  /* ─────────────────────────────────────────────────────
+     Render
+  ───────────────────────────────────────────────────── */
+  return (
+    <div
+      className="min-h-screen flex w-full"
+      style={{ background: TK.gray50, fontFamily: TK.sans }}
+    >
+      {/* Sidebar */}
+      <DashboardSidebar
+        activeSection={activeSection}
+        setActiveSection={handleSectionChange}
+        onSignOut={handleSignOut}
+      />
+
+      {/* Main area */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Desktop header */}
+        <DashboardHeader
+          user={null}
+          profile={null}
+          onSignOut={handleSignOut}
+        />
+
+        {/* Page content */}
+        <main
+          className="flex-1 overflow-auto pb-20 md:pb-6 tk-page-in"
+          style={{ padding: "0 28px 60px" }}
+        >
+          <div style={{ maxWidth: 900, margin: "0 auto" }}>
+
+            {/* ── Hero header ─────────────────────────────── */}
+            <div
+              style={{
+                textAlign: "center",
+                padding: "40px 0 32px",
+                position: "relative",
+              }}
+            >
+              {/* Sparkle decorations */}
+              <span
+                className="tk-sparkle"
+                style={{
+                  position: "absolute",
+                  top: 24,
+                  left: "15%",
+                  fontSize: 18,
+                  color: TK.blue600,
+                  opacity: 0.5,
+                }}
+              >
+                ✦
+              </span>
+              <span
+                className="tk-sparkle"
+                style={{
+                  position: "absolute",
+                  top: 48,
+                  right: "18%",
+                  fontSize: 12,
+                  color: TK.orange,
+                  opacity: 0.6,
+                  animationDelay: "1.2s",
+                }}
+              >
+                ✦
+              </span>
+              <span
+                className="tk-sparkle"
+                style={{
+                  position: "absolute",
+                  bottom: 16,
+                  left: "25%",
+                  fontSize: 10,
+                  color: TK.blue700,
+                  opacity: 0.4,
+                  animationDelay: "2.4s",
+                }}
+              >
+                ✦
+              </span>
+
+              {/* Icon */}
+              <div style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}>
+                <Users size={28} style={{ color: TK.blue600 }} />
               </div>
-              <div className="flex items-center gap-8 mt-8 text-white/80">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-white">15k+</div>
-                  <div className="text-sm">Members</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-white">1k+</div>
-                  <div className="text-sm">Diskusi</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-white">24/7</div>
-                  <div className="text-sm">Aktif</div>
-                </div>
+
+              {/* Heading */}
+              <h1
+                style={{
+                  fontFamily: TK.display,
+                  fontWeight: 800,
+                  fontSize: 32,
+                  color: TK.ink,
+                  margin: "0 0 10px",
+                  lineHeight: 1.2,
+                }}
+              >
+                Community for{" "}
+                <span style={{ color: TK.blue600 }}>You</span>
+              </h1>
+
+              {/* Sub */}
+              <p
+                style={{
+                  color: TK.gray500,
+                  fontFamily: TK.sans,
+                  fontSize: 15,
+                  margin: "0 0 24px",
+                }}
+              >
+                Bergabung, diskusi, dan tumbuh bersama komunitas
+              </p>
+
+              {/* Stat pills */}
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  gap: 10,
+                  flexWrap: "wrap",
+                }}
+              >
+                {[
+                  { label: "15k+ Members" },
+                  { label: "1k+ Diskusi" },
+                  { label: "24/7 Aktif" },
+                ].map((s) => (
+                  <span
+                    key={s.label}
+                    style={{
+                      background: TK.blue50,
+                      color: TK.blue700,
+                      fontFamily: TK.display,
+                      fontWeight: 700,
+                      fontSize: 13,
+                      padding: "6px 18px",
+                      borderRadius: 999,
+                    }}
+                  >
+                    {s.label}
+                  </span>
+                ))}
               </div>
             </div>
-            <div className="hidden lg:block">
-              <img loading="lazy" decoding="async"
-                src="/lovable-uploads/029928be-11a9-49ba-9a70-7dd69aff1316.png"
-                alt="Community Forum"
-                className="rounded-2xl shadow-2xl transform rotate-3 hover:rotate-0 transition-transform duration-500"
+
+            {/* ── Search bar ──────────────────────────────── */}
+            <div
+              style={{
+                maxWidth: 560,
+                margin: "0 auto 20px",
+                background: TK.gray0,
+                borderRadius: 16,
+                border: `1px solid ${TK.gray200}`,
+                boxShadow: TK.shadowSm,
+                display: "flex",
+                alignItems: "center",
+                padding: "10px 16px",
+                gap: 10,
+              }}
+            >
+              <Search size={18} style={{ color: TK.gray400, flexShrink: 0 }} />
+              <input
+                placeholder="Cari diskusi, topik, atau pengguna..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{
+                  flex: 1,
+                  border: "none",
+                  outline: "none",
+                  fontFamily: TK.sans,
+                  fontSize: 14,
+                  color: TK.ink,
+                  background: "transparent",
+                }}
               />
             </div>
-          </div>
-        </div>
-      </div>
 
-      <div className="container mx-auto px-4 py-16">
-
-        {/* Search and Filter */}
-        <Card className="shadow-card mb-8">
-          <CardContent className="p-6">
-            <div className="flex flex-col lg:flex-row gap-4">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Cari diskusi, topik, atau pengguna..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              <div className="flex gap-2 overflow-x-auto pb-2">
-                {categories.map((category) => {
-                  const Icon = category.icon;
-                  return (
-                    <Button
-                      key={category.id}
-                      variant={selectedCategory === category.id ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setSelectedCategory(category.id)}
-                      className="whitespace-nowrap"
-                    >
-                      <Icon className="w-4 h-4 mr-2" />
-                      {category.name}
-                    </Button>
-                  );
-                })}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Tabs defaultValue="discussions" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="discussions">
-              <MessageSquare className="w-4 h-4 mr-2" />
-              Diskusi
-            </TabsTrigger>
-            <TabsTrigger value="study-groups">
-              <BookOpen className="w-4 h-4 mr-2" />
-              Study Groups
-            </TabsTrigger>
-            <TabsTrigger value="mentorship">
-              <Users className="w-4 h-4 mr-2" />
-              Mentorship
-            </TabsTrigger>
-            <TabsTrigger value="events">
-              <Calendar className="w-4 h-4 mr-2" />
-              Events
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="discussions" className="mt-6">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-semibold">Diskusi Terbaru</h2>
-              <Button className="bg-primary text-primary-foreground">
-                <Plus className="w-4 h-4 mr-2" />
-                Buat Diskusi
-              </Button>
-            </div>
-
-            <div className="space-y-4">
-              {forumPosts
-                .filter((post) => {
-                  const q = searchQuery.toLowerCase();
-                  const matchesSearch = !q ||
-                    post.title.toLowerCase().includes(q) ||
-                    post.content.toLowerCase().includes(q) ||
-                    post.author.toLowerCase().includes(q);
-                  const matchesCategory = selectedCategory === "all" || post.category === selectedCategory;
-                  return matchesSearch && matchesCategory;
-                })
-                .map((post) => {
-                const CategoryIcon = getCategoryIcon(post.category);
+            {/* ── Category filter pills ────────────────────── */}
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 8,
+                justifyContent: "center",
+                marginBottom: 24,
+              }}
+            >
+              {categories.map((cat) => {
+                const Icon = cat.icon;
+                const isActive = selectedCategory === cat.id;
                 return (
-                  <Card key={post.id} className="shadow-card hover:shadow-floating transition-shadow cursor-pointer">
-                    <CardContent className="p-6">
-                      <div className="flex items-start gap-4">
-                        <Avatar className="w-12 h-12">
-                          <AvatarImage src={post.avatar} />
-                          <AvatarFallback className="bg-primary text-primary-foreground">
-                            {post.author.charAt(0)}
-                          </AvatarFallback>
-                        </Avatar>
-                        
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <h3 className="font-semibold text-foreground hover:text-primary transition-colors">
-                              {post.title}
-                            </h3>
-                            {post.isHot && (
-                              <Badge className="bg-accent/10 text-accent-foreground border-accent">
-                                <TrendingUp className="w-3 h-3 mr-1" />
-                                Hot
-                              </Badge>
+                  <button
+                    key={cat.id}
+                    onClick={() => setSelectedCategory(cat.id)}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                      padding: "7px 16px",
+                      borderRadius: 999,
+                      border: `1px solid ${isActive ? TK.blue600 : TK.gray200}`,
+                      background: isActive ? TK.blue600 : TK.gray0,
+                      color: isActive ? "#fff" : TK.gray700,
+                      fontFamily: TK.display,
+                      fontWeight: 600,
+                      fontSize: 13,
+                      cursor: "pointer",
+                      transition: "all .18s ease",
+                    }}
+                  >
+                    <Icon size={14} />
+                    {cat.name}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* ── Tab switcher ─────────────────────────────── */}
+            <div
+              style={{
+                display: "flex",
+                gap: 4,
+                background: TK.gray100,
+                borderRadius: 16,
+                padding: 4,
+                marginBottom: 28,
+              }}
+            >
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+                const isActive = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    style={{
+                      flex: 1,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 6,
+                      padding: "9px 4px",
+                      borderRadius: 12,
+                      border: "none",
+                      background: isActive ? TK.gray0 : "transparent",
+                      boxShadow: isActive ? TK.shadowSm : "none",
+                      color: isActive ? TK.blue700 : TK.gray500,
+                      fontFamily: TK.display,
+                      fontWeight: 600,
+                      fontSize: 13,
+                      cursor: "pointer",
+                      transition: "all .18s ease",
+                    }}
+                  >
+                    <Icon size={15} />
+                    <span className="hidden sm:inline">{tab.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* ══ DISCUSSIONS tab ══════════════════════════════ */}
+            {activeTab === "discussions" && (
+              <div>
+                {/* Header row */}
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    marginBottom: 20,
+                  }}
+                >
+                  <h2
+                    style={{
+                      fontFamily: TK.display,
+                      fontWeight: 700,
+                      fontSize: 20,
+                      color: TK.ink,
+                      margin: 0,
+                    }}
+                  >
+                    Diskusi Terbaru
+                  </h2>
+                  <button
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                      padding: "9px 18px",
+                      borderRadius: 10,
+                      border: "none",
+                      background: TK.blue600,
+                      color: "#fff",
+                      fontFamily: TK.display,
+                      fontWeight: 700,
+                      fontSize: 14,
+                      cursor: "pointer",
+                    }}
+                  >
+                    <Plus size={16} />
+                    Buat Diskusi
+                  </button>
+                </div>
+
+                {/* Post list */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {filteredPosts.map((post) => {
+                    const CategoryIcon = getCategoryIcon(post.category);
+                    const initial = post.author.charAt(0).toUpperCase();
+                    return (
+                      <div
+                        key={post.id}
+                        style={{
+                          background: TK.gray0,
+                          border: `1px solid ${TK.gray200}`,
+                          borderRadius: TK.radiusLg,
+                          padding: 20,
+                          cursor: "pointer",
+                          transition: "box-shadow .2s ease",
+                        }}
+                        onMouseEnter={(e) =>
+                          ((e.currentTarget as HTMLDivElement).style.boxShadow =
+                            TK.shadow)
+                        }
+                        onMouseLeave={(e) =>
+                          ((e.currentTarget as HTMLDivElement).style.boxShadow =
+                            "none")
+                        }
+                      >
+                        <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
+                          {/* Avatar */}
+                          <div
+                            style={{
+                              width: 40,
+                              height: 40,
+                              borderRadius: "50%",
+                              background: getAvatarGradient(post.author),
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              flexShrink: 0,
+                              fontFamily: TK.display,
+                              fontWeight: 700,
+                              fontSize: 16,
+                              color: "#fff",
+                            }}
+                          >
+                            {initial}
+                          </div>
+
+                          {/* Body */}
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            {/* Title + Hot badge */}
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 8,
+                                marginBottom: 6,
+                                flexWrap: "wrap",
+                              }}
+                            >
+                              <span
+                                style={{
+                                  fontFamily: TK.display,
+                                  fontWeight: 600,
+                                  fontSize: 15,
+                                  color: TK.ink,
+                                }}
+                              >
+                                {post.title}
+                              </span>
+                              {post.isHot && (
+                                <span
+                                  style={{
+                                    background: TK.orangeSoft,
+                                    color: "#C04400",
+                                    fontFamily: TK.display,
+                                    fontWeight: 700,
+                                    fontSize: 11,
+                                    padding: "2px 9px",
+                                    borderRadius: 999,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 3,
+                                  }}
+                                >
+                                  🔥 Hot
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Content preview */}
+                            <p
+                              style={{
+                                fontFamily: TK.sans,
+                                fontSize: 13,
+                                color: TK.gray500,
+                                margin: "0 0 12px",
+                                display: "-webkit-box",
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: "vertical",
+                                overflow: "hidden",
+                              }}
+                            >
+                              {post.content}
+                            </p>
+
+                            {/* Footer row */}
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                flexWrap: "wrap",
+                                gap: 8,
+                              }}
+                            >
+                              <div
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: 10,
+                                  fontSize: 12,
+                                  color: TK.gray500,
+                                  fontFamily: TK.sans,
+                                }}
+                              >
+                                <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                                  <CategoryIcon size={13} />
+                                  {post.author}
+                                </span>
+                                <span>{post.timestamp}</span>
+                              </div>
+
+                              <div
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: 14,
+                                  fontSize: 13,
+                                  color: TK.gray500,
+                                  fontFamily: TK.sans,
+                                }}
+                              >
+                                <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                                  ❤️ {post.likes}
+                                </span>
+                                <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                                  💬 {post.replies}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  {filteredPosts.length === 0 && (
+                    <div style={{ textAlign: "center", padding: "48px 0", color: TK.gray500, fontFamily: TK.sans, fontSize: 14 }}>
+                      <MessageSquare size={40} style={{ margin: "0 auto 12px", opacity: .3, display: "block" }} />
+                      <p style={{ margin: 0, fontWeight: 600, fontSize: 15, color: TK.gray600 }}>Forum diskusi segera hadir!</p>
+                      <p style={{ margin: "6px 0 0", fontSize: 13, opacity: .7 }}>Fitur forum komunitas sedang dalam pengembangan. Nantikan pembaruan berikutnya!</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* ══ STUDY GROUPS tab ══════════════════════════════ */}
+            {activeTab === "study-groups" && (
+              <div>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    marginBottom: 20,
+                  }}
+                >
+                  <h2
+                    style={{
+                      fontFamily: TK.display,
+                      fontWeight: 700,
+                      fontSize: 20,
+                      color: TK.ink,
+                      margin: 0,
+                    }}
+                  >
+                    Study Groups Aktif
+                  </h2>
+                  <button
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                      padding: "9px 18px",
+                      borderRadius: 10,
+                      border: "none",
+                      background: TK.blue600,
+                      color: "#fff",
+                      fontFamily: TK.display,
+                      fontWeight: 700,
+                      fontSize: 14,
+                      cursor: "pointer",
+                    }}
+                  >
+                    <Plus size={16} />
+                    Buat Study Group
+                  </button>
+                </div>
+
+                {studyGroups.length === 0 && (
+                  <div style={{ textAlign: "center", padding: "48px 0", color: TK.gray500, fontFamily: TK.sans }}>
+                    <BookOpen size={40} style={{ margin: "0 auto 12px", opacity: .3, display: "block" }} />
+                    <p style={{ margin: 0, fontWeight: 600, fontSize: 15, color: TK.gray600 }}>Study Groups segera hadir!</p>
+                    <p style={{ margin: "6px 0 0", fontSize: 13, opacity: .7 }}>Fitur study group komunitas sedang dalam pengembangan.</p>
+                  </div>
+                )}
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+                    gap: 18,
+                  }}
+                >
+                  {studyGroups.map((group) => {
+                    const CategoryIcon = getCategoryIcon(group.category);
+                    return (
+                      <div
+                        key={group.id}
+                        style={{
+                          background: TK.gray0,
+                          border: `1px solid ${TK.gray200}`,
+                          borderRadius: TK.radiusLg,
+                          padding: 20,
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 10,
+                          transition: "box-shadow .2s ease",
+                        }}
+                        onMouseEnter={(e) =>
+                          ((e.currentTarget as HTMLDivElement).style.boxShadow =
+                            TK.shadow)
+                        }
+                        onMouseLeave={(e) =>
+                          ((e.currentTarget as HTMLDivElement).style.boxShadow =
+                            "none")
+                        }
+                      >
+                        {/* Category label */}
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 6,
+                            color: TK.blue600,
+                            fontSize: 12,
+                            fontFamily: TK.display,
+                            fontWeight: 600,
+                          }}
+                        >
+                          <CategoryIcon size={14} />
+                          {categories.find((c) => c.id === group.category)?.name ?? group.category}
+                        </div>
+
+                        {/* Name */}
+                        <h3
+                          style={{
+                            fontFamily: TK.display,
+                            fontWeight: 700,
+                            fontSize: 17,
+                            color: TK.ink,
+                            margin: 0,
+                          }}
+                        >
+                          {group.name}
+                        </h3>
+
+                        {/* Description */}
+                        <p
+                          style={{
+                            fontFamily: TK.sans,
+                            fontSize: 13,
+                            color: TK.gray500,
+                            margin: 0,
+                            display: "-webkit-box",
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: "vertical",
+                            overflow: "hidden",
+                          }}
+                        >
+                          {group.description}
+                        </p>
+
+                        {/* Meta */}
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            fontSize: 12,
+                            color: TK.gray500,
+                            fontFamily: TK.sans,
+                          }}
+                        >
+                          <span>
+                            👥 {group.members} anggota
+                          </span>
+                          <span>{group.nextMeeting}</span>
+                        </div>
+
+                        {/* Join button */}
+                        <button
+                          style={{
+                            marginTop: 4,
+                            width: "100%",
+                            padding: "10px 0",
+                            borderRadius: 10,
+                            border: `1px solid ${group.isActive ? TK.blue600 : TK.gray200}`,
+                            background: group.isActive ? TK.blue600 : TK.gray0,
+                            color: group.isActive ? "#fff" : TK.gray700,
+                            fontFamily: TK.display,
+                            fontWeight: 700,
+                            fontSize: 14,
+                            cursor: "pointer",
+                          }}
+                        >
+                          Gabung Group
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* ══ MENTORSHIP tab ══════════════════════════════ */}
+            {activeTab === "mentorship" && (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  padding: "16px 0",
+                }}
+              >
+                <div
+                  style={{
+                    background: TK.gray0,
+                    border: `1px solid ${TK.gray200}`,
+                    borderRadius: TK.radiusLg,
+                    padding: "56px 40px",
+                    textAlign: "center",
+                    maxWidth: 480,
+                    width: "100%",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "center",
+                      marginBottom: 20,
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 72,
+                        height: 72,
+                        borderRadius: "50%",
+                        background: TK.blue50,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Users size={32} style={{ color: TK.blue600 }} />
+                    </div>
+                  </div>
+
+                  <h3
+                    style={{
+                      fontFamily: TK.display,
+                      fontWeight: 700,
+                      fontSize: 20,
+                      color: TK.ink,
+                      margin: "0 0 10px",
+                    }}
+                  >
+                    Mentorship Corner
+                  </h3>
+                  <p
+                    style={{
+                      fontFamily: TK.sans,
+                      fontSize: 14,
+                      color: TK.gray500,
+                      margin: "0 0 28px",
+                    }}
+                  >
+                    Connect dengan mentor berpengalaman dan alumni sukses
+                  </p>
+
+                  <div style={{ display: "flex", justifyContent: "center", gap: 12 }}>
+                    <button
+                      style={{
+                        padding: "10px 22px",
+                        borderRadius: 10,
+                        border: "none",
+                        background: TK.blue600,
+                        color: "#fff",
+                        fontFamily: TK.display,
+                        fontWeight: 700,
+                        fontSize: 14,
+                        cursor: "pointer",
+                      }}
+                    >
+                      Cari Mentor
+                    </button>
+                    <button
+                      style={{
+                        padding: "10px 22px",
+                        borderRadius: 10,
+                        border: `1px solid ${TK.gray200}`,
+                        background: TK.gray0,
+                        color: TK.gray700,
+                        fontFamily: TK.display,
+                        fontWeight: 700,
+                        fontSize: 14,
+                        cursor: "pointer",
+                      }}
+                    >
+                      Jadi Mentor
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ══ EVENTS tab ══════════════════════════════════ */}
+            {activeTab === "events" && (
+              <div>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    marginBottom: 20,
+                  }}
+                >
+                  <h2
+                    style={{
+                      fontFamily: TK.display,
+                      fontWeight: 700,
+                      fontSize: 20,
+                      color: TK.ink,
+                      margin: 0,
+                    }}
+                  >
+                    Upcoming Events
+                  </h2>
+                  <button
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                      padding: "9px 18px",
+                      borderRadius: 10,
+                      border: "none",
+                      background: TK.blue600,
+                      color: "#fff",
+                      fontFamily: TK.display,
+                      fontWeight: 700,
+                      fontSize: 14,
+                      cursor: "pointer",
+                    }}
+                  >
+                    <Plus size={16} />
+                    Buat Event
+                  </button>
+                </div>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {eventsLoading ? (
+                    <div style={{ textAlign: "center", padding: "32px 0", color: TK.gray500, fontFamily: TK.sans }}>Memuat events...</div>
+                  ) : upcomingEvents.length === 0 ? (
+                    <div style={{ textAlign: "center", padding: "48px 0", color: TK.gray500, fontFamily: TK.sans }}>
+                      <Calendar size={36} style={{ margin: "0 auto 10px", opacity: .35, display: "block" }} />
+                      <p style={{ fontSize: 14, margin: 0 }}>Belum ada event yang akan datang.</p>
+                      <p style={{ fontSize: 13, marginTop: 6, opacity: .7 }}>Pantau terus untuk event berikutnya!</p>
+                    </div>
+                  ) : upcomingEvents.map((event) => {
+                    const typeStyle = getEventTypeColor(event.event_type as any);
+                    const eventDate = new Date(event.event_date);
+                    const isOnline = !event.location || event.location.toLowerCase().includes("online");
+                    return (
+                      <div
+                        key={event.id}
+                        style={{
+                          background: TK.gray0,
+                          border: `1px solid ${TK.gray200}`,
+                          borderRadius: TK.radiusLg,
+                          padding: "18px 20px",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 16,
+                          flexWrap: "wrap",
+                          cursor: "pointer",
+                          transition: "box-shadow .2s ease",
+                        }}
+                        onMouseEnter={(e) => ((e.currentTarget as HTMLDivElement).style.boxShadow = TK.shadow)}
+                        onMouseLeave={(e) => ((e.currentTarget as HTMLDivElement).style.boxShadow = "none")}
+                      >
+                        {/* Info */}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
+                            <span style={{ fontFamily: TK.display, fontWeight: 600, fontSize: 15, color: TK.ink }}>{event.title}</span>
+                            <span style={{ background: typeStyle.bg, color: typeStyle.color, fontFamily: TK.display, fontWeight: 700, fontSize: 11, padding: "2px 10px", borderRadius: 999, textTransform: "capitalize" }}>
+                              {event.event_type}
+                            </span>
+                            {isOnline && (
+                              <span style={{ background: TK.gray100, color: TK.gray600, fontFamily: TK.display, fontWeight: 600, fontSize: 11, padding: "2px 10px", borderRadius: 999 }}>Online</span>
+                            )}
+                            {event.is_premium_only && (
+                              <span style={{ background: "var(--tk-yellow-soft)", color: "#A47000", fontFamily: TK.display, fontWeight: 700, fontSize: 11, padding: "2px 10px", borderRadius: 999 }}>Premium</span>
                             )}
                           </div>
-                          
-                          <p className="text-muted-foreground mb-3 line-clamp-2">
-                            {post.content}
-                          </p>
-                          
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                              <div className="flex items-center gap-1">
-                                <CategoryIcon className="w-4 h-4" />
-                                <span>{post.author}</span>
-                              </div>
-                              <span>{post.timestamp}</span>
-                            </div>
-                            
-                            <div className="flex items-center gap-4">
-                              <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                                <Heart className="w-4 h-4" />
-                                <span>{post.likes}</span>
-                              </div>
-                              <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                                <MessageCircle className="w-4 h-4" />
-                                <span>{post.replies}</span>
-                              </div>
-                            </div>
+                          <div style={{ display: "flex", gap: 16, fontSize: 13, color: TK.gray500, fontFamily: TK.sans, alignItems: "center", flexWrap: "wrap" }}>
+                            <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                              <Calendar size={13} />
+                              {eventDate.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })} • {eventDate.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })} WIB
+                            </span>
+                            <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                              <Users size={13} />
+                              {event.current_participants}{event.max_participants ? `/${event.max_participants}` : ""} peserta
+                            </span>
                           </div>
                         </div>
+                        <button style={{ flexShrink: 0, padding: "9px 20px", borderRadius: 10, border: "none", background: TK.blue600, color: "#fff", fontFamily: TK.display, fontWeight: 700, fontSize: 13, cursor: "pointer", whiteSpace: "nowrap" }}>
+                          Daftar Sekarang
+                        </button>
                       </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="study-groups" className="mt-6">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-semibold">Study Groups Aktif</h2>
-              <Button className="bg-primary text-primary-foreground">
-                <Plus className="w-4 h-4 mr-2" />
-                Buat Study Group
-              </Button>
-            </div>
-
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {studyGroups.map((group) => {
-                const CategoryIcon = getCategoryIcon(group.category);
-                return (
-                  <Card key={group.id} className="shadow-card hover:shadow-floating transition-shadow">
-                    <CardHeader>
-                      <div className="flex items-center justify-between mb-2">
-                        <CategoryIcon className="w-6 h-6 text-primary" />
-                        <Badge variant="outline" className="bg-secondary/10 text-secondary-foreground border-secondary">
-                          {group.isActive ? 'Aktif' : 'Tidak Aktif'}
-                        </Badge>
-                      </div>
-                      <CardTitle className="text-lg">{group.name}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-muted-foreground mb-4 line-clamp-2">
-                        {group.description}
-                      </p>
-                      
-                      <div className="space-y-2 mb-4">
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-muted-foreground">Members</span>
-                          <span className="font-semibold">{group.members}</span>
-                        </div>
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-muted-foreground">Next Meeting</span>
-                          <span className="font-semibold">{group.nextMeeting}</span>
-                        </div>
-                      </div>
-                      
-                      <Button className="w-full bg-primary text-primary-foreground">
-                        Gabung Group
-                      </Button>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="mentorship" className="mt-6">
-            <Card className="text-center py-12">
-              <CardContent>
-                <Users className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Mentorship Corner</h3>
-                <p className="text-muted-foreground mb-4">
-                  Connect dengan mentor berpengalaman dan alumni sukses
-                </p>
-                <div className="flex justify-center gap-4">
-                  <Button className="bg-primary text-primary-foreground">
-                    Cari Mentor
-                  </Button>
-                  <Button variant="outline">
-                    Jadi Mentor
-                  </Button>
+                    );
+                  })}
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+              </div>
+            )}
 
-          <TabsContent value="events" className="mt-6">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-semibold">Upcoming Events</h2>
-              <Button className="bg-primary text-primary-foreground">
-                <Plus className="w-4 h-4 mr-2" />
-                Buat Event
-              </Button>
-            </div>
+          </div>
+        </main>
 
-            <div className="space-y-4">
-              {upcomingEvents.map((event) => (
-                <Card key={event.id} className="shadow-card hover:shadow-floating transition-shadow cursor-pointer">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h3 className="font-semibold text-foreground">{event.title}</h3>
-                          <Badge className={getEventTypeColor(event.type)}>
-                            {event.type}
-                          </Badge>
-                          {event.isOnline && (
-                            <Badge variant="outline" className="bg-muted/10">Online</Badge>
-                          )}
-                        </div>
-                        
-                        <div className="flex items-center gap-6 text-sm text-muted-foreground">
-                          <div className="flex items-center gap-1">
-                            <Calendar className="w-4 h-4" />
-                            <span>{event.date} • {event.time}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Users className="w-4 h-4" />
-                            <span>{event.participants} peserta</span>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <Button className="bg-primary text-primary-foreground">
-                        Daftar Sekarang
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
-        </Tabs>
+        <BottomNavigationBar
+          activeSection={activeSection}
+          onSectionChange={handleSectionChange}
+        />
       </div>
     </div>
   );

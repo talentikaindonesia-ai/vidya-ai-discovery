@@ -1,8 +1,9 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+// Webhooks are server-to-server — no CORS needed, but keep the header for safety
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': 'https://talentika.id',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
@@ -11,6 +12,21 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+
+  // ── C-01: Xendit webhook signature verification ──────────────────────────
+  // Xendit sends a callback token in the x-callback-token header.
+  // Any request without the correct token must be rejected immediately.
+  const callbackToken = req.headers.get('x-callback-token');
+  const expectedToken = Deno.env.get('XENDIT_WEBHOOK_TOKEN');
+  if (!expectedToken) {
+    console.error('XENDIT_WEBHOOK_TOKEN env var not set — rejecting all webhooks for safety');
+    return new Response('Server configuration error', { status: 500 });
+  }
+  if (!callbackToken || callbackToken !== expectedToken) {
+    console.error('Xendit webhook signature mismatch — possible spoofed request');
+    return new Response('Unauthorized', { status: 401 });
+  }
+  // ────────────────────────────────────────────────────────────────────────
 
   try {
     const supabase = createClient(
