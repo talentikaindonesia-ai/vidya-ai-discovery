@@ -113,6 +113,8 @@ const Auth = () => {
   const [organizationType, setOrganizationType] = useState("");
   const [error, setError] = useState("");
   const [tab, setTab] = useState<"login" | "register">("login");
+  const [forgotMode, setForgotMode] = useState(false);
+  const [forgotSent, setForgotSent] = useState(false);
 
   const navigate = useNavigate();
 
@@ -235,6 +237,28 @@ const Auth = () => {
     }
   };
 
+  // H-02: Password reset via Supabase magic link
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) {
+      setError("Masukkan alamat email kamu terlebih dahulu.");
+      return;
+    }
+    setIsLoading(true);
+    setError("");
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth?mode=reset`,
+      });
+      if (error) throw error;
+      setForgotSent(true);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // ── value props data ──
   const valueProps = [
     {
@@ -257,11 +281,11 @@ const Auth = () => {
     },
   ];
 
-  // ── Social proof stats ──
+  // ── Social proof stats (H-04: removed fake star rating) ──
   const STATS = [
     { value: "12K+",  label: "Pengguna aktif" },
     { value: "500+",  label: "Kursus tersedia" },
-    { value: "4.9★",  label: "Rating pengguna" },
+    { value: "100%",  label: "Gratis untuk mulai" },
   ];
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -568,8 +592,89 @@ const Auth = () => {
             </div>
           )}
 
+          {/* ════════ FORGOT PASSWORD ════════ */}
+          {forgotMode && (
+            <div>
+              {forgotSent ? (
+                <div style={{ textAlign: "center", padding: "24px 0" }}>
+                  <div style={{ fontSize: 40, marginBottom: 12 }}>📧</div>
+                  <h2 style={{ fontFamily: "var(--tk-font-display)", fontSize: 20, fontWeight: 700, color: "var(--tk-ink)", marginBottom: 8 }}>
+                    Email Terkirim!
+                  </h2>
+                  <p style={{ fontSize: 14, color: "var(--tk-gray-500)", fontFamily: "var(--tk-font-sans)", marginBottom: 24 }}>
+                    Link reset kata sandi telah dikirim ke <strong>{email}</strong>. Periksa inbox atau folder spam kamu.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => { setForgotMode(false); setForgotSent(false); }}
+                    style={{
+                      background: "var(--tk-blue-600)", color: "#fff", border: "none",
+                      borderRadius: 12, padding: "12px 24px", fontSize: 14, fontWeight: 600,
+                      fontFamily: "var(--tk-font-sans)", cursor: "pointer",
+                    }}
+                  >
+                    Kembali ke Login
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleForgotPassword}>
+                  <h2 style={{ fontFamily: "var(--tk-font-display)", fontSize: 22, fontWeight: 700, color: "var(--tk-ink)", marginBottom: 6 }}>
+                    Reset Kata Sandi
+                  </h2>
+                  <p style={{ fontSize: 14, color: "var(--tk-gray-500)", marginBottom: 24, fontFamily: "var(--tk-font-sans)" }}>
+                    Masukkan email yang terdaftar. Kami akan kirimkan link untuk mereset kata sandi.
+                  </p>
+                  {error && (
+                    <div style={{ background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: 10, padding: "10px 14px", marginBottom: 16, fontSize: 13, color: "#B91C1C", fontFamily: "var(--tk-font-sans)" }}>
+                      {error}
+                    </div>
+                  )}
+                  <div style={{ marginBottom: 20 }}>
+                    <div style={inputWrapStyle}>
+                      <Mail size={16} style={{ color: "var(--tk-gray-400)", flexShrink: 0 }} />
+                      <input
+                        type="email"
+                        placeholder="Alamat email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        style={inputStyle}
+                      />
+                    </div>
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    style={{
+                      width: "100%", background: isLoading ? "var(--tk-gray-200)" : "var(--tk-blue-600)",
+                      color: isLoading ? "var(--tk-gray-400)" : "#fff", border: "none",
+                      borderRadius: 12, padding: "14px 0", fontSize: 15, fontWeight: 600,
+                      fontFamily: "var(--tk-font-sans)", cursor: isLoading ? "not-allowed" : "pointer",
+                      display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                      marginBottom: 16,
+                    }}
+                  >
+                    {isLoading ? <Loader2 size={18} className="animate-spin" /> : null}
+                    Kirim Link Reset →
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setForgotMode(false); setError(""); }}
+                    style={{
+                      width: "100%", background: "none", border: "1.5px solid var(--tk-gray-200)",
+                      borderRadius: 12, padding: "12px 0", fontSize: 14, fontWeight: 500,
+                      fontFamily: "var(--tk-font-sans)", cursor: "pointer", color: "var(--tk-gray-600)",
+                    }}
+                  >
+                    Kembali ke Login
+                  </button>
+                </form>
+              )}
+            </div>
+          )}
+
           {/* ════════ LOGIN TAB ════════ */}
-          {tab === "login" && (
+          {!forgotMode && tab === "login" && (
             <form onSubmit={handleSignIn}>
               <h2
                 style={{
@@ -639,19 +744,23 @@ const Auth = () => {
                 </div>
               </div>
 
-              {/* Forgot password */}
+              {/* H-02: Forgot password — triggers real reset flow */}
               <div style={{ textAlign: "right", marginBottom: 24 }}>
-                <a
-                  href="#"
+                <button
+                  type="button"
+                  onClick={() => { setForgotMode(true); setForgotSent(false); setError(""); }}
                   style={{
+                    background: "none",
+                    border: "none",
                     fontSize: 13,
                     color: "var(--tk-blue-600)",
-                    textDecoration: "none",
+                    cursor: "pointer",
                     fontFamily: "var(--tk-font-sans)",
+                    padding: 0,
                   }}
                 >
                   Lupa kata sandi?
-                </a>
+                </button>
               </div>
 
               {/* Primary CTA */}
@@ -866,7 +975,7 @@ const Auth = () => {
           )}
 
           {/* ════════ REGISTER TAB ════════ */}
-          {tab === "register" && (
+          {!forgotMode && tab === "register" && (
             <form onSubmit={handleSignUp}>
               <h2
                 style={{

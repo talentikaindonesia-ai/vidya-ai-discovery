@@ -1,5 +1,23 @@
 import { Mail, Phone, MapPin, Instagram, Youtube } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
+
+// H-01: Map all footer links to real routes/anchors — no more dead href="#"
+const QUICK_LINKS = [
+  { label: "Beranda",      href: "/" },
+  { label: "Fitur",        href: "/#fitur" },
+  { label: "Cara Kerja",   href: "/#cara-kerja" },
+  { label: "Harga",        href: "/#harga" },
+  { label: "Kontak",       href: "mailto:Discover@Talentika.id" },
+];
+
+const SERVICE_LINKS = [
+  { label: "Tes Minat & Bakat",  href: "/assessment" },
+  { label: "Eksplorasi Karir",   href: "/opportunities" },
+  { label: "Learning Hub",       href: "/learning-hub" },
+  { label: "Komunitas Belajar",  href: "/community" },
+  { label: "Portfolio Builder",  href: "/portfolio" },
+];
 
 const Footer = () => {
   return (
@@ -21,27 +39,27 @@ const Footer = () => {
               Talentika membantu generasi muda menemukan passion dan mengembangkan talenta melalui assessment yang komprehensif dan panduan karir yang personal.
             </p>
             <div className="flex gap-3">
-              <Button 
-                variant="ghost" 
-                size="icon" 
+              <Button
+                variant="ghost"
+                size="icon"
                 className="hover:bg-white/10 text-white"
                 onClick={() => window.open('https://www.instagram.com/talentika.id/', '_blank')}
                 aria-label="Instagram Talentika"
               >
                 <Instagram className="w-5 h-5" />
               </Button>
-              <Button 
-                variant="ghost" 
-                size="icon" 
+              <Button
+                variant="ghost"
+                size="icon"
                 className="hover:bg-white/10 text-white"
                 onClick={() => window.open('https://www.youtube.com/@talentikaid', '_blank')}
                 aria-label="YouTube Talentika"
               >
                 <Youtube className="w-5 h-5" />
               </Button>
-              <Button 
-                variant="ghost" 
-                size="icon" 
+              <Button
+                variant="ghost"
+                size="icon"
                 className="hover:bg-white/10 text-white"
                 onClick={() => window.open('https://www.tiktok.com/@talentika.id', '_blank')}
                 aria-label="TikTok Talentika"
@@ -57,11 +75,21 @@ const Footer = () => {
           <div className="space-y-4">
             <h4 className="text-lg font-semibold">Tautan Cepat</h4>
             <ul className="space-y-2">
-              {["Beranda", "Fitur", "Cara Kerja", "Tentang Kami", "FAQ"].map((link) => (
-                <li key={link}>
-                  <a href="#" className="text-white/80 hover:text-white transition-colors">
-                    {link}
-                  </a>
+              {QUICK_LINKS.map(({ label, href }) => (
+                <li key={label}>
+                  {href.startsWith("mailto:") ? (
+                    <a href={href} className="text-white/80 hover:text-white transition-colors">
+                      {label}
+                    </a>
+                  ) : href.startsWith("/") && !href.includes("#") ? (
+                    <Link to={href} className="text-white/80 hover:text-white transition-colors">
+                      {label}
+                    </Link>
+                  ) : (
+                    <a href={href} className="text-white/80 hover:text-white transition-colors">
+                      {label}
+                    </a>
+                  )}
                 </li>
               ))}
             </ul>
@@ -71,11 +99,11 @@ const Footer = () => {
           <div className="space-y-4">
             <h4 className="text-lg font-semibold">Layanan</h4>
             <ul className="space-y-2">
-              {["Tes Minat & Bakat", "Eksplorasi Karir", "Rekomendasi Skill", "Komunitas Belajar", "Progress Tracking"].map((service) => (
-                <li key={service}>
-                  <a href="#" className="text-white/80 hover:text-white transition-colors">
-                    {service}
-                  </a>
+              {SERVICE_LINKS.map(({ label, href }) => (
+                <li key={label}>
+                  <Link to={href} className="text-white/80 hover:text-white transition-colors">
+                    {label}
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -85,16 +113,16 @@ const Footer = () => {
           <div className="space-y-4">
             <h4 className="text-lg font-semibold">Kontak</h4>
             <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <Mail className="w-5 h-5 text-primary" />
+              <a href="mailto:Discover@Talentika.id" className="flex items-center gap-3 hover:text-white/100 transition-colors">
+                <Mail className="w-5 h-5 text-primary flex-shrink-0" />
                 <span className="text-white/80">Discover@Talentika.id</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <Phone className="w-5 h-5 text-primary" />
+              </a>
+              <a href="https://wa.me/6285148434141" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 hover:text-white/100 transition-colors">
+                <Phone className="w-5 h-5 text-primary flex-shrink-0" />
                 <span className="text-white/80">+62 851 4843 4141</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <MapPin className="w-5 h-5 text-primary" />
+              </a>
+              <div className="flex items-start gap-3">
+                <MapPin className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
                 <span className="text-white/80">Jalan Kuningan Mulia Lot 9 B, Kota Adm. Jakarta Selatan, DKI Jakarta</span>
               </div>
             </div>
@@ -107,10 +135,20 @@ const Footer = () => {
               © 2025 Talentika by PT. Invisi Karya Indonesia. Semua hak dilindungi undang-undang.
             </p>
             <div className="flex gap-6 text-sm">
-              <a href="#" className="text-white/60 hover:text-white transition-colors">
+              <a
+                href="https://wa.me/6285148434141?text=Halo%20Talentika%2C%20saya%20ingin%20menanyakan%20Kebijakan%20Privasi"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-white/60 hover:text-white transition-colors"
+              >
                 Kebijakan Privasi
               </a>
-              <a href="#" className="text-white/60 hover:text-white transition-colors">
+              <a
+                href="https://wa.me/6285148434141?text=Halo%20Talentika%2C%20saya%20ingin%20menanyakan%20Syarat%20%26%20Ketentuan"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-white/60 hover:text-white transition-colors"
+              >
                 Syarat & Ketentuan
               </a>
             </div>
