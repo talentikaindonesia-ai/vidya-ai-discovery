@@ -6,21 +6,25 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  ArrowLeft, 
-  Play, 
-  Clock, 
-  BookOpen, 
-  Star, 
-  Users, 
+import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { BottomNavigationBar } from "@/components/dashboard/BottomNavigationBar";
+import {
+  ArrowLeft,
+  Play,
+  Clock,
+  BookOpen,
+  Star,
+  Users,
   Download,
   FileText,
   Video,
   Brain,
   Edit,
-  Trash2,
+  CheckCircle,
   Eye,
-  Share2
+  Share2,
+  ExternalLink
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -66,6 +70,7 @@ export const ContentDetailView = () => {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
+  const [activeSection, setActiveSection] = useState("courses");
 
   useEffect(() => {
     if (contentId) {
@@ -146,8 +151,8 @@ export const ContentDetailView = () => {
           content_id: contentId,
           status: 'in_progress',
           progress_percentage: progress?.progress_percentage || 0,
-          last_accessed_at: new Date().toISOString()
-        });
+          last_accessed_at: new Date().toISOString(),
+        }, { onConflict: "user_id,content_id" });
 
       if (error) throw error;
 
@@ -176,8 +181,8 @@ export const ContentDetailView = () => {
           status: 'completed',
           progress_percentage: 100,
           completed_at: new Date().toISOString(),
-          last_accessed_at: new Date().toISOString()
-        });
+          last_accessed_at: new Date().toISOString(),
+        }, { onConflict: "user_id,content_id" });
 
       if (error) throw error;
 
@@ -239,7 +244,22 @@ export const ContentDetailView = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <SidebarProvider>
+    <div className="min-h-screen bg-background flex w-full">
+      <DashboardSidebar
+        activeSection={activeSection}
+        setActiveSection={(s) => {
+          if (s === 'community') { navigate('/community'); return; }
+          if (s === 'timeline')  { navigate('/discovery'); return; }
+          navigate('/dashboard');
+        }}
+        onSignOut={async () => {
+          await supabase.auth.signOut();
+          navigate('/');
+        }}
+        userRole={null}
+      />
+      <div className="flex-1 flex flex-col min-w-0">
       <div className="container mx-auto px-4 py-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -348,25 +368,31 @@ export const ContentDetailView = () => {
                 <div className="flex gap-3">
                   <Button onClick={startContent} size="lg" className="flex items-center gap-2">
                     <Play className="w-4 h-4" />
-                    {progress?.status === 'completed' ? 'Pelajari Lagi' : 
+                    {progress?.status === 'completed' ? 'Pelajari Lagi' :
                      progress?.status === 'in_progress' ? 'Lanjutkan' : 'Mulai Belajar'}
                   </Button>
-                  
+
                   {progress?.status === 'in_progress' && (
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       onClick={markAsCompleted}
                       className="flex items-center gap-2"
                     >
-                      <Star className="w-4 h-4" />
+                      <CheckCircle className="w-4 h-4" />
                       Tandai Selesai
                     </Button>
                   )}
 
-                  <Button variant="outline" size="lg">
-                    <Share2 className="w-4 h-4 mr-2" />
-                    Bagikan
-                  </Button>
+                  {content.content_url && (
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      onClick={() => window.open(content.content_url, '_blank')}
+                    >
+                      <ExternalLink className="w-4 h-4 mr-2" />
+                      Buka
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
@@ -392,7 +418,7 @@ export const ContentDetailView = () => {
                   <CardContent>
                     <p className="text-muted-foreground mb-4">{content.description}</p>
                     
-                    {content.tags.length > 0 && (
+                    {(content.tags?.length ?? 0) > 0 && (
                       <div>
                         <h4 className="font-semibold mb-2">Tags:</h4>
                         <div className="flex flex-wrap gap-2">
@@ -528,6 +554,9 @@ export const ContentDetailView = () => {
           </TabsContent>
         </Tabs>
       </div>
+      <BottomNavigationBar activeSection={activeSection} setActiveSection={setActiveSection} />
+      </div>
     </div>
+    </SidebarProvider>
   );
 };
