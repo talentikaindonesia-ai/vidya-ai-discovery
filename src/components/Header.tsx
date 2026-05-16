@@ -28,14 +28,15 @@ const Header = () => {
     }
   };
 
-  const navItems = [
+  const navItems: { label: string; href: string; highlight?: boolean; highlightColor?: string }[] = [
     { label: "Beranda", href: "#home" },
     { label: "Fitur", href: "#features" },
     { label: "Cara Kerja", href: "#how-it-works" },
     { label: "Harga", href: "#pricing" },
     { label: "Testimoni", href: "#testimonials" },
     { label: "Artikel", href: "/articles" },
-    { label: "Talentika Junior", href: "/talentika-junior", highlight: true }
+    { label: "Talentika Junior", href: "/talentika-junior", highlight: true },
+    { label: "Talentika for School", href: "/for-schools", highlight: true, highlightColor: "blue" }
   ];
 
   return (
@@ -58,15 +59,17 @@ const Header = () => {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-8">
+          <nav className="hidden md:flex items-center gap-6">
             {navItems.map((item) => (
               <a
                 key={item.label}
                 href={item.href}
                 onClick={(e) => handleNavClick(e, item.href)}
-                className={`transition-colors font-medium cursor-pointer ${
-                  item.highlight 
-                    ? "text-primary hover:text-primary/80 bg-primary/10 px-3 py-1 rounded-lg" 
+                className={`transition-colors font-medium cursor-pointer text-sm ${
+                  item.highlight
+                    ? item.highlightColor === "blue"
+                      ? "text-blue-700 hover:text-blue-800 bg-blue-50 border border-blue-200 px-3 py-1 rounded-lg"
+                      : "text-primary hover:text-primary/80 bg-primary/10 px-3 py-1 rounded-lg"
                     : "text-foreground hover:text-primary"
                 }`}
               >
@@ -112,8 +115,10 @@ const Header = () => {
                   href={item.href}
                   onClick={(e) => handleNavClick(e, item.href)}
                   className={`transition-colors font-medium cursor-pointer ${
-                    item.highlight 
-                      ? "text-primary hover:text-primary/80 bg-primary/10 px-3 py-1 rounded-lg" 
+                    item.highlight
+                      ? item.highlightColor === "blue"
+                        ? "text-blue-700 bg-blue-50 border border-blue-200 px-3 py-1 rounded-lg"
+                        : "text-primary hover:text-primary/80 bg-primary/10 px-3 py-1 rounded-lg"
                       : "text-foreground hover:text-primary"
                   }`}
                 >

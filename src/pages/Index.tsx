@@ -756,6 +756,153 @@ const Harga = ({ navigate }: { navigate: ReturnType<typeof useNavigate> }) => {
   );
 };
 
+/* ─── Talentika for School Teaser ─── */
+const ForSchoolTeaser = ({ navigate }: { navigate: ReturnType<typeof useNavigate> }) => (
+  <section style={{
+    padding: "88px 36px",
+    background: "linear-gradient(180deg,#F1F5FB 0%,#E8F1FF 60%,#F8FAFC 100%)",
+    position: "relative",
+    overflow: "hidden",
+  }}>
+    {/* Decorative blobs */}
+    <div style={{ position:"absolute",width:500,height:500,borderRadius:"50%",background:"radial-gradient(circle,rgba(29,78,216,.06) 0%,transparent 70%)",top:-200,right:-100,pointerEvents:"none" }}/>
+    <div style={{ position:"absolute",width:300,height:300,borderRadius:"50%",background:"radial-gradient(circle,rgba(255,193,7,.08) 0%,transparent 70%)",bottom:-80,left:-50,pointerEvents:"none" }}/>
+
+    <div style={{ maxWidth:1320,margin:"0 auto",display:"grid",gridTemplateColumns:"1fr 1fr",gap:64,alignItems:"center" }}>
+      {/* Left: copy */}
+      <div className="reveal">
+        <div style={{ display:"inline-flex",alignItems:"center",gap:10,padding:"8px 16px 8px 8px",borderRadius:99,background:"#fff",border:"1.5px solid #BFDBFE",color:"#1E40AF",fontWeight:700,fontSize:14,boxShadow:"0 6px 20px -8px rgba(29,78,216,.2)",marginBottom:24 }}>
+          <div style={{ width:32,height:32,borderRadius:"50%",background:"linear-gradient(135deg,#3B82F6,#1D4ED8)",color:"#fff",display:"grid",placeItems:"center" }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 21V8l9-5 9 5v13"/><path d="M9 21V12h6v9"/></svg>
+          </div>
+          Talentika for School
+        </div>
+
+        <h2 style={{ fontFamily:"'Poppins',sans-serif",fontWeight:800,fontSize:"clamp(30px,3.4vw,44px)",letterSpacing:"-.025em",lineHeight:1.1,margin:"0 0 16px",color:"#0B1D3A" }}>
+          Platform Resmi untuk<br/>
+          <span style={{ color:"#1D4ED8" }}>Sekolah &amp; Institusi</span><br/>
+          Pendidikan Indonesia
+        </h2>
+
+        <p style={{ fontSize:16,color:"#4B5563",lineHeight:1.65,margin:"0 0 28px",maxWidth:"48ch" }}>
+          Talentika for School menghadirkan ekosistem lengkap — asesmen potensi siswa, dashboard admin, mentoring, dan laporan real-time — khusus dirancang untuk sekolah SD, SMP, SMA, dan SMK.
+        </p>
+
+        {/* 4 quick benefits */}
+        <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:32 }}>
+          {[
+            { icon:"🎯", text:"Asesmen Ilmiah & Akurat" },
+            { icon:"📊", text:"Dashboard Admin Sekolah" },
+            { icon:"🏆", text:"Program Pengembangan Siswa" },
+            { icon:"🤝", text:"Kolaborasi Guru & Orang Tua" },
+          ].map((b) => (
+            <div key={b.text} style={{ display:"flex",alignItems:"center",gap:10,padding:"10px 14px",background:"#fff",borderRadius:12,border:"1px solid #E5E7EB",fontSize:13,fontWeight:600,color:"#0B1D3A" }}>
+              <span style={{ fontSize:18 }}>{b.icon}</span> {b.text}
+            </div>
+          ))}
+        </div>
+
+        <div style={{ display:"flex",gap:12,flexWrap:"wrap" }}>
+          <button
+            onClick={() => navigate("/for-schools")}
+            style={{ display:"inline-flex",alignItems:"center",gap:8,padding:"14px 24px",borderRadius:13,background:"linear-gradient(135deg,#2563EB,#1D4ED8)",color:"#fff",fontFamily:"'Poppins',sans-serif",fontWeight:700,fontSize:15,border:"none",cursor:"pointer",boxShadow:"0 14px 32px -10px rgba(29,78,216,.4)",transition:"transform .15s" }}
+            onMouseEnter={e => (e.currentTarget.style.transform="translateY(-2px)")}
+            onMouseLeave={e => (e.currentTarget.style.transform="none")}
+          >
+            Pelajari Selengkapnya
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+          </button>
+          <a
+            href="https://wa.me/6285148434141?text=Halo%20Talentika%2C%20saya%20ingin%20mendaftarkan%20sekolah%20kami"
+            target="_blank" rel="noopener noreferrer"
+            style={{ display:"inline-flex",alignItems:"center",gap:8,padding:"14px 24px",borderRadius:13,background:"#fff",color:"#0B1D3A",fontFamily:"'Poppins',sans-serif",fontWeight:700,fontSize:15,border:"1.5px solid #E5E7EB",cursor:"pointer",textDecoration:"none" }}
+          >
+            Daftar Sekolah
+          </a>
+        </div>
+      </div>
+
+      {/* Right: mini dashboard mockup */}
+      <div className="reveal" style={{ display:"flex",flexDirection:"column",gap:12 }}>
+        {/* Stats row */}
+        <div style={{ display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10 }}>
+          {[
+            { n:"500+", l:"Sekolah Mitra", c:"#1D4ED8" },
+            { n:"120K+", l:"Siswa Aktif", c:"#FF6A00" },
+            { n:"95%", l:"Akurasi Asesmen", c:"#16A34A" },
+            { n:"4.9★", l:"Rating Sekolah", c:"#D97706" },
+          ].map((s) => (
+            <div key={s.l} style={{ background:"#fff",borderRadius:14,padding:"14px 12px",textAlign:"center",border:"1px solid #E5E7EB",boxShadow:"0 2px 8px -2px rgba(11,29,58,.08)" }}>
+              <div style={{ fontFamily:"'Poppins',sans-serif",fontWeight:800,fontSize:20,color:s.c,lineHeight:1 }}>{s.n}</div>
+              <div style={{ fontSize:11,color:"#6B7280",marginTop:4,lineHeight:1.3 }}>{s.l}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Mini dashboard card */}
+        <div style={{ background:"#fff",borderRadius:20,border:"1px solid #E5E7EB",boxShadow:"0 20px 60px -20px rgba(11,29,58,.2)",overflow:"hidden" }}>
+          {/* Header bar */}
+          <div style={{ padding:"12px 18px",borderBottom:"1px solid #F3F4F6",display:"flex",alignItems:"center",justifyContent:"space-between" }}>
+            <div style={{ display:"flex",alignItems:"center",gap:8 }}>
+              <div style={{ width:28,height:28,borderRadius:7,background:"#1D4ED8",display:"grid",placeItems:"center" }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="M12 2l1.7 6.3L20 10l-6.3 1.7L12 18l-1.7-6.3L4 10l6.3-1.7z"/></svg>
+              </div>
+              <span style={{ fontFamily:"'Poppins',sans-serif",fontWeight:700,fontSize:13,color:"#1E40AF" }}>Talentika School Dashboard</span>
+            </div>
+            <div style={{ fontSize:10,background:"#D1FAE5",color:"#0F7A3E",borderRadius:99,padding:"3px 10px",fontWeight:700 }}>● Live</div>
+          </div>
+
+          {/* Content */}
+          <div style={{ padding:18 }}>
+            <div style={{ fontSize:11,fontWeight:700,color:"#6B7280",marginBottom:8,textTransform:"uppercase" as const,letterSpacing:".06em" }}>Progress Belajar Siswa — Bulan Ini</div>
+            <svg viewBox="0 0 400 80" width="100%" height="70" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="lp-school-grad" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0" stopColor="#3B82F6" stopOpacity=".2"/>
+                  <stop offset="1" stopColor="#3B82F6" stopOpacity="0"/>
+                </linearGradient>
+              </defs>
+              <path d="M0 60 L60 50 L130 54 L200 32 L280 28 L360 14 L400 10" fill="none" stroke="#1D4ED8" strokeWidth="2.5"/>
+              <path d="M0 60 L60 50 L130 54 L200 32 L280 28 L360 14 L400 10 L400 80 L0 80Z" fill="url(#lp-school-grad)"/>
+              <g fill="#1D4ED8">
+                {[[0,60],[130,54],[200,32],[280,28],[400,10]].map(([x,y],i) => <circle key={i} cx={x} cy={y} r="3"/>)}
+              </g>
+            </svg>
+
+            <div style={{ display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginTop:14 }}>
+              {[
+                { lbl:"Siswa Aktif Minggu Ini", val:"1.250", delta:"+12%" },
+                { lbl:"Kursus Diselesaikan", val:"320", delta:"+18%" },
+                { lbl:"Jam Belajar Total", val:"2.450j", delta:"+22%" },
+              ].map((s) => (
+                <div key={s.lbl} style={{ background:"#F9FAFB",borderRadius:10,padding:"10px 12px" }}>
+                  <div style={{ fontSize:9,color:"#9CA3AF",marginBottom:3 }}>{s.lbl}</div>
+                  <div style={{ fontFamily:"'Poppins',sans-serif",fontWeight:700,fontSize:18,color:"#0B1D3A",lineHeight:1 }}>{s.val}</div>
+                  <div style={{ fontSize:9,color:"#16A34A",marginTop:2,fontWeight:600 }}>{s.delta}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* 4 program pills */}
+        <div style={{ display:"flex",flexWrap:"wrap",gap:8 }}>
+          {[
+            { t:"Talent Development", c:"#1D4ED8", bg:"#EFF6FF" },
+            { t:"Kompetisi & Challenge", c:"#16A34A", bg:"#D1FAE5" },
+            { t:"Pelatihan Guru", c:"#D97706", bg:"#FFF6E0" },
+            { t:"Kolaborasi Sekolah", c:"#7C3AED", bg:"#EDE9FE" },
+          ].map((p) => (
+            <div key={p.t} style={{ padding:"7px 14px",borderRadius:99,background:p.bg,color:p.c,fontSize:12,fontWeight:700 }}>
+              {p.t}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+);
+
 /* ─── Mitra ─── */
 const Mitra = () => {
   const mitraCards = [
@@ -1201,6 +1348,7 @@ const Index = () => {
         <CaraKerja navigate={navigate} />
         <Testimoni />
         <Harga navigate={navigate} />
+        <ForSchoolTeaser navigate={navigate} />
         <Mitra />
         <Articles navigate={navigate} />
         <Footer navigate={navigate} />
