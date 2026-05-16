@@ -15,6 +15,7 @@ import CommunityPreview from "@/components/CommunityPreview";
 import { BottomNavigationBar } from "@/components/dashboard/BottomNavigationBar";
 import { CoursesSection } from "@/components/dashboard/CoursesSection";
 import { ChallengesSection } from "@/components/dashboard/ChallengesSection";
+import { ChallengesPreview } from "@/components/dashboard/ChallengesPreview";
 import { OpportunitiesSection } from "@/components/dashboard/OpportunitiesSection";
 import { ProgressTracker } from "@/components/dashboard/ProgressTracker";
 import { Achievements } from "@/components/dashboard/Achievements";
@@ -189,6 +190,8 @@ const Dashboard = () => {
             {/* Onboarding checklist — only for new users */}
             {user?.id && <OnboardingChecklist userId={user.id} profile={profile} />}
             <WelcomeDashboard user={user} profile={profile} />
+            {/* Challenges — shown inline (temporary/ephemeral, no dedicated tab) */}
+            <ChallengesPreview />
             <CoursesPreview profile={profile} />
             <OpportunitiesPreview profile={profile} />
             <CommunityPreview userAssessment={profile} userInterests={userInterests} profile={profile} />
@@ -199,7 +202,8 @@ const Dashboard = () => {
       case "courses":
         return <CoursesSection />;
       case "challenges":
-        return <ChallengesSection />;
+        // Tab removed — challenges now live on the overview page
+        return null;
       case "opportunities":
         return <OpportunitiesSection />;
       case "progress":
@@ -234,6 +238,7 @@ const Dashboard = () => {
             {user?.id && <WelcomeNudge userId={user.id} />}
             {user?.id && <OnboardingChecklist userId={user.id} profile={profile} />}
             <WelcomeDashboard user={user} profile={profile} />
+            <ChallengesPreview />
             <CoursesPreview profile={profile} />
             <OpportunitiesPreview profile={profile} />
             <CommunityPreview userAssessment={profile} userInterests={userInterests} profile={profile} />

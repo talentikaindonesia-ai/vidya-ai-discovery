@@ -20,7 +20,6 @@ interface DashboardSidebarProps {
 const NAV_ITEMS = [
   { id: "overview",      label: "Dashboard",    icon: Home,     route: "/dashboard" },
   { id: "courses",       label: "Kursus Saya",  icon: BookOpen, route: "/learning" },
-  { id: "challenges",    label: "Tantangan",    icon: Trophy,   route: "/dashboard-gamified" },
   { id: "opportunities", label: "Peluang",      icon: Briefcase,route: "/opportunities" },
   { id: "progress",      label: "Progress",     icon: BarChart3,route: "/dashboard" },
   { id: "achievements",  label: "Pencapaian",   icon: Award,    route: "/dashboard" },
