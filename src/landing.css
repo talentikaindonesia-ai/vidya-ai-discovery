@@ -702,11 +702,9 @@
   background: #fff;
   border: 1px solid var(--lp-gray-150);
   border-radius: 24px;
-  padding: 28px;
+  padding: 28px 28px 120px; /* bottom padding creates safe zone above illustration */
   position: relative;
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
   transition: transform .3s var(--lp-ease-lift), box-shadow .3s var(--lp-ease-lift), border-color .3s;
 }
 .lp-wrap .lp-feature-card:hover {
@@ -758,14 +756,12 @@
   max-width: 34ch;
 }
 .lp-wrap .lp-feature-illus {
-  /* Moved to TOP of card so it never covers text */
-  order: -1;            /* visually first in flex-column, above num/title/desc */
-  align-self: flex-end; /* hugs the right edge */
-  width: 130px;
-  height: 130px;
+  position: absolute;
+  right: -8px;
+  bottom: -8px;
+  width: 170px;
+  height: 170px;
   pointer-events: none;
-  margin: -8px -8px 12px auto; /* bleed slightly off top-right, space below before text */
-  flex-shrink: 0;
 }
 
 /* Feature trust strip */
@@ -1927,7 +1923,7 @@
     min-width: 0;
   }
   .lp-wrap .lp-feature-card h3 { font-size: 18px; }
-  .lp-wrap .lp-feature-illus { width: 100px; height: 100px; margin: -8px -8px 10px auto; }
+  .lp-wrap .lp-feature-illus { width: 120px; height: 120px; }
   .lp-wrap .lp-feature-trust { grid-template-columns: 1fr; gap: 16px; padding: 20px; }
   .lp-wrap .lp-ft-lead { gap: 12px; }
 
