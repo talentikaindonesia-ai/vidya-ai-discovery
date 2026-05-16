@@ -1790,7 +1790,9 @@
 
   /* ── Nav ── */
   .lp-wrap .lp-nav-links { display: none; }
-  .lp-wrap .lp-nav-cta { display: none; }
+  /* Hide top-level CTA (desktop) but keep the one inside the mobile menu */
+  .lp-wrap .lp-nav-inner > .lp-nav-cta { display: none; }
+  .lp-wrap .lp-mobile-menu .lp-nav-cta { display: flex; }
   .lp-wrap .lp-hamburger { display: grid; place-items: center; }
   .lp-wrap .lp-nav-inner { padding: 12px 18px; }
   .lp-wrap .lp-mobile-menu { padding: 12px 18px 20px; }
