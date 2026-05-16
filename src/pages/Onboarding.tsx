@@ -530,6 +530,21 @@ const Onboarding = () => {
               )}
             </button>
           </div>
+
+          {/* Skip link */}
+          <div style={{ textAlign: "center", marginTop: 16 }}>
+            <button
+              onClick={() => navigate("/dashboard")}
+              style={{
+                background: "none", border: "none", cursor: "pointer",
+                fontFamily: "var(--tk-font-display)", fontSize: 13,
+                color: "var(--tk-gray-400)", textDecoration: "underline",
+                textUnderlineOffset: 3,
+              }}
+            >
+              Isi nanti, langsung ke dashboard →
+            </button>
+          </div>
         </div>
       </div>
     </div>

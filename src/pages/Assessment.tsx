@@ -1215,6 +1215,163 @@ const Assessment = () => {
           )}
         </div>
 
+        {/* Recommended courses based on RIASEC type */}
+        {(() => {
+          const courseMap: Record<string, { emoji: string; title: string; desc: string; tag: string }[]> = {
+            realistic:     [
+              { emoji: "🛠️", title: "Teknik & Rekayasa Dasar", desc: "Pelajari prinsip dasar rekayasa, mekanik, dan pembuatan produk fisik.", tag: "Teknik" },
+              { emoji: "💻", title: "Pemrograman untuk Pemula", desc: "Mulai coding dari nol — logika, variabel, dan membangun program pertamamu.", tag: "Teknologi" },
+              { emoji: "📐", title: "Desain Produk & Prototyping", desc: "Dari ide ke prototipe: belajar merancang produk yang fungsional dan estetis.", tag: "Desain" },
+            ],
+            investigative: [
+              { emoji: "📊", title: "Analisis Data dengan Python", desc: "Transformasi data mentah menjadi insight bermakna menggunakan Python & Pandas.", tag: "Data Science" },
+              { emoji: "🔬", title: "Riset & Metodologi Ilmiah", desc: "Pelajari cara merancang penelitian yang valid dan menyajikan hasilnya.", tag: "Riset" },
+              { emoji: "🧮", title: "Statistika untuk Pemula", desc: "Dasar probabilitas, distribusi, dan pengujian hipotesis secara praktis.", tag: "Matematika" },
+            ],
+            artistic:      [
+              { emoji: "🎨", title: "UI/UX Design Fundamental", desc: "Prinsip desain antarmuka yang indah dan pengalaman pengguna yang intuitif.", tag: "Desain" },
+              { emoji: "✍️", title: "Content Writing & Copywriting", desc: "Tulis konten yang menarik, persuasif, dan relevan untuk audiens digitalmu.", tag: "Konten" },
+              { emoji: "🎬", title: "Video Editing & Storytelling", desc: "Buat video yang menghipnotis — teknik editing, color grading, dan narasi.", tag: "Kreatif" },
+            ],
+            social:        [
+              { emoji: "🤝", title: "Public Speaking & Presentasi", desc: "Bicara dengan percaya diri di depan umum dan sampaikan pesan yang berkesan.", tag: "Komunikasi" },
+              { emoji: "🧘", title: "Psikologi Dasar & Empati", desc: "Pahami perilaku manusia, emosi, dan cara membangun hubungan bermakna.", tag: "Psikologi" },
+              { emoji: "🏫", title: "Pendidikan & Fasilitasi", desc: "Teknik mengajar efektif, merancang kurikulum, dan memfasilitasi belajar.", tag: "Pendidikan" },
+            ],
+            enterprising:  [
+              { emoji: "🚀", title: "Kewirausahaan & Startup", desc: "Dari ide ke bisnis nyata — validasi pasar, pitch, dan scale-up.", tag: "Bisnis" },
+              { emoji: "📣", title: "Digital Marketing Fundamentals", desc: "SEO, social media, dan iklan digital untuk tumbuhkan bisnis online.", tag: "Marketing" },
+              { emoji: "💼", title: "Leadership & Manajemen Tim", desc: "Pelajari cara memimpin tim, membuat keputusan, dan mengelola konflik.", tag: "Leadership" },
+            ],
+            conventional:  [
+              { emoji: "📋", title: "Manajemen Proyek dengan Agile", desc: "Kelola proyek secara terstruktur dengan metode Scrum dan Kanban.", tag: "Manajemen" },
+              { emoji: "💹", title: "Akuntansi & Keuangan Dasar", desc: "Pahami laporan keuangan, arus kas, dan prinsip akuntansi untuk bisnis.", tag: "Keuangan" },
+              { emoji: "🗂️", title: "Produktivitas & Manajemen Waktu", desc: "Sistem kerja efisien, prioritisasi tugas, dan kebiasaan yang menghasilkan.", tag: "Produktivitas" },
+            ],
+          };
+          const courses = courseMap[primaryType] ?? courseMap.investigative;
+          return (
+            <div
+              style={{
+                background: "white",
+                borderRadius: 24,
+                border: "1px solid var(--tk-gray-200)",
+                padding: "28px 32px",
+                marginBottom: 32,
+              }}
+            >
+              <h3
+                style={{
+                  fontFamily: "var(--tk-font-display)",
+                  fontWeight: 700,
+                  fontSize: 18,
+                  color: "var(--tk-ink)",
+                  marginBottom: 6,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                }}
+              >
+                <span style={{ fontSize: 20 }}>🎓</span>
+                Kursus yang Cocok untuk Tipe {personalityData.name}
+              </h3>
+              <p style={{ color: "var(--tk-gray-500)", fontSize: 13, marginBottom: 20 }}>
+                Mulai belajar sekarang dengan kursus yang dirancang khusus untuk tipe kepribadianmu.
+              </p>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14, marginBottom: 18 }}>
+                {courses.map((course, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      padding: "18px 16px",
+                      borderRadius: 16,
+                      border: "1.5px solid var(--tk-gray-200)",
+                      background: "var(--tk-gray-50)",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 8,
+                      cursor: "pointer",
+                      transition: "box-shadow .2s, border-color .2s",
+                    }}
+                    onMouseEnter={e => {
+                      (e.currentTarget as HTMLElement).style.boxShadow = "var(--tk-shadow-lg)";
+                      (e.currentTarget as HTMLElement).style.borderColor = personalityData.accent;
+                    }}
+                    onMouseLeave={e => {
+                      (e.currentTarget as HTMLElement).style.boxShadow = "none";
+                      (e.currentTarget as HTMLElement).style.borderColor = "var(--tk-gray-200)";
+                    }}
+                    onClick={() => navigate("/learning")}
+                  >
+                    <div style={{ fontSize: 30 }}>{course.emoji}</div>
+                    <span
+                      style={{
+                        display: "inline-block",
+                        padding: "2px 10px",
+                        borderRadius: 99,
+                        background: `${personalityData.accent}18`,
+                        color: personalityData.accent,
+                        fontFamily: "var(--tk-font-display)",
+                        fontWeight: 700,
+                        fontSize: 11,
+                        width: "fit-content",
+                      }}
+                    >
+                      {course.tag}
+                    </span>
+                    <div
+                      style={{
+                        fontFamily: "var(--tk-font-display)",
+                        fontWeight: 700,
+                        fontSize: 13.5,
+                        color: "var(--tk-ink)",
+                        lineHeight: 1.35,
+                      }}
+                    >
+                      {course.title}
+                    </div>
+                    <div style={{ fontSize: 12, color: "var(--tk-gray-500)", lineHeight: 1.5 }}>
+                      {course.desc}
+                    </div>
+                    <div
+                      style={{
+                        marginTop: "auto",
+                        fontSize: 12,
+                        fontWeight: 700,
+                        color: personalityData.accent,
+                        fontFamily: "var(--tk-font-display)",
+                      }}
+                    >
+                      Mulai belajar →
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ textAlign: "center" }}>
+                <button
+                  onClick={() => navigate("/learning")}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    padding: "9px 22px",
+                    borderRadius: 12,
+                    border: "1.5px solid var(--tk-blue-300)",
+                    background: "var(--tk-blue-50)",
+                    cursor: "pointer",
+                    fontFamily: "var(--tk-font-display)",
+                    fontWeight: 600,
+                    fontSize: 13,
+                    color: "var(--tk-blue-700)",
+                  }}
+                >
+                  Lihat semua kursus →
+                </button>
+              </div>
+            </div>
+          );
+        })()}
+
         {/* CTA: Lihat Dashboard + Retake */}
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}>
           <button

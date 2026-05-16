@@ -382,22 +382,79 @@ export const WelcomeDashboard = ({ user, profile }: WelcomeDashboardProps) => {
       {/* ══════════════ RIGHT RAIL ══════════════ */}
       <div className="flex flex-col gap-4">
 
-        {/* ── Ringkasan Progress ─────────────────────────────── */}
+        {/* ── Ringkasan Progress / Getting Started ──────────── */}
         <div className="tk-card">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <TrendingUp size={18} style={{ color: "var(--tk-blue-600)" }} />
               <h3 style={{ fontFamily: "var(--tk-font-display)", fontWeight: 700, fontSize: 16, color: "var(--tk-ink)", margin: 0 }}>
-                Ringkasan Progress
+                {stats.coursesEnrolled === 0 && stats.coursesCompleted === 0 && stats.achievements === 0
+                  ? "Mulai Perjalananmu"
+                  : "Ringkasan Progress"}
               </h3>
             </div>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            <MiniStat icon={BookOpen}    color="blue"   label="Kursus Aktif"    value={String(stats.coursesEnrolled)}   sub="Lanjutkan belajar!" />
-            <MiniStat icon={CheckCircle} color="green"  label="Selesai"         value={String(stats.coursesCompleted)}  sub="Kursus tuntas" />
-            <MiniStat icon={Clock}       color="orange" label="Jam Belajar"     value={String(stats.totalLearningTime)} sub="Total waktu" />
-            <MiniStat icon={Star}        color="yellow" label="Pencapaian"      value={String(stats.achievements)}      sub="Badge diraih" />
-          </div>
+
+          {stats.coursesEnrolled === 0 && stats.coursesCompleted === 0 && stats.achievements === 0 ? (
+            /* ── Empty state: 4 actionable starter cards ── */
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              {[
+                {
+                  emoji: "🧠", label: "Ikuti Assessment",
+                  sub: "Temukan tipe kepribadian & bakat", href: "/assessment",
+                  bg: "var(--tk-blue-50)", color: "var(--tk-blue-700)",
+                },
+                {
+                  emoji: "📚", label: "Jelajahi Kursus",
+                  sub: "Mulai belajar kursus pertamamu", href: "/learning",
+                  bg: "var(--tk-mint)", color: "var(--tk-green-dark)",
+                },
+                {
+                  emoji: "💼", label: "Lihat Peluang",
+                  sub: "Beasiswa & magang tersedia", href: "/opportunities",
+                  bg: "var(--tk-orange-soft)", color: "#C04400",
+                },
+                {
+                  emoji: "👤", label: "Lengkapi Profil",
+                  sub: "Profil lengkap = rekomendasi lebih baik", href: "/profile",
+                  bg: "var(--tk-lilac)", color: "#5B21B6",
+                },
+              ].map(({ emoji, label, sub, href, bg, color }) => (
+                <button
+                  key={label}
+                  onClick={() => navigate(href)}
+                  style={{
+                    textAlign: "left",
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: 10,
+                    padding: "14px 12px",
+                    borderRadius: 14,
+                    background: bg,
+                    border: "none",
+                    cursor: "pointer",
+                    transition: "opacity .15s",
+                  }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = ".85"; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = "1"; }}
+                >
+                  <span style={{ fontSize: 24, flexShrink: 0 }}>{emoji}</span>
+                  <div>
+                    <div style={{ fontFamily: "var(--tk-font-display)", fontWeight: 700, fontSize: 13, color }}>{label}</div>
+                    <div style={{ fontSize: 11, color, opacity: 0.75, marginTop: 2, lineHeight: 1.3 }}>{sub}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          ) : (
+            /* ── Normal stats grid ── */
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              <MiniStat icon={BookOpen}    color="blue"   label="Kursus Aktif"    value={String(stats.coursesEnrolled)}   sub="Lanjutkan belajar!" />
+              <MiniStat icon={CheckCircle} color="green"  label="Selesai"         value={String(stats.coursesCompleted)}  sub="Kursus tuntas" />
+              <MiniStat icon={Clock}       color="orange" label="Jam Belajar"     value={String(stats.totalLearningTime)} sub="Total waktu" />
+              <MiniStat icon={Star}        color="yellow" label="Pencapaian"      value={String(stats.achievements)}      sub="Badge diraih" />
+            </div>
+          )}
         </div>
 
         {/* ── Kursus Terakhir Diakses ────────────────────────── */}

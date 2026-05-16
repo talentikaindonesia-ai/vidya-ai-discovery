@@ -192,6 +192,8 @@ const Auth = () => {
           .catch(() => {}); // best-effort
       }
 
+      // Mark as new user so login redirects to /onboarding
+      sessionStorage.setItem("new_user_email", email);
       toast.success("Akun berhasil dibuat! Silakan login untuk melanjutkan.");
     } catch (error: any) {
       setError(error.message);
@@ -222,8 +224,17 @@ const Auth = () => {
             supabase.auth.signOut();
           });
         }
+        // New users (just registered) go to onboarding first
+        const newUserEmail = sessionStorage.getItem("new_user_email");
+        const isNewUser = newUserEmail === data.user.email;
+        if (isNewUser) sessionStorage.removeItem("new_user_email");
+
         const destination =
-          redirectTo === "talentika-junior" ? "/talentika-junior" : "/dashboard";
+          redirectTo === "talentika-junior"
+            ? "/talentika-junior"
+            : isNewUser
+            ? "/onboarding"
+            : "/dashboard";
         navigate(destination);
       }
     } catch (error: any) {
