@@ -2,16 +2,32 @@ import { useState, useEffect } from "react";
 import {
   BookOpen, Clock, Target, Star, Trophy, Brain,
   Activity, TrendingUp, ChevronRight, RefreshCw,
+  Wrench, Microscope, Palette, Users, Briefcase, Calculator,
+  Play, CheckCircle,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
-import { AssessmentResultsCard } from "./AssessmentResultsCard";
 import { useNavigate } from "react-router-dom";
 
 interface WelcomeDashboardProps {
   user: User | null;
   profile: any;
 }
+
+// ── RIASEC type map ───────────────────────────────────────────────────────────
+const RIASEC: Record<string, { emoji: string; name: string; desc: string; gradient: string; iconColor: string }> = {
+  realistic:     { emoji: "🔧", name: "Realistic (Doer)",         desc: "Suka bekerja dengan tangan, praktis, dan berorientasi hasil konkret",    gradient: "linear-gradient(135deg,#FED7AA,#FB923C)", iconColor: "#C2410C" },
+  investigative: { emoji: "🔬", name: "Investigative (Thinker)",  desc: "Suka menganalisis, meneliti, dan memecahkan masalah kompleks",           gradient: "linear-gradient(135deg,#BFDBFE,#60A5FA)", iconColor: "#1D4ED8" },
+  artistic:      { emoji: "🎨", name: "Artistic (Creator)",       desc: "Kreatif, ekspresif, dan suka menciptakan sesuatu yang baru",             gradient: "linear-gradient(135deg,#E9D5FF,#A78BFA)", iconColor: "#6D28D9" },
+  social:        { emoji: "🤝", name: "Social (Helper)",          desc: "Suka membantu orang lain, empatis, dan berorientasi hubungan sosial",    gradient: "linear-gradient(135deg,#FBCFE8,#F472B6)", iconColor: "#BE185D" },
+  enterprising:  { emoji: "💼", name: "Enterprising (Persuader)", desc: "Suka memimpin, persuasif, dan berorientasi pada pencapaian tujuan",      gradient: "linear-gradient(135deg,#D1FAE5,#34D399)", iconColor: "#065F46" },
+  conventional:  { emoji: "📊", name: "Conventional (Organizer)", desc: "Teratur, detail, dan suka mengorganisir informasi atau data",            gradient: "linear-gradient(135deg,#CCFBF1,#2DD4BF)", iconColor: "#0F766E" },
+};
+
+const RIASEC_ICONS: Record<string, React.ElementType> = {
+  realistic: Wrench, investigative: Microscope, artistic: Palette,
+  social: Users, enterprising: Briefcase, conventional: Calculator,
+};
 
 // ── Design tokens helpers ─────────────────────────────────────────────────────
 const TINTS: Record<string, [string, string]> = {
@@ -61,6 +77,17 @@ function ActivityItem({ icon: Icon, color, title, subject, time }: {
   );
 }
 
+// ── Category colour band ──────────────────────────────────────────────────────
+const CAT_GRADIENTS = [
+  "linear-gradient(135deg,#DBEAFE,#93C5FD)",
+  "linear-gradient(135deg,#FEF3C7,#FDE68A)",
+  "linear-gradient(135deg,#EDE9FE,#C4B5FD)",
+  "linear-gradient(135deg,#D1FAE5,#A7F3D0)",
+  "linear-gradient(135deg,#FCE7F3,#FBCFE8)",
+  "linear-gradient(135deg,#CCFBF1,#2DD4BF)",
+];
+const CAT_COLORS = ["#1D4ED8","#A47000","#6D28D9","#0F7A3E","#BE185D","#0F766E"];
+
 export const WelcomeDashboard = ({ user, profile }: WelcomeDashboardProps) => {
   const navigate = useNavigate();
   const [stats, setStats] = useState({
@@ -74,40 +101,59 @@ export const WelcomeDashboard = ({ user, profile }: WelcomeDashboardProps) => {
   const [assessmentResults, setAssessmentResults] = useState<any>(null);
 
   useEffect(() => {
-    if (user?.id) loadDashboardData();
+    if (user?.id) loadDashboardData(user.id);
   }, [user?.id]);
 
-  const loadDashboardData = async () => {
+  const loadDashboardData = async (userId: string) => {
     try {
       const [
         { data: progressData },
         { data: achievementsData },
-        { data: coursesData },
         { data: assessmentData },
+        { data: recentProgressData },
       ] = await Promise.all([
-        supabase.from("user_progress").select("*").eq("user_id", user?.id),
-        supabase.from("achievements").select("*").eq("user_id", user?.id),
-        supabase.from("courses").select("*, interest_categories(*)").limit(3),
+        supabase
+          .from("learning_progress")
+          .select("content_id, status, progress_percentage, time_spent_minutes, last_accessed_at")
+          .eq("user_id", userId),
+        supabase.from("achievements").select("id").eq("user_id", userId),
         supabase
           .from("assessment_results")
-          .select("*")
-          .eq("user_id", user?.id)
+          .select("personality_type, career_recommendations, talent_areas, score_breakdown, interest_categories, created_at")
+          .eq("user_id", userId)
           .order("created_at", { ascending: false })
           .limit(1)
           .maybeSingle(),
+        supabase
+          .from("learning_progress")
+          .select("content_id, progress_percentage, status, last_accessed_at, learning_content(id, title, description, content_type, category_id, duration_minutes)")
+          .eq("user_id", userId)
+          .order("last_accessed_at", { ascending: false })
+          .limit(3),
       ]);
 
       setStats({
-        coursesEnrolled: progressData?.length ?? 0,
-        coursesCompleted: progressData?.filter((p: any) => p.progress_percentage === 100).length ?? 0,
+        coursesEnrolled:   progressData?.filter(p => p.status !== "completed").length ?? 0,
+        coursesCompleted:  progressData?.filter(p => p.status === "completed").length ?? 0,
         totalLearningTime: Math.round(
-          (progressData?.reduce((t: number, p: any) => t + (p.time_spent_minutes ?? 0), 0) ?? 0) / 60
+          (progressData?.reduce((t, p: any) => t + (p.time_spent_minutes ?? 0), 0) ?? 0) / 60
         ),
         achievements: achievementsData?.length ?? 0,
         challenges: 0,
       });
-      setRecentCourses(coursesData ?? []);
+
       setAssessmentResults(assessmentData ?? null);
+
+      // Map recent courses from progress data
+      const courses = (recentProgressData ?? [])
+        .filter(p => (p as any).learning_content)
+        .map((p: any) => ({
+          ...p.learning_content,
+          progress_percentage: p.progress_percentage ?? 0,
+          status: p.status,
+          last_accessed_at: p.last_accessed_at,
+        }));
+      setRecentCourses(courses);
     } catch (err) {
       console.error("Error loading dashboard data:", err);
     }
@@ -118,16 +164,22 @@ export const WelcomeDashboard = ({ user, profile }: WelcomeDashboardProps) => {
   const greeting = hour < 11 ? "Pagi" : hour < 15 ? "Siang" : hour < 18 ? "Sore" : "Malam";
   const firstName = profile?.full_name?.split(" ")[0] || user?.email?.split("@")[0] || "Talentika";
 
-  // Course color mapping
-  const courseGrads: Record<string, string> = {
-    blue:   "linear-gradient(135deg,#DBEAFE,#93C5FD)",
-    yellow: "linear-gradient(135deg,#FEF3C7,#FDE68A)",
-    pink:   "linear-gradient(135deg,#FCE7F3,#FBCFE8)",
-    green:  "linear-gradient(135deg,#D1FAE5,#A7F3D0)",
-    purple: "linear-gradient(135deg,#EDE9FE,#C4B5FD)",
-  };
-  const courseColors: Record<string, string> = {
-    blue: "#1D4ED8", yellow: "#A47000", pink: "#BE185D", green: "#0F7A3E", purple: "#6D28D9",
+  // RIASEC derived values
+  const riasecKey = assessmentResults?.personality_type as string | undefined;
+  const riasecInfo = riasecKey ? (RIASEC[riasecKey] ?? null) : null;
+  const RiasecIcon = riasecKey ? (RIASEC_ICONS[riasecKey] ?? Brain) : Brain;
+
+  const scoreBreakdown: Record<string, number> = assessmentResults?.score_breakdown ?? {};
+  const totalScore = Object.values(scoreBreakdown).reduce((s, v) => s + Number(v || 0), 0);
+  const primaryScore = Number(scoreBreakdown[riasecKey ?? ""] || 0);
+  const percentage = totalScore > 0 ? Math.round((primaryScore / totalScore) * 100) : 0;
+
+  const formatTimeAgo = (iso: string) => {
+    const diff = Date.now() - new Date(iso).getTime();
+    const h = Math.floor(diff / 3.6e6);
+    if (h < 1) return "Baru saja";
+    if (h < 24) return `${h} jam lalu`;
+    return `${Math.floor(h / 24)} hari lalu`;
   };
 
   return (
@@ -168,7 +220,9 @@ export const WelcomeDashboard = ({ user, profile }: WelcomeDashboardProps) => {
               <span className="tk-wave" style={{ display: "inline-block" }}>👋</span>
             </h2>
             <p style={{ color: "rgba(255,255,255,.85)", margin: 0, fontSize: 14.5 }}>
-              Mari lanjutkan perjalanan pembelajaran Anda hari ini.
+              {riasecInfo
+                ? `Tipe ${riasecInfo.name} — ${riasecInfo.desc}`
+                : "Mari lanjutkan perjalanan pembelajaran Anda hari ini."}
             </p>
           </div>
 
@@ -178,7 +232,7 @@ export const WelcomeDashboard = ({ user, profile }: WelcomeDashboardProps) => {
             <path d="M0 90 C 60 60, 120 110, 200 80 L 220 90 L 220 140 L 0 140 Z"
               fill="rgba(255,255,255,.12)" />
             <circle cx="175" cy="52" r="22" fill="#FFC107" opacity=".7" />
-            <text x="140" y="102" fontSize="52">🙋‍♂️</text>
+            <text x="140" y="102" fontSize="52">{riasecInfo?.emoji ?? "🙋‍♂️"}</text>
           </svg>
           <span className="tk-sparkle" style={{ position: "absolute", top: 18, right: 55, fontSize: 15, color: "#FFC107" }}>✦</span>
           <span className="tk-sparkle" style={{ position: "absolute", top: 58, right: 130, fontSize: 10, color: "rgba(255,255,255,.6)" }}>✦</span>
@@ -193,46 +247,71 @@ export const WelcomeDashboard = ({ user, profile }: WelcomeDashboardProps) => {
             </h3>
           </div>
 
-          {assessmentResults ? (
+          {riasecInfo ? (
             <>
               {/* RIASEC type */}
               <div className="text-center mb-5">
-                <div className="tk-avatar" style={{
-                  width: 80, height: 80, fontSize: 32, margin: "0 auto 12px",
-                  background: "radial-gradient(circle at 30% 30%, #F0E8FF, #7C3AED)",
-                }}>
-                  {assessmentResults.primary_type?.charAt(0) ?? "🎨"}
+                <div className="flex items-center justify-center mx-auto mb-3"
+                  style={{
+                    width: 80, height: 80, borderRadius: 20,
+                    background: riasecInfo.gradient,
+                    color: riasecInfo.iconColor,
+                    fontSize: 36,
+                  }}>
+                  {riasecInfo.emoji}
                 </div>
                 <h3 style={{ fontFamily: "var(--tk-font-display)", fontWeight: 700, fontSize: 20, color: "var(--tk-ink)", margin: "0 0 4px" }}>
-                  {assessmentResults.primary_type ?? "Artistic (Creator)"}
+                  {riasecInfo.name}
                 </h3>
                 <p style={{ color: "var(--tk-gray-500)", margin: 0, fontSize: 13 }}>
-                  {assessmentResults.description ?? "Kreatif, ekspresif, dan suka menciptakan sesuatu yang baru"}
+                  {riasecInfo.desc}
                 </p>
               </div>
 
               {/* Kesesuaian */}
-              <div className="flex justify-between items-center mb-1.5">
-                <span style={{ fontSize: 13, fontWeight: 600, color: "var(--tk-ink)" }}>Tingkat Kesesuaian</span>
-                <span style={{ fontFamily: "var(--tk-font-display)", fontWeight: 700, color: "var(--tk-blue-700)" }}>
-                  {assessmentResults.score ? `${Math.round(assessmentResults.score)}%` : "–"}
-                </span>
-              </div>
-              <div className="tk-progress mb-5">
-                <div className="tk-progress-fill" style={{ width: `${assessmentResults.score ?? 0}%` }} />
-              </div>
+              {percentage > 0 && (
+                <>
+                  <div className="flex justify-between items-center mb-1.5">
+                    <span style={{ fontSize: 13, fontWeight: 600, color: "var(--tk-ink)" }}>Tingkat Kesesuaian</span>
+                    <span style={{ fontFamily: "var(--tk-font-display)", fontWeight: 700, color: "var(--tk-blue-700)" }}>
+                      {percentage}%
+                    </span>
+                  </div>
+                  <div className="tk-progress mb-5">
+                    <div className="tk-progress-fill" style={{ width: `${percentage}%` }} />
+                  </div>
+                </>
+              )}
 
               {/* Career pills */}
-              <div className="text-center mb-3">
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontFamily: "var(--tk-font-display)", fontWeight: 600, fontSize: 13 }}>
-                  <Target size={14} style={{ color: "var(--tk-orange)" }} /> Rekomendasi Karier
-                </span>
-              </div>
-              <div className="flex flex-wrap gap-2 justify-center mb-5">
-                {(assessmentResults.career_recommendations ?? ["Seni", "Design", "Media", "Kreatif"]).slice(0, 4).map((c: string) => (
-                  <span key={c} className="tk-pill tk-pill-orange">{c}</span>
-                ))}
-              </div>
+              {assessmentResults.career_recommendations?.length > 0 && (
+                <>
+                  <div className="text-center mb-3">
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontFamily: "var(--tk-font-display)", fontWeight: 600, fontSize: 13 }}>
+                      <Target size={14} style={{ color: "var(--tk-orange)" }} /> Rekomendasi Karier
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-2 justify-center mb-5">
+                    {assessmentResults.career_recommendations.slice(0, 4).map((c: string) => (
+                      <span key={c} className="tk-pill tk-pill-orange">{c}</span>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {/* Talent areas */}
+              {assessmentResults.talent_areas?.length > 0 && (
+                <div className="flex flex-wrap gap-2 justify-center mb-5">
+                  {assessmentResults.talent_areas.slice(0, 3).map((t: string) => {
+                    const TIcon = RIASEC_ICONS[t] ?? Brain;
+                    return (
+                      <span key={t} className="tk-pill" style={{ background: "var(--tk-blue-50)", color: "var(--tk-blue-700)", display: "inline-flex", alignItems: "center", gap: 4 }}>
+                        <TIcon size={11} /> {RIASEC[t]?.name?.split(" ")[0] ?? t}
+                      </span>
+                    );
+                  })}
+                </div>
+              )}
 
               {/* Actions */}
               <div className="grid grid-cols-2 gap-2.5">
@@ -312,19 +391,16 @@ export const WelcomeDashboard = ({ user, profile }: WelcomeDashboardProps) => {
                 Ringkasan Progress
               </h3>
             </div>
-            <a onClick={() => navigate("/dashboard")} style={{ color: "var(--tk-blue-600)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
-              Lihat Semua
-            </a>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            <MiniStat icon={BookOpen} color="blue"   label="Kursus Aktif"     value={String(stats.coursesEnrolled)}    sub="Lanjutkan belajar!" />
-            <MiniStat icon={Clock}    color="green"  label="Jam Belajar"      value={String(stats.totalLearningTime)}  sub="Jam" />
-            <MiniStat icon={Trophy}   color="purple" label="Tantangan Aktif"  value={String(stats.challenges)}        sub="Ikuti tantangan" />
-            <MiniStat icon={Star}     color="yellow" label="Pencapaian"       value={String(stats.achievements)}      sub="Badge diraih" />
+            <MiniStat icon={BookOpen}    color="blue"   label="Kursus Aktif"    value={String(stats.coursesEnrolled)}   sub="Lanjutkan belajar!" />
+            <MiniStat icon={CheckCircle} color="green"  label="Selesai"         value={String(stats.coursesCompleted)}  sub="Kursus tuntas" />
+            <MiniStat icon={Clock}       color="orange" label="Jam Belajar"     value={String(stats.totalLearningTime)} sub="Total waktu" />
+            <MiniStat icon={Star}        color="yellow" label="Pencapaian"      value={String(stats.achievements)}      sub="Badge diraih" />
           </div>
         </div>
 
-        {/* ── Kursus Anda ───────────────────────────────────── */}
+        {/* ── Kursus Terakhir Diakses ────────────────────────── */}
         <div className="tk-card">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
@@ -352,40 +428,40 @@ export const WelcomeDashboard = ({ user, profile }: WelcomeDashboardProps) => {
             </div>
           ) : (
             recentCourses.map((course, idx) => {
-              const colorKey = ["blue", "yellow", "purple"][idx % 3];
-              const progress = Math.floor(Math.random() * 80) + 10; // mock progress
+              const grad = CAT_GRADIENTS[idx % CAT_GRADIENTS.length];
+              const clr  = CAT_COLORS[idx % CAT_COLORS.length];
+              const progress = course.progress_percentage ?? 0;
+              const isDone = course.status === "completed";
               return (
                 <div key={course.id} className="flex items-center gap-3 py-2.5"
                   style={{ borderTop: idx > 0 ? "1px solid var(--tk-gray-150)" : "none" }}>
-                  {/* Course thumb */}
                   <div className="flex items-center justify-center flex-shrink-0 rounded-xl"
-                    style={{
-                      width: 40, height: 40,
-                      background: courseGrads[colorKey],
-                      color: courseColors[colorKey],
-                    }}>
-                    <BookOpen size={18} />
+                    style={{ width: 40, height: 40, background: grad, color: clr }}>
+                    {isDone ? <CheckCircle size={18} /> : <Play size={18} />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div style={{ fontFamily: "var(--tk-font-display)", fontWeight: 600, fontSize: 13, color: "var(--tk-ink)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                      {course.title || course.name || "Kursus"}
+                      {course.title ?? "Kursus"}
                     </div>
                     <div style={{ fontSize: 11, color: "var(--tk-gray-500)" }}>
-                      {course.interest_categories?.name ?? "Pembelajaran"}
+                      {course.last_accessed_at ? formatTimeAgo(course.last_accessed_at) : ""}
                     </div>
                   </div>
                   <div style={{ width: 80 }}>
                     <div className="tk-progress">
                       <div className="tk-progress-fill" style={{ width: `${progress}%` }} />
                     </div>
-                    <div style={{ fontSize: 11, fontFamily: "var(--tk-font-display)", fontWeight: 700, color: "var(--tk-blue-700)", textAlign: "right", marginTop: 3 }}>
+                    <div style={{ fontSize: 11, fontFamily: "var(--tk-font-display)", fontWeight: 700, color: isDone ? "var(--tk-green-dark)" : "var(--tk-blue-700)", textAlign: "right", marginTop: 3 }}>
                       {progress}%
                     </div>
                   </div>
-                  <button className="flex items-center justify-center w-7 h-7 rounded-lg transition-colors"
+                  <button
+                    className="flex items-center justify-center w-7 h-7 rounded-lg transition-colors"
                     style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--tk-gray-400)" }}
                     onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--tk-blue-600)"; }}
-                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--tk-gray-400)"; }}>
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--tk-gray-400)"; }}
+                    onClick={() => navigate(`/learning/content/${course.id}`)}
+                  >
                     <ChevronRight size={14} />
                   </button>
                 </div>
@@ -395,27 +471,28 @@ export const WelcomeDashboard = ({ user, profile }: WelcomeDashboardProps) => {
         </div>
 
         {/* ── RIASEC quick summary (if assessment done) ─────── */}
-        {assessmentResults && (
-          <div className="tk-card" style={{ background: "linear-gradient(135deg, #E8F1FF, #F0E8FF)" }}>
+        {riasecInfo && (
+          <div className="tk-card" style={{ background: riasecInfo.gradient }}>
             <div className="flex items-center gap-2 mb-3">
-              <Activity size={16} style={{ color: "var(--tk-blue-600)" }} />
+              <Activity size={16} style={{ color: riasecInfo.iconColor }} />
               <span style={{ fontFamily: "var(--tk-font-display)", fontWeight: 700, fontSize: 14, color: "var(--tk-ink)" }}>
                 Tipe Kepribadian Anda
               </span>
             </div>
             <div className="flex items-center gap-3">
-              <div className="tk-avatar" style={{
-                width: 48, height: 48, fontSize: 20, borderRadius: 14,
-                background: "linear-gradient(135deg, #7C3AED, #4F46E5)",
-              }}>
-                🎨
+              <div className="flex items-center justify-center flex-shrink-0"
+                style={{
+                  width: 48, height: 48, borderRadius: 14, fontSize: 24,
+                  background: "rgba(255,255,255,.45)",
+                }}>
+                {riasecInfo.emoji}
               </div>
               <div>
                 <div style={{ fontFamily: "var(--tk-font-display)", fontWeight: 700, fontSize: 15, color: "var(--tk-ink)" }}>
-                  {assessmentResults.primary_type ?? "Artistic"}
+                  {riasecInfo.name}
                 </div>
                 <div style={{ fontSize: 12, color: "var(--tk-gray-600)" }}>
-                  Tes dilakukan · {new Date(assessmentResults.created_at).toLocaleDateString("id-ID")}
+                  Tes · {new Date(assessmentResults.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}
                 </div>
               </div>
             </div>
