@@ -290,7 +290,7 @@ const Subscription = () => {
                   color: "#16A34A",
                   bg: "#F0FDF4",
                   title: "Pembayaran Aman",
-                  desc: "Transaksi dilindungi dengan Xendit — payment gateway terpercaya di Indonesia",
+                  desc: "Transaksi dilindungi dengan Mayar — payment gateway terpercaya untuk bisnis Indonesia",
                 },
                 {
                   icon: RotateCcw,

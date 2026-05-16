@@ -10,12 +10,6 @@ max_rows = 1000
 [functions.web-scraper]
 verify_jwt = false
 
-[functions.create-xendit-payment]
-verify_jwt = true
-
-[functions.xendit-webhook]
-verify_jwt = false
-
 [functions.create-mayar-payment]
 verify_jwt = true
 

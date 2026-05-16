@@ -1,0 +1,849 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Talentika for School — Platform Pengembangan Diri & Talenta Siswa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="app/tokens.css"/>
+<link rel="stylesheet" href="app/landing.css"/>
+<link rel="stylesheet" href="app/school.css"/>
+</head>
+<body>
+
+<!-- ============ NAVBAR ============ -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a class="nav-brand" href="Talentika Landing Page.html">
+      <div class="logo-mark">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.7 6.3L20 10l-6.3 1.7L12 18l-1.7-6.3L4 10l6.3-1.7z"/></svg>
+        <span class="star">✦</span>
+      </div>
+      <div class="brand-name">
+        <b>Talentika</b>
+        <small>Discover. Develop. Grow.</small>
+      </div>
+    </a>
+    <div class="nav-links">
+      <a class="nav-link" href="Talentika Landing Page.html">Beranda</a>
+      <a class="nav-link" href="#positioning">Tentang</a>
+      <a class="nav-link" href="#fitur">Fitur</a>
+      <a class="nav-link" href="#program">Program</a>
+      <a class="nav-link" href="#manfaat">Manfaat</a>
+      <a class="nav-link" href="#faq">FAQ</a>
+      <a class="nav-link junior active" href="#">Talentika for School</a>
+    </div>
+    <div class="nav-cta">
+      <a class="btn btn-ghost">Masuk</a>
+      <a class="btn btn-primary">Daftar Sekolah</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ============ HERO ============ -->
+<header class="s-hero">
+  <div class="s-hero-grid">
+    <!-- LEFT -->
+    <div data-comment-anchor="hero-copy">
+      <span class="school-badge">
+        <span class="ico">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V8l9-5 9 5v13"/><path d="M9 21V12h6v9"/></svg>
+        </span>
+        Talentika for School
+      </span>
+      <h1>
+        Platform Pengembangan<br/>
+        Diri &amp; Talenta Siswa<br/>
+        Terintegrasi <span class="blue">untuk Sekolah</span>
+      </h1>
+      <p class="s-lede">
+        Talentika membantu sekolah mencetak generasi berkarakter, kompeten, dan siap menghadapi masa depan
+        melalui pembelajaran, mentoring, dan pengembangan diri yang terukur.
+      </p>
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <a class="btn btn-primary btn-lg">Daftar Sekolah Anda
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+        </a>
+        <a class="btn btn-secondary btn-lg">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          Lihat Demo
+        </a>
+      </div>
+
+      <!-- 4 mini feature highlights -->
+      <div class="s-feat-row">
+        <div class="item f1">
+          <div class="fi-ico">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2V5z"/><path d="M19 19H6"/></svg>
+          </div>
+          <h4>Pembelajaran Berkualitas</h4>
+          <p>Kursus sesuai kebutuhan siswa dan kurikulum.</p>
+        </div>
+        <div class="item f2">
+          <div class="fi-ico">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+          </div>
+          <h4>Mentoring Personal</h4>
+          <p>Bimbingan dari mentor profesional dan ahli.</p>
+        </div>
+        <div class="item f3">
+          <div class="fi-ico">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8M14 7h7v7"/></svg>
+          </div>
+          <h4>Tracking Terukur</h4>
+          <p>Pantau progress, potensi, dan pencapaian siswa.</p>
+        </div>
+        <div class="item f4">
+          <div class="fi-ico">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.5 8.5-8 9-4.5-.5-8-4-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg>
+          </div>
+          <h4>Karakter &amp; Soft Skill</h4>
+          <p>Bangun karakter positif dan soft skill sejak dini.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT VISUAL -->
+    <div class="s-hero-visual" data-comment-anchor="hero-visual">
+      <div class="s-hero-blob b1"></div>
+
+      <svg class="sp a" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.7 6.3L20 10l-6.3 1.7L12 18l-1.7-6.3L4 10l6.3-1.7z"/></svg>
+      <svg class="sp b" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.7 6.3L20 10l-6.3 1.7L12 18l-1.7-6.3L4 10l6.3-1.7z"/></svg>
+      <svg class="sp c" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.7 6.3L20 10l-6.3 1.7L12 18l-1.7-6.3L4 10l6.3-1.7z"/></svg>
+      <svg class="sp d" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.7 6.3L20 10l-6.3 1.7L12 18l-1.7-6.3L4 10l6.3-1.7z"/></svg>
+
+      <image-slot id="school-hero-photo" class="s-hero-photo"
+        placeholder="Drop foto 3-4 siswa SMA di laptop di sini"
+        shape="rect" radius="32"></image-slot>
+
+      <!-- Trust card -->
+      <div class="s-trust">
+        <div class="ts-ico">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.5 8.5-8 9-4.5-.5-8-4-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg>
+        </div>
+        <h5>Dipercaya oleh<br/><b>Ribuan Sekolah</b><br/>di Seluruh Indonesia
+          <span class="stars">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3 7 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3 7 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3 7 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3 7 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3 7 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg>
+          </span>
+        </h5>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ============ MANFAAT BAND ============ -->
+<section id="manfaat" style="padding:0 36px;">
+  <div class="manfaat-band reveal">
+    <div class="mb-title">Manfaat untuk<br/>Sekolah Anda</div>
+    <div class="mb-item">
+      <div class="ico">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.5 8.5-8 9-4.5-.5-8-4-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg>
+      </div>
+      <p>Meningkatkan kualitas pembelajaran &amp; daya saing sekolah</p>
+    </div>
+    <div class="mb-item">
+      <div class="ico">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+      </div>
+      <p>Membantu guru dalam memantau perkembangan siswa</p>
+    </div>
+    <div class="mb-item">
+      <div class="ico">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8M14 7h7v7"/></svg>
+      </div>
+      <p>Mendukung program sekolah berbasis data dan insight</p>
+    </div>
+    <div class="mb-item">
+      <div class="ico">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2 21c0-3.5 3.1-6 7-6s7 2.5 7 6"/><circle cx="17" cy="9" r="2.5"/><path d="M22 19c0-2.5-2-4-5-4"/></svg>
+      </div>
+      <p>Membangun ekosistem positif untuk siswa, guru, dan orang tua</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ POSITIONING + KAMI BERBEDA ============ -->
+<section id="positioning" class="s-section">
+  <div class="s-section-inner">
+    <div class="s-head center reveal">
+      <span class="eyebrow blue">Brand Positioning</span>
+      <h2>Mengapa <span class="blue">Talentika for School?</span></h2>
+      <p>Bukan sekadar platform — kami adalah mitra strategis sekolah dalam membangun generasi hebat yang berkarakter dan berprestasi.</p>
+    </div>
+
+    <div class="pos-grid">
+      <div class="pos-card reveal">
+        <div class="pos-eyebrow">Our Positioning</div>
+        <p>Talentika for School adalah <b>platform terintegrasi pertama di Indonesia</b> yang menggabungkan asesmen potensi, pengembangan diri, dan penguatan karakter untuk mendukung sekolah dalam menciptakan ekosistem pendidikan yang holistik dan berdampak nyata.</p>
+        <div style="margin-top:20px;padding:18px;background:var(--blue-50);border-radius:14px;border-left:4px solid var(--blue-600)">
+          <div style="font-family:var(--display);font-weight:800;font-size:11px;color:var(--blue-700);letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px">Our Positioning Statement</div>
+          <p style="font-family:var(--display);font-weight:500;font-size:14px;color:var(--ink);margin:0;line-height:1.6">Talentika for School adalah <b style="color:var(--blue-700)">mitra strategis sekolah</b> dalam <b style="color:var(--orange)">mengembangkan potensi dan karakter siswa</b> secara terintegrasi, untuk menciptakan <b style="color:var(--green-dark)">generasi hebat</b> yang siap meraih masa depan dan memberi dampak.</p>
+        </div>
+      </div>
+
+      <div class="kami-card reveal">
+        <div class="pos-eyebrow">Kami Berbeda</div>
+        <p style="color:rgba(255,255,255,.85);font-size:14.5px;line-height:1.65">Talentika dirancang oleh praktisi pendidikan & psikolog untuk memberikan dampak nyata pada perkembangan siswa.</p>
+        <ul>
+          <li><span class="ck"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></span> Pendekatan ilmiah &amp; terverifikasi</li>
+          <li><span class="ck"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></span> Solusi terintegrasi &amp; mudah digunakan</li>
+          <li><span class="ck"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></span> Konten relevan &amp; terus diperbarui</li>
+          <li><span class="ck"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></span> Dampak terukur untuk siswa &amp; sekolah</li>
+          <li><span class="ck"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></span> Didukung oleh komunitas &amp; ahli terbaik</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TARGET AUDIENCE ============ -->
+<section class="s-section s-section-tint">
+  <div class="s-section-inner">
+    <div class="s-head center reveal">
+      <span class="eyebrow">Our Target</span>
+      <h2>Untuk Siapa <span class="blue">Talentika for School?</span></h2>
+      <p>Satu platform yang melayani semua aktor utama dalam ekosistem pendidikan — sekolah, guru, dan siswa.</p>
+    </div>
+
+    <div class="target-grid">
+      <div class="target-card t1 reveal">
+        <div class="t-ico">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V8l9-5 9 5v13"/><path d="M9 21V12h6v9"/><path d="M12 6v2M10 7h4"/></svg>
+        </div>
+        <h3>Sekolah</h3>
+        <div class="t-meta">SD · SMP · SMA · SMK</div>
+        <p>Yang ingin meningkatkan kualitas pendidikan, pembinaan karakter, dan kesiapan siswa menghadapi masa depan dengan ekosistem yang terstruktur.</p>
+      </div>
+      <div class="target-card t2 reveal">
+        <div class="t-ico">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2 21c0-3.5 3.1-6 7-6s7 2.5 7 6"/><circle cx="17" cy="9" r="2.5"/><path d="M22 19c0-2.5-2-4-5-4"/></svg>
+        </div>
+        <h3>Guru &amp; Tenaga Pendidik</h3>
+        <div class="t-meta">Wali Kelas · BK · Mentor</div>
+        <p>Yang ingin mendapatkan data dan insight untuk mendampingi siswa secara lebih tepat dan efektif berbasis hasil asesmen yang valid.</p>
+      </div>
+      <div class="target-card t3 reveal">
+        <div class="t-ico">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+        </div>
+        <h3>Siswa</h3>
+        <div class="t-meta">Generasi Penerus Bangsa</div>
+        <p>Yang ingin mengenali potensi diri, mengembangkan kemampuan, dan meraih masa depan terbaiknya melalui pembelajaran yang relevan dan menyenangkan.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ VALUE PROPOSITION ============ -->
+<section id="fitur" class="s-section">
+  <div class="s-section-inner">
+    <div class="s-head center reveal">
+      <span class="eyebrow">Our Value Proposition</span>
+      <h2>Empat Kekuatan Utama untuk <span class="blue">Sekolah Hebat</span></h2>
+      <p>Setiap fitur Talentika for School dirancang untuk mendukung sekolah dari hulu ke hilir — dari mengenali potensi hingga mengukur dampak.</p>
+    </div>
+
+    <div class="value-grid">
+      <div class="value-card v1 reveal">
+        <div class="v-ico">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/><circle cx="11" cy="11" r="2.5" fill="currentColor"/></svg>
+        </div>
+        <div>
+          <h3>Kenali Potensi Secara Akurat</h3>
+          <p>Asesmen ilmiah berbasis Holland, MBTI, dan Multiple Intelligences untuk memetakan potensi, minat, bakat, dan gaya belajar setiap siswa dengan akurasi tinggi.</p>
+        </div>
+      </div>
+      <div class="value-card v2 reveal">
+        <div class="v-ico">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2V5z"/><path d="M19 19H6"/><path d="M9 8h6M9 12h4"/></svg>
+        </div>
+        <div>
+          <h3>Kembangkan Diri &amp; Karakter</h3>
+          <p>Program dan konten pembelajaran lengkap untuk pengembangan diri, soft skills, dan karakter positif yang relevan dengan kebutuhan masa depan.</p>
+        </div>
+      </div>
+      <div class="value-card v3 reveal">
+        <div class="v-ico">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg>
+        </div>
+        <div>
+          <h3>Pantau &amp; Ukur Perkembangan</h3>
+          <p>Dashboard dan laporan komprehensif untuk memantau perkembangan siswa secara berkelanjutan — by individual, kelas, jurusan, atau seluruh sekolah.</p>
+        </div>
+      </div>
+      <div class="value-card v4 reveal">
+        <div class="v-ico">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2 21c0-3.5 3.1-6 7-6s7 2.5 7 6"/><circle cx="17" cy="9" r="2.5"/><path d="M22 19c0-2.5-2-4-5-4"/></svg>
+        </div>
+        <div>
+          <h3>Kolaborasi &amp; Dukungan</h3>
+          <p>Ekosistem kolaboratif antara sekolah, guru, siswa, orang tua, dan komunitas Talentika untuk hasil pembinaan yang maksimal dan berkelanjutan.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats bar -->
+    <div style="margin-top:48px" class="reveal">
+      <div class="stats-bar">
+        <div class="stat-cell">
+          <div class="ico"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V8l9-5 9 5v13"/><path d="M9 21V12h6v9"/></svg></div>
+          <div class="n">500<span class="acc">+</span></div>
+          <div class="l">Sekolah Mitra di Indonesia</div>
+        </div>
+        <div class="stat-cell">
+          <div class="ico"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></div>
+          <div class="n">120K<span class="acc">+</span></div>
+          <div class="l">Siswa Tergabung</div>
+        </div>
+        <div class="stat-cell">
+          <div class="ico"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8M14 7h7v7"/></svg></div>
+          <div class="n">95<span class="acc">%</span></div>
+          <div class="l">Tingkat Akurasi Asesmen</div>
+        </div>
+        <div class="stat-cell">
+          <div class="ico"><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3 7 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg></div>
+          <div class="n">4.9<span class="acc">★</span></div>
+          <div class="l">Rating Kepuasan Sekolah</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SATU PLATFORM BANYAK SOLUSI (Dashboard preview) ============ -->
+<section class="s-section s-section-tint">
+  <div class="s-section-inner">
+    <div class="s-head reveal">
+      <span class="eyebrow">Dashboard Sekolah</span>
+      <h2>Satu Platform, <span class="blue">Banyak Solusi</span></h2>
+      <p>Akses semua kebutuhan sekolah dalam satu dashboard yang intuitif — mulai dari katalog kursus, mentoring, asesmen, hingga laporan analitik real-time.</p>
+    </div>
+
+    <div class="dash-grid">
+      <!-- Features list -->
+      <div class="dash-features reveal">
+        <div class="df-tabs">
+          <button class="df-tab active"><span class="dot">✓</span> Untuk Sekolah</button>
+          <button class="df-tab">Untuk Siswa</button>
+        </div>
+        <div class="df-row r1">
+          <div class="df-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2V5z"/><path d="M19 19H6"/></svg></div>
+          <div>
+            <h4>Katalog Kursus Lengkap</h4>
+            <p>Ribuan kursus berkualitas dari berbagai bidang untuk mendukung pembelajaran dan pengembangan diri siswa.</p>
+          </div>
+        </div>
+        <div class="df-row r2">
+          <div class="df-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 11-3-6l3-1-1 3a8 8 0 011 4z"/></svg></div>
+          <div>
+            <h4>Mentoring &amp; Konsultasi</h4>
+            <p>Siswa dapat berkonsultasi dan mendapatkan arahan langsung dari mentor berpengalaman.</p>
+          </div>
+        </div>
+        <div class="df-row r3">
+          <div class="df-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3 7 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg></div>
+          <div>
+            <h4>Asesmen &amp; Potensi Diri</h4>
+            <p>Tes psikometri dan asesmen untuk membantu siswa mengenali potensi dan minat terbaiknya.</p>
+          </div>
+        </div>
+        <div class="df-row r4">
+          <div class="df-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg></div>
+          <div>
+            <h4>Laporan &amp; Analitik Sekolah</h4>
+            <p>Dapatkan laporan perkembangan siswa secara real-time untuk pengambilan keputusan yang lebih baik.</p>
+          </div>
+        </div>
+        <div class="df-row r5">
+          <div class="df-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2 21c0-3.5 3.1-6 7-6s7 2.5 7 6"/><circle cx="17" cy="9" r="2.5"/><path d="M22 19c0-2.5-2-4-5-4"/></svg></div>
+          <div>
+            <h4>Kolaborasi Multi-Pihak</h4>
+            <p>Hubungkan sekolah, guru, siswa, dan orang tua dalam satu ekosistem yang transparan.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dashboard mockup -->
+      <div class="dash-mock reveal">
+        <div class="dash-mock-inner">
+          <div class="dm-side">
+            <div class="brand">
+              <svg width="24" height="24" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#1D4ED8"/><path d="M16 7l1.6 5.4L23 14l-5.4 1.6L16 21l-1.6-5.4L9 14l5.4-1.6z" fill="#fff"/></svg>
+              <b>Talentika<span style="color:var(--yellow)">✦</span></b>
+            </div>
+            <div class="dm-nav">
+              <div class="nv active">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
+                Dashboard
+              </div>
+              <div class="nv">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+                Siswa
+              </div>
+              <div class="nv">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2V5z"/></svg>
+                Kursus
+              </div>
+              <div class="nv">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 11-3-6l3-1-1 3a8 8 0 011 4z"/></svg>
+                Mentoring
+              </div>
+              <div class="nv">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.7 6.3L20 10l-6.3 1.7L12 18l-1.7-6.3L4 10l6.3-1.7z"/></svg>
+                Asesmen
+              </div>
+              <div class="nv">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/></svg>
+                Laporan
+              </div>
+              <div class="nv">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 1112 0c0 7 3 7 3 9H3c0-2 3-2 3-9z"/></svg>
+                Pengumuman
+              </div>
+              <div class="nv">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                Pengaturan
+              </div>
+            </div>
+          </div>
+          <div class="dm-main">
+            <div class="dm-head">
+              <h3>Ringkasan Sekolah</h3>
+              <div class="avatar-row">
+                <div class="av">SC</div>
+                <div>
+                  <div class="h-name">SMA Cerdas Bangsa</div>
+                  <div class="h-role">Admin Sekolah</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="dm-stats">
+              <div class="dm-stat">
+                <div class="lbl">Siswa Aktif</div>
+                <div class="val">1.250</div>
+                <div class="delta">+12% dari bulan lalu</div>
+              </div>
+              <div class="dm-stat">
+                <div class="lbl">Kursus Diikuti</div>
+                <div class="val">320</div>
+                <div class="delta">+10% dari bulan lalu</div>
+              </div>
+              <div class="dm-stat">
+                <div class="lbl">Jam Belajar</div>
+                <div class="val">2.450</div>
+                <div class="delta">+18% dari bulan lalu</div>
+              </div>
+              <div class="dm-stat">
+                <div class="lbl">Sertifikat Diterbitkan</div>
+                <div class="val">180</div>
+                <div class="delta">+25% dari bulan lalu</div>
+              </div>
+            </div>
+
+            <div class="dm-charts">
+              <div class="dm-card">
+                <h4>Progress Belajar Siswa</h4>
+                <!-- mini line chart -->
+                <svg viewBox="0 0 280 100" width="100%" height="80" preserveAspectRatio="none">
+                  <defs>
+                    <linearGradient id="lineGrad" x1="0" x2="0" y1="0" y2="1">
+                      <stop offset="0" stop-color="#3B82F6" stop-opacity=".25"/>
+                      <stop offset="1" stop-color="#3B82F6" stop-opacity="0"/>
+                    </linearGradient>
+                  </defs>
+                  <g stroke="#E5E7EB" stroke-width=".6">
+                    <line x1="20" y1="20" x2="280" y2="20"/>
+                    <line x1="20" y1="50" x2="280" y2="50"/>
+                    <line x1="20" y1="80" x2="280" y2="80"/>
+                  </g>
+                  <path d="M20 70 L70 60 L120 64 L170 40 L220 36 L270 18" fill="none" stroke="#1D4ED8" stroke-width="2"/>
+                  <path d="M20 70 L70 60 L120 64 L170 40 L220 36 L270 18 L270 95 L20 95 Z" fill="url(#lineGrad)"/>
+                  <g fill="#1D4ED8">
+                    <circle cx="20" cy="70" r="2.5"/><circle cx="70" cy="60" r="2.5"/><circle cx="120" cy="64" r="2.5"/>
+                    <circle cx="170" cy="40" r="2.5"/><circle cx="220" cy="36" r="2.5"/><circle cx="270" cy="18" r="3" stroke="#fff" stroke-width="1.5"/>
+                  </g>
+                  <g font-family="Inter" font-size="7" fill="#94A3B8">
+                    <text x="20" y="98">Jan</text><text x="68" y="98">Feb</text><text x="118" y="98">Mar</text>
+                    <text x="168" y="98">Apr</text><text x="218" y="98">Mei</text><text x="266" y="98">Jun</text>
+                  </g>
+                </svg>
+              </div>
+              <div class="dm-card">
+                <h4>Top Kategori Kursus</h4>
+                <!-- donut chart -->
+                <div style="display:flex;align-items:center;gap:10px">
+                  <svg width="80" height="80" viewBox="0 0 42 42">
+                    <circle cx="21" cy="21" r="15.9" fill="transparent" stroke="#E5E7EB" stroke-width="6"/>
+                    <circle cx="21" cy="21" r="15.9" fill="transparent" stroke="#1D4ED8" stroke-width="6" stroke-dasharray="40 100" stroke-dashoffset="25" transform="rotate(-90 21 21)"/>
+                    <circle cx="21" cy="21" r="15.9" fill="transparent" stroke="#FF6A00" stroke-width="6" stroke-dasharray="25 100" stroke-dashoffset="-15" transform="rotate(-90 21 21)"/>
+                    <circle cx="21" cy="21" r="15.9" fill="transparent" stroke="#FFC107" stroke-width="6" stroke-dasharray="20 100" stroke-dashoffset="-40" transform="rotate(-90 21 21)"/>
+                    <circle cx="21" cy="21" r="15.9" fill="transparent" stroke="#7C3AED" stroke-width="6" stroke-dasharray="15 100" stroke-dashoffset="-60" transform="rotate(-90 21 21)"/>
+                  </svg>
+                  <div style="font-size:9px;color:var(--gray-700);display:flex;flex-direction:column;gap:3px">
+                    <div style="display:flex;align-items:center;gap:4px"><span style="width:7px;height:7px;background:#1D4ED8;border-radius:2px"></span>Teknologi <b style="margin-left:auto">40%</b></div>
+                    <div style="display:flex;align-items:center;gap:4px"><span style="width:7px;height:7px;background:#FF6A00;border-radius:2px"></span>Bisnis <b style="margin-left:auto">25%</b></div>
+                    <div style="display:flex;align-items:center;gap:4px"><span style="width:7px;height:7px;background:#FFC107;border-radius:2px"></span>Desain <b style="margin-left:auto">20%</b></div>
+                    <div style="display:flex;align-items:center;gap:4px"><span style="width:7px;height:7px;background:#7C3AED;border-radius:2px"></span>P. Diri <b style="margin-left:auto">15%</b></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="dm-list">
+              <h4 style="font-family:var(--display);font-weight:700;font-size:11px;margin:0 0 6px;color:var(--ink)">Aktivitas Terbaru</h4>
+              <div class="li-item">
+                <div class="ln">
+                  <div class="av-sm" style="background:linear-gradient(135deg,#3B82F6,#1D4ED8)">SA</div>
+                  <div><b style="font-family:var(--display);font-weight:600">Siti Aisyah</b> menyelesaikan kursus <i style="color:var(--blue-700)">Public Speaking Mastery</i></div>
+                </div>
+                <span style="color:var(--gray-500);font-size:9px">2 jam lalu</span>
+              </div>
+              <div class="li-item">
+                <div class="ln">
+                  <div class="av-sm" style="background:linear-gradient(135deg,#FF8A33,#FF6A00)">RP</div>
+                  <div><b style="font-family:var(--display);font-weight:600">Rafi Pratama</b> mendapatkan sertifikat <i style="color:var(--blue-700)">UI/UX Design Fundamentals</i></div>
+                </div>
+                <span style="color:var(--gray-500);font-size:9px">5 jam lalu</span>
+              </div>
+              <div class="li-item">
+                <div class="ln">
+                  <div class="av-sm" style="background:linear-gradient(135deg,#FFD23F,#FFC107);color:var(--ink)">DK</div>
+                  <div><b style="font-family:var(--display);font-weight:600">Dimas Kurniawan</b> bergabung dengan komunitas <i style="color:var(--blue-700)">Tech Innovators</i></div>
+                </div>
+                <span style="color:var(--gray-500);font-size:9px">1 hari lalu</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PROGRAM UNGGULAN ============ -->
+<section id="program" class="s-section">
+  <div class="s-section-inner">
+    <div class="s-head reveal">
+      <span class="eyebrow">Program Unggulan</span>
+      <h2>Program Unggulan untuk <span class="blue">Sekolah</span></h2>
+      <p>Empat program andalan yang siap diaktifkan di sekolah Anda — dapat disesuaikan dengan kebutuhan, kurikulum, dan anggaran sekolah.</p>
+    </div>
+
+    <div class="prog-grid">
+      <div class="prog-card p1 reveal">
+        <div class="p-ico">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V8l9-5 9 5v13"/><path d="M9 21V12h6v9"/></svg>
+        </div>
+        <h3>Talent Development Program</h3>
+        <p>Program pengembangan talenta terstruktur sesuai kebutuhan sekolah, mulai dari asesmen hingga aksi konkret.</p>
+      </div>
+      <div class="prog-card p2 reveal">
+        <div class="p-ico">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2 21c0-3.5 3.1-6 7-6s7 2.5 7 6"/><circle cx="17" cy="9" r="2.5"/><path d="M22 19c0-2.5-2-4-5-4"/></svg>
+        </div>
+        <h3>Kompetisi &amp; Challenge</h3>
+        <p>Tantangan seru untuk meningkatkan motivasi, kreativitas, dan prestasi siswa — solo &amp; tim.</p>
+      </div>
+      <div class="prog-card p3 reveal">
+        <div class="p-ico">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3 7 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg>
+        </div>
+        <h3>Pelatihan Guru</h3>
+        <p>Tingkatkan kompetensi guru melalui pelatihan digital dan program sertifikasi terstandar.</p>
+      </div>
+      <div class="prog-card p4 reveal">
+        <div class="p-ico">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 6.6a5.5 5.5 0 00-9-1.6 5.5 5.5 0 00-9 1.6c-1.5 4.4 5 8.6 9 12.4 4-3.8 10.5-8 9-12.4z"/></svg>
+        </div>
+        <h3>Kolaborasi Sekolah</h3>
+        <p>Bersinergi dengan sekolah lain dalam kegiatan positif dan program lintas-sekolah yang bermanfaat.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ BENEFITS + TESTIMONIAL ============ -->
+<section class="s-section s-section-tint">
+  <div class="s-section-inner">
+    <div class="s-head reveal">
+      <span class="eyebrow green">Benefits for School</span>
+      <h2>Apa yang Anda <span class="blue">Dapatkan?</span></h2>
+      <p>Bergabungnya sekolah Anda dengan Talentika menghasilkan keuntungan yang nyata — bukan hanya untuk siswa, tapi juga citra sekolah di mata orang tua dan stakeholder.</p>
+    </div>
+
+    <div class="benefits-grid">
+      <div class="benefits-list reveal">
+        <div class="benefit-row b1">
+          <span class="br-check"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></span>
+          <p>Meningkatkan kualitas pendidikan berbasis data dan teknologi.</p>
+          <span class="br-ico">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V8l9-5 9 5v13"/><path d="M9 21V12h6v9"/></svg>
+          </span>
+        </div>
+        <div class="benefit-row b2">
+          <span class="br-check"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></span>
+          <p>Membantu sekolah mencapai visi misi dan keunggulan kompetitif.</p>
+          <span class="br-ico">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10v4a5 5 0 01-10 0V4z"/><path d="M5 4H3v3a3 3 0 003 3M19 4h2v3a3 3 0 01-3 3M9 14h6l-1 6h-4l-1-6z"/></svg>
+          </span>
+        </div>
+        <div class="benefit-row b3">
+          <span class="br-check"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></span>
+          <p>Mendukung program pengembangan siswa secara holistik dan terstruktur.</p>
+          <span class="br-ico">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2 21c0-3.5 3.1-6 7-6s7 2.5 7 6"/><circle cx="17" cy="9" r="2.5"/><path d="M22 19c0-2.5-2-4-5-4"/></svg>
+          </span>
+        </div>
+        <div class="benefit-row b4">
+          <span class="br-check"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></span>
+          <p>Memperkuat kepercayaan orang tua dan stakeholder terhadap sekolah.</p>
+          <span class="br-ico">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.5 8.5-8 9-4.5-.5-8-4-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg>
+          </span>
+        </div>
+      </div>
+
+      <div class="b-visual reveal">
+        <image-slot id="school-benefit-photo" class="b-photo"
+          placeholder="Drop foto kepala sekolah / suasana sekolah"
+          shape="rect" radius="24"></image-slot>
+
+        <div class="b-quote">
+          <div class="qmark">"</div>
+          <blockquote>Talentika membantu kami mengembangkan potensi siswa secara menyeluruh, tidak hanya akademik tapi juga karakter dan keterampilan masa depan.</blockquote>
+          <cite>
+            <b>Drs. Bambang Surya, M.Pd</b>
+            Kepala Sekolah — SMA Cerdas Bangsa, Jakarta
+          </cite>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mini benefits below -->
+    <div class="mini-benefits reveal">
+      <div class="mb-title">Keuntungan Utama <b>untuk Sekolah</b></div>
+      <div class="mini-benefit m1">
+        <div class="mi">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 11l3 3 8-8"/></svg>
+        </div>
+        <div>
+          <h5>Data &amp; Insight Akurat</h5>
+          <p>Pengambilan keputusan berbasis data nyata.</p>
+        </div>
+      </div>
+      <div class="mini-benefit m2">
+        <div class="mi">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg>
+        </div>
+        <div>
+          <h5>Program Terstruktur</h5>
+          <p>Roadmap pengembangan yang jelas.</p>
+        </div>
+      </div>
+      <div class="mini-benefit m3">
+        <div class="mi">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8M14 7h7v7"/></svg>
+        </div>
+        <div>
+          <h5>Hasil Terukur &amp; Berkelanjutan</h5>
+          <p>Dampak nyata setiap semester.</p>
+        </div>
+      </div>
+      <div class="mini-benefit m4">
+        <div class="mi">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17l-3 2-1-4 4-9 5 1 4-1 4 9-1 4-3-2"/><path d="M9 17a3 3 0 006 0"/></svg>
+        </div>
+        <div>
+          <h5>Mitra Terpercaya Jangka Panjang</h5>
+          <p>Dukungan support tim &amp; komunitas.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FAQ ============ -->
+<section id="faq" class="s-section">
+  <div class="s-section-inner">
+    <div class="s-head center reveal">
+      <span class="eyebrow">FAQ</span>
+      <h2>Pertanyaan yang Sering <span class="blue">Diajukan</span></h2>
+      <p>Belum menemukan jawaban? Tim kami siap membantu via WhatsApp dalam 1×24 jam.</p>
+    </div>
+
+    <div class="faq-grid">
+      <details class="faq reveal">
+        <summary>Sekolah seperti apa yang cocok dengan Talentika? <span class="icon-plus"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></summary>
+        <p>Talentika for School cocok untuk semua jenjang — SD, SMP, SMA, dan SMK negeri maupun swasta — yang ingin meningkatkan kualitas pengembangan siswa berbasis data dan teknologi.</p>
+      </details>
+
+      <details class="faq reveal">
+        <summary>Apakah ada biaya untuk sekolah? <span class="icon-plus"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></summary>
+        <p>Kami menawarkan beberapa paket fleksibel — dari pilot gratis untuk uji coba, hingga paket institusi penuh. Hubungi tim kami untuk konsultasi paket yang paling sesuai dengan kebutuhan dan anggaran sekolah.</p>
+      </details>
+
+      <details class="faq reveal">
+        <summary>Berapa lama proses implementasi di sekolah? <span class="icon-plus"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></summary>
+        <p>Proses implementasi rata-rata 2–4 minggu, mencakup onboarding admin, pelatihan guru, setup data siswa, dan briefing program. Tim Customer Success kami akan mendampingi sepanjang prosesnya.</p>
+      </details>
+
+      <details class="faq reveal">
+        <summary>Bagaimana keamanan data siswa? <span class="icon-plus"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></summary>
+        <p>Seluruh data dienkripsi end-to-end dan disimpan di server lokal dengan standar ISO 27001. Talentika tunduk pada UU PDP Indonesia dan tidak pernah membagikan data ke pihak ketiga tanpa izin.</p>
+      </details>
+
+      <details class="faq reveal">
+        <summary>Bisakah disesuaikan dengan kurikulum sekolah? <span class="icon-plus"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></summary>
+        <p>Tentu. Talentika mendukung Kurikulum Merdeka, Kurikulum 2013, IB, dan Cambridge. Konten dan asesmen dapat disesuaikan dengan visi-misi sekolah.</p>
+      </details>
+
+      <details class="faq reveal">
+        <summary>Apakah orang tua bisa mengakses progres anak? <span class="icon-plus"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></summary>
+        <p>Ya, orang tua mendapat akses portal khusus untuk memantau perkembangan, pencapaian, dan rekomendasi pengembangan anak — transparan dan real-time.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CTA WITH ROCKET ============ -->
+<section style="padding:0 36px 96px">
+  <div class="cta-rocket reveal">
+    <svg class="csp a" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.7 6.3L20 10l-6.3 1.7L12 18l-1.7-6.3L4 10l6.3-1.7z"/></svg>
+    <svg class="csp b" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.7 6.3L20 10l-6.3 1.7L12 18l-1.7-6.3L4 10l6.3-1.7z"/></svg>
+    <svg class="csp c" width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.7 6.3L20 10l-6.3 1.7L12 18l-1.7-6.3L4 10l6.3-1.7z"/></svg>
+
+    <div class="rocket-art">
+      <svg width="160" height="180" viewBox="0 0 160 180" fill="none">
+        <!-- clouds -->
+        <ellipse cx="40" cy="160" rx="30" ry="9" fill="#fff" opacity=".25"/>
+        <ellipse cx="120" cy="170" rx="25" ry="7" fill="#fff" opacity=".2"/>
+        <!-- rocket -->
+        <g transform="translate(50,10)">
+          <path d="M30 0 C 18 14, 12 30, 12 60 V 110 H 48 V 60 C 48 30, 42 14, 30 0Z" fill="#3B82F6"/>
+          <path d="M30 0 C 24 14, 22 30, 22 60 V 110 H 30 V 0Z" fill="#1D4ED8"/>
+          <!-- window -->
+          <circle cx="30" cy="50" r="11" fill="#fff" stroke="#1E40AF" stroke-width="2"/>
+          <circle cx="30" cy="50" r="7" fill="#60A5FA"/>
+          <circle cx="27" cy="47" r="2" fill="#fff" opacity=".8"/>
+          <!-- fins -->
+          <path d="M12 80 L0 110 L12 110 Z" fill="#FF6A00"/>
+          <path d="M48 80 L60 110 L48 110 Z" fill="#FF6A00"/>
+          <!-- flame -->
+          <path d="M18 110 Q 20 130 30 145 Q 40 130 42 110 Z" fill="#FFC107"/>
+          <path d="M22 110 Q 24 124 30 134 Q 36 124 38 110 Z" fill="#FF6A00"/>
+        </g>
+        <!-- stars -->
+        <path d="M20 30l1.5 4 4 1.5-4 1.5L20 41l-1.5-4-4-1.5 4-1.5z" fill="#FFC107"/>
+        <path d="M140 50l1.5 4 4 1.5-4 1.5-1.5 4-1.5-4-4-1.5 4-1.5z" fill="#fff" opacity=".7"/>
+        <circle cx="150" cy="20" r="2" fill="#FFC107"/>
+        <circle cx="10" cy="80" r="2" fill="#fff" opacity=".5"/>
+      </svg>
+    </div>
+
+    <div class="ct-copy">
+      <h2>Bersama Talentika,<br/>Wujudkan <span class="o">Sekolah Hebat</span> untuk <span class="y">Generasi Hebat!</span></h2>
+      <p>Daftar sekolah Anda hari ini dan dapatkan demo gratis + konsultasi program selama 30 menit dengan tim Education Success Talentika.</p>
+    </div>
+
+    <div class="cta-buttons">
+      <button class="btn-wa-yellow">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M20.5 3.5A11 11 0 003 19l-1 5 5-1.3a11 11 0 0013.5-19.2zM12 21a9 9 0 01-4.6-1.3l-3.2.8.9-3.1A9 9 0 1112 21z"/></svg>
+        Hubungi Kami via WhatsApp
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+      </button>
+      <button class="btn-demo">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        Lihat Demo Dashboard
+      </button>
+      <div class="ct-url">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18"/></svg>
+        www.talentika.id/school
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FOOTER (reused) ============ -->
+<footer class="lp-footer">
+  <div class="footer-inner">
+    <div>
+      <div class="foot-brand">
+        <div class="logo-mark" style="width:42px;height:42px;border-radius:11px;background:linear-gradient(135deg,#1D4ED8,#1E40AF);display:grid;place-items:center;position:relative">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M12 2l1.7 6.3L20 10l-6.3 1.7L12 18l-1.7-6.3L4 10l6.3-1.7z"/></svg>
+          <span style="position:absolute;top:-2px;right:-2px;color:var(--yellow);font-size:13px">✦</span>
+        </div>
+        <div>
+          <b>Talentika</b>
+          <small>Discover. Develop. Grow.</small>
+        </div>
+      </div>
+      <p class="foot-desc">Talentika for School adalah mitra strategis sekolah dalam mengembangkan potensi dan karakter siswa secara terintegrasi untuk menciptakan generasi hebat yang siap meraih masa depan.</p>
+      <div class="socials">
+        <a aria-label="Instagram"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg></a>
+        <a aria-label="YouTube"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M22 8a3 3 0 00-2-2c-2-.5-8-.5-8-.5s-6 0-8 .5a3 3 0 00-2 2c-.5 2-.5 4-.5 4s0 2 .5 4a3 3 0 002 2c2 .5 8 .5 8 .5s6 0 8-.5a3 3 0 002-2c.5-2 .5-4 .5-4s0-2-.5-4zM10 15V9l5 3-5 3z"/></svg></a>
+        <a aria-label="LinkedIn"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/><path d="M10 9h4v2c.5-1 2-2 4-2 3 0 4 2 4 5v7h-4v-6c0-1 0-2-2-2s-2 1-2 2v6h-4z"/></svg></a>
+        <a aria-label="TikTok"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M16 3a5 5 0 005 5v3a8 8 0 01-5-1.7V16a6 6 0 11-6-6v3.2A2.8 2.8 0 1013 16V3z"/></svg></a>
+      </div>
+    </div>
+
+    <div>
+      <h5>Produk</h5>
+      <ul>
+        <li><a href="Talentika Landing Page.html">Talentika (Personal)</a></li>
+        <li><a>Talentika for School</a></li>
+        <li><a>Talentika for Brand</a></li>
+        <li><a>Talentika Junior</a></li>
+      </ul>
+    </div>
+
+    <div>
+      <h5>Untuk Sekolah</h5>
+      <ul>
+        <li><a>Demo Dashboard</a></li>
+        <li><a>Paket &amp; Harga</a></li>
+        <li><a>Studi Kasus</a></li>
+        <li><a>Pelatihan Guru</a></li>
+        <li><a>FAQ</a></li>
+      </ul>
+    </div>
+
+    <div>
+      <h5>Kontak Sekolah</h5>
+      <div class="contact-row">
+        <span class="cio"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 7 9-7"/></svg></span>
+        school@talentika.id
+      </div>
+      <div class="contact-row">
+        <span class="cio"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5c0 9 7 16 16 16l3-4-5-2-2 2c-3-1-6-4-7-7l2-2-2-5z"/></svg></span>
+        +62 851 4843 4141
+      </div>
+      <div class="contact-row" style="align-items:flex-start">
+        <span class="cio"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1118 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
+        <span>Jalan Kuningan Mulia Lot 9 B<br/>Jakarta Selatan, DKI Jakarta</span>
+      </div>
+    </div>
+  </div>
+  <div class="lp-foot-bottom">
+    <span>© 2026 Talentika. All rights reserved.</span>
+    <span style="display:flex;gap:18px"><a>Kebijakan Privasi</a><a>Syarat &amp; Ketentuan</a><a>Cookie</a></span>
+  </div>
+</footer>
+
+<script src="image-slot.js"></script>
+<script>
+  // Reveal on scroll
+  const io = new IntersectionObserver(entries=>{
+    entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); }});
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+</script>
+
+</body>
+</html>

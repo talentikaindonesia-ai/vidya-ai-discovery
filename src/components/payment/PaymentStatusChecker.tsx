@@ -87,7 +87,7 @@ export const PaymentStatusChecker = ({
   useEffect(() => {
     if (!userId) return;
     loadPendingPayments();
-    // Poll every 30 s for Xendit webhook updates
+    // Poll every 30 s for Mayar webhook updates
     const interval = setInterval(loadPendingPayments, 30_000);
     return () => clearInterval(interval);
   }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps

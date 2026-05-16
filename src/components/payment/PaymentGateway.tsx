@@ -90,7 +90,7 @@ export const PaymentGateway = ({
     });
   }, []);
 
-  // Auto-poll every 30 s while awaiting Xendit confirmation
+  // Auto-poll every 30 s while awaiting Mayar webhook confirmation
   useEffect(() => {
     if (!paymentInitiated || !transactionId) return;
     const interval = setInterval(() => checkPaymentStatus(false), 30_000);
@@ -126,7 +126,7 @@ export const PaymentGateway = ({
       } else if (showToast) {
         toast({
           title: "Masih Menunggu",
-          description: "Pembayaran belum dikonfirmasi. Selesaikan di halaman Xendit.",
+          description: "Pembayaran belum dikonfirmasi. Selesaikan di halaman Mayar.",
         });
       }
     } catch {

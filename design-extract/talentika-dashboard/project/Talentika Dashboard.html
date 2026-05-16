@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=1440"/>
+<title>Talentika · Dashboard Workflow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="app/tokens.css"/>
+<style>
+  /* Workflow overlay (route picker) */
+  .wf-fab{position:fixed;bottom:18px;left:18px;z-index:120;display:flex;gap:8px;align-items:center;background:#0B1D3A;color:#fff;padding:10px 14px;border-radius:99px;box-shadow:0 16px 40px -12px rgba(11,29,58,.4);font-family:var(--display);font-weight:600;font-size:13px;cursor:pointer;border:none}
+  .wf-fab:hover{background:#1E40AF}
+  .wf-panel{position:fixed;bottom:80px;left:18px;z-index:120;background:#fff;border-radius:18px;box-shadow:var(--shadow-lg);width:280px;padding:14px;border:1px solid var(--gray-200)}
+  .wf-panel h4{margin:4px 4px 10px;font-family:var(--display);font-size:13px;color:var(--gray-500);text-transform:uppercase;letter-spacing:.1em;font-weight:700}
+  .wf-step{display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:10px;cursor:pointer;margin-bottom:2px;font-family:var(--display);font-size:13.5px;font-weight:500;color:var(--gray-700);border:none;background:transparent;width:100%;text-align:left}
+  .wf-step:hover{background:var(--gray-100)}
+  .wf-step.active{background:var(--blue-50);color:var(--blue-700);font-weight:600}
+  .wf-step .num{width:22px;height:22px;border-radius:50%;background:var(--gray-200);color:var(--gray-600);font-size:11px;font-weight:700;display:grid;place-items:center;flex:0 0 auto}
+  .wf-step.active .num{background:var(--blue-600);color:#fff}
+  .wf-step.done .num{background:var(--green);color:#fff}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="app/icons.jsx"></script>
+<script type="text/babel" src="app/data.jsx"></script>
+<script type="text/babel" src="app/shell.jsx"></script>
+<script type="text/babel" src="app/auth.jsx"></script>
+<script type="text/babel" src="app/screens-main.jsx"></script>
+<script type="text/babel" src="app/screens-extra.jsx"></script>
+
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+const FLOW = [
+  { id:"auth", label:"Login & Register", phase:"Awal" },
+  { id:"onboarding", label:"Onboarding 5 Langkah", phase:"Awal" },
+  { id:"talenttest", label:"Talent Test", phase:"Awal" },
+  { id:"dashboard", label:"Dashboard", phase:"Inti" },
+  { id:"courses", label:"Kursus Saya", phase:"Inti" },
+  { id:"challenges", label:"Tantangan", phase:"Inti" },
+  { id:"opportunities", label:"Peluang", phase:"Inti" },
+  { id:"progress", label:"Progress", phase:"Tracking" },
+  { id:"achievements", label:"Pencapaian", phase:"Tracking" },
+  { id:"community", label:"Community", phase:"Sosial" },
+  { id:"timeline", label:"Timeline", phase:"Sosial" },
+  { id:"profile", label:"Profile", phase:"Akun" },
+  { id:"settings", label:"Pengaturan", phase:"Akun" },
+];
+
+function WorkflowPicker({ route, setRoute, visited }){
+  const [open, setOpen] = useState(false);
+  const idx = FLOW.findIndex(f=>f.id===route);
+  let lastPhase = null;
+  return (
+    <>
+      <button className="wf-fab" onClick={()=>setOpen(!open)}>
+        <span style={{display:"grid",placeItems:"center",width:22,height:22,borderRadius:"50%",background:"#1D4ED8",fontSize:11}}>{idx+1}</span>
+        Workflow · {FLOW[idx]?.label || "—"}
+        <span style={{opacity:.6,fontSize:11}}>{open?"▼":"▲"}</span>
+      </button>
+      {open && (
+        <div className="wf-panel page-in">
+          <h4>Simulasi Alur</h4>
+          {FLOW.map((f,i)=>{
+            const showPhase = f.phase !== lastPhase;
+            lastPhase = f.phase;
+            const done = visited.has(f.id) && f.id!==route;
+            return (
+              <React.Fragment key={f.id}>
+                {showPhase && <div style={{fontSize:10.5,fontFamily:"var(--mono)",letterSpacing:".1em",textTransform:"uppercase",color:"var(--gray-400)",margin:"10px 6px 4px"}}>{f.phase}</div>}
+                <button className={`wf-step ${f.id===route?"active":""} ${done?"done":""}`} onClick={()=>{setRoute(f.id);setOpen(false)}}>
+                  <span className="num">{done?"✓":i+1}</span>
+                  {f.label}
+                </button>
+              </React.Fragment>
+            );
+          })}
+        </div>
+      )}
+    </>
+  );
+}
+
+function App(){
+  const [route, setRoute] = useState("auth");
+  const [visited, setVisited] = useState(new Set(["auth"]));
+  useEffect(()=>{
+    setVisited(v=>{const n=new Set(v);n.add(route);return n});
+    window.scrollTo({top:0,behavior:"smooth"});
+  },[route]);
+
+  const navTo = (id) => setRoute(id);
+
+  // Pre-app flow vs in-app flow
+  const preApp = route==="auth" || route==="onboarding" || route==="talenttest";
+  return (
+    <>
+      {route==="auth" && <AuthScreen onAuth={()=>navTo("onboarding")}/>}
+      {route==="onboarding" && <OnboardingScreen onDone={()=>navTo("talenttest")}/>}
+      {route==="talenttest" && <TalentTest onDone={()=>navTo("dashboard")}/>}
+      {!preApp && (
+        <AppShell route={route} setRoute={navTo} onLogout={()=>navTo("auth")}>
+          {route==="dashboard" && <DashboardScreen setRoute={navTo}/>}
+          {route==="courses" && <CoursesScreen/>}
+          {route==="challenges" && <ChallengesScreen/>}
+          {route==="opportunities" && <OpportunitiesScreen/>}
+          {route==="progress" && <ProgressScreen/>}
+          {route==="achievements" && <AchievementsScreen/>}
+          {route==="community" && <CommunityScreen/>}
+          {route==="timeline" && <TimelineScreen/>}
+          {route==="profile" && <ProfileScreen/>}
+          {route==="settings" && <SettingsScreen/>}
+        </AppShell>
+      )}
+      <WorkflowPicker route={route} setRoute={navTo} visited={visited}/>
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>

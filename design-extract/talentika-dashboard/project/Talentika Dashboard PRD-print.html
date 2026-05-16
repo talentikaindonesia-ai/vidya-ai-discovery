@@ -1,0 +1,1230 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Talentika — Dashboard Design PRD</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --blue-50:#E8F1FF;
+    --blue-100:#D6E4FF;
+    --blue-200:#A9C5FF;
+    --blue-500:#2563EB;
+    --blue-600:#1D4ED8;   /* primary */
+    --blue-700:#1E40AF;
+    --blue-900:#0B1D3A;   /* navy */
+    --orange:#FF6A00;
+    --orange-soft:#FFEDE2;
+    --yellow:#FFC107;
+    --yellow-soft:#FFF6E0;
+    --mint:#E6F7EF;
+    --green:#16A34A;
+    --lilac:#F0E8FF;
+    --purple:#7C3AED;
+    --gray-0:#FFFFFF;
+    --gray-50:#F8FAFC;
+    --gray-100:#F5F7FA;
+    --gray-150:#EEF1F6;
+    --gray-200:#E6EAF0;
+    --gray-300:#CBD5E1;
+    --gray-500:#64748B;
+    --gray-700:#334155;
+    --gray-900:#0F172A;
+    --ink:#0B1D3A;
+
+    --radius-sm:8px;
+    --radius:14px;
+    --radius-lg:20px;
+    --radius-xl:28px;
+
+    --shadow-sm: 0 1px 2px rgba(11,29,58,.05);
+    --shadow: 0 6px 22px -8px rgba(11,29,58,.12), 0 2px 6px -2px rgba(11,29,58,.06);
+    --shadow-lg: 0 24px 60px -20px rgba(29,78,216,.25), 0 8px 20px -10px rgba(11,29,58,.10);
+
+    --serif:'Poppins', system-ui, sans-serif;
+    --sans:'Inter', system-ui, sans-serif;
+    --mono:'JetBrains Mono', ui-monospace, monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--gray-50);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  a{color:var(--blue-600);text-decoration:none}
+  a:hover{text-decoration:underline}
+
+  /* ---------- Page layout ---------- */
+  .shell{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
+  nav.toc{
+    position:sticky;top:0;align-self:start;height:100vh;overflow:auto;
+    background:var(--gray-0);border-right:1px solid var(--gray-200);
+    padding:28px 22px;
+  }
+  nav.toc .brand{display:flex;align-items:center;gap:10px;margin-bottom:24px}
+  nav.toc .brand .logo{font-family:var(--serif);font-weight:700;font-size:22px;color:var(--blue-600);letter-spacing:-.02em}
+  nav.toc .brand .star{color:var(--yellow);font-size:14px;margin-left:-2px}
+  nav.toc .doc-meta{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--gray-500);margin-bottom:6px}
+  nav.toc .doc-title{font-family:var(--serif);font-weight:700;font-size:17px;color:var(--ink);line-height:1.25;margin-bottom:22px}
+  nav.toc ol{list-style:none;padding:0;margin:0;counter-reset:section}
+  nav.toc ol > li{counter-increment:section;margin:2px 0}
+  nav.toc ol > li > a{
+    display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;
+    color:var(--gray-700);font-weight:500;font-size:13.5px;
+  }
+  nav.toc ol > li > a::before{
+    content:counter(section, decimal-leading-zero);
+    font-family:var(--mono);font-size:10.5px;color:var(--gray-500);
+    background:var(--gray-100);border-radius:5px;padding:2px 5px;flex:0 0 auto;
+  }
+  nav.toc ol > li > a:hover{background:var(--blue-50);color:var(--blue-700);text-decoration:none}
+  nav.toc ol ol{padding-left:14px;margin-top:2px}
+  nav.toc ol ol li{counter-increment:none;margin:0}
+  nav.toc ol ol a{
+    display:block;padding:5px 10px;font-size:12.5px;color:var(--gray-500);
+    border-left:2px solid var(--gray-200);
+  }
+  nav.toc ol ol a:hover{color:var(--blue-700);border-left-color:var(--blue-600);text-decoration:none}
+
+  main{max-width:980px;padding:56px 60px 120px;margin:0 auto;width:100%}
+  section{margin-bottom:64px;scroll-margin-top:24px}
+
+  h1,h2,h3,h4{font-family:var(--serif);color:var(--ink);letter-spacing:-.01em}
+  h1{font-size:44px;line-height:1.05;font-weight:700;margin:0 0 12px;letter-spacing:-.025em}
+  h2{font-size:28px;line-height:1.15;font-weight:700;margin:0 0 6px;letter-spacing:-.02em}
+  h3{font-size:18px;font-weight:600;margin:24px 0 10px}
+  h4{font-size:14px;font-weight:600;margin:0 0 6px;color:var(--gray-700)}
+  p{margin:0 0 12px;color:var(--gray-700)}
+  .lead{font-size:17px;color:var(--gray-700);line-height:1.6}
+
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:8px;
+    font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--blue-600);font-weight:600;margin-bottom:14px;
+  }
+  .eyebrow::before{content:"";width:18px;height:2px;background:var(--blue-600);border-radius:2px}
+
+  .section-head{margin-bottom:22px}
+  .section-head .num{
+    font-family:var(--mono);font-size:12px;color:var(--gray-500);
+    letter-spacing:.12em;text-transform:uppercase;display:block;margin-bottom:6px;
+  }
+  .section-head p{max-width:64ch;color:var(--gray-500);margin-top:4px}
+
+  /* ---------- Cover ---------- */
+  .cover{
+    position:relative;border-radius:var(--radius-xl);
+    background:
+      radial-gradient(120% 70% at 100% 0%, rgba(255,193,7,.18), transparent 55%),
+      radial-gradient(80% 60% at 0% 100%, rgba(255,106,0,.14), transparent 55%),
+      linear-gradient(135deg, #1D4ED8 0%, #0B1D3A 100%);
+    color:#fff;padding:56px 56px 48px;overflow:hidden;
+    margin-bottom:64px;
+  }
+  .cover::before, .cover::after{
+    content:"";position:absolute;border-radius:50%;
+    background:radial-gradient(circle at 30% 30%, #fff 0%, transparent 60%);
+    opacity:.12;pointer-events:none;
+  }
+  .cover::before{width:380px;height:380px;top:-120px;right:-100px}
+  .cover::after{width:240px;height:240px;bottom:-120px;left:30%}
+  .cover .kicker{display:flex;align-items:center;gap:10px;font-family:var(--mono);
+    font-size:12px;letter-spacing:.2em;text-transform:uppercase;opacity:.85;margin-bottom:18px}
+  .cover .kicker .dot{width:6px;height:6px;border-radius:50%;background:var(--yellow);box-shadow:0 0 0 4px rgba(255,193,7,.25)}
+  .cover h1{color:#fff;font-size:54px;line-height:1.02;max-width:18ch}
+  .cover h1 .accent-o{color:var(--orange)}
+  .cover h1 .accent-y{color:var(--yellow)}
+  .cover .tagline{font-family:var(--serif);font-weight:600;font-size:18px;margin-top:10px}
+  .cover .tagline span{margin-right:14px;opacity:.95}
+  .cover .tagline .o{color:var(--orange)}
+  .cover .tagline .y{color:var(--yellow)}
+  .cover .meta{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:38px;
+    border-top:1px solid rgba(255,255,255,.18);padding-top:24px;
+  }
+  .cover .meta div{position:relative;z-index:1}
+  .cover .meta dt{font-family:var(--mono);font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;opacity:.7;margin-bottom:6px}
+  .cover .meta dd{margin:0;font-family:var(--serif);font-weight:600;font-size:15px}
+  .sparkle{position:absolute;color:var(--yellow);opacity:.85;filter:drop-shadow(0 4px 10px rgba(255,193,7,.4))}
+
+  /* ---------- Cards & grids ---------- */
+  .card{background:var(--gray-0);border:1px solid var(--gray-200);border-radius:var(--radius);padding:20px}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  @media (max-width:900px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr}}
+
+  .pill{
+    display:inline-flex;align-items:center;gap:6px;
+    padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600;
+    background:var(--blue-50);color:var(--blue-700);
+  }
+  .pill.orange{background:var(--orange-soft);color:var(--orange)}
+  .pill.yellow{background:var(--yellow-soft);color:#A47000}
+  .pill.green{background:var(--mint);color:#0F7A3E}
+  .pill.lilac{background:var(--lilac);color:#5B21B6}
+  .pill.gray{background:var(--gray-100);color:var(--gray-700)}
+
+  .kv{display:grid;grid-template-columns:160px 1fr;gap:6px 18px;font-size:14px}
+  .kv dt{color:var(--gray-500);font-weight:500}
+  .kv dd{margin:0;color:var(--ink);font-weight:500}
+
+  table.spec{
+    width:100%;border-collapse:collapse;font-size:13.5px;background:var(--gray-0);
+    border:1px solid var(--gray-200);border-radius:var(--radius);overflow:hidden;
+  }
+  table.spec th, table.spec td{padding:12px 14px;text-align:left;border-bottom:1px solid var(--gray-150);vertical-align:top}
+  table.spec th{background:var(--gray-50);font-family:var(--serif);font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--gray-500);font-weight:600}
+  table.spec tr:last-child td{border-bottom:none}
+  table.spec td code{font-family:var(--mono);font-size:12px;background:var(--gray-100);padding:1px 6px;border-radius:5px;color:var(--blue-700)}
+  table.spec td.num{font-family:var(--mono);color:var(--blue-700);white-space:nowrap}
+
+  /* ---------- Color tokens ---------- */
+  .swatches{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  .swatch{
+    border:1px solid var(--gray-200);border-radius:var(--radius);overflow:hidden;background:#fff;
+  }
+  .swatch .chip{height:78px}
+  .swatch .meta-row{padding:10px 12px}
+  .swatch .name{font-family:var(--serif);font-weight:600;font-size:13.5px;color:var(--ink)}
+  .swatch .hex{font-family:var(--mono);font-size:11.5px;color:var(--gray-500);margin-top:2px}
+  .swatch.has-text .chip{display:flex;align-items:flex-end;padding:10px;color:#fff;font-family:var(--serif);font-weight:600}
+
+  /* ---------- Type specimen ---------- */
+  .specimen{display:grid;grid-template-columns:140px 1fr;gap:24px;align-items:start;padding:20px;border:1px solid var(--gray-200);border-radius:var(--radius);background:#fff}
+  .specimen + .specimen{margin-top:14px}
+  .specimen .lbl{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--gray-500)}
+  .specimen .lbl b{display:block;font-family:var(--serif);font-size:16px;color:var(--ink);text-transform:none;letter-spacing:0;margin-top:6px}
+  .specimen .sample{font-family:var(--serif)}
+
+  /* ---------- IA / sitemap ---------- */
+  .sitemap{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .ia-node{
+    background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius);padding:14px 16px;
+    display:flex;flex-direction:column;gap:8px;position:relative;
+  }
+  .ia-node .ia-h{display:flex;align-items:center;gap:10px}
+  .ia-node .ia-icon{
+    width:32px;height:32px;border-radius:9px;display:grid;place-items:center;
+    background:var(--blue-50);color:var(--blue-700);font-size:14px;
+  }
+  .ia-node h4{margin:0}
+  .ia-node ul{margin:0;padding-left:18px;font-size:13px;color:var(--gray-700)}
+  .ia-node ul li{margin:2px 0}
+
+  /* ---------- Screen spec cards ---------- */
+  .screen{
+    background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius-lg);
+    overflow:hidden;margin-bottom:22px;
+  }
+  .screen .preview{
+    position:relative;background:linear-gradient(180deg,#F1F5FB,#E8F1FF);
+    padding:18px;display:grid;place-items:center;border-bottom:1px solid var(--gray-200);
+  }
+  .screen .preview img{max-width:100%;border-radius:var(--radius);box-shadow:var(--shadow-lg);display:block}
+  .screen .body{padding:24px 26px 26px}
+  .screen .body .row{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+  .screen .meta-line{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+  .screen ul.checks{padding-left:0;list-style:none;margin:8px 0 0}
+  .screen ul.checks li{position:relative;padding:5px 0 5px 24px;font-size:13.5px;color:var(--gray-700)}
+  .screen ul.checks li::before{
+    content:"";position:absolute;left:0;top:9px;width:14px;height:14px;border-radius:50%;
+    background:var(--blue-50);border:2px solid var(--blue-600);
+  }
+  .screen ul.checks li::after{
+    content:"";position:absolute;left:4px;top:13px;width:6px;height:3px;border-left:2px solid var(--blue-600);border-bottom:2px solid var(--blue-600);transform:rotate(-45deg);
+  }
+
+  .screen-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:8px}
+  .screen-head h3{margin:0;font-size:22px}
+  .screen-head .route{font-family:var(--mono);font-size:12.5px;color:var(--blue-700);background:var(--blue-50);padding:3px 9px;border-radius:6px}
+
+  /* Components mini-gallery */
+  .comp-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+  .comp{
+    background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius);padding:18px;
+    display:flex;flex-direction:column;gap:10px;
+  }
+  .comp .demo{
+    background:linear-gradient(180deg,#FAFBFE,#F2F5FA);
+    border:1px solid var(--gray-150);border-radius:var(--radius-sm);
+    padding:18px;min-height:90px;display:grid;place-items:center;
+  }
+  .comp h4{margin:0}
+  .comp .desc{font-size:12.5px;color:var(--gray-500)}
+
+  /* Buttons demo */
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:10px 18px;border-radius:10px;font-family:var(--serif);font-weight:600;font-size:14px;
+    border:1px solid transparent;cursor:pointer;
+  }
+  .btn.primary{background:var(--blue-600);color:#fff}
+  .btn.secondary{background:#fff;color:var(--blue-700);border-color:var(--blue-200)}
+  .btn.ghost{background:transparent;color:var(--gray-700)}
+  .btn.accent{background:var(--orange);color:#fff}
+
+  /* Input demo */
+  .input-demo{
+    display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--gray-200);
+    border-radius:12px;padding:10px 14px;width:280px;
+  }
+  .input-demo input{border:none;outline:none;font:inherit;flex:1;background:transparent;color:var(--ink)}
+  .input-demo .kbd{font-family:var(--mono);font-size:11px;color:var(--gray-500);background:var(--gray-100);padding:2px 6px;border-radius:5px}
+
+  /* Stat card demo */
+  .stat-card{
+    background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius);padding:14px 16px;
+    display:flex;gap:12px;align-items:center;width:240px;
+  }
+  .stat-card .icon{
+    width:42px;height:42px;border-radius:12px;background:var(--blue-50);color:var(--blue-700);
+    display:grid;place-items:center;font-size:18px;
+  }
+  .stat-card .label{font-size:12px;color:var(--gray-500);font-weight:500}
+  .stat-card .val{font-family:var(--serif);font-weight:700;font-size:22px;color:var(--ink)}
+  .stat-card .sub{font-size:11.5px;color:var(--gray-500)}
+
+  /* Course row demo */
+  .course-row{
+    display:flex;align-items:center;gap:14px;background:#fff;border:1px solid var(--gray-200);
+    border-radius:var(--radius);padding:14px;width:100%;
+  }
+  .course-row .thumb{width:54px;height:54px;border-radius:10px;background:linear-gradient(135deg,#E0EBFF,#B7CEFF);
+    display:grid;place-items:center;font-size:22px;color:var(--blue-700)}
+  .course-row .body{flex:1}
+  .course-row .name{font-family:var(--serif);font-weight:600;color:var(--ink);font-size:14.5px}
+  .course-row .crumbs{font-size:12px;color:var(--gray-500)}
+  .progress{height:6px;background:var(--gray-150);border-radius:99px;overflow:hidden;margin-top:8px}
+  .progress > i{display:block;height:100%;background:var(--blue-600);border-radius:99px}
+  .course-row .pct{font-family:var(--serif);font-weight:700;color:var(--blue-700);font-size:14px;margin-left:8px;min-width:36px;text-align:right}
+
+  /* Callouts */
+  .callout{
+    border-left:4px solid var(--blue-600);background:linear-gradient(90deg, rgba(37,99,235,.06), rgba(37,99,235,0));
+    padding:14px 18px;border-radius:0 var(--radius-sm) var(--radius-sm) 0;margin:14px 0;
+  }
+  .callout.warn{border-left-color:var(--orange);background:linear-gradient(90deg, rgba(255,106,0,.08), rgba(255,106,0,0))}
+  .callout.note{border-left-color:var(--purple);background:linear-gradient(90deg, rgba(124,58,237,.07), rgba(124,58,237,0))}
+  .callout h4{margin:0 0 4px;color:var(--ink)}
+  .callout p{margin:0;color:var(--gray-700);font-size:14px}
+
+  /* Numbered list */
+  ol.numbered{counter-reset:n;list-style:none;padding:0;margin:0;display:grid;gap:10px}
+  ol.numbered li{counter-increment:n;display:grid;grid-template-columns:34px 1fr;gap:12px;align-items:start}
+  ol.numbered li::before{
+    content:counter(n,decimal-leading-zero);
+    font-family:var(--mono);font-size:12px;color:var(--blue-700);background:var(--blue-50);
+    padding:6px 0;border-radius:8px;text-align:center;font-weight:600;
+  }
+
+  /* Persona */
+  .persona{
+    display:grid;grid-template-columns:96px 1fr;gap:18px;
+    background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius);padding:18px;
+  }
+  .persona .avatar{
+    width:96px;height:96px;border-radius:24px;display:grid;place-items:center;
+    background:radial-gradient(circle at 30% 30%, #D6E4FF, #1D4ED8);
+    color:#fff;font-family:var(--serif);font-weight:700;font-size:36px;
+  }
+  .persona.p2 .avatar{background:radial-gradient(circle at 30% 30%, #FFE0C2, #FF6A00)}
+  .persona.p3 .avatar{background:radial-gradient(circle at 30% 30%, #FFF1B8, #FFC107);color:var(--ink)}
+  .persona h4{margin:0 0 4px;font-size:16px}
+  .persona .role{font-size:12.5px;color:var(--gray-500);font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
+  .persona ul{margin:6px 0 0;padding-left:18px;color:var(--gray-700);font-size:13.5px}
+
+  /* Footer */
+  footer{margin-top:80px;padding:28px 0;border-top:1px solid var(--gray-200);color:var(--gray-500);font-size:13px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+
+  /* Print */
+  @page { size: A4 portrait; margin: 14mm 12mm; }
+  @media print{
+    html, body { background:#fff !important; }
+    *, *::before, *::after {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    nav.toc{display:none !important}
+    .shell{display:block}
+    main{max-width:none;padding:0;margin:0}
+    section{margin-bottom:18px;page-break-inside:auto;break-inside:auto}
+    h1,h2,h3,h4{page-break-after:avoid;break-after:avoid}
+    .section-head{page-break-after:avoid;break-after:avoid}
+    .cover{
+      box-shadow:none;
+      margin-bottom:24px;
+      padding:36px 36px 30px;
+      border-radius:18px;
+      page-break-after:always;
+      break-after:page;
+    }
+    .cover h1{font-size:42px}
+    .cover .meta{grid-template-columns:repeat(2,1fr);gap:10px}
+    .card, .swatch, .specimen, .ia-node, .persona, .comp, .stat-card, .course-row, table.spec, .screen, .callout{
+      page-break-inside:avoid;break-inside:avoid;
+    }
+    .screen{margin-bottom:14px}
+    .screen .preview{padding:12px}
+    .screen .preview img{max-height:420px;width:auto;box-shadow:0 6px 22px -10px rgba(11,29,58,.18)}
+    .grid-2, .grid-3, .grid-4, .sitemap, .comp-grid, .swatches{break-inside:auto}
+    pre{white-space:pre-wrap;word-break:break-word;page-break-inside:avoid}
+    a{color:var(--blue-600);text-decoration:none}
+    footer{margin-top:30px;page-break-inside:avoid}
+    section#screens article.screen{page-break-before:auto}
+    section#overview, section#personas, section#goals, section#ia,
+    section#tokens, section#components, section#screens,
+    section#motion, section#stack, section#acceptance, section#roadmap{
+      padding-top:6px;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- ============== SIDEBAR TOC ============== -->
+  <nav class="toc">
+    <div class="brand">
+      <span class="logo">Talentika</span><span class="star">✦</span>
+    </div>
+    <div class="doc-meta">PRD · v1.0 · May 11, 2026</div>
+    <div class="doc-title">Talentika Dashboard — Design &amp; Implementation PRD</div>
+    <ol>
+      <li><a href="#overview">Overview &amp; Vision</a></li>
+      <li><a href="#personas">Users &amp; Personas</a></li>
+      <li><a href="#goals">Goals &amp; Success Metrics</a></li>
+      <li><a href="#ia">Information Architecture</a></li>
+      <li><a href="#tokens">Design Tokens
+        <ol>
+          <li><a href="#color">Color</a></li>
+          <li><a href="#type">Typography</a></li>
+          <li><a href="#spacing">Spacing &amp; Radius</a></li>
+        </ol>
+      </a></li>
+      <li><a href="#components">Core Components</a></li>
+      <li><a href="#screens">Screens
+        <ol>
+          <li><a href="#s-auth">Auth</a></li>
+          <li><a href="#s-onboard">Onboarding</a></li>
+          <li><a href="#s-dash">Dashboard</a></li>
+          <li><a href="#s-courses">Kursus Saya</a></li>
+          <li><a href="#s-peluang">Peluang</a></li>
+          <li><a href="#s-community">Community</a></li>
+          <li><a href="#s-misc">Other</a></li>
+        </ol>
+      </a></li>
+      <li><a href="#motion">Motion &amp; Interaction</a></li>
+      <li><a href="#stack">Tech Stack &amp; Conventions</a></li>
+      <li><a href="#acceptance">Acceptance Criteria</a></li>
+      <li><a href="#roadmap">Build Order for Claude Code</a></li>
+    </ol>
+  </nav>
+
+  <!-- ============== MAIN ============== -->
+  <main>
+
+    <!-- ============== COVER ============== -->
+    <header class="cover">
+      <svg class="sparkle" style="top:40px;right:80px;" width="34" height="34" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.7 6.3L20 10l-6.3 1.7L12 18l-1.7-6.3L4 10l6.3-1.7z"/></svg>
+      <svg class="sparkle" style="bottom:80px;right:180px;color:#fff;opacity:.6" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.7 6.3L20 10l-6.3 1.7L12 18l-1.7-6.3L4 10l6.3-1.7z"/></svg>
+      <div class="kicker"><span class="dot"></span> Product Requirements · Design System · Implementation Spec</div>
+      <h1>Talentika Dashboard <span class="accent-y">✦</span></h1>
+      <div class="tagline"><span>Discover.</span><span class="o">Develop.</span><span class="y">Grow.</span></div>
+      <p style="max-width:60ch;opacity:.92;margin-top:18px;font-size:16.5px">
+        A talent-discovery &amp; growth platform for Indonesian youth — combining scientific assessment,
+        curated courses, real opportunities, and supportive community in one warm, energetic product.
+      </p>
+      <dl class="meta">
+        <div><dt>Product</dt><dd>Talentika Web Dashboard</dd></div>
+        <div><dt>Primary Locale</dt><dd>Bahasa Indonesia (en fallback)</dd></div>
+        <div><dt>Target Device</dt><dd>Web · Desktop‑first, responsive</dd></div>
+        <div><dt>Owner</dt><dd>Design × Engineering</dd></div>
+      </dl>
+    </header>
+
+    <!-- ============== 1. OVERVIEW ============== -->
+    <section id="overview">
+      <div class="section-head">
+        <span class="num">01 — Overview</span>
+        <h2>What Talentika is, and why this PRD exists</h2>
+        <p>This document is the single source of truth for Claude Code to implement the Talentika dashboard.
+          It locks the brand system, the screens, the tokens, and the acceptance criteria so the build matches the design.</p>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <span class="eyebrow">Product Vision</span>
+          <p style="color:var(--ink);font-family:var(--serif);font-weight:500;font-size:16px;line-height:1.45">
+            Help every young person in Indonesia <i>discover</i> their unique potential, <i>develop</i> it with
+            structured guidance, and <i>grow</i> through opportunities and community.
+          </p>
+        </div>
+        <div class="card">
+          <span class="eyebrow">Brand Personality</span>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px">
+            <span class="pill">★ Inspiring</span>
+            <span class="pill orange">⚡ Empowering</span>
+            <span class="pill">♥ Supportive</span>
+            <span class="pill gray">◆ Trustworthy</span>
+            <span class="pill yellow">✦ Innovative</span>
+          </div>
+          <p style="margin-top:12px;font-size:13.5px">Tone of voice: <b>Positif &amp; Memotivasi · Ramah &amp; Dekat · Jelas &amp; Informatif · Membangun &amp; Solutif</b>.</p>
+        </div>
+      </div>
+
+      <div class="callout">
+        <h4>Scope of this PRD</h4>
+        <p>Covers the post-login member dashboard for the <b>Individual</b> user type (students &amp; young professionals).
+          Membership/Pro upsell surfaces are referenced but the full billing flow is out-of-scope for v1.</p>
+      </div>
+    </section>
+
+    <!-- ============== 2. PERSONAS ============== -->
+    <section id="personas">
+      <div class="section-head">
+        <span class="num">02 — Users</span>
+        <h2>Who we're building for</h2>
+        <p>Three primary personas drive the dashboard's structure. Every flow should serve at least one persona's "job to be done".</p>
+      </div>
+
+      <div style="display:grid;gap:12px">
+        <div class="persona">
+          <div class="avatar">D</div>
+          <div>
+            <h4>Muhammad Dafa — “The Explorer”</h4>
+            <div class="role">SMA / Early university · 16–19 yrs</div>
+            <p style="margin:0;font-size:13.5px">Curious but unsure which path fits. Wants to “try things” without commitment, and to see proof his interests can lead somewhere.</p>
+            <ul>
+              <li>JTBD: <b>“Help me figure out what I'm good at, and what to do next.”</b></li>
+              <li>Cares about: assessment results, beginner courses, scholarships, peer community.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="persona p2">
+          <div class="avatar">S</div>
+          <div>
+            <h4>Siti — “The Climber”</h4>
+            <div class="role">University · 19–22 yrs</div>
+            <p style="margin:0;font-size:13.5px">Has a direction (e.g. UI/UX) and wants structured growth: a roadmap, real challenges, a portfolio of badges.</p>
+            <ul>
+              <li>JTBD: <b>“Give me a clear path and prove I'm progressing.”</b></li>
+              <li>Cares about: roadmap, progress %, challenges, internships, certificates.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="persona p3">
+          <div class="avatar">R</div>
+          <div>
+            <h4>Rian — “The Achiever”</h4>
+            <div class="role">Fresh grad / Early career · 22–25 yrs</div>
+            <p style="margin:0;font-size:13.5px">Goal-oriented; treating Talentika like a launchpad. Wants premium content, mentorship, and high-signal opportunities.</p>
+            <ul>
+              <li>JTBD: <b>“Connect me to the next real step in my career.”</b></li>
+              <li>Cares about: Pro upgrade, conferences, jobs, mentorship, community leadership.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============== 3. GOALS ============== -->
+    <section id="goals">
+      <div class="section-head">
+        <span class="num">03 — Goals</span>
+        <h2>Goals &amp; success metrics</h2>
+      </div>
+
+      <table class="spec">
+        <thead><tr><th style="width:30%">Goal</th><th>Behaviour</th><th>Metric (v1 target)</th></tr></thead>
+        <tbody>
+          <tr><td>Activation</td><td>New user completes Talent Test + opens 1 recommended course</td><td class="num">≥ 60% within day 1</td></tr>
+          <tr><td>Engagement</td><td>User returns to dashboard ≥ 3× per week</td><td class="num">WAU/MAU ≥ 0.45</td></tr>
+          <tr><td>Course progress</td><td>Avg. enrolled course completion</td><td class="num">≥ 55%</td></tr>
+          <tr><td>Opportunity click‑through</td><td>“Lihat Detail” clicks on Peluang cards</td><td class="num">≥ 18% of card impressions</td></tr>
+          <tr><td>Community join</td><td>User joins ≥ 1 community within first 7 days</td><td class="num">≥ 40%</td></tr>
+          <tr><td>Pro conversion</td><td>Free → Pro upgrade</td><td class="num">≥ 4% / quarter</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ============== 4. IA ============== -->
+    <section id="ia">
+      <div class="section-head">
+        <span class="num">04 — Information Architecture</span>
+        <h2>Sitemap &amp; primary nav</h2>
+        <p>The left rail mirrors the user's growth journey, top → bottom: <b>see where you are</b>, <b>learn</b>, <b>challenge yourself</b>, <b>seize chances</b>, <b>track</b>, <b>celebrate</b>, <b>belong</b>, <b>plan</b>, <b>be you</b>, <b>configure</b>.</p>
+      </div>
+
+      <div class="sitemap">
+        <div class="ia-node"><div class="ia-h"><div class="ia-icon">⌂</div><h4>Dashboard</h4></div>
+          <ul><li>Greeting hero</li><li>Talent Test result + career rec</li><li>Progress summary</li><li>Activity feed</li></ul></div>
+        <div class="ia-node"><div class="ia-h"><div class="ia-icon">📖</div><h4>Kursus Saya</h4></div>
+          <ul><li>Active courses</li><li>Stats (5 / 23.5h / 58% / 3 certs)</li><li>Calendar &amp; recommendations</li></ul></div>
+        <div class="ia-node"><div class="ia-h"><div class="ia-icon">🏆</div><h4>Tantangan</h4></div>
+          <ul><li>Daily &amp; weekly challenges</li><li>Streaks &amp; badges</li><li>Leaderboard (lite)</li></ul></div>
+        <div class="ia-node"><div class="ia-h"><div class="ia-icon">🎁</div><h4>Peluang</h4></div>
+          <ul><li>Beasiswa · Kompetisi · Magang · Lowongan · Konferensi</li><li>Filter &amp; saved</li></ul></div>
+        <div class="ia-node"><div class="ia-h"><div class="ia-icon">📈</div><h4>Progress</h4></div>
+          <ul><li>Skill graph</li><li>Weekly hours</li><li>Roadmap tracker</li></ul></div>
+        <div class="ia-node"><div class="ia-h"><div class="ia-icon">🛡</div><h4>Pencapaian</h4></div>
+          <ul><li>Badges</li><li>Certificates</li><li>Milestones</li></ul></div>
+        <div class="ia-node"><div class="ia-h"><div class="ia-icon">👥</div><h4>Community</h4></div>
+          <ul><li>Recommended communities</li><li>Discussions</li><li>Pro membership upsell</li></ul></div>
+        <div class="ia-node"><div class="ia-h"><div class="ia-icon">🕒</div><h4>Timeline</h4></div>
+          <ul><li>Personal feed of activity</li><li>Saved events &amp; deadlines</li></ul></div>
+        <div class="ia-node"><div class="ia-h"><div class="ia-icon">👤</div><h4>Profile &amp; Pengaturan</h4></div>
+          <ul><li>Identity, bio, links</li><li>Preferences, theme, notif</li></ul></div>
+      </div>
+    </section>
+
+    <!-- ============== 5. DESIGN TOKENS ============== -->
+    <section id="tokens">
+      <div class="section-head">
+        <span class="num">05 — Design Tokens</span>
+        <h2>Foundations — colors, type, spacing</h2>
+        <p>All tokens below are normative. Implement as CSS custom properties under <code>:root</code> and re-export via Tailwind config / theme.</p>
+      </div>
+
+      <h3 id="color">5.1 — Color</h3>
+      <h4>Primary</h4>
+      <div class="swatches">
+        <div class="swatch has-text"><div class="chip" style="background:#1D4ED8">Primary 600</div><div class="meta-row"><div class="name">Talentika Blue</div><div class="hex">#1D4ED8 · --blue-600</div></div></div>
+        <div class="swatch has-text"><div class="chip" style="background:#FF6A00">Accent</div><div class="meta-row"><div class="name">Energy Orange</div><div class="hex">#FF6A00 · --orange</div></div></div>
+        <div class="swatch has-text"><div class="chip" style="background:#FFC107;color:#0B1D3A">Highlight</div><div class="meta-row"><div class="name">Spark Yellow</div><div class="hex">#FFC107 · --yellow</div></div></div>
+        <div class="swatch has-text"><div class="chip" style="background:#0B1D3A">Ink</div><div class="meta-row"><div class="name">Deep Navy</div><div class="hex">#0B1D3A · --blue-900</div></div></div>
+      </div>
+
+      <h4 style="margin-top:18px">Secondary (tints)</h4>
+      <div class="swatches">
+        <div class="swatch"><div class="chip" style="background:#E8F1FF"></div><div class="meta-row"><div class="name">Blue Tint</div><div class="hex">#E8F1FF</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#FFEDE2"></div><div class="meta-row"><div class="name">Orange Tint</div><div class="hex">#FFEDE2</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#FFF6E0"></div><div class="meta-row"><div class="name">Yellow Tint</div><div class="hex">#FFF6E0</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#E6F7EF"></div><div class="meta-row"><div class="name">Mint</div><div class="hex">#E6F7EF</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#F0E8FF"></div><div class="meta-row"><div class="name">Lilac</div><div class="hex">#F0E8FF</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#F5F7FA;border-right:1px solid var(--gray-200)"></div><div class="meta-row"><div class="name">Gray 100</div><div class="hex">#F5F7FA</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#E6EAF0"></div><div class="meta-row"><div class="name">Gray 200</div><div class="hex">#E6EAF0</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#334155"></div><div class="meta-row"><div class="name">Gray 700</div><div class="hex">#334155</div></div></div>
+      </div>
+
+      <div class="callout warn" style="margin-top:18px">
+        <h4>Color usage rules</h4>
+        <p><b>Blue 600</b> = primary actions, links, active state. <b>Orange</b> = celebratory + Pro/Membership accents (use sparingly, never as body text). <b>Yellow</b> = achievement &amp; "spark" moments only. <b>Navy</b> = headings &amp; high‑emphasis text. Backgrounds are <b>off‑white &amp; gray‑50</b>, not pure white slabs.</p>
+      </div>
+
+      <h3 id="type" style="margin-top:32px">5.2 — Typography</h3>
+      <div class="specimen">
+        <div class="lbl">Primary<b>Poppins</b>700 · 600 · 500 · 400</div>
+        <div>
+          <div class="sample" style="font-size:40px;font-weight:700;line-height:1.05;letter-spacing:-.02em;color:var(--ink)">Discover your potential.</div>
+          <div class="sample" style="font-size:22px;font-weight:600;color:var(--ink);margin-top:6px">Display / H1 — Poppins 700, -2% tracking</div>
+          <div style="font-family:var(--mono);font-size:11.5px;color:var(--gray-500);margin-top:6px">Use Poppins for: page titles, card titles, stats, hero copy.</div>
+        </div>
+      </div>
+      <div class="specimen">
+        <div class="lbl">Secondary<b>Inter</b>700 · 600 · 500 · 400</div>
+        <div>
+          <div class="sample" style="font-family:var(--sans);font-size:16px;color:var(--gray-700);line-height:1.55">Inter handles all body text, table content, form labels, captions and microcopy. Optical sizes and a neutral skeleton keep dense product UI readable next to Poppins' rounder display voice.</div>
+          <div style="font-family:var(--mono);font-size:11.5px;color:var(--gray-500);margin-top:8px">Use Inter for: body, inputs, table cells, badges, helper text, nav labels.</div>
+        </div>
+      </div>
+
+      <h4 style="margin-top:14px">Type scale</h4>
+      <table class="spec">
+        <thead><tr><th>Token</th><th>Family</th><th>Size / Line</th><th>Weight</th><th>Use</th></tr></thead>
+        <tbody>
+          <tr><td><code>display</code></td><td>Poppins</td><td class="num">44 / 48</td><td>700</td><td>Hero, marketing surfaces</td></tr>
+          <tr><td><code>h1</code></td><td>Poppins</td><td class="num">32 / 38</td><td>700</td><td>Page titles ("Kursus Saya")</td></tr>
+          <tr><td><code>h2</code></td><td>Poppins</td><td class="num">24 / 30</td><td>700</td><td>Section heads ("Community for You")</td></tr>
+          <tr><td><code>h3</code></td><td>Poppins</td><td class="num">18 / 26</td><td>600</td><td>Card titles, course names</td></tr>
+          <tr><td><code>body</code></td><td>Inter</td><td class="num">15 / 24</td><td>400/500</td><td>Default text</td></tr>
+          <tr><td><code>small</code></td><td>Inter</td><td class="num">13 / 18</td><td>500</td><td>Helper text, breadcrumb meta</td></tr>
+          <tr><td><code>caption</code></td><td>Inter</td><td class="num">11.5 / 16</td><td>500</td><td>Pills, captions, timestamps</td></tr>
+          <tr><td><code>stat</code></td><td>Poppins</td><td class="num">28 / 32</td><td>700</td><td>Big numbers in stat cards</td></tr>
+        </tbody>
+      </table>
+
+      <h3 id="spacing" style="margin-top:32px">5.3 — Spacing, radius, elevation</h3>
+      <div class="grid-2">
+        <table class="spec">
+          <thead><tr><th>Token</th><th>Px</th><th>Use</th></tr></thead>
+          <tbody>
+            <tr><td><code>space-1</code></td><td class="num">4</td><td>Icon ↔ label</td></tr>
+            <tr><td><code>space-2</code></td><td class="num">8</td><td>Pill, chip padding</td></tr>
+            <tr><td><code>space-3</code></td><td class="num">12</td><td>Form fields</td></tr>
+            <tr><td><code>space-4</code></td><td class="num">16</td><td>Card padding base</td></tr>
+            <tr><td><code>space-5</code></td><td class="num">20</td><td>Card padding-lg</td></tr>
+            <tr><td><code>space-6</code></td><td class="num">24</td><td>Section gap</td></tr>
+            <tr><td><code>space-8</code></td><td class="num">32</td><td>Page gutter</td></tr>
+            <tr><td><code>space-10</code></td><td class="num">40</td><td>Top of main column</td></tr>
+          </tbody>
+        </table>
+        <table class="spec">
+          <thead><tr><th>Token</th><th>Value</th><th>Use</th></tr></thead>
+          <tbody>
+            <tr><td><code>radius-sm</code></td><td class="num">8px</td><td>Pills, small buttons</td></tr>
+            <tr><td><code>radius</code></td><td class="num">14px</td><td>Inputs, default card</td></tr>
+            <tr><td><code>radius-lg</code></td><td class="num">20px</td><td>Hero card, modal</td></tr>
+            <tr><td><code>radius-xl</code></td><td class="num">28px</td><td>Big illustration card</td></tr>
+            <tr><td><code>shadow-sm</code></td><td><code>0 1px 2px rgba(11,29,58,.05)</code></td><td>Subtle separation</td></tr>
+            <tr><td><code>shadow</code></td><td><code>0 6px 22px -8px rgba(11,29,58,.12)</code></td><td>Default card</td></tr>
+            <tr><td><code>shadow-lg</code></td><td><code>0 24px 60px -20px rgba(29,78,216,.25)</code></td><td>Hero / focused state</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============== 6. COMPONENTS ============== -->
+    <section id="components">
+      <div class="section-head">
+        <span class="num">06 — Components</span>
+        <h2>Core components &amp; their states</h2>
+        <p>Every component below must exist as a reusable React component (typed props, no inline duplicates).</p>
+      </div>
+
+      <div class="comp-grid">
+        <div class="comp">
+          <h4>Button</h4>
+          <div class="desc">Primary · Secondary · Ghost · Accent. Sizes sm/md/lg. Loading + disabled.</div>
+          <div class="demo" style="gap:10px;display:flex;flex-wrap:wrap">
+            <button class="btn primary">Masuk →</button>
+            <button class="btn secondary">Lihat Detail</button>
+            <button class="btn accent">Upgrade ke Pro</button>
+            <button class="btn ghost">Lewati</button>
+          </div>
+        </div>
+
+        <div class="comp">
+          <h4>Search input</h4>
+          <div class="desc">Pill input, leading icon, trailing <code>⌘K</code> hint. Fires global search modal.</div>
+          <div class="demo">
+            <div class="input-demo">
+              <span style="color:var(--gray-500)">⌕</span>
+              <input placeholder="Cari kursus, materi, atau topik…">
+              <span class="kbd">Ctrl K</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="comp">
+          <h4>Stat card</h4>
+          <div class="desc">Icon + label + big number + sub-caption. 1×4 row on dashboard headers.</div>
+          <div class="demo">
+            <div class="stat-card">
+              <div class="icon">📖</div>
+              <div>
+                <div class="label">Kursus Aktif</div>
+                <div class="val">5</div>
+                <div class="sub">Lanjutkan belajar!</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="comp">
+          <h4>Course row</h4>
+          <div class="desc">Thumb · name · taxonomy · module count · progress bar · CTA · overflow menu.</div>
+          <div class="demo">
+            <div class="course-row">
+              <div class="thumb">✦</div>
+              <div class="body">
+                <div class="name">UI/UX Design Fundamentals</div>
+                <div class="crumbs">Design · 24 Modul</div>
+                <div class="progress"><i style="width:60%"></i></div>
+              </div>
+              <div class="pct">60%</div>
+              <button class="btn secondary" style="padding:6px 12px;font-size:13px">Lanjutkan</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="comp">
+          <h4>Pill / Tag</h4>
+          <div class="desc">Category, status, taxonomy. 6 tonal variants mapped to taxonomy color.</div>
+          <div class="demo" style="gap:8px;display:flex;flex-wrap:wrap">
+            <span class="pill">Programming</span>
+            <span class="pill orange">Design</span>
+            <span class="pill yellow">AI</span>
+            <span class="pill green">Social</span>
+            <span class="pill lilac">Marketing</span>
+            <span class="pill gray">+1</span>
+          </div>
+        </div>
+
+        <div class="comp">
+          <h4>Opportunity card</h4>
+          <div class="desc">Banner header (taxonomy color) · domain · title · location · tags · CTA. Hover lifts, saved state pinned.</div>
+          <div class="demo">
+            <div style="width:240px;background:#fff;border:1px solid var(--gray-200);border-radius:14px;overflow:hidden">
+              <div style="background:linear-gradient(135deg,#2563EB,#1D4ED8);height:84px;color:#fff;padding:10px 12px;position:relative">
+                <span class="pill" style="background:#fff;color:var(--blue-700)">Beasiswa</span>
+                <div style="position:absolute;bottom:8px;left:0;right:0;text-align:center;font-family:var(--serif);font-size:12px;opacity:.9">worldscholarshipforum.com</div>
+              </div>
+              <div style="padding:12px">
+                <div style="font-family:var(--serif);font-weight:600;font-size:13.5px;line-height:1.3">Fully Funded Scholarships 2026–2027</div>
+                <div style="font-size:11.5px;color:var(--gray-500);margin-top:4px">⌖ Internasional</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="comp">
+          <h4>Calendar (week strip)</h4>
+          <div class="desc">7-col grid; events as filled blue dots. Today = filled circle, scheduled = ring.</div>
+          <div class="demo" style="font-size:12px;color:var(--gray-700)">
+            <div style="display:grid;grid-template-columns:repeat(7,28px);gap:8px;text-align:center">
+              <div style="opacity:.6">S</div><div style="opacity:.6">S</div><div style="opacity:.6">R</div><div style="opacity:.6">K</div><div style="opacity:.6">J</div><div style="opacity:.6">S</div><div style="opacity:.6">M</div>
+              <div>4</div><div>5</div><div style="background:var(--blue-600);color:#fff;border-radius:50%">6</div><div>7</div><div>8</div><div>9</div><div>10</div>
+              <div style="background:var(--blue-600);color:#fff;border-radius:50%">11</div><div>12</div><div>13</div><div style="background:var(--blue-600);color:#fff;border-radius:50%">14</div><div>15</div><div>16</div><div>17</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="comp">
+          <h4>Sidebar nav item</h4>
+          <div class="desc">Icon + label. Active = blue tint bg + blue text + 3px left bar. Hover = gray-100.</div>
+          <div class="demo" style="flex-direction:column;align-items:stretch;width:100%">
+            <div style="background:var(--blue-50);color:var(--blue-700);font-family:var(--serif);font-weight:600;padding:10px 14px;border-radius:10px;border-left:3px solid var(--blue-600);width:220px">📖&nbsp;&nbsp;Kursus Saya</div>
+          </div>
+        </div>
+      </div>
+
+      <h3 style="margin-top:30px">Inventory checklist</h3>
+      <table class="spec">
+        <thead><tr><th>Component</th><th>Variants</th><th>States</th></tr></thead>
+        <tbody>
+          <tr><td>Button</td><td>primary, secondary, ghost, accent, icon-only</td><td>default, hover, active, focus-ring, loading, disabled</td></tr>
+          <tr><td>Input</td><td>text, password (eye toggle), search, textarea, dropdown</td><td>default, focus, error, success, disabled</td></tr>
+          <tr><td>Card</td><td>flat, elevated, hero-gradient, illustrated</td><td>default, hover‑lift, selected</td></tr>
+          <tr><td>Sidebar item</td><td>top-level, with badge</td><td>default, hover, active, collapsed</td></tr>
+          <tr><td>Topbar</td><td>with search, with theme toggle, with avatar menu</td><td>default, search-open, notif-open</td></tr>
+          <tr><td>Stat card</td><td>4 tonal variants (blue/green/yellow/purple)</td><td>default, loading skeleton</td></tr>
+          <tr><td>Course row</td><td>active, completed, locked</td><td>default, hover, overflow-open</td></tr>
+          <tr><td>Opportunity card</td><td>per category color</td><td>default, hover, saved (filled bookmark)</td></tr>
+          <tr><td>Community card</td><td>tech/design/social/etc.</td><td>default, joined, recommended badge</td></tr>
+          <tr><td>Badge / Pill</td><td>tonal × 6</td><td>default, with icon, removable</td></tr>
+          <tr><td>Progress bar</td><td>thin (6px), thick (10px), radial</td><td>0–100, indeterminate</td></tr>
+          <tr><td>Tabs</td><td>underline, segmented, with counters</td><td>default, active, disabled</td></tr>
+          <tr><td>Modal / Sheet</td><td>center modal, right sheet, command palette</td><td>open, closing</td></tr>
+          <tr><td>Toast</td><td>info, success, warn, error</td><td>enter, hold, exit</td></tr>
+          <tr><td>Avatar</td><td>initials, image, with status dot</td><td>sm, md, lg</td></tr>
+          <tr><td>Calendar</td><td>month, week strip</td><td>today, scheduled, range</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ============== 7. SCREENS ============== -->
+    <section id="screens">
+      <div class="section-head">
+        <span class="num">07 — Screens</span>
+        <h2>Screen-by-screen spec</h2>
+        <p>Each screen lists route, purpose, layout regions, data, primary actions, and acceptance criteria. Image references are 1:1 with the brand mocks.</p>
+      </div>
+
+      <!-- AUTH -->
+      <article class="screen" id="s-auth">
+        <div class="preview"><img src="assets/login.png" alt="Login screen"></div>
+        <div class="body">
+          <div class="screen-head"><h3>7.1 — Authentication</h3><span class="route">/auth · /auth/register</span></div>
+          <div class="meta-line">
+            <span class="pill">Public</span>
+            <span class="pill gray">Tabs: Masuk · Daftar Akun</span>
+            <span class="pill gray">Locale: ID</span>
+          </div>
+          <div class="row">
+            <div>
+              <h4>Layout</h4>
+              <p>Two‑column split. Left = brand panel (gradient blob illustration + value props + hero copy "Mulai perjalanan terbaikmu bersama <span style="color:var(--blue-600);font-weight:700">Talentika</span>"). Right = card with tab switcher, form, social auth.</p>
+              <h4>Form fields</h4>
+              <ul class="checks">
+                <li>Email atau Nomor Handphone (smart input — detects @ vs digits)</li>
+                <li>Kata Sandi with eye toggle</li>
+                <li>Forgot password link, right-aligned</li>
+                <li>Sticky CTA: "Masuk →" full width, blue 600</li>
+                <li>OAuth: Google · Apple · Facebook (equal-weight, monochrome)</li>
+              </ul>
+            </div>
+            <div>
+              <h4>Value props (left rail)</h4>
+              <ul class="checks">
+                <li>Akses Pembelajaran Berkualitas — blue tint icon</li>
+                <li>Komunitas Positif &amp; Inspiratif — orange tint icon</li>
+                <li>Bangun Masa Depanmu — mint tint icon</li>
+              </ul>
+              <h4>Acceptance</h4>
+              <ul class="checks">
+                <li>Form validates inline (no full-page reload)</li>
+                <li>Footer microcopy links to Syarat &amp; Ketentuan and Kebijakan Privasi</li>
+                <li>"Belum punya akun? Daftar sekarang" swaps tab without route change</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- ONBOARDING -->
+      <article class="screen" id="s-onboard">
+        <div class="preview"><img src="assets/onboarding.png" alt="Onboarding flow"></div>
+        <div class="body">
+          <div class="screen-head"><h3>7.2 — Onboarding (5 steps)</h3><span class="route">/onboarding/[1..5]</span></div>
+          <div class="meta-line">
+            <span class="pill">First‑run only</span>
+            <span class="pill orange">Lewati allowed</span>
+            <span class="pill gray">Persistent dot pagination</span>
+          </div>
+          <div class="row">
+            <div>
+              <h4>Steps</h4>
+              <ol class="numbered">
+                <li><b>Kenali dirimu lebih dalam</b> — intro to Talent Test (illustration: youth with laptop).</li>
+                <li><b>Dapatkan insight karier yang tepat</b> — recommendations preview.</li>
+                <li><b>Bangun roadmap pengembangan diri</b> — mountain path illustration.</li>
+                <li><b>Bergabung dengan komunitas positif</b> — group of friends.</li>
+                <li><b>Siap untuk masa depanmu?</b> — rocket; CTA <b>Mulai Sekarang</b>.</li>
+              </ol>
+            </div>
+            <div>
+              <h4>Layout rules</h4>
+              <ul class="checks">
+                <li>Desktop: 5 cards in a row preview; Mobile: one card at a time, swipe.</li>
+                <li>Each card: illustration block (60% height) over title + body.</li>
+                <li>Footer strip with 3 trust signals: Aman &amp; Terpercaya · Privasi Terjaga · Berdasarkan Sains.</li>
+                <li>"Lewati" persists in top-right across all steps.</li>
+              </ul>
+              <h4>Acceptance</h4>
+              <ul class="checks">
+                <li>Final step CTA routes to <code>/talent-test</code> not dashboard.</li>
+                <li>Onboarding state stored in user profile → never shown again.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- DASHBOARD -->
+      <article class="screen" id="s-dash">
+        <div class="preview"><img src="assets/screen-dashboard.png" alt="Main dashboard"></div>
+        <div class="body">
+          <div class="screen-head"><h3>7.3 — Dashboard (Home)</h3><span class="route">/dashboard</span></div>
+          <div class="meta-line">
+            <span class="pill">Authenticated · Default landing</span>
+            <span class="pill gray">3 main regions</span>
+          </div>
+          <div class="row">
+            <div>
+              <h4>Regions</h4>
+              <ol class="numbered">
+                <li><b>Greeting hero</b> — full-width gradient banner: "Selamat Malam, {firstName}! 👋" + waving illustration on right.</li>
+                <li><b>Hasil Assessment Anda</b> — avatar circle, persona ("Artistic (Creator)"), 1-line summary, "Tingkat Kesesuaian" progress, recommended career chips, Area Bakat Utama list, Tes Ulang / Lihat Kursus actions.</li>
+                <li><b>Right column</b> — Ringkasan Progress (4 mini-stats grid) + Kursus Anda (top 3 with progress + chevron) + Aktivitas Terbaru horizontal feed.</li>
+              </ol>
+            </div>
+            <div>
+              <h4>Data &amp; behavior</h4>
+              <ul class="checks">
+                <li>Greeting time-aware (Pagi/Siang/Sore/Malam).</li>
+                <li>Notification bell shows live count badge (top-right).</li>
+                <li>Theme toggle next to bell — light/dark, no system flicker.</li>
+                <li>Avatar menu reveals profile + sign-out + plan switch.</li>
+                <li>"Tes Ulang" opens confirmation modal (retesting cools down 30 days).</li>
+              </ul>
+              <h4>Acceptance</h4>
+              <ul class="checks">
+                <li>If user hasn't taken Talent Test → block #2 shows empty state CTA "Mulai Talent Test".</li>
+                <li>Activity feed shows last 4 events with relative timestamps in ID locale.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- COURSES -->
+      <article class="screen" id="s-courses">
+        <div class="preview"><img src="assets/screen-kursus.png" alt="My courses"></div>
+        <div class="body">
+          <div class="screen-head"><h3>7.4 — Kursus Saya</h3><span class="route">/courses</span></div>
+          <div class="meta-line">
+            <span class="pill">Persistent main nav</span>
+            <span class="pill gray">Filter: Semua Status ▾</span>
+          </div>
+          <div class="row">
+            <div>
+              <h4>Layout</h4>
+              <ul class="checks">
+                <li>Header row: page title + subtitle + status filter (right).</li>
+                <li>4 stat cards: Kursus Aktif · Jam Belajar · Progress Rata‑rata (radial) · Sertifikat.</li>
+                <li>Main panel: <b>Kursus Aktif</b> list (5/page) with course rows + pagination.</li>
+                <li>Right rail: Kalender Belajar (month view) → Rekomendasi Untukmu (paid placement allowed) → Pencapaian Terbaru.</li>
+              </ul>
+            </div>
+            <div>
+              <h4>Acceptance</h4>
+              <ul class="checks">
+                <li>Course row click opens course detail (out of v1 scope, stub route).</li>
+                <li>Progress bar color stays blue regardless of %; never red.</li>
+                <li>Calendar marks today + every day with scheduled study session.</li>
+                <li>Recommendation card uses radial accent if "sponsored".</li>
+                <li>Pagination: "Menampilkan 1 – 5 dari N kursus" stays in lower-left.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- PELUANG -->
+      <article class="screen" id="s-peluang">
+        <div class="preview"><img src="assets/screen-peluang.png" alt="Opportunities"></div>
+        <div class="body">
+          <div class="screen-head"><h3>7.5 — Peluang (Opportunities)</h3><span class="route">/opportunities</span></div>
+          <div class="meta-line">
+            <span class="pill">Discovery</span>
+            <span class="pill gray">Tabs: Semua · Beasiswa · Kompetisi · Magang · Lowongan · Konferensi</span>
+            <span class="pill yellow">Saved state</span>
+          </div>
+          <div class="row">
+            <div>
+              <h4>Layout</h4>
+              <ul class="checks">
+                <li>Top hero: centered title "🎁 Opportunity for You" + subtitle + decorative graduation cap &amp; trophy SVGs on right.</li>
+                <li>Category tab row, each with count chip.</li>
+                <li>3-col grid of opportunity cards (2 rows shown, paginated).</li>
+                <li>Selected/hovered card flips banner to filled blue + CTA flips to filled.</li>
+              </ul>
+            </div>
+            <div>
+              <h4>Card anatomy</h4>
+              <ul class="checks">
+                <li>Banner with category pill (top-left) + source domain (centered) + bookmark icon (top-right, fills when saved).</li>
+                <li>Title 2 lines max with line-clamp; "Internasional" location row.</li>
+                <li>2–3 tags (scholarship/phd/sosial).</li>
+                <li>Footer CTA "Lihat Detail →".</li>
+              </ul>
+              <h4>Acceptance</h4>
+              <ul class="checks">
+                <li>Filter tab updates count + URL query.</li>
+                <li>Saved items persist server-side (per-user).</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- COMMUNITY -->
+      <article class="screen" id="s-community">
+        <div class="preview"><img src="assets/screen-community.png" alt="Community"></div>
+        <div class="body">
+          <div class="screen-head"><h3>7.6 — Community</h3><span class="route">/community</span></div>
+          <div class="meta-line"><span class="pill">Discovery + upsell</span><span class="pill orange">Pro membership CTA</span></div>
+          <div class="row">
+            <div>
+              <h4>Layout</h4>
+              <ul class="checks">
+                <li>Top hero: "👥 Community for <span style="color:var(--blue-600);font-weight:700">You</span>" with decorative chat/heart SVGs.</li>
+                <li>Carousel of 3 recommendation cards per page (dot pagination).</li>
+                <li>Each card: category pill (top-left, tonal) + Rekomendasi pill (top-right, lilac), title, 2-line description, member &amp; discussion count, tag pills, primary CTA "Bergabung" (active card filled blue tint).</li>
+                <li>Below: full-width "Explore All Communities →" outline CTA.</li>
+                <li>Membership banner: illustration + headline + "Akses Membership Dashboard →".</li>
+              </ul>
+            </div>
+            <div>
+              <h4>States</h4>
+              <ul class="checks">
+                <li>Joined card replaces CTA with "✓ Bergabung" disabled style.</li>
+                <li>Loading: 3 skeleton cards with shimmer.</li>
+              </ul>
+              <h4>Acceptance</h4>
+              <ul class="checks">
+                <li>Recommendations are personalized from Talent Test result.</li>
+                <li>Pro CTA only shows for non-Pro users.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- OTHER SCREENS -->
+      <article class="screen" id="s-misc">
+        <div class="body" style="padding:24px 26px">
+          <div class="screen-head"><h3>7.7 — Other dashboard surfaces</h3><span class="route">v1 scope</span></div>
+          <table class="spec" style="margin-top:8px">
+            <thead><tr><th>Screen</th><th>Route</th><th>Primary content</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td>Tantangan</td><td><code>/challenges</code></td><td>Daily/weekly challenge cards, streak, badge gallery</td><td>Mirror Peluang card grid; orange accents for challenge category</td></tr>
+              <tr><td>Progress</td><td><code>/progress</code></td><td>Skill radar chart, weekly hours bars, roadmap timeline</td><td>Charts use blue → orange gradient; never multi-rainbow</td></tr>
+              <tr><td>Pencapaian</td><td><code>/achievements</code></td><td>Badges grid (hex tiles), certificates list, milestones</td><td>Earned = full color; locked = grayscale + 50% opacity</td></tr>
+              <tr><td>Timeline</td><td><code>/timeline</code></td><td>Vertical chronological feed of activity + saved deadlines</td><td>Group by day; date chips sticky on scroll</td></tr>
+              <tr><td>Profile</td><td><code>/profile</code></td><td>Identity card, links, public bio, share button</td><td>Public preview toggle "Lihat sebagai publik"</td></tr>
+              <tr><td>Pengaturan</td><td><code>/settings</code></td><td>Account, password, notifications, theme, language, danger zone</td><td>Section anchors + sticky in-page nav</td></tr>
+              <tr><td>Talent Test</td><td><code>/talent-test</code></td><td>Multi-step quiz (≈40 questions), progress bar, result reveal</td><td>Out of v1 visual scope but route reserved</td></tr>
+              <tr><td>Help center</td><td><code>/help</code></td><td>Search + categories + contact</td><td>Linked from sidebar bottom "Butuh Bantuan?" card</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+
+    <!-- ============== 8. MOTION ============== -->
+    <section id="motion">
+      <div class="section-head">
+        <span class="num">08 — Motion &amp; Interaction</span>
+        <h2>How Talentika moves</h2>
+        <p>Motion direction: <b>smooth, dinamis, dan penuh energi positif</b>. Never bouncy-cartoonish; never sterile-flat.</p>
+      </div>
+      <table class="spec">
+        <thead><tr><th>Token</th><th>Curve</th><th>Duration</th><th>Use</th></tr></thead>
+        <tbody>
+          <tr><td><code>ease-soft</code></td><td>cubic-bezier(.2,.7,.2,1)</td><td class="num">220ms</td><td>Default UI transitions</td></tr>
+          <tr><td><code>ease-lift</code></td><td>cubic-bezier(.16,1,.3,1)</td><td class="num">320ms</td><td>Card hover-lift, modal in</td></tr>
+          <tr><td><code>ease-snap</code></td><td>cubic-bezier(.4,.0,.2,1)</td><td class="num">160ms</td><td>Toggle, tab switch</td></tr>
+          <tr><td><code>page-in</code></td><td>fade + translateY(8px)</td><td class="num">280ms</td><td>Route transitions</td></tr>
+          <tr><td><code>sparkle</code></td><td>scale 0→1 + rotate ±15°</td><td class="num">600ms</td><td>Achievement unlock</td></tr>
+        </tbody>
+      </table>
+      <div class="callout note">
+        <h4>Microinteractions to include</h4>
+        <p>Greeting hero waving hand loops on mount. Course progress bar fills with 600ms ease-lift on first paint. Bookmark icon morphs (outline → filled) with a 200ms scale pulse. Sparkles (★) drift slowly in onboarding step backgrounds. Reduce motion preference disables all but opacity transitions.</p>
+      </div>
+    </section>
+
+    <!-- ============== 9. STACK ============== -->
+    <section id="stack">
+      <div class="section-head">
+        <span class="num">09 — Tech Stack &amp; Conventions</span>
+        <h2>How to build it</h2>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <h4>Recommended stack</h4>
+          <dl class="kv">
+            <dt>Framework</dt><dd>Next.js 14 (App Router)</dd>
+            <dt>Language</dt><dd>TypeScript (strict)</dd>
+            <dt>Styling</dt><dd>Tailwind CSS + CSS variables</dd>
+            <dt>Components</dt><dd>Radix UI primitives + custom</dd>
+            <dt>Icons</dt><dd>Lucide React (lineal, friendly)</dd>
+            <dt>Charts</dt><dd>Recharts</dd>
+            <dt>Forms</dt><dd>React Hook Form + Zod</dd>
+            <dt>State</dt><dd>TanStack Query (server) + Zustand (UI)</dd>
+            <dt>i18n</dt><dd>next-intl (ID default, EN fallback)</dd>
+            <dt>Auth</dt><dd>NextAuth (Google/Apple/Facebook + credentials)</dd>
+          </dl>
+        </div>
+        <div class="card">
+          <h4>Folder &amp; naming</h4>
+          <ul style="margin:0;padding-left:18px;font-size:13.5px;color:var(--gray-700)">
+            <li><code>app/</code> — routes by surface (auth, onboarding, dashboard, ...)</li>
+            <li><code>components/ui/</code> — primitives (Button, Card, Input)</li>
+            <li><code>components/blocks/</code> — composed (CourseRow, OpportunityCard)</li>
+            <li><code>components/layout/</code> — Sidebar, Topbar, AppShell</li>
+            <li><code>lib/</code> — clients, utils, validation</li>
+            <li><code>styles/tokens.css</code> — the CSS variables from §5</li>
+            <li>kebab-case files, PascalCase components, ID‑locale strings in <code>messages/id.json</code></li>
+          </ul>
+        </div>
+      </div>
+
+      <h3>Tailwind theme excerpt (illustrative)</h3>
+      <pre style="background:var(--ink);color:#E2E8F0;padding:18px 20px;border-radius:14px;font-family:var(--mono);font-size:12.5px;line-height:1.65;overflow:auto"><code>// tailwind.config.ts (excerpt)
+extend: {
+  colors: {
+    blue:   { 50:'#E8F1FF', 100:'#D6E4FF', 500:'#2563EB', 600:'#1D4ED8', 700:'#1E40AF', 900:'#0B1D3A' },
+    orange: { DEFAULT:'#FF6A00', soft:'#FFEDE2' },
+    yellow: { DEFAULT:'#FFC107', soft:'#FFF6E0' },
+    mint:   '#E6F7EF',
+    lilac:  '#F0E8FF',
+    ink:    '#0B1D3A',
+  },
+  fontFamily: {
+    display: ['Poppins','system-ui','sans-serif'],
+    sans:    ['Inter','system-ui','sans-serif'],
+  },
+  borderRadius: { sm:'8px', DEFAULT:'14px', lg:'20px', xl:'28px' },
+  boxShadow: {
+    sm: '0 1px 2px rgba(11,29,58,.05)',
+    DEFAULT: '0 6px 22px -8px rgba(11,29,58,.12), 0 2px 6px -2px rgba(11,29,58,.06)',
+    lg: '0 24px 60px -20px rgba(29,78,216,.25)',
+  },
+}</code></pre>
+
+      <h3>Accessibility</h3>
+      <ul class="checks">
+        <li>WCAG AA contrast for all text + interactive UI.</li>
+        <li>Focus rings: <code>outline: 2px solid var(--blue-600); outline-offset: 2px</code>.</li>
+        <li>All icons paired with labels or <code>aria-label</code>.</li>
+        <li>Keyboard navigable nav: Cmd/Ctrl + K opens search; arrow keys traverse cards.</li>
+        <li>Respect <code>prefers-reduced-motion</code>.</li>
+        <li>Color is never the only signal (use icons + text).</li>
+      </ul>
+    </section>
+
+    <!-- ============== 10. ACCEPTANCE ============== -->
+    <section id="acceptance">
+      <div class="section-head">
+        <span class="num">10 — Acceptance Criteria</span>
+        <h2>“Ship it” checklist</h2>
+        <p>v1 is accepted when <b>every</b> row below is green in staging.</p>
+      </div>
+      <table class="spec">
+        <thead><tr><th style="width:30%">Area</th><th>Criterion</th></tr></thead>
+        <tbody>
+          <tr><td>Brand fidelity</td><td>Logo, colors, type, illustrations match the Visual Brand Guideline (no off-brand hexes anywhere in the codebase).</td></tr>
+          <tr><td>Auth</td><td>Login + Register + OAuth + password reset flows complete; ID copy verbatim.</td></tr>
+          <tr><td>Onboarding</td><td>5 steps, skippable, completion stored. CTA routes to Talent Test.</td></tr>
+          <tr><td>Dashboard</td><td>Greeting time-aware, Talent Test result block renders with API data or empty state.</td></tr>
+          <tr><td>Courses</td><td>Stats, list, pagination, filter dropdown, right rail calendar/recs/pencapaian all populated.</td></tr>
+          <tr><td>Peluang</td><td>Category tabs with counts, save/unsave persists, hover &amp; selected states correct.</td></tr>
+          <tr><td>Community</td><td>3-card carousel works (mouse, keyboard, swipe). Pro upsell visible for free users only.</td></tr>
+          <tr><td>Theme</td><td>Light + dark themes ship together. Toggle persists in <code>localStorage</code> + user record.</td></tr>
+          <tr><td>Responsive</td><td>Breakpoints: ≥1280 (3‑col grids), ≥1024 (2‑col), ≥768 (sidebar collapses to icons), &lt;768 (bottom-tab nav).</td></tr>
+          <tr><td>Performance</td><td>LCP &lt; 2.0s on Fast 3G; route transitions &lt; 300ms; total CSS &lt; 80KB gzipped.</td></tr>
+          <tr><td>A11y</td><td>0 critical axe issues; full keyboard run-through documented.</td></tr>
+          <tr><td>Locale</td><td>Bahasa Indonesia is default; all dates/numbers formatted with <code>id-ID</code>.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ============== 11. ROADMAP ============== -->
+    <section id="roadmap">
+      <div class="section-head">
+        <span class="num">11 — Build Order</span>
+        <h2>Suggested build order for Claude Code</h2>
+        <p>Implement in this sequence so each layer can be reviewed before the next is built on top.</p>
+      </div>
+      <ol class="numbered">
+        <li><b>Tokens &amp; theme.</b> Add Poppins/Inter, write <code>styles/tokens.css</code>, wire Tailwind theme + dark theme variables.</li>
+        <li><b>Primitives.</b> Button, Input, Card, Pill, Avatar, Progress, Tabs, Modal, Toast.</li>
+        <li><b>Layout shell.</b> Sidebar (with collapse), Topbar (search/theme/notif/avatar), AppShell, AuthLayout.</li>
+        <li><b>Auth + Onboarding.</b> Static screens first, then mock auth, then real auth.</li>
+        <li><b>Dashboard skeleton.</b> Greeting hero, assessment card, progress + courses + activity. Mock API.</li>
+        <li><b>Kursus Saya.</b> Stat row + course list + right rail (calendar, recs, pencapaian).</li>
+        <li><b>Peluang + Community.</b> Card grids, filters, save state, carousel.</li>
+        <li><b>Remaining surfaces.</b> Progress, Pencapaian, Timeline, Profile, Pengaturan.</li>
+        <li><b>Motion pass.</b> Apply ease tokens to all hover/route transitions, sparkle and waving microinteractions.</li>
+        <li><b>A11y + i18n + perf pass.</b> Run axe, finalize ID strings, measure LCP, ship.</li>
+      </ol>
+
+      <div class="callout warn" style="margin-top:18px">
+        <h4>Out of scope for v1</h4>
+        <p>Live mentorship video, payment processing, admin/CMS dashboard, full Talent Test engine logic (UI shell only), notification email templates, mobile-native apps.</p>
+      </div>
+    </section>
+
+    <footer>
+      <div>Talentika · Dashboard PRD v1.0 · May 11, 2026</div>
+      <div>Discover. <span style="color:var(--orange)">Develop.</span> <span style="color:#A47000">Grow.</span></div>
+    </footer>
+
+  </main>
+</div>
+<script>
+  (function(){
+    function go(){
+      setTimeout(function(){ window.print(); }, 500);
+    }
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(go);
+    } else {
+      window.addEventListener('load', go);
+    }
+  })();
+</script>
+</body>
+</html>
