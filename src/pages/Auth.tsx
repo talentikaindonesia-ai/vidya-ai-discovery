@@ -115,6 +115,7 @@ const Auth = () => {
   const [tab, setTab] = useState<"login" | "register">("login");
   const [forgotMode, setForgotMode] = useState(false);
   const [forgotSent, setForgotSent] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
 
   const navigate = useNavigate();
 
@@ -215,6 +216,12 @@ const Auth = () => {
 
       if (data.user) {
         toast.success("Login berhasil!");
+        // If "remember me" is off, clear session when the tab/window is closed
+        if (!rememberMe) {
+          window.addEventListener("beforeunload", () => {
+            supabase.auth.signOut();
+          });
+        }
         const destination =
           redirectTo === "talentika-junior" ? "/talentika-junior" : "/dashboard";
         navigate(destination);
@@ -757,8 +764,33 @@ const Auth = () => {
                 </div>
               </div>
 
+              {/* Remember me + Forgot password row */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
+                {/* ── Simpan akun checkbox ── */}
+                <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", userSelect: "none" }}>
+                  <span
+                    onClick={() => setRememberMe(!rememberMe)}
+                    style={{
+                      width: 18, height: 18, borderRadius: 5,
+                      border: rememberMe ? "none" : "1.5px solid var(--tk-gray-300)",
+                      background: rememberMe ? "var(--tk-blue-600)" : "#fff",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      flexShrink: 0, cursor: "pointer", transition: "all .15s",
+                    }}
+                  >
+                    {rememberMe && (
+                      <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                        <path d="M1.5 5L4 7.5L8.5 2.5" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    )}
+                  </span>
+                  <span style={{ fontFamily: "var(--tk-font-sans)", fontSize: 13.5, color: "var(--tk-gray-700)", fontWeight: 500 }}>
+                    Simpan akun
+                  </span>
+                </label>
+
               {/* H-02: Forgot password — triggers real reset flow */}
-              <div style={{ textAlign: "right", marginBottom: 24 }}>
+              <div style={{ textAlign: "right" }}>
                 <button
                   type="button"
                   onClick={() => { setForgotMode(true); setForgotSent(false); setError(""); }}
@@ -775,6 +807,7 @@ const Auth = () => {
                   Lupa kata sandi?
                 </button>
               </div>
+              </div>{/* end remember-me row */}
 
               {/* Primary CTA */}
               <button
