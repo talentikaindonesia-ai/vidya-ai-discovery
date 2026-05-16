@@ -178,6 +178,19 @@ const Auth = () => {
         sessionStorage.removeItem("referral_code");
       }
 
+      // Fire welcome email (non-blocking)
+      if (signUpData?.user?.id) {
+        supabase.functions
+          .invoke("send-welcome-email", {
+            body: {
+              email: signUpData.user.email,
+              name: fullName || "",
+              user_id: signUpData.user.id,
+            },
+          })
+          .catch(() => {}); // best-effort
+      }
+
       toast.success("Akun berhasil dibuat! Silakan login untuk melanjutkan.");
     } catch (error: any) {
       setError(error.message);
