@@ -1,19 +1,15 @@
 /**
  * PaymentGateway — simplified Mayar checkout
  *
- * Mayar already shows all payment method options on their hosted page
- * (bank transfer, e-wallet, QRIS, credit card), so we don't duplicate
- * that UI here. The only thing we need from the user is a phone number,
- * which Mayar requires for the payment link API call.
- *
- * Flow:
- *   1. Show order summary + phone field
- *   2. Click "Lanjut ke Pembayaran" → create Mayar link via edge function
- *   3. Redirect same-tab to Mayar's hosted checkout
- *   4. Mayar redirects back to /subscription?payment=success&ref=<txId>
+ * User picks a payment category here (for UX clarity), then gets
+ * redirected to Mayar's hosted page which handles the actual payment.
+ * Mayar supports all methods — the selection here just sets the context.
  */
 import { useState, useEffect } from "react";
-import { Loader2, ArrowLeft, Phone, ShieldCheck, ChevronRight } from "lucide-react";
+import {
+  Loader2, ArrowLeft, Phone, ShieldCheck, ChevronRight,
+  Building2, Smartphone, CreditCard, QrCode, Check,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { formatCurrency } from "@/lib/utils";
@@ -29,11 +25,39 @@ interface PaymentGatewayProps {
   onCancel?: () => void;
 }
 
-const MAYAR_METHODS = [
-  { icon: "🏦", label: "Transfer Bank", sub: "BCA, Mandiri, BNI, BRI" },
-  { icon: "📱", label: "E-Wallet",      sub: "GoPay, OVO, DANA, LinkAja" },
-  { icon: "⊡",  label: "QRIS",          sub: "Scan QR dari semua dompet" },
-  { icon: "💳", label: "Kartu Kredit",  sub: "Visa, Mastercard, JCB" },
+const METHODS = [
+  {
+    id: "bank_transfer",
+    icon: Building2,
+    label: "Transfer Bank",
+    sub: "BCA · Mandiri · BNI · BRI",
+    color: "#2563EB",
+    bg: "#EFF6FF",
+  },
+  {
+    id: "e_wallet",
+    icon: Smartphone,
+    label: "E-Wallet",
+    sub: "GoPay · OVO · DANA · LinkAja",
+    color: "#059669",
+    bg: "#ECFDF5",
+  },
+  {
+    id: "qris",
+    icon: QrCode,
+    label: "QRIS",
+    sub: "Scan dari dompet digital manapun",
+    color: "#7C3AED",
+    bg: "#F5F3FF",
+  },
+  {
+    id: "credit_card",
+    icon: CreditCard,
+    label: "Kartu Kredit / Debit",
+    sub: "Visa · Mastercard · JCB",
+    color: "#D97706",
+    bg: "#FFFBEB",
+  },
 ];
 
 export const PaymentGateway = ({
@@ -46,13 +70,13 @@ export const PaymentGateway = ({
   onPaymentSuccess,
   onCancel,
 }: PaymentGatewayProps) => {
-  const [phone, setPhone]       = useState("");
-  const [loading, setLoading]   = useState(false);
-  const { toast }               = useToast();
+  const [method, setMethod]   = useState("bank_transfer");
+  const [phone, setPhone]     = useState("");
+  const [loading, setLoading] = useState(false);
+  const { toast }             = useToast();
 
   const finalAmount = amount - discount;
 
-  // Pre-fill phone from user profile
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) return;
@@ -80,14 +104,13 @@ export const PaymentGateway = ({
           planId,
           userId: user.id,
           amount: finalAmount,
-          paymentMethod: "mayar",   // Mayar handles method selection on their page
+          paymentMethod: method,
           billingCycle,
           voucherId,
           phone: phone.trim(),
         },
       });
 
-      // Extract edge-function error body when present
       if (error) {
         let msg = "Terjadi kesalahan saat membuat link pembayaran.";
         try { const b = await (error as any).context?.json?.(); if (b?.error) msg = b.error; } catch {}
@@ -98,13 +121,9 @@ export const PaymentGateway = ({
         throw new Error(data?.error || "Gagal membuat link pembayaran Mayar.");
       }
 
-      // Save txId in sessionStorage so the return page can verify status
-      if (data.transaction_id) {
-        sessionStorage.setItem("mayar_tx_id", data.transaction_id);
-      }
+      if (data.transaction_id) sessionStorage.setItem("mayar_tx_id", data.transaction_id);
 
-      // Redirect to Mayar's hosted checkout — Mayar will send the user back
-      // to /subscription?payment=success&ref=<txId> after completion.
+      // Redirect to Mayar's hosted checkout
       window.location.href = data.invoice_url;
     } catch (err: any) {
       toast({ title: "Gagal", description: err.message, variant: "destructive" });
@@ -112,54 +131,88 @@ export const PaymentGateway = ({
     }
   };
 
-  // ── UI ────────────────────────────────────────────────────────────────────
+  const selectedMethod = METHODS.find(m => m.id === method)!;
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
 
-      {/* Order summary card */}
-      <div style={{ background: "white", borderRadius: 16, border: "1px solid #E2E8F0", overflow: "hidden" }}>
-        {/* Header stripe */}
-        <div style={{ background: "linear-gradient(135deg,#1D4ED8,#2563EB)", padding: "18px 24px" }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,.65)", textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 4 }}>Ringkasan Pesanan</div>
-          <div style={{ fontFamily: "var(--tk-font-display)", fontWeight: 800, fontSize: 20, color: "white" }}>{planName}</div>
-          <div style={{ fontSize: 13, color: "rgba(255,255,255,.75)", marginTop: 2 }}>
-            Berlangganan {billingCycle === "monthly" ? "Bulanan" : "Tahunan"}
-          </div>
-        </div>
-
-        {/* Price breakdown */}
-        <div style={{ padding: "18px 24px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, color: "#64748B", marginBottom: 8 }}>
-            <span>Harga {billingCycle === "monthly" ? "bulanan" : "tahunan"}</span>
-            <span>{formatCurrency(amount)}</span>
-          </div>
-          {discount > 0 && (
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, color: "#059669", marginBottom: 8, fontWeight: 600 }}>
-              <span>🎟 Diskon Voucher</span>
-              <span>-{formatCurrency(discount)}</span>
+      {/* ── Order summary ─────────────────────────────────────────────── */}
+      <div style={{ background: "linear-gradient(135deg,#1D4ED8,#2563EB)", borderRadius: 16, padding: "20px 24px", color: "white" }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,.65)", textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 6 }}>Ringkasan Pesanan</div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+          <div>
+            <div style={{ fontFamily: "var(--tk-font-display)", fontWeight: 800, fontSize: 18, lineHeight: 1.2 }}>{planName}</div>
+            <div style={{ fontSize: 13, color: "rgba(255,255,255,.7)", marginTop: 3 }}>
+              Berlangganan {billingCycle === "monthly" ? "Bulanan" : "Tahunan"}
             </div>
-          )}
-          <div style={{ borderTop: "1px solid #F1F5F9", paddingTop: 12, display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-            <span style={{ fontWeight: 700, fontSize: 15, color: "#0F172A" }}>Total Pembayaran</span>
-            <span style={{ fontFamily: "var(--tk-font-display)", fontWeight: 800, fontSize: 24, color: "#2563EB" }}>
-              {formatCurrency(finalAmount)}
-            </span>
+          </div>
+          <div style={{ textAlign: "right" }}>
+            {discount > 0 && (
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,.6)", textDecoration: "line-through" }}>{formatCurrency(amount)}</div>
+            )}
+            <div style={{ fontFamily: "var(--tk-font-display)", fontWeight: 800, fontSize: 26 }}>{formatCurrency(finalAmount)}</div>
+            {discount > 0 && (
+              <div style={{ fontSize: 11, background: "rgba(255,255,255,.2)", borderRadius: 6, padding: "2px 8px", marginTop: 2, display: "inline-block" }}>
+                Hemat {formatCurrency(discount)} 🎟
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Phone input */}
-      <div style={{ background: "white", borderRadius: 16, border: "1px solid #E2E8F0", padding: "18px 24px" }}>
-        <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 700, color: "#0F172A", marginBottom: 10 }}>
-          <Phone size={15} style={{ color: "#2563EB" }} />
-          Nomor WhatsApp / HP
-          <span style={{ color: "#EF4444", fontSize: 12 }}>*</span>
+      {/* ── Payment method ────────────────────────────────────────────── */}
+      <div style={{ background: "white", borderRadius: 16, border: "1px solid #E2E8F0", padding: "18px 20px" }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: "#0F172A", marginBottom: 12 }}>
+          Pilih Metode Pembayaran
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          {METHODS.map(m => {
+            const active = method === m.id;
+            const Icon = m.icon;
+            return (
+              <button
+                key={m.id}
+                onClick={() => setMethod(m.id)}
+                style={{
+                  display: "flex", alignItems: "center", gap: 10,
+                  padding: "12px 14px", borderRadius: 12, cursor: "pointer",
+                  border: active ? `2px solid ${m.color}` : "1.5px solid #E2E8F0",
+                  background: active ? m.bg : "white",
+                  transition: "all .15s", textAlign: "left", position: "relative",
+                }}
+              >
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: active ? m.color : "#F1F5F9", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all .15s" }}>
+                  <Icon size={17} color={active ? "white" : "#94A3B8"} />
+                </div>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontWeight: 700, fontSize: 12.5, color: active ? m.color : "#0F172A", lineHeight: 1.2 }}>{m.label}</div>
+                  <div style={{ fontSize: 10.5, color: "#94A3B8", marginTop: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{m.sub}</div>
+                </div>
+                {active && (
+                  <div style={{ position: "absolute", top: 6, right: 6, width: 16, height: 16, borderRadius: "50%", background: m.color, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <Check size={10} color="white" strokeWidth={3} />
+                  </div>
+                )}
+              </button>
+            );
+          })}
+        </div>
+        <div style={{ marginTop: 10, fontSize: 11.5, color: "#94A3B8", background: "#F8FAFC", borderRadius: 8, padding: "8px 12px" }}>
+          💡 Anda akan menyelesaikan pembayaran via <strong style={{ color: "#374151" }}>Mayar</strong> — pilihan metode di atas akan disiapkan untuk Anda
+        </div>
+      </div>
+
+      {/* ── Phone ─────────────────────────────────────────────────────── */}
+      <div style={{ background: "white", borderRadius: 16, border: "1px solid #E2E8F0", padding: "16px 20px" }}>
+        <label style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 12.5, fontWeight: 700, color: "#0F172A", marginBottom: 9 }}>
+          <Phone size={14} style={{ color: "#2563EB" }} />
+          Nomor WhatsApp / HP <span style={{ color: "#EF4444" }}>*</span>
         </label>
         <input
           type="tel"
           value={phone}
           onChange={e => setPhone(e.target.value)}
-          placeholder="contoh: 08123456789"
+          placeholder="08123456789"
           style={{
             width: "100%", boxSizing: "border-box",
             padding: "10px 14px", borderRadius: 10,
@@ -167,52 +220,32 @@ export const PaymentGateway = ({
             color: "#0F172A", background: "#F8FAFC",
             outline: "none", fontFamily: "inherit",
           }}
-          onFocus={e => (e.target.style.borderColor = "#2563EB")}
-          onBlur={e => (e.target.style.borderColor = "#E2E8F0")}
+          onFocus={e => (e.currentTarget.style.borderColor = "#2563EB")}
+          onBlur={e => (e.currentTarget.style.borderColor = "#E2E8F0")}
         />
-        <p style={{ fontSize: 12, color: "#94A3B8", marginTop: 6 }}>
-          Digunakan Mayar untuk mengirim konfirmasi pembayaran
+        <p style={{ fontSize: 11.5, color: "#94A3B8", marginTop: 6 }}>
+          Untuk notifikasi konfirmasi pembayaran dari Mayar
         </p>
       </div>
 
-      {/* Available methods — informational only */}
-      <div style={{ background: "#F8FAFC", borderRadius: 14, border: "1px solid #E2E8F0", padding: "16px 20px" }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: "#64748B", textTransform: "uppercase", letterSpacing: ".05em", marginBottom: 12 }}>
-          Metode pembayaran tersedia di Mayar
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-          {MAYAR_METHODS.map(m => (
-            <div key={m.label} style={{ display: "flex", alignItems: "center", gap: 8, background: "white", borderRadius: 10, padding: "9px 12px", border: "1px solid #E2E8F0" }}>
-              <span style={{ fontSize: 18 }}>{m.icon}</span>
-              <div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: "#0F172A" }}>{m.label}</div>
-                <div style={{ fontSize: 11, color: "#94A3B8" }}>{m.sub}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-        <p style={{ fontSize: 11, color: "#94A3B8", marginTop: 10, textAlign: "center" }}>
-          Anda akan memilih metode di halaman pembayaran Mayar
-        </p>
-      </div>
-
-      {/* Security badge */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, fontSize: 12, color: "#64748B" }}>
-        <ShieldCheck size={14} style={{ color: "#059669" }} />
+      {/* ── Security note ─────────────────────────────────────────────── */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, fontSize: 11.5, color: "#94A3B8" }}>
+        <ShieldCheck size={13} style={{ color: "#059669" }} />
         Pembayaran aman & terenkripsi melalui Mayar
       </div>
 
-      {/* Action buttons */}
-      <div style={{ display: "flex", gap: 12 }}>
+      {/* ── CTA ───────────────────────────────────────────────────────── */}
+      <div style={{ display: "flex", gap: 10 }}>
         <button
           onClick={onCancel}
           disabled={loading}
           style={{
-            flex: "0 0 auto", padding: "12px 18px", borderRadius: 12,
+            flexShrink: 0, padding: "12px 16px", borderRadius: 12,
             border: "1.5px solid #E2E8F0", background: "white",
             color: "#475569", fontWeight: 600, fontSize: 14,
             cursor: loading ? "not-allowed" : "pointer",
-            display: "flex", alignItems: "center", gap: 6, opacity: loading ? 0.6 : 1,
+            display: "flex", alignItems: "center", gap: 6,
+            opacity: loading ? 0.6 : 1,
           }}
         >
           <ArrowLeft size={15} /> Kembali
@@ -222,19 +255,25 @@ export const PaymentGateway = ({
           onClick={handlePay}
           disabled={loading || !phone.trim()}
           style={{
-            flex: 1, padding: "12px 24px", borderRadius: 12, border: "none",
-            background: loading || !phone.trim() ? "#93C5FD" : "linear-gradient(135deg,#1D4ED8,#2563EB)",
-            color: "white", fontWeight: 700, fontSize: 15,
+            flex: 1, padding: "12px 20px", borderRadius: 12, border: "none",
+            background: loading || !phone.trim()
+              ? "#93C5FD"
+              : `linear-gradient(135deg,${selectedMethod.color},${selectedMethod.color}dd)`,
+            color: "white", fontWeight: 700, fontSize: 14.5,
             cursor: loading || !phone.trim() ? "not-allowed" : "pointer",
             display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-            boxShadow: loading || !phone.trim() ? "none" : "0 4px 16px rgba(37,99,235,.35)",
-            transition: "all .15s",
+            boxShadow: loading || !phone.trim() ? "none" : `0 4px 16px ${selectedMethod.color}44`,
+            transition: "all .2s",
           }}
         >
           {loading ? (
-            <><Loader2 size={16} className="animate-spin" /> Membuat link pembayaran…</>
+            <><Loader2 size={15} className="animate-spin" /> Membuat link…</>
           ) : (
-            <>Lanjut ke Pembayaran Mayar <ChevronRight size={16} /></>
+            <>
+              <selectedMethod.icon size={15} />
+              Bayar via {selectedMethod.label}
+              <ChevronRight size={15} />
+            </>
           )}
         </button>
       </div>
