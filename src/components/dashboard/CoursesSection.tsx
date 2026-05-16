@@ -452,10 +452,26 @@ export const CoursesSection = () => {
         className="grid gap-4 mb-5"
         style={{ gridTemplateColumns: "repeat(4, 1fr)" }}
       >
-        <StatCard icon={BookOpen} color="blue"   label="Kursus Aktif"       value={String(enrolledContent.length)} sub="Lanjutkan belajar!" />
-        <StatCard icon={Clock}    color="green"  label="Jam Belajar"         value={String(totalHours)}             sub="Jam" />
-        <StatCard icon={Activity} color="yellow" label="Progress Rata-rata"  value={`${avgProgress}%`}              sub="Semangat!" />
-        <StatCard icon={Shield}   color="purple" label="Sertifikat"          value={String(certCount)}              sub="Sertifikat diperoleh" />
+        {loading ? (
+          Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="rounded-2xl flex items-center gap-4 animate-pulse"
+              style={{ background: "white", border: "1px solid var(--tk-gray-200)", padding: 18 }}>
+              <div style={{ width: 48, height: 48, borderRadius: 16, background: "var(--tk-gray-150)", flexShrink: 0 }} />
+              <div style={{ flex: 1 }}>
+                <div style={{ height: 10, background: "var(--tk-gray-150)", borderRadius: 6, marginBottom: 8, width: "60%" }} />
+                <div style={{ height: 20, background: "var(--tk-gray-150)", borderRadius: 6, marginBottom: 6, width: "40%" }} />
+                <div style={{ height: 9, background: "var(--tk-gray-150)", borderRadius: 6, width: "70%" }} />
+              </div>
+            </div>
+          ))
+        ) : (
+          <>
+            <StatCard icon={BookOpen} color="blue"   label="Kursus Aktif"       value={String(enrolledContent.length)} sub="Lanjutkan belajar!" />
+            <StatCard icon={Clock}    color="green"  label="Jam Belajar"         value={String(totalHours)}             sub="Jam" />
+            <StatCard icon={Activity} color="yellow" label="Progress Rata-rata"  value={`${avgProgress}%`}              sub="Semangat!" />
+            <StatCard icon={Shield}   color="purple" label="Sertifikat"          value={String(certCount)}              sub="Sertifikat diperoleh" />
+          </>
+        )}
       </div>
 
       {/* ── Main 2-col area ────────────────────────────────────── */}
@@ -499,18 +515,54 @@ export const CoursesSection = () => {
           </div>
 
           {loading ? (
-            <div style={{ padding: "32px 22px", textAlign: "center", color: "var(--tk-gray-400)" }}>
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2" />
-              Memuat kursus…
-            </div>
-          ) : pageItems.length === 0 ? (
-            <div style={{ padding: "40px 22px", textAlign: "center" }}>
-              <BookOpen size={40} style={{ color: "var(--tk-gray-300)", margin: "0 auto 12px" }} />
-              <div style={{ fontFamily: "var(--tk-font-display)", fontWeight: 600, color: "var(--tk-gray-500)" }}>
-                Belum ada kursus
+            /* ── Skeleton loading ── */
+            Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 16, padding: "18px 22px", borderTop: "1px solid var(--tk-gray-150)" }}>
+                <div className="animate-pulse" style={{ width: 56, height: 56, borderRadius: 14, background: "var(--tk-gray-150)", flexShrink: 0 }} />
+                <div style={{ flex: 1 }}>
+                  <div className="animate-pulse" style={{ height: 13, background: "var(--tk-gray-150)", borderRadius: 6, marginBottom: 8, width: "65%" }} />
+                  <div className="animate-pulse" style={{ height: 10, background: "var(--tk-gray-150)", borderRadius: 6, marginBottom: 10, width: "40%" }} />
+                  <div className="animate-pulse" style={{ height: 6, background: "var(--tk-gray-150)", borderRadius: 99, width: "80%" }} />
+                </div>
+                <div className="animate-pulse" style={{ width: 80, height: 32, borderRadius: 10, background: "var(--tk-gray-150)", flexShrink: 0 }} />
               </div>
-              <div style={{ fontSize: 13, color: "var(--tk-gray-400)", marginTop: 4 }}>
-                Mulai belajar sekarang!
+            ))
+          ) : pageItems.length === 0 ? (
+            /* ── Rich empty state ── */
+            <div style={{ padding: "44px 32px", textAlign: "center" }}>
+              <div style={{ fontSize: 52, marginBottom: 12 }}>📚</div>
+              <div style={{ fontFamily: "var(--tk-font-display)", fontWeight: 700, fontSize: 17, color: "var(--tk-ink)", marginBottom: 6 }}>
+                Kamu belum mendaftar kursus apapun
+              </div>
+              <div style={{ fontSize: 13.5, color: "var(--tk-gray-500)", marginBottom: 24, maxWidth: 320, margin: "0 auto 24px" }}>
+                Mulai perjalanan belajarmu sekarang. Ribuan kursus menunggu — dari desain, coding, bisnis, hingga pengembangan diri.
+              </div>
+              <button
+                onClick={() => navigate("/learning")}
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 8,
+                  padding: "12px 28px", borderRadius: 14, border: "none",
+                  background: "var(--tk-blue-600)", color: "#fff", cursor: "pointer",
+                  fontFamily: "var(--tk-font-display)", fontWeight: 700, fontSize: 14,
+                  boxShadow: "0 4px 14px rgba(37,99,235,.3)",
+                }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "var(--tk-blue-700)"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "var(--tk-blue-600)"; }}
+              >
+                <BookOpen size={16} /> Jelajahi Kursus Sekarang
+              </button>
+              <div style={{ marginTop: 12 }}>
+                <button
+                  onClick={() => navigate("/assessment")}
+                  style={{
+                    background: "none", border: "none", cursor: "pointer",
+                    fontFamily: "var(--tk-font-display)", fontSize: 13,
+                    color: "var(--tk-blue-600)", fontWeight: 600,
+                    textDecoration: "underline", textUnderlineOffset: 3,
+                  }}
+                >
+                  Atau ikuti assessment untuk rekomendasi kursus personal →
+                </button>
               </div>
             </div>
           ) : (

@@ -105,9 +105,30 @@ const OpportunitiesPreview = ({ profile }: OpportunitiesPreviewProps) => {
 
   if (loading) {
     return (
-      <section className="py-12 bg-muted/30">
-        <div className="container px-4 text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto" />
+      <section className="py-20 bg-muted/30">
+        <div className="container px-4">
+          <div className="text-center mb-12">
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <Briefcase className="w-8 h-8 text-primary" />
+              <h2 className="text-3xl md:text-4xl font-bold">Opportunity for You</h2>
+            </div>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Beasiswa, kompetisi, dan magang terbaik — diprioritaskan untuk Indonesia &amp; Asia Tenggara
+            </p>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+            {[0, 1, 2, 3, 4, 5].map(i => (
+              <div key={i} style={{ borderRadius: 16, overflow: "hidden", border: "1.5px solid var(--tk-gray-200)", background: "white" }}>
+                <div className="animate-pulse" style={{ height: 144, background: "var(--tk-gray-150)" }} />
+                <div style={{ padding: 16 }}>
+                  <div className="animate-pulse" style={{ height: 13, background: "var(--tk-gray-150)", borderRadius: 6, marginBottom: 8, width: "85%" }} />
+                  <div className="animate-pulse" style={{ height: 10, background: "var(--tk-gray-150)", borderRadius: 6, marginBottom: 6, width: "55%" }} />
+                  <div className="animate-pulse" style={{ height: 10, background: "var(--tk-gray-150)", borderRadius: 6, marginBottom: 16, width: "40%" }} />
+                  <div className="animate-pulse" style={{ height: 34, background: "var(--tk-gray-150)", borderRadius: 8 }} />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
     );
@@ -259,10 +280,33 @@ const OpportunitiesPreview = ({ profile }: OpportunitiesPreviewProps) => {
         </div>
 
         {filteredOpportunities.length === 0 && (
-          <div className="text-center py-12">
-            <Briefcase className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-xl font-semibold mb-2">Belum Ada Opportunity</h3>
-            <p className="text-muted-foreground">Opportunity untuk kategori ini akan segera tersedia.</p>
+          <div className="text-center py-16">
+            <div style={{ fontSize: 56, marginBottom: 14 }}>🔍</div>
+            <h3 className="text-xl font-semibold mb-2">
+              {activeFilter === "Semua" ? "Belum ada peluang tersedia" : `Belum ada peluang "${activeFilter}"`}
+            </h3>
+            <p className="text-muted-foreground mb-6 max-w-sm mx-auto text-sm">
+              {activeFilter === "Semua"
+                ? "Tim kami sedang mengumpulkan peluang terbaik untukmu. Cek lagi nanti!"
+                : "Coba pilih kategori lain atau kembali ke semua kategori untuk melihat peluang yang tersedia."}
+            </p>
+            {activeFilter !== "Semua" ? (
+              <button
+                onClick={() => setActiveFilter("Semua")}
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-colors"
+                style={{ background: "var(--tk-blue-600)", color: "#fff", border: "none", cursor: "pointer", fontFamily: "var(--tk-font-display)" }}
+              >
+                Lihat Semua Kategori
+              </button>
+            ) : (
+              <button
+                onClick={() => navigate("/opportunities")}
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-colors"
+                style={{ background: "var(--tk-blue-600)", color: "#fff", border: "none", cursor: "pointer", fontFamily: "var(--tk-font-display)" }}
+              >
+                <Briefcase className="w-4 h-4" /> Jelajahi Semua Peluang
+              </button>
+            )}
           </div>
         )}
 
