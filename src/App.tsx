@@ -35,6 +35,7 @@ const TalentikaJuniorDiscovery = lazy(() => import("./pages/TalentikaJuniorDisco
 const TalentikaJuniorLearning  = lazy(() => import("./pages/TalentikaJuniorLearning"));
 const TalentikaJuniorGames     = lazy(() => import("./pages/TalentikaJuniorGames"));
 const TalentikaJuniorRewards   = lazy(() => import("./pages/TalentikaJuniorRewards"));
+// MembershipDashboard merged into Profile — kept for lazy import compatibility
 const MembershipDashboard   = lazy(() => import("./pages/MembershipDashboard"));
 const Settings              = lazy(() => import("./pages/Settings"));
 const Articles              = lazy(() => import("./pages/Articles"));
@@ -129,7 +130,8 @@ const App = () => {
             <Route path="/settings" element={user ? <Settings /> : <Navigate to="/auth" />} />
             <Route path="/admin" element={user ? <Admin /> : <Navigate to="/auth" />} />
             <Route path="/admin/content/edit/:contentId" element={user ? <ContentEditor /> : <Navigate to="/auth" />} />
-            <Route path="/membership" element={user ? <MembershipDashboard /> : <Navigate to="/auth" />} />
+            {/* /membership merged into /profile — redirect so old links still work */}
+            <Route path="/membership" element={<Navigate to="/profile" replace />} />
             <Route path="/talentika-junior" element={<TalentikaJuniorLanding />} />
             <Route path="/talentika-junior/dashboard" element={user ? <TalentikaJuniorDashboard /> : <Navigate to="/auth" />} />
             <Route path="/talentika-junior/discovery" element={user ? <TalentikaJuniorDiscovery /> : <Navigate to="/auth" />} />
