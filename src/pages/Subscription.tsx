@@ -19,13 +19,65 @@ const Subscription = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // URL params for pre-selected plan
+  // URL params for pre-selected plan and Mayar return
   const preSelectedPlanId   = searchParams.get("planId");
   const preSelectedPlanName = searchParams.get("planName");
+  const paymentResult       = searchParams.get("payment");  // "success" | "failed"
+  const paymentRef          = searchParams.get("ref");       // transaction id
 
   useEffect(() => {
     checkUser();
   }, []);
+
+  // Handle Mayar redirect-back: show feedback, strip URL params, poll for status
+  useEffect(() => {
+    if (!paymentResult) return;
+
+    if (paymentResult === "success") {
+      toast({
+        title: "Pembayaran Berhasil! 🎉",
+        description: "Langganan Anda sedang diaktifkan. Status akan diperbarui otomatis.",
+      });
+    } else if (paymentResult === "failed") {
+      toast({
+        title: "Pembayaran Tidak Berhasil",
+        description: "Silakan coba lagi atau pilih metode pembayaran lain.",
+        variant: "destructive",
+      });
+    }
+
+    // Clean URL — remove payment params so refresh doesn't re-trigger
+    const clean = new URLSearchParams(searchParams);
+    clean.delete("payment");
+    clean.delete("ref");
+    navigate({ search: clean.toString() }, { replace: true });
+
+    // Poll payment_transactions until status flips from pending → completed/failed
+    if (paymentResult === "success" && paymentRef) {
+      const txId = paymentRef;
+      let tries = 0;
+      const iv = setInterval(async () => {
+        tries++;
+        const { data } = await supabase
+          .from("payment_transactions")
+          .select("status")
+          .eq("id", txId)
+          .maybeSingle();
+
+        if (data?.status === "completed") {
+          clearInterval(iv);
+          toast({ title: "Langganan Aktif ✅", description: "Selamat! Akses premium Anda sudah aktif." });
+          // Reload page so SubscriptionManager re-fetches current subscription
+          window.location.reload();
+        } else if (data?.status === "failed" || tries >= 10) {
+          clearInterval(iv);
+          if (data?.status === "failed") {
+            toast({ title: "Pembayaran Gagal", description: "Silakan hubungi support@talentika.id", variant: "destructive" });
+          }
+        }
+      }, 5_000); // check every 5 s (max 50 s)
+    }
+  }, [paymentResult]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const checkUser = async () => {
     const { data: { session } } = await supabase.auth.getSession();

@@ -1,13 +1,19 @@
+/**
+ * PaymentGateway — simplified Mayar checkout
+ *
+ * Mayar already shows all payment method options on their hosted page
+ * (bank transfer, e-wallet, QRIS, credit card), so we don't duplicate
+ * that UI here. The only thing we need from the user is a phone number,
+ * which Mayar requires for the payment link API call.
+ *
+ * Flow:
+ *   1. Show order summary + phone field
+ *   2. Click "Lanjut ke Pembayaran" → create Mayar link via edge function
+ *   3. Redirect same-tab to Mayar's hosted checkout
+ *   4. Mayar redirects back to /subscription?payment=success&ref=<txId>
+ */
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Loader2, CreditCard, Building, Smartphone, QrCode,
-  CheckCircle2, ExternalLink, RefreshCw, ArrowLeft, Phone,
-} from "lucide-react";
+import { Loader2, ArrowLeft, Phone, ShieldCheck, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { formatCurrency } from "@/lib/utils";
@@ -23,35 +29,11 @@ interface PaymentGatewayProps {
   onCancel?: () => void;
 }
 
-const PAYMENT_METHODS = [
-  {
-    id: "bank_transfer",
-    name: "Transfer Bank",
-    icon: <Building className="w-5 h-5" />,
-    description: "BCA, Mandiri, BNI, BRI",
-    fee: 0,
-  },
-  {
-    id: "e_wallet",
-    name: "E-Wallet",
-    icon: <Smartphone className="w-5 h-5" />,
-    description: "GoPay, OVO, Dana, LinkAja",
-    fee: 0,
-  },
-  {
-    id: "credit_card",
-    name: "Kartu Kredit",
-    icon: <CreditCard className="w-5 h-5" />,
-    description: "Visa, Mastercard, JCB",
-    fee: 3000,
-  },
-  {
-    id: "qr_code",
-    name: "QRIS",
-    icon: <QrCode className="w-5 h-5" />,
-    description: "Scan QR untuk bayar",
-    fee: 0,
-  },
+const MAYAR_METHODS = [
+  { icon: "🏦", label: "Transfer Bank", sub: "BCA, Mandiri, BNI, BRI" },
+  { icon: "📱", label: "E-Wallet",      sub: "GoPay, OVO, DANA, LinkAja" },
+  { icon: "⊡",  label: "QRIS",          sub: "Scan QR dari semua dompet" },
+  { icon: "💳", label: "Kartu Kredit",  sub: "Visa, Mastercard, JCB" },
 ];
 
 export const PaymentGateway = ({
@@ -64,14 +46,9 @@ export const PaymentGateway = ({
   onPaymentSuccess,
   onCancel,
 }: PaymentGatewayProps) => {
-  const [selectedMethod, setSelectedMethod] = useState<string>("");
-  const [phone, setPhone] = useState<string>("");
-  const [loading, setLoading] = useState(false);
-  const [paymentInitiated, setPaymentInitiated] = useState(false);
-  const [invoiceUrl, setInvoiceUrl] = useState<string | null>(null);
-  const [transactionId, setTransactionId] = useState<string | null>(null);
-  const [checkingStatus, setCheckingStatus] = useState(false);
-  const { toast } = useToast();
+  const [phone, setPhone]       = useState("");
+  const [loading, setLoading]   = useState(false);
+  const { toast }               = useToast();
 
   const finalAmount = amount - discount;
 
@@ -84,320 +61,182 @@ export const PaymentGateway = ({
         .select("phone")
         .eq("user_id", user.id)
         .maybeSingle()
-        .then(({ data }) => {
-          if (data?.phone) setPhone(data.phone);
-        });
+        .then(({ data }) => { if (data?.phone) setPhone(data.phone); });
     });
   }, []);
 
-  // Auto-poll every 30 s while awaiting Mayar webhook confirmation
-  useEffect(() => {
-    if (!paymentInitiated || !transactionId) return;
-    const interval = setInterval(() => checkPaymentStatus(false), 30_000);
-    return () => clearInterval(interval);
-  }, [paymentInitiated, transactionId]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const checkPaymentStatus = async (showToast = true) => {
-    if (!transactionId) return;
-    setCheckingStatus(true);
-    try {
-      const { data, error } = await supabase
-        .from("payment_transactions")
-        .select("status")
-        .eq("id", transactionId)
-        .maybeSingle();
-
-      if (error) throw error;
-
-      if (data?.status === "completed") {
-        toast({
-          title: "Pembayaran Berhasil! 🎉",
-          description: "Selamat! Langganan Anda sudah aktif.",
-        });
-        onPaymentSuccess?.(transactionId);
-      } else if (data?.status === "failed" || data?.status === "expired") {
-        toast({
-          title: "Pembayaran Gagal",
-          description: "Silakan coba lagi dengan metode lain.",
-          variant: "destructive",
-        });
-        setPaymentInitiated(false);
-        setTransactionId(null);
-      } else if (showToast) {
-        toast({
-          title: "Masih Menunggu",
-          description: "Pembayaran belum dikonfirmasi. Selesaikan di halaman Mayar.",
-        });
-      }
-    } catch {
-      if (showToast) {
-        toast({
-          title: "Error",
-          description: "Gagal memeriksa status pembayaran.",
-          variant: "destructive",
-        });
-      }
-    } finally {
-      setCheckingStatus(false);
+  const handlePay = async () => {
+    if (!phone.trim()) {
+      toast({ title: "Nomor HP diperlukan", description: "Masukkan nomor WhatsApp / HP aktif.", variant: "destructive" });
+      return;
     }
-  };
-
-  const handlePayment = async () => {
-    if (!selectedMethod) return;
     setLoading(true);
     try {
       const user = (await supabase.auth.getUser()).data.user;
-      if (!user) throw new Error("User not authenticated");
-
-      const methodFee = PAYMENT_METHODS.find((m) => m.id === selectedMethod)?.fee ?? 0;
+      if (!user) throw new Error("Silakan login terlebih dahulu");
 
       const { data, error } = await supabase.functions.invoke("create-mayar-payment", {
         body: {
           planId,
           userId: user.id,
-          amount: finalAmount + methodFee,
-          paymentMethod: selectedMethod,
+          amount: finalAmount,
+          paymentMethod: "mayar",   // Mayar handles method selection on their page
           billingCycle,
           voucherId,
           phone: phone.trim(),
         },
       });
 
+      // Extract edge-function error body when present
       if (error) {
-        // Extract the actual error message from the edge function response body
-        let message = "Terjadi kesalahan saat memproses pembayaran.";
-        try {
-          const body = await (error as any).context?.json?.();
-          if (body?.error) message = body.error;
-        } catch {}
-        throw new Error(message);
+        let msg = "Terjadi kesalahan saat membuat link pembayaran.";
+        try { const b = await (error as any).context?.json?.(); if (b?.error) msg = b.error; } catch {}
+        throw new Error(msg);
       }
 
-      if (data.success) {
-        setInvoiceUrl(data.invoice_url ?? null);
-        setTransactionId(data.transaction_id ?? null);
-        setPaymentInitiated(true);
-      } else {
-        throw new Error(data.error || "Failed to create payment");
+      if (!data?.success || !data?.invoice_url) {
+        throw new Error(data?.error || "Gagal membuat link pembayaran Mayar.");
       }
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Terjadi kesalahan saat memproses pembayaran.",
-        variant: "destructive",
-      });
-    } finally {
+
+      // Save txId in sessionStorage so the return page can verify status
+      if (data.transaction_id) {
+        sessionStorage.setItem("mayar_tx_id", data.transaction_id);
+      }
+
+      // Redirect to Mayar's hosted checkout — Mayar will send the user back
+      // to /subscription?payment=success&ref=<txId> after completion.
+      window.location.href = data.invoice_url;
+    } catch (err: any) {
+      toast({ title: "Gagal", description: err.message, variant: "destructive" });
       setLoading(false);
     }
   };
 
-  // ─── POST-PAYMENT AWAITING STATE ──────────────────────────────────────────
-  if (paymentInitiated) {
-    return (
-      <div className="space-y-6">
-        <Card className="border-amber-200 bg-amber-50/50 dark:border-amber-800 dark:bg-amber-950/20">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
-              <RefreshCw className="w-5 h-5 animate-spin" />
-              Menunggu Konfirmasi Pembayaran
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Primary CTA — manual link avoids popup blocker */}
-            {invoiceUrl && (
-              <a
-                href={invoiceUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 w-full h-12 rounded-lg bg-primary text-primary-foreground font-semibold text-base hover:bg-primary/90 transition-colors"
-              >
-                <ExternalLink className="w-5 h-5" />
-                Buka Halaman Pembayaran Mayar
-              </a>
-            )}
-
-            <p className="text-sm text-muted-foreground text-center">
-              Setelah membayar, ikuti langkah berikut:
-            </p>
-
-            <ol className="space-y-3">
-              {[
-                {
-                  step: "1",
-                  text: "Klik tombol di atas untuk membuka halaman pembayaran Mayar",
-                  icon: <ExternalLink className="w-4 h-4 text-primary flex-shrink-0" />,
-                },
-                {
-                  step: "2",
-                  text: "Selesaikan pembayaran di halaman Mayar",
-                  icon: <CheckCircle2 className="w-4 h-4 text-primary flex-shrink-0" />,
-                },
-                {
-                  step: "3",
-                  text: 'Kembali ke sini lalu klik "Cek Status Pembayaran"',
-                  icon: <ArrowLeft className="w-4 h-4 text-primary flex-shrink-0" />,
-                },
-              ].map(({ step, text, icon }) => (
-                <li
-                  key={step}
-                  className="flex items-center gap-3 p-3 bg-background rounded-lg border"
-                >
-                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">
-                    {step}
-                  </span>
-                  {icon}
-                  <span className="text-sm">{text}</span>
-                </li>
-              ))}
-            </ol>
-
-            <p className="text-xs text-muted-foreground text-center">
-              Status diperbarui otomatis setiap 30 detik
-            </p>
-          </CardContent>
-        </Card>
-
-        <div className="flex gap-3">
-          <Button
-            variant="outline"
-            onClick={() => {
-              setPaymentInitiated(false);
-              setTransactionId(null);
-              setInvoiceUrl(null);
-            }}
-            className="flex-1"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Kembali ke Pilihan Metode
-          </Button>
-          <Button
-            onClick={() => checkPaymentStatus(true)}
-            disabled={checkingStatus}
-            className="flex-1"
-          >
-            {checkingStatus ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <RefreshCw className="w-4 h-4 mr-2" />
-            )}
-            Cek Status Pembayaran
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  // ─── PAYMENT METHOD SELECTION STATE ──────────────────────────────────────
+  // ── UI ────────────────────────────────────────────────────────────────────
   return (
-    <div className="space-y-6">
-      {/* Order summary */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Ringkasan Pembayaran</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex justify-between">
-            <span>
-              {planName} ({billingCycle === "monthly" ? "Bulanan" : "Tahunan"})
-            </span>
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+
+      {/* Order summary card */}
+      <div style={{ background: "white", borderRadius: 16, border: "1px solid #E2E8F0", overflow: "hidden" }}>
+        {/* Header stripe */}
+        <div style={{ background: "linear-gradient(135deg,#1D4ED8,#2563EB)", padding: "18px 24px" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,.65)", textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 4 }}>Ringkasan Pesanan</div>
+          <div style={{ fontFamily: "var(--tk-font-display)", fontWeight: 800, fontSize: 20, color: "white" }}>{planName}</div>
+          <div style={{ fontSize: 13, color: "rgba(255,255,255,.75)", marginTop: 2 }}>
+            Berlangganan {billingCycle === "monthly" ? "Bulanan" : "Tahunan"}
+          </div>
+        </div>
+
+        {/* Price breakdown */}
+        <div style={{ padding: "18px 24px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, color: "#64748B", marginBottom: 8 }}>
+            <span>Harga {billingCycle === "monthly" ? "bulanan" : "tahunan"}</span>
             <span>{formatCurrency(amount)}</span>
           </div>
-
           {discount > 0 && (
-            <div className="flex justify-between text-green-600">
-              <span>Diskon Voucher</span>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, color: "#059669", marginBottom: 8, fontWeight: 600 }}>
+              <span>🎟 Diskon Voucher</span>
               <span>-{formatCurrency(discount)}</span>
             </div>
           )}
-
-          <div className="border-t pt-2">
-            <div className="flex justify-between font-bold text-lg">
-              <span>Total Pembayaran</span>
-              <span>{formatCurrency(finalAmount)}</span>
-            </div>
+          <div style={{ borderTop: "1px solid #F1F5F9", paddingTop: 12, display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+            <span style={{ fontWeight: 700, fontSize: 15, color: "#0F172A" }}>Total Pembayaran</span>
+            <span style={{ fontFamily: "var(--tk-font-display)", fontWeight: 800, fontSize: 24, color: "#2563EB" }}>
+              {formatCurrency(finalAmount)}
+            </span>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      {/* Phone number — required by Mayar */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Phone className="w-4 h-4" />
-            Nomor WhatsApp / HP
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            <Label htmlFor="phone">
-              Nomor HP aktif untuk notifikasi pembayaran <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="phone"
-              type="tel"
-              placeholder="contoh: 08123456789"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              className="text-base"
-            />
-            <p className="text-xs text-muted-foreground">
-              Notifikasi status pembayaran akan dikirim ke nomor ini
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Phone input */}
+      <div style={{ background: "white", borderRadius: 16, border: "1px solid #E2E8F0", padding: "18px 24px" }}>
+        <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 700, color: "#0F172A", marginBottom: 10 }}>
+          <Phone size={15} style={{ color: "#2563EB" }} />
+          Nomor WhatsApp / HP
+          <span style={{ color: "#EF4444", fontSize: 12 }}>*</span>
+        </label>
+        <input
+          type="tel"
+          value={phone}
+          onChange={e => setPhone(e.target.value)}
+          placeholder="contoh: 08123456789"
+          style={{
+            width: "100%", boxSizing: "border-box",
+            padding: "10px 14px", borderRadius: 10,
+            border: "1.5px solid #E2E8F0", fontSize: 15,
+            color: "#0F172A", background: "#F8FAFC",
+            outline: "none", fontFamily: "inherit",
+          }}
+          onFocus={e => (e.target.style.borderColor = "#2563EB")}
+          onBlur={e => (e.target.style.borderColor = "#E2E8F0")}
+        />
+        <p style={{ fontSize: 12, color: "#94A3B8", marginTop: 6 }}>
+          Digunakan Mayar untuk mengirim konfirmasi pembayaran
+        </p>
+      </div>
 
-      {/* Payment methods */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Pilih Metode Pembayaran</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {PAYMENT_METHODS.map((method) => (
-            <div
-              key={method.id}
-              className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                selectedMethod === method.id
-                  ? "border-primary bg-primary/5"
-                  : "border-border hover:border-primary/50"
-              }`}
-              onClick={() => setSelectedMethod(method.id)}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  {method.icon}
-                  <div>
-                    <p className="font-medium">{method.name}</p>
-                    <p className="text-sm text-muted-foreground">{method.description}</p>
-                  </div>
-                </div>
-                {method.fee > 0 && (
-                  <Badge variant="secondary">+{formatCurrency(method.fee)}</Badge>
-                )}
+      {/* Available methods — informational only */}
+      <div style={{ background: "#F8FAFC", borderRadius: 14, border: "1px solid #E2E8F0", padding: "16px 20px" }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: "#64748B", textTransform: "uppercase", letterSpacing: ".05em", marginBottom: 12 }}>
+          Metode pembayaran tersedia di Mayar
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+          {MAYAR_METHODS.map(m => (
+            <div key={m.label} style={{ display: "flex", alignItems: "center", gap: 8, background: "white", borderRadius: 10, padding: "9px 12px", border: "1px solid #E2E8F0" }}>
+              <span style={{ fontSize: 18 }}>{m.icon}</span>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "#0F172A" }}>{m.label}</div>
+                <div style={{ fontSize: 11, color: "#94A3B8" }}>{m.sub}</div>
               </div>
             </div>
           ))}
-        </CardContent>
-      </Card>
+        </div>
+        <p style={{ fontSize: 11, color: "#94A3B8", marginTop: 10, textAlign: "center" }}>
+          Anda akan memilih metode di halaman pembayaran Mayar
+        </p>
+      </div>
 
-      <div className="flex gap-4">
-        <Button
-          variant="outline"
+      {/* Security badge */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, fontSize: 12, color: "#64748B" }}>
+        <ShieldCheck size={14} style={{ color: "#059669" }} />
+        Pembayaran aman & terenkripsi melalui Mayar
+      </div>
+
+      {/* Action buttons */}
+      <div style={{ display: "flex", gap: 12 }}>
+        <button
           onClick={onCancel}
           disabled={loading}
-          className="flex-1"
+          style={{
+            flex: "0 0 auto", padding: "12px 18px", borderRadius: 12,
+            border: "1.5px solid #E2E8F0", background: "white",
+            color: "#475569", fontWeight: 600, fontSize: 14,
+            cursor: loading ? "not-allowed" : "pointer",
+            display: "flex", alignItems: "center", gap: 6, opacity: loading ? 0.6 : 1,
+          }}
         >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Kembali
-        </Button>
-        <Button
-          onClick={handlePayment}
-          disabled={!selectedMethod || !phone.trim() || loading}
-          className="flex-1"
+          <ArrowLeft size={15} /> Kembali
+        </button>
+
+        <button
+          onClick={handlePay}
+          disabled={loading || !phone.trim()}
+          style={{
+            flex: 1, padding: "12px 24px", borderRadius: 12, border: "none",
+            background: loading || !phone.trim() ? "#93C5FD" : "linear-gradient(135deg,#1D4ED8,#2563EB)",
+            color: "white", fontWeight: 700, fontSize: 15,
+            cursor: loading || !phone.trim() ? "not-allowed" : "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+            boxShadow: loading || !phone.trim() ? "none" : "0 4px 16px rgba(37,99,235,.35)",
+            transition: "all .15s",
+          }}
         >
-          {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-          Bayar Sekarang
-        </Button>
+          {loading ? (
+            <><Loader2 size={16} className="animate-spin" /> Membuat link pembayaran…</>
+          ) : (
+            <>Lanjut ke Pembayaran Mayar <ChevronRight size={16} /></>
+          )}
+        </button>
       </div>
     </div>
   );
