@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
@@ -252,10 +253,43 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Memuat dashboard...</p>
+      <div className="min-h-screen bg-background flex">
+        {/* Sidebar skeleton */}
+        <div className="hidden md:flex flex-col w-64 border-r border-border bg-card p-4 gap-3 flex-shrink-0">
+          <div className="flex items-center gap-3 px-2 py-3 mb-2">
+            <Skeleton className="h-9 w-9 rounded-xl" />
+            <div><Skeleton className="h-4 w-20 mb-1" /><Skeleton className="h-3 w-28" /></div>
+          </div>
+          <Skeleton className="h-10 w-full rounded-xl mb-1" />
+          {[1,2,3,4,5,6].map(i => <Skeleton key={i} className="h-9 w-full rounded-lg" />)}
+          <div className="mt-auto">
+            <Skeleton className="h-20 w-full rounded-xl mb-2" />
+            <Skeleton className="h-9 w-full rounded-lg" />
+          </div>
+        </div>
+        {/* Main content skeleton */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="border-b border-border px-6 py-3 flex items-center justify-between">
+            <Skeleton className="h-6 w-36" />
+            <div className="flex gap-3"><Skeleton className="h-8 w-8 rounded-full" /><Skeleton className="h-8 w-8 rounded-full" /></div>
+          </div>
+          <div className="flex-1 p-6 overflow-auto">
+            {/* Welcome banner */}
+            <Skeleton className="h-28 w-full rounded-2xl mb-6" />
+            {/* Stats row */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              {[1,2,3,4].map(i => <Skeleton key={i} className="h-24 rounded-xl" />)}
+            </div>
+            {/* Section title + cards */}
+            <Skeleton className="h-6 w-40 mb-4" />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              {[1,2,3].map(i => <Skeleton key={i} className="h-40 rounded-xl" />)}
+            </div>
+            <Skeleton className="h-6 w-40 mb-4" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {[1,2,3,4].map(i => <Skeleton key={i} className="h-28 rounded-xl" />)}
+            </div>
+          </div>
         </div>
       </div>
     );

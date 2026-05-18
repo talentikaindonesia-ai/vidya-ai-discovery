@@ -9,6 +9,7 @@ import SEO from "@/components/SEO";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 interface Article {
@@ -375,10 +376,69 @@ const Articles = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
+      <div style={{ minHeight: "100vh", background: "#F8FAFC" }}>
         <Header />
-        <div className="pt-20 flex items-center justify-center min-h-[60vh]">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
+        {/* Hero skeleton */}
+        <section style={{ background: "#fff", padding: "80px 36px 52px", textAlign: "center", borderBottom: "1px solid #E2E8F0" }}>
+          <div style={{ maxWidth: 760, margin: "0 auto" }}>
+            <Skeleton className="h-12 w-3/4 mx-auto mb-4" />
+            <Skeleton className="h-5 w-1/2 mx-auto mb-6" />
+            <div className="flex gap-6 justify-center">
+              <Skeleton className="h-5 w-32" /><Skeleton className="h-5 w-20" /><Skeleton className="h-5 w-32" />
+            </div>
+          </div>
+        </section>
+        {/* Featured cards skeleton */}
+        <div style={{ padding: "52px 36px 0", maxWidth: 1320, margin: "0 auto" }}>
+          <Skeleton className="h-8 w-48 mx-auto mb-6" />
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 20 }}>
+            {[1, 2, 3].map(i => (
+              <div key={i} style={{ background: "#fff", borderRadius: 20, overflow: "hidden", border: "1.5px solid #E2E8F0" }}>
+                <Skeleton className="h-48 w-full rounded-none" />
+                <div style={{ padding: "18px 20px 20px" }}>
+                  <div className="flex gap-2 mb-3"><Skeleton className="h-5 w-20 rounded-full" /><Skeleton className="h-5 w-24 rounded-full" /></div>
+                  <Skeleton className="h-5 w-full mb-2" /><Skeleton className="h-5 w-4/5 mb-3" />
+                  <Skeleton className="h-4 w-full mb-1" /><Skeleton className="h-4 w-5/6 mb-1" /><Skeleton className="h-4 w-3/4 mb-4" />
+                  <div className="flex gap-4"><Skeleton className="h-4 w-14" /><Skeleton className="h-4 w-14" /></div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div style={{ height: 1, background: "#E2E8F0", marginTop: 40 }} />
+        </div>
+        {/* Search + grid skeleton */}
+        <div style={{ padding: "28px 36px", maxWidth: 1320, margin: "0 auto" }}>
+          <div className="flex gap-4 flex-wrap">
+            <Skeleton className="h-11 flex-1 min-w-[280px] rounded-xl" />
+            {[1,2,3,4,5].map(i => <Skeleton key={i} className="h-11 w-28 rounded-xl" />)}
+          </div>
+        </div>
+        <div style={{ padding: "0 36px 48px", maxWidth: 1320, margin: "0 auto" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: 24 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 22 }}>
+              {[1,2,3,4,5,6].map(i => (
+                <div key={i} style={{ background: "#fff", borderRadius: 18, overflow: "hidden", border: "1.5px solid #E2E8F0" }}>
+                  <Skeleton className="h-44 w-full rounded-none" />
+                  <div style={{ padding: "16px 18px 18px" }}>
+                    <div className="flex gap-2 mb-2"><Skeleton className="h-4 w-16 rounded-full" /><Skeleton className="h-4 w-20 rounded-full" /></div>
+                    <Skeleton className="h-5 w-full mb-1" /><Skeleton className="h-5 w-3/4 mb-2" />
+                    <Skeleton className="h-4 w-full mb-1" /><Skeleton className="h-4 w-5/6 mb-3" />
+                    <div className="flex justify-between"><div className="flex gap-3"><Skeleton className="h-3 w-12" /><Skeleton className="h-3 w-12" /></div><Skeleton className="h-3 w-16" /></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="flex flex-col gap-4">
+              <div style={{ background: "#fff", border: "1.5px solid #E2E8F0", borderRadius: 18, padding: 22 }}>
+                <Skeleton className="h-5 w-36 mb-4" />
+                {[1,2,3,4,5].map(i => <div key={i} className="flex gap-3 py-2"><Skeleton className="h-7 w-7 rounded-lg flex-shrink-0" /><div className="flex-1"><Skeleton className="h-4 w-full mb-1" /><Skeleton className="h-3 w-24" /></div></div>)}
+              </div>
+              <div style={{ background: "#fff", border: "1.5px solid #E2E8F0", borderRadius: 18, padding: 22 }}>
+                <Skeleton className="h-5 w-32 mb-3" />
+                <div className="flex flex-wrap gap-2">{[1,2,3,4,5,6,7,8].map(i => <Skeleton key={i} className="h-8 w-20 rounded-full" />)}</div>
+              </div>
+            </div>
+          </div>
         </div>
         <Footer />
       </div>

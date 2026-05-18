@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Search, Play, BookOpen, FileText, Star, Lock, CheckCircle } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
@@ -170,8 +171,57 @@ const LearningHub = () => {
   // ── Loading ────────────────────────────────────────────────────────────────
 
   if (loading) return (
-    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#F8FAFC" }}>
-      <div style={{ width: 44, height: 44, borderRadius: "50%", border: "3px solid #1D4ED8", borderTopColor: "transparent", animation: "spin .8s linear infinite" }} />
+    <div style={{ minHeight: "100vh", background: "#F8FAFC", display: "flex" }}>
+      {/* Sidebar skeleton */}
+      <div style={{ width: 260, flexShrink: 0, borderRight: "1px solid #E2E8F0", background: "#fff", padding: 16, display: "flex", flexDirection: "column", gap: 8 }} className="hidden md:flex">
+        <div className="flex items-center gap-3 px-2 py-3 mb-2">
+          <Skeleton className="h-9 w-9 rounded-xl" />
+          <div><Skeleton className="h-4 w-20 mb-1" /><Skeleton className="h-3 w-28" /></div>
+        </div>
+        {[1,2,3,4,5,6].map(i => <Skeleton key={i} className="h-9 w-full rounded-lg" />)}
+      </div>
+      {/* Content skeleton */}
+      <div style={{ flex: 1, padding: "32px 28px", maxWidth: 1100, overflow: "auto" }}>
+        {/* Header + stats pills */}
+        <div className="flex items-center justify-between mb-6">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-9 w-32 rounded-full" />
+        </div>
+        <div className="flex gap-3 mb-8">
+          {[1,2,3,4].map(i => <Skeleton key={i} className="h-10 w-28 rounded-full" />)}
+        </div>
+        {/* Continue learning */}
+        <Skeleton className="h-6 w-44 mb-4" />
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16, marginBottom: 32 }}>
+          {[1,2,3].map(i => (
+            <div key={i} style={{ background: "#fff", borderRadius: 16, overflow: "hidden", border: "1px solid #E2E8F0" }}>
+              <Skeleton className="h-36 w-full rounded-none" />
+              <div style={{ padding: "14px 16px" }}>
+                <Skeleton className="h-4 w-3/4 mb-2" /><Skeleton className="h-3 w-1/2 mb-3" />
+                <Skeleton className="h-2 w-full rounded-full mb-1" /><Skeleton className="h-3 w-16" />
+              </div>
+            </div>
+          ))}
+        </div>
+        {/* Search + filter */}
+        <div className="flex gap-3 mb-6">
+          <Skeleton className="h-10 flex-1 rounded-xl" />
+          {[1,2,3,4].map(i => <Skeleton key={i} className="h-10 w-24 rounded-lg" />)}
+        </div>
+        {/* Course grid */}
+        <Skeleton className="h-6 w-44 mb-4" />
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14 }}>
+          {[1,2,3,4,5,6,7,8].map(i => (
+            <div key={i} style={{ background: "#fff", borderRadius: 14, overflow: "hidden", border: "1px solid #E2E8F0" }}>
+              <Skeleton className="h-28 w-full rounded-none" />
+              <div style={{ padding: "12px 14px" }}>
+                <Skeleton className="h-4 w-full mb-1" /><Skeleton className="h-4 w-3/4 mb-2" />
+                <Skeleton className="h-3 w-1/2" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 

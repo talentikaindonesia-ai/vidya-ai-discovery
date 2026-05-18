@@ -13,6 +13,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
+import { Skeleton } from "@/components/ui/skeleton";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { BottomNavigationBar } from "@/components/dashboard/BottomNavigationBar";
@@ -204,11 +205,49 @@ const Profile = () => {
   /* ── loading ── */
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--tk-gray-50)" }}>
-        <div className="text-center">
-          <div className="animate-spin rounded-full mx-auto mb-4"
-            style={{ width: 48, height: 48, border: "3px solid var(--tk-gray-200)", borderTopColor: "var(--tk-blue-600)" }} />
-          <p style={{ color: "var(--tk-gray-500)", fontFamily: "var(--tk-font-sans)" }}>Memuat profil…</p>
+      <div className="min-h-screen flex" style={{ background: "var(--tk-gray-50)" }}>
+        {/* Sidebar skeleton */}
+        <div className="hidden md:flex flex-col w-64 border-r bg-white p-4 gap-3 flex-shrink-0" style={{ borderColor: "var(--tk-gray-200)" }}>
+          <div className="flex items-center gap-3 px-2 py-3 mb-2">
+            <Skeleton className="h-9 w-9 rounded-xl" />
+            <div><Skeleton className="h-4 w-20 mb-1" /><Skeleton className="h-3 w-28" /></div>
+          </div>
+          {[1,2,3,4,5,6].map(i => <Skeleton key={i} className="h-9 w-full rounded-lg" />)}
+        </div>
+        {/* Profile two-column skeleton */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="border-b bg-white px-6 py-3 flex items-center justify-between" style={{ borderColor: "var(--tk-gray-200)" }}>
+            <Skeleton className="h-6 w-24" />
+            <div className="flex gap-3"><Skeleton className="h-8 w-8 rounded-full" /><Skeleton className="h-8 w-8 rounded-full" /></div>
+          </div>
+          <div className="flex-1 overflow-auto p-6">
+            <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-6 max-w-5xl mx-auto">
+              {/* Left identity card */}
+              <div className="flex flex-col gap-4">
+                <div className="bg-white rounded-2xl p-6 border" style={{ borderColor: "var(--tk-gray-200)" }}>
+                  <Skeleton className="h-20 w-20 rounded-full mx-auto mb-4" />
+                  <Skeleton className="h-5 w-36 mx-auto mb-2" />
+                  <Skeleton className="h-4 w-24 mx-auto mb-4 rounded-full" />
+                  <div className="grid grid-cols-3 gap-2 mb-4">
+                    {[1,2,3].map(i => <div key={i} className="text-center"><Skeleton className="h-6 w-full mb-1" /><Skeleton className="h-3 w-full" /></div>)}
+                  </div>
+                  <Skeleton className="h-9 w-full rounded-lg" />
+                </div>
+                <Skeleton className="h-28 w-full rounded-2xl" />
+              </div>
+              {/* Right tab area */}
+              <div className="bg-white rounded-2xl border p-6" style={{ borderColor: "var(--tk-gray-200)" }}>
+                <div className="flex gap-2 mb-6 flex-wrap">
+                  {[1,2,3,4,5,6].map(i => <Skeleton key={i} className="h-9 w-24 rounded-lg" />)}
+                </div>
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  {[1,2,3,4].map(i => <Skeleton key={i} className="h-12 rounded-lg" />)}
+                </div>
+                <Skeleton className="h-4 w-32 mb-3" />
+                {[1,2,3].map(i => <Skeleton key={i} className="h-16 w-full rounded-xl mb-3" />)}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
