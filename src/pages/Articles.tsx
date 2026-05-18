@@ -327,7 +327,7 @@ const Articles = () => {
     try {
       const { data, error } = await supabase
         .from("articles")
-        .select("*")
+        .select("id,title,slug,excerpt,featured_image_url,category,tags,view_count,reading_time_minutes,created_at,published_at,is_featured,seo_title,seo_description,content")
         .eq("is_published", true)
         .order("created_at", { ascending: false });
       if (error) throw error;

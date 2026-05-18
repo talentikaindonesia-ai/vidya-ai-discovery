@@ -41,7 +41,7 @@ const TalentikaJuniorDashboard = () => {
       // Load profile
       const { data: profileData } = await supabase
         .from('profiles')
-        .select('*')
+        .select('id,full_name,avatar_url')
         .eq('user_id', user.id)
         .single();
       
@@ -52,7 +52,7 @@ const TalentikaJuniorDashboard = () => {
       // Load XP data
       const { data: xpData } = await supabase
         .from('user_xp')
-        .select('*')
+        .select('current_level,current_xp')
         .eq('user_id', user.id)
         .single();
       

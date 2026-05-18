@@ -78,7 +78,7 @@ const Dashboard = () => {
       ] = await Promise.all([
         supabase.rpc('get_profile_secure', { profile_user_id: userId }).maybeSingle(),
         supabase.from('user_roles').select('role').eq('user_id', userId).maybeSingle(),
-        supabase.from('subscription_packages').select('*').eq('is_active', true).order('price_monthly'),
+        supabase.from('subscription_packages').select('id,name,description,price_monthly,price_yearly,features,is_active').eq('is_active', true).order('price_monthly'),
         supabase.from('user_interests').select('*, interest_categories(name)').eq('user_id', userId).limit(3),
       ]);
 

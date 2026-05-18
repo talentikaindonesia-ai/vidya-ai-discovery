@@ -35,7 +35,7 @@ export const useGameification = () => {
       // Load XP data
       const { data: xpData } = await supabase
         .from('user_xp')
-        .select('*')
+        .select('id,user_id,current_xp,current_level,total_xp_earned')
         .eq('user_id', user.id)
         .single();
 
@@ -49,7 +49,7 @@ export const useGameification = () => {
       // Load streak data
       const { data: streakData } = await supabase
         .from('user_streaks')
-        .select('*')
+        .select('id,user_id,streak_type,current_streak,longest_streak,last_activity_date')
         .eq('user_id', user.id);
 
       if (streakData) {

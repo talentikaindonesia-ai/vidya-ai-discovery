@@ -451,7 +451,7 @@ export const ChallengesSection = () => {
         { data: challengesData },
         { data: userChallenges },
       ] = await Promise.all([
-        supabase.from("community_challenges").select("*").eq("is_active", true).order("created_at", { ascending: false }),
+        supabase.from("community_challenges").select("id,title,description,challenge_type,difficulty,xp_reward,max_participants,start_date,end_date,is_active").eq("is_active", true).order("created_at", { ascending: false }),
         supabase.from("user_challenges").select("challenge_id").eq("user_id", user.id),
       ]);
 
