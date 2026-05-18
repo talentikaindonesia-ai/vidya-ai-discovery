@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo } from "react";
 import {
   BookOpen, Clock, Activity, Shield, Star, ChevronRight,
   ChevronLeft, Bookmark, MoreHorizontal, Play, Video, FileText, Headphones,
@@ -19,7 +19,7 @@ const TINTS: Record<string, [string, string]> = {
 };
 
 // ─── Stat card ───────────────────────────────────────────────────────────────
-function StatCard({
+const StatCard = memo(function StatCard({
   icon: Icon, color, label, value, sub,
 }: {
   icon: React.ElementType; color: string; label: string; value: string; sub: string;
@@ -57,7 +57,7 @@ function StatCard({
       </div>
     </div>
   );
-}
+});
 
 // ─── Course thumbnail ────────────────────────────────────────────────────────
 const COURSE_GRADS: Record<string, string> = {
@@ -68,7 +68,7 @@ const COURSE_GRADS: Record<string, string> = {
   yellow: "linear-gradient(135deg,#FFF6E0,#FDE68A)",
 };
 
-function CourseThumb({ color = "blue", icon = "📚", sm = false }: { color?: string; icon?: string; sm?: boolean }) {
+const CourseThumb = memo(function CourseThumb({ color = "blue", icon = "📚", sm = false }: { color?: string; icon?: string; sm?: boolean }) {
   const size = sm ? 44 : 56;
   return (
     <div
@@ -83,7 +83,7 @@ function CourseThumb({ color = "blue", icon = "📚", sm = false }: { color?: st
       {icon}
     </div>
   );
-}
+});
 
 // ─── Mini calendar ───────────────────────────────────────────────────────────
 function MiniCalendar() {

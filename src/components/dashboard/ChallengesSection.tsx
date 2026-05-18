@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo } from "react";
 import {
   Trophy, Star, Shield, Users, ArrowRight, Check, Loader2,
   Zap, Target, Clock, Flame, ChevronRight, BookOpen,
@@ -78,7 +78,7 @@ function DiffDots({ difficulty }: { difficulty: string | null }) {
 }
 
 // ── Card ───────────────────────────────────────────────────────────────────────
-function ChallengeCard({
+const ChallengeCard = memo(function ChallengeCard({
   c, isJoined, isJoining, isFeatured, onJoin,
 }: {
   c: Challenge; isJoined: boolean; isJoining: boolean; isFeatured?: boolean; onJoin: () => void;
@@ -337,7 +337,7 @@ function ChallengeCard({
       </div>
     </div>
   );
-}
+});
 
 // ── Leaderboard mini-widget ────────────────────────────────────────────────────
 const MOCK_LEADERS = [

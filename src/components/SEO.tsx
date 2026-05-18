@@ -1,6 +1,36 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 
+const ROUTE_LABELS: Record<string, string> = {
+  articles: "Artikel", dashboard: "Dashboard", learning: "Learning Hub",
+  profile: "Profil", assessment: "Assessment", opportunities: "Peluang",
+  community: "Komunitas", portfolio: "Portfolio", subscription: "Langganan",
+  "for-schools": "Untuk Sekolah", "tentang-kami": "Tentang Kami",
+  mitra: "Mitra & Mentor", "school-dashboard": "Dashboard Sekolah",
+  "talentika-junior": "Talentika Junior", explore: "Eksplorasi",
+};
+
+function buildBreadcrumb(pathname: string) {
+  const parts = pathname.split("/").filter(Boolean);
+  const items = [{ name: "Beranda", url: "https://talentika.id/" }];
+  let cumPath = "";
+  parts.forEach(part => {
+    cumPath += "/" + part;
+    const label = ROUTE_LABELS[part] || part.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+    items.push({ name: label, url: "https://talentika.id" + cumPath });
+  });
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": items.map((item, i) => ({
+      "@type": "ListItem",
+      "position": i + 1,
+      "name": item.name,
+      "item": item.url,
+    })),
+  };
+}
+
 interface SEOProps {
   title?: string;
   description?: string;
@@ -69,20 +99,30 @@ const SEO = ({
     }
     canonicalLink.setAttribute('href', canonicalUrl);
 
-    // Update structured data if provided
+    // Page-specific structured data
     if (structuredData) {
-      let script = document.querySelector('script[type="application/ld+json"][data-dynamic="true"]');
-      
+      let script = document.querySelector('script[type="application/ld+json"][data-dynamic="page"]');
       if (!script) {
         script = document.createElement('script');
         script.setAttribute('type', 'application/ld+json');
-        script.setAttribute('data-dynamic', 'true');
+        script.setAttribute('data-dynamic', 'page');
         document.head.appendChild(script);
       }
-      
       script.textContent = JSON.stringify(structuredData);
     }
-  }, [title, description, keywords, image, type, currentUrl, canonicalUrl, structuredData]);
+
+    // BreadcrumbList — always injected, updated on route change
+    if (location.pathname !== '/') {
+      let bcScript = document.querySelector('script[type="application/ld+json"][data-dynamic="breadcrumb"]');
+      if (!bcScript) {
+        bcScript = document.createElement('script');
+        bcScript.setAttribute('type', 'application/ld+json');
+        bcScript.setAttribute('data-dynamic', 'breadcrumb');
+        document.head.appendChild(bcScript);
+      }
+      bcScript.textContent = JSON.stringify(buildBreadcrumb(location.pathname));
+    }
+  }, [title, description, keywords, image, type, currentUrl, canonicalUrl, structuredData, location.pathname]);
 
   return null;
 };

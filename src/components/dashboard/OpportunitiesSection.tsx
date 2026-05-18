@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, memo } from "react";
 import { Gift, Shield, MapPin, Bookmark, ChevronRight, ChevronLeft, GraduationCap, Trophy, Briefcase, Users, Mic } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -110,7 +110,7 @@ const MOCK_OPPORTUNITIES = [
 const PAGE_SIZE = 6;
 
 // ─── Opportunity card ────────────────────────────────────────────────────────
-function OppCard({
+const OppCard = memo(function OppCard({
   opp,
   focused,
   onFocus,
@@ -278,7 +278,7 @@ function OppCard({
       </div>
     </div>
   );
-}
+});
 
 // ─── Main component ──────────────────────────────────────────────────────────
 export const OpportunitiesSection = () => {
