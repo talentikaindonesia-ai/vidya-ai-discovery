@@ -104,7 +104,7 @@ const TentangKami = () => {
               <div
                 className="au-hero-photo-slot"
                 style={{
-                  backgroundImage: "url('/hero-students.png')",
+                  backgroundImage: "url('/hero-students.webp')",
                   backgroundSize: "cover",
                   backgroundPosition: "center top",
                 }}

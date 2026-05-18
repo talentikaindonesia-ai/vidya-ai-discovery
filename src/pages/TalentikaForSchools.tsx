@@ -178,7 +178,7 @@ const TalentikaForSchools = () => {
               <svg className="sp-dot" style={{ bottom: "30%", right: "8%", color: "#93C5FD", animationDelay: ".8s" }} width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.7 6.3L20 10l-6.3 1.7L12 18l-1.7-6.3L4 10l6.3-1.7z"/></svg>
 
               {/* Hero Photo */}
-              <div className="sp-hero-photo" style={{ backgroundImage: "url('/school-hero-2.png')", backgroundSize: "cover", backgroundPosition: "center top" }} />
+              <div className="sp-hero-photo" style={{ backgroundImage: "url('/school-hero-2.webp')", backgroundSize: "cover", backgroundPosition: "center top" }} />
 
               {/* Trust card */}
               <div className="sp-trust">

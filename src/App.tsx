@@ -10,12 +10,12 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { UpgradeModalProvider } from "@/contexts/UpgradeModalContext";
 
-// ── Eager (hit on very first load or needed for error/auth states) ──────────
-import Index   from "./pages/Index";
+// ── Eager (needed for auth state and error boundaries) ───────────────────────
 import Auth    from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
 // ── Lazy (loaded only when the user navigates to that route) ────────────────
+const Index                 = lazy(() => import("./pages/Index"));
 const Assessment            = lazy(() => import("./pages/Assessment"));
 const Dashboard             = lazy(() => import("./pages/Dashboard"));
 const Admin                 = lazy(() => import("./pages/Admin"));

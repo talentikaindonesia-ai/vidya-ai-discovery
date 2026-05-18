@@ -298,7 +298,7 @@ const Hero = ({ navigate }: { navigate: ReturnType<typeof useNavigate> }) => (
         </div>
 
         {/* Hero Photo */}
-        <div className="lp-hero-photo" style={{ backgroundImage: "url('/hero-students.png')", backgroundSize: "cover", backgroundPosition: "center" }}>
+        <div className="lp-hero-photo" style={{ backgroundImage: "url('/hero-students.webp')", backgroundSize: "cover", backgroundPosition: "center" }}>
         </div>
 
         {/* Floating Info Card */}
@@ -1232,7 +1232,7 @@ const Mitra = () => {
           ))}
 
           {/* Mitra Photo */}
-          <div className="lp-mitra-photo" style={{ backgroundImage: "url('/mitra-mentor.png')", backgroundSize: "cover", backgroundPosition: "center top" }} />
+          <div className="lp-mitra-photo" style={{ backgroundImage: "url('/mitra-mentor.webp')", backgroundSize: "cover", backgroundPosition: "center top" }} />
 
           {mitraCards.map((card) => (
             <div key={card.title} className={`lp-mitra-card ${card.cls}`}>
