@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
@@ -49,6 +50,7 @@ const TRUST_ITEMS = [
 // ─── Main component ──────────────────────────────────────────────────────────
 const Onboarding = () => {
   const navigate  = useNavigate();
+  const isMobile  = useIsMobile();
   const [step,    setStep]    = useState(0); // 0 = card carousel, 1-3 = form steps
   const [phase,   setPhase]   = useState<"carousel" | "form">("carousel");
   const [saving,  setSaving]  = useState(false);
@@ -170,7 +172,7 @@ const Onboarding = () => {
         <div
           style={{
             maxWidth: 1200, margin: "0 auto",
-            padding: "120px 40px 60px",
+            padding: isMobile ? "80px 16px 40px" : "120px 40px 60px",
             position: "relative", zIndex: 2,
           }}
         >
@@ -190,7 +192,12 @@ const Onboarding = () => {
           </div>
 
           {/* 5-card carousel */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 18 }}>
+          <div style={isMobile ? {
+            display: "flex", overflowX: "auto", gap: 14,
+            scrollSnapType: "x mandatory", paddingBottom: 12,
+            WebkitOverflowScrolling: "touch" as any,
+            marginLeft: -8, marginRight: -8, paddingLeft: 8, paddingRight: 8,
+          } : { display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 18 }}>
             {ONBOARD_STEPS.map((card, i) => (
               <div
                 key={i}
@@ -203,6 +210,7 @@ const Onboarding = () => {
                   boxShadow: i === step ? "var(--tk-shadow-lg)" : "0 2px 8px rgba(0,0,0,.06)",
                   transform: i === step ? "translateY(-6px)" : "none",
                   transition: "all .3s ease",
+                  ...(isMobile ? { minWidth: 220, flexShrink: 0, scrollSnapAlign: "start" } : {}),
                 }}
               >
                 {/* Step number bubble */}
@@ -297,7 +305,7 @@ const Onboarding = () => {
 
           {/* Trust items */}
           <div style={{
-            display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 24,
+            display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3,1fr)", gap: 24,
             marginTop: 48, maxWidth: 900, marginLeft: "auto", marginRight: "auto",
           }}>
             {TRUST_ITEMS.map(({ icon: Icon, title, desc }) => (

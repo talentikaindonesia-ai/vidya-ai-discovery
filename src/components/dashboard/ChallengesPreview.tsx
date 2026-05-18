@@ -7,6 +7,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Flame, Calendar, Star, BookOpen, Brain, Code2, MessageSquare,
   Zap, Target, Swords, Clock, ArrowRight, Trophy,
@@ -38,6 +39,7 @@ function daysLeft(end: string | null): { label: string; urgent: boolean } | null
 // ── Component ──────────────────────────────────────────────────────────────────
 export const ChallengesPreview = () => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [challenges, setChallenges] = useState<any[]>([]);
   const [loading, setLoading]       = useState(true);
 
@@ -88,13 +90,13 @@ export const ChallengesPreview = () => {
 
       {/* Cards */}
       {loading ? (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 12 }}>
           {[0, 1, 2].map(i => (
             <div key={i} className="animate-pulse" style={{ height: 110, borderRadius: 14, background: "var(--tk-gray-150)" }} />
           ))}
         </div>
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: `repeat(${challenges.length}, 1fr)`, gap: 12 }}>
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : `repeat(${challenges.length}, 1fr)`, gap: 12 }}>
           {challenges.map((c) => {
             const cfg = TYPE_CONFIG[c.challenge_type] ?? DEFAULT_CFG;
             const rem = daysLeft(c.end_date);

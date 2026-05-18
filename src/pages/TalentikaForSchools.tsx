@@ -143,11 +143,11 @@ const TalentikaForSchools = () => {
               </p>
 
               <div className="sp-hero-btns">
-                <button className="sp-btn-primary" onClick={() => navigate("/auth")}>
-                  Daftar Sekolah Anda <IcoArrow />
+                <button className="sp-btn-primary" onClick={() => navigate("/school-dashboard")}>
+                  Akses Dashboard Sekolah <IcoArrow />
                 </button>
-                <button className="sp-btn-secondary">
-                  <IcoPlay /> Lihat Demo
+                <button className="sp-btn-secondary" onClick={() => navigate("/school-dashboard")}>
+                  <IcoPlay /> Lihat Demo Dashboard
                 </button>
               </div>
 
@@ -177,13 +177,8 @@ const TalentikaForSchools = () => {
               <svg className="sp-dot" style={{ top: "20%", left: "54%", color: "#3B82F6", animationDelay: ".4s" }} width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.7 6.3L20 10l-6.3 1.7L12 18l-1.7-6.3L4 10l6.3-1.7z"/></svg>
               <svg className="sp-dot" style={{ bottom: "30%", right: "8%", color: "#93C5FD", animationDelay: ".8s" }} width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.7 6.3L20 10l-6.3 1.7L12 18l-1.7-6.3L4 10l6.3-1.7z"/></svg>
 
-              {/* Photo placeholder */}
-              <div className="sp-hero-photo">
-                <div style={{ textAlign: "center", color: "rgba(255,255,255,.6)", padding: 32 }}>
-                  <svg width="80" height="80" viewBox="0 0 24 24" fill="currentColor" style={{ opacity: .4, marginBottom: 12 }}><path d="M3 21V8l9-5 9 5v13"/><path d="M9 21V12h6v9"/></svg>
-                  <p style={{ fontFamily: "var(--sp-display)", fontWeight: 700, fontSize: 14, margin: 0 }}>Talentika for School</p>
-                </div>
-              </div>
+              {/* Hero Photo */}
+              <div className="sp-hero-photo" style={{ backgroundImage: "url('/school-hero-2.png')", backgroundSize: "cover", backgroundPosition: "center top" }} />
 
               {/* Trust card */}
               <div className="sp-trust">
@@ -417,7 +412,7 @@ const TalentikaForSchools = () => {
 
               {/* Dashboard mockup */}
               <Reveal>
-                <div className="sp-dash-mock">
+                <div className="sp-dash-mock" onClick={() => navigate("/school-dashboard")} style={{ cursor: "pointer" }} title="Klik untuk membuka Dashboard Sekolah">
                   <div className="sp-dm-inner">
                     {/* Sidebar */}
                     <div className="sp-dm-side">
@@ -649,6 +644,126 @@ const TalentikaForSchools = () => {
           </div>
         </section>
 
+        {/* ══ PRICING ════════════════════════════════════════════ */}
+        <section id="harga" className="sp-section sp-section-tint">
+          <div className="sp-section-inner">
+            <Reveal>
+              <div className="sp-head center">
+                <span className="sp-eyebrow">Investasi Terbaik untuk Sekolah</span>
+                <h2>Harga Transparan, <span className="sp-blue">Tanpa Kejutan</span></h2>
+                <p>Satu paket lengkap untuk seluruh ekosistem sekolah Anda — siswa, guru, dan admin.</p>
+              </div>
+            </Reveal>
+
+            <Reveal>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 24, maxWidth: 960, margin: "0 auto" }}>
+
+                {/* Pilot Gratis */}
+                <div style={{ background: "#fff", borderRadius: 24, border: "1.5px solid #E2E8F0", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+                  <div style={{ background: "linear-gradient(135deg, #F0FDF4, #DCFCE7)", padding: "28px 28px 20px", textAlign: "center" }}>
+                    <div style={{ width: 56, height: 56, borderRadius: 16, background: "#D1FAE5", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px" }}>
+                      <IcoSchool />
+                    </div>
+                    <div style={{ fontFamily: "var(--sp-display)", fontWeight: 700, fontSize: 20, color: "var(--sp-ink)", marginBottom: 6 }}>Pilot Gratis</div>
+                    <div style={{ fontFamily: "var(--sp-display)", fontWeight: 800, fontSize: 36, color: "#059669" }}>Rp 0</div>
+                    <div style={{ fontSize: 13, color: "#6B7280", marginTop: 4 }}>30 hari · maks. 30 siswa</div>
+                  </div>
+                  <div style={{ padding: "20px 28px", flex: 1, display: "flex", flexDirection: "column", gap: 10 }}>
+                    {[
+                      "Akses penuh semua fitur",
+                      "Onboarding tim kami",
+                      "Dashboard admin sekolah",
+                      "Asesmen untuk 30 siswa",
+                      "Laporan ringkas akhir pilot",
+                    ].map(f => (
+                      <div key={f} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                        <div style={{ width: 20, height: 20, borderRadius: "50%", background: "#D1FAE5", color: "#059669", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
+                          <IcoCheck size={11} />
+                        </div>
+                        <span style={{ fontSize: 14, color: "#374151", lineHeight: 1.45 }}>{f}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ padding: "0 28px 28px" }}>
+                    <a
+                      href="https://wa.me/6282249148433?text=Halo%20Talentika%2C%20saya%20tertarik%20mencoba%20Pilot%20Gratis%20untuk%20sekolah%20kami"
+                      target="_blank" rel="noreferrer"
+                      style={{ display: "block", textAlign: "center", padding: "13px 0", borderRadius: 14, background: "#059669", color: "#fff", fontFamily: "var(--sp-display)", fontWeight: 700, fontSize: 15, textDecoration: "none", transition: "filter .2s" }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.filter = "brightness(1.08)"; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.filter = "none"; }}
+                    >
+                      Mulai Pilot Gratis →
+                    </a>
+                  </div>
+                </div>
+
+                {/* Paket Institusi — Featured */}
+                <div style={{ background: "#fff", borderRadius: 24, border: "2px solid #3B82F6", overflow: "hidden", boxShadow: "0 24px 60px -16px rgba(29,78,216,.25)", transform: "scale(1.02)", display: "flex", flexDirection: "column", position: "relative" }}>
+                  {/* Popular ribbon */}
+                  <div style={{ background: "linear-gradient(90deg, #2563EB, #1D4ED8)", color: "#fff", textAlign: "center", padding: "8px 0", fontSize: 12, fontFamily: "var(--sp-display)", fontWeight: 700, letterSpacing: ".04em" }}>
+                    ⭐ PALING BANYAK DIPILIH
+                  </div>
+                  <div style={{ background: "linear-gradient(135deg, #EFF6FF, #DBEAFE)", padding: "24px 28px 20px", textAlign: "center" }}>
+                    <div style={{ width: 56, height: 56, borderRadius: 16, background: "linear-gradient(135deg, #3B82F6, #1D4ED8)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px", boxShadow: "0 8px 20px -4px rgba(29,78,216,.35)" }}>
+                      <IcoSchool />
+                    </div>
+                    <div style={{ fontFamily: "var(--sp-display)", fontWeight: 700, fontSize: 20, color: "var(--sp-ink)", marginBottom: 6 }}>Paket Sekolah</div>
+                    <div style={{ fontFamily: "var(--sp-display)", fontWeight: 800, fontSize: 36, color: "#1D4ED8" }}>
+                      Rp 7,5 jt<span style={{ fontSize: 16, fontWeight: 500, color: "#6B7280" }}>/tahun</span>
+                    </div>
+                    <div style={{ fontSize: 12.5, color: "#3B82F6", fontWeight: 600, marginTop: 6, background: "#DBEAFE", display: "inline-block", padding: "3px 12px", borderRadius: 99 }}>
+                      per sekolah · min. 50 siswa
+                    </div>
+                  </div>
+                  <div style={{ padding: "20px 28px", flex: 1, display: "flex", flexDirection: "column", gap: 10 }}>
+                    {[
+                      "Semua fitur Premium untuk setiap siswa",
+                      "Dashboard admin & laporan real-time",
+                      "Bimbingan konselor via platform",
+                      "Integrasi kurikulum BK & Merdeka",
+                      "Onboarding + training staf sekolah",
+                      "Akses orang tua via portal khusus",
+                      "Dukungan prioritas 24/7",
+                      "Review program setiap semester",
+                    ].map(f => (
+                      <div key={f} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                        <div style={{ width: 20, height: 20, borderRadius: "50%", background: "#DBEAFE", color: "#1D4ED8", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
+                          <IcoCheck size={11} />
+                        </div>
+                        <span style={{ fontSize: 14, color: "#374151", lineHeight: 1.45 }}>{f}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ padding: "0 28px 28px" }}>
+                    <a
+                      href="https://wa.me/6282249148433?text=Halo%20Talentika%2C%20saya%20tertarik%20dengan%20Paket%20Sekolah%20Rp%207%2C5%20juta%2Ftahun"
+                      target="_blank" rel="noreferrer"
+                      style={{ display: "block", textAlign: "center", padding: "13px 0", borderRadius: 14, background: "linear-gradient(135deg, #3B82F6, #1D4ED8)", color: "#fff", fontFamily: "var(--sp-display)", fontWeight: 700, fontSize: 15, textDecoration: "none", boxShadow: "0 8px 20px -4px rgba(29,78,216,.4)", transition: "filter .2s" }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.filter = "brightness(1.08)"; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.filter = "none"; }}
+                    >
+                      💬 Hubungi Tim Kami →
+                    </a>
+                    <div style={{ textAlign: "center", fontSize: 12, color: "#9CA3AF", marginTop: 10 }}>
+                      Harga khusus untuk &gt;200 siswa tersedia
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </Reveal>
+
+            {/* Trust note */}
+            <Reveal>
+              <div style={{ textAlign: "center", marginTop: 36, display: "flex", flexWrap: "wrap", gap: 20, justifyContent: "center", alignItems: "center" }}>
+                {["✓ Tanpa kontrak jangka panjang", "✓ Invoice resmi & NPWP tersedia", "✓ Harga khusus sekolah negeri", "✓ Bisa tagih ke Dana BOS"].map(t => (
+                  <span key={t} style={{ fontSize: 13.5, color: "#6B7280", fontWeight: 600 }}>{t}</span>
+                ))}
+              </div>
+            </Reveal>
+          </div>
+        </section>
+
         {/* ══ FAQ ════════════════════════════════════════════════ */}
         <section id="faq" className="sp-section">
           <div className="sp-section-inner">
@@ -721,7 +836,7 @@ const TalentikaForSchools = () => {
                   Hubungi Kami via WhatsApp
                   <IcoArrow />
                 </a>
-                <button className="sp-btn-demo-cta">
+                <button className="sp-btn-demo-cta" onClick={() => navigate("/school-dashboard")}>
                   <IcoPlay /> Lihat Demo Dashboard
                 </button>
                 <div className="sp-cta-url">

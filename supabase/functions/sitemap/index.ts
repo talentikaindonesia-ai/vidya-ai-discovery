@@ -3,16 +3,16 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 const DOMAIN = 'https://talentika.id'
 
 const STATIC_PAGES = [
-  { loc: '/', changefreq: 'weekly',  priority: '1.0' },
-  { loc: '/articles',     changefreq: 'daily',   priority: '0.9' },
-  { loc: '/assessment',   changefreq: 'monthly', priority: '0.9' },
-  { loc: '/auth',         changefreq: 'monthly', priority: '0.8' },
-  { loc: '/talentika-junior', changefreq: 'weekly', priority: '0.8' },
-  { loc: '/for-schools',  changefreq: 'weekly',  priority: '0.8' },
-  { loc: '/opportunities',changefreq: 'daily',   priority: '0.7' },
-  { loc: '/community',    changefreq: 'daily',   priority: '0.7' },
-  { loc: '/learning',     changefreq: 'weekly',  priority: '0.7' },
-  { loc: '/subscription', changefreq: 'monthly', priority: '0.6' },
+  { loc: '/',                 changefreq: 'weekly',  priority: '1.0' },
+  { loc: '/articles',         changefreq: 'daily',   priority: '0.9' },
+  { loc: '/assessment',       changefreq: 'monthly', priority: '0.9' },
+  { loc: '/tentang-kami',     changefreq: 'monthly', priority: '0.8' },
+  { loc: '/talentika-junior', changefreq: 'weekly',  priority: '0.8' },
+  { loc: '/for-schools',      changefreq: 'weekly',  priority: '0.8' },
+  { loc: '/subscription',     changefreq: 'monthly', priority: '0.7' },
+  { loc: '/opportunities',    changefreq: 'daily',   priority: '0.7' },
+  { loc: '/community',        changefreq: 'daily',   priority: '0.6' },
+  { loc: '/learning',         changefreq: 'weekly',  priority: '0.6' },
 ]
 
 Deno.serve(async () => {

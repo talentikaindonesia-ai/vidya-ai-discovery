@@ -41,9 +41,22 @@ class ErrorBoundary extends Component<Props, State> {
     console.error("[ErrorBoundary] Uncaught error:", error);
     console.error("[ErrorBoundary] Component stack:", errorInfo.componentStack);
 
-    // TODO: plug in Sentry here
-    // import * as Sentry from "@sentry/react";
-    // Sentry.captureException(error, { extra: errorInfo });
+    // Auto-reload on stale chunk errors (happens after new deployment when
+    // the browser tries to lazy-load a chunk whose filename has changed).
+    const isChunkError =
+      error.name === "ChunkLoadError" ||
+      /loading (css )?chunk/i.test(error.message) ||
+      /failed to fetch dynamically imported module/i.test(error.message) ||
+      /error loading dynamically imported module/i.test(error.message);
+
+    if (isChunkError) {
+      // Reload once; avoid infinite loop by marking in sessionStorage
+      const reloaded = sessionStorage.getItem("chunk_reload");
+      if (!reloaded) {
+        sessionStorage.setItem("chunk_reload", "1");
+        window.location.reload();
+      }
+    }
   }
 
   handleReset = () => {

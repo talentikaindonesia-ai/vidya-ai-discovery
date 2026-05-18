@@ -30,6 +30,7 @@ import {
   BookOpen, Users, Diamond,
 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 /* ─────────────────────────────────── helpers ── */
 const getInitials = (name: string) =>
@@ -85,6 +86,7 @@ const Profile = () => {
 
   const navigate = useNavigate();
   const { toggleTheme } = useTheme();
+  const isMobile = useIsMobile();
 
   /* ── auth ── */
   useEffect(() => {
@@ -120,7 +122,7 @@ const Profile = () => {
           .select("*, learning_content(title, learning_categories(name))")
           .eq("user_id", userId).limit(5),
         supabase.from("assessment_results")
-          .select("primary_type, career_recommendations, talent_areas, personality_type, completed_at")
+          .select("personality_type, career_recommendations, talent_areas, completed_at")
           .eq("user_id", userId).order("created_at", { ascending: false }).limit(1).maybeSingle(),
         supabase.from("achievements").select("id").eq("user_id", userId),
         supabase.from("user_subscriptions")
@@ -136,9 +138,14 @@ const Profile = () => {
       setBadgeCount(achievementsData?.length ?? 0);
 
       if (subData) {
-        const features = Array.isArray(subData.subscription_packages?.features)
-          ? subData.subscription_packages.features
-          : (() => { try { return JSON.parse(subData.subscription_packages?.features ?? "[]"); } catch { return []; } })();
+        // features is Json in the schema — already parsed by Supabase client.
+        // Guard for rare edge-case where it arrives as a JSON string.
+        const rawFeatures = subData.subscription_packages?.features;
+        const features: string[] = Array.isArray(rawFeatures)
+          ? rawFeatures as string[]
+          : typeof rawFeatures === "string"
+            ? (() => { try { return JSON.parse(rawFeatures); } catch { return []; } })()
+            : [];
         setSubscription({ ...subData, subscription_packages: { ...subData.subscription_packages, features } });
       }
 
@@ -180,7 +187,9 @@ const Profile = () => {
   const initials      = getInitials(displayName);
   const coursesCount  = progress.length;
   const certsCount    = progress.filter((p: any) => p.progress_percentage === 100 || p.status === "completed").length;
-  const isPremium     = subscription?.subscription_packages?.type?.includes("premium");
+  const isPremium     = ["premium", "premium_individual", "premium_school", "enterprise"].includes(
+    subscription?.subscription_packages?.type ?? ""
+  );
   const planName      = subscription?.subscription_packages?.name ?? null;
 
   const completionPct = Math.round(
@@ -232,11 +241,11 @@ const Profile = () => {
         </div>
 
         {/* Main */}
-        <main className="flex-1 overflow-auto pb-20 md:pb-6" style={{ padding: "28px 28px 60px" }}>
+        <main className="flex-1 overflow-auto pb-20 md:pb-6" style={{ padding: isMobile ? "16px 16px 80px" : "28px 28px 60px" }}>
           <div style={{ maxWidth: 1140, margin: "0 auto" }}>
 
             {/* ── Page title ── */}
-            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 24 }}>
+            <div style={{ display: "flex", alignItems: isMobile ? "flex-start" : "flex-start", flexDirection: isMobile ? "column" : "row", justifyContent: "space-between", gap: isMobile ? 12 : 0, marginBottom: 24 }}>
               <div>
                 <h1 style={{ fontFamily: "var(--tk-font-display)", fontWeight: 700, fontSize: 28, color: "var(--tk-ink)", margin: 0 }}>
                   Profil &amp; Keanggotaan
@@ -252,7 +261,7 @@ const Profile = () => {
             </div>
 
             {/* ── Two-column layout ── */}
-            <div className="profile-grid" style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: 20, alignItems: "start" }}>
+            <div className="profile-grid" style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "300px 1fr", gap: 20, alignItems: "start" }}>
 
               {/* ══════════ LEFT: Identity Card ══════════ */}
               <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -289,9 +298,9 @@ const Profile = () => {
                   <p style={{ fontFamily: "var(--tk-font-sans)", fontSize: 13, color: "var(--tk-gray-500)", margin: "0 0 14px", wordBreak: "break-all" }}>{user.email}</p>
 
                   {/* Personality pills */}
-                  {(assessment?.primary_type || assessment?.career_recommendations?.[0]) && (
+                  {(assessment?.personality_type || assessment?.career_recommendations?.[0]) && (
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 6, justifyContent: "center", marginBottom: 14 }}>
-                      {[assessment.primary_type, assessment.career_recommendations?.[0]].filter(Boolean).map((p: string, i: number) => (
+                      {[assessment.personality_type, assessment.career_recommendations?.[0]].filter(Boolean).map((p: string, i: number) => (
                         <span key={i} style={{ background: "#FFF7ED", color: "#D97706", fontFamily: "var(--tk-font-sans)", fontWeight: 600, fontSize: 11, padding: "3px 10px", borderRadius: 999 }}>{p}</span>
                       ))}
                     </div>
@@ -376,10 +385,10 @@ const Profile = () => {
               <div style={{ minWidth: 0 }}>
 
                 {/* Tab pill bar */}
-                <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 18 }}>
+                <div style={{ display: "flex", gap: 6, flexWrap: isMobile ? "nowrap" : "wrap", overflowX: isMobile ? "auto" : "visible", WebkitOverflowScrolling: "touch" as any, marginBottom: 18, paddingBottom: isMobile ? 4 : 0 }}>
                   {TABS.map(tab => (
                     <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-                      style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 999, border: "none", fontFamily: "var(--tk-font-sans)", fontWeight: 600, fontSize: 13, cursor: "pointer", transition: "all .15s",
+                      style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 999, border: "none", fontFamily: "var(--tk-font-sans)", fontWeight: 600, fontSize: 13, cursor: "pointer", transition: "all .15s", flexShrink: 0,
                         background: activeTab === tab.id ? "var(--tk-blue-600)" : "#fff",
                         color: activeTab === tab.id ? "#fff" : "var(--tk-gray-600)",
                         boxShadow: activeTab === tab.id ? "0 2px 8px rgba(37,99,235,.3)" : "0 1px 4px rgba(0,0,0,.06)",
@@ -408,10 +417,10 @@ const Profile = () => {
                           )}
                         </div>
                         <div style={{ display: "flex", flexWrap: "wrap", gap: 24 }}>
-                          {assessment.primary_type && (
+                          {assessment.personality_type && (
                             <div>
                               <div style={{ fontFamily: "var(--tk-font-sans)", fontSize: 11, color: "var(--tk-gray-500)", marginBottom: 4, fontWeight: 600, textTransform: "uppercase", letterSpacing: ".05em" }}>Tipe Kepribadian</div>
-                              <span style={{ background: "var(--tk-blue-600)", color: "#fff", fontFamily: "var(--tk-font-display)", fontWeight: 700, fontSize: 13, padding: "4px 12px", borderRadius: 999 }}>{assessment.primary_type}</span>
+                              <span style={{ background: "var(--tk-blue-600)", color: "#fff", fontFamily: "var(--tk-font-display)", fontWeight: 700, fontSize: 13, padding: "4px 12px", borderRadius: 999 }}>{assessment.personality_type}</span>
                             </div>
                           )}
                           {assessment.talent_areas?.length > 0 && (

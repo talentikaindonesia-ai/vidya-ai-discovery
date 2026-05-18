@@ -1,7 +1,9 @@
 User-agent: *
 Allow: /
 Allow: /articles
+Allow: /articles/
 Allow: /assessment
+Allow: /tentang-kami
 Allow: /talentika-junior
 Allow: /for-schools
 Allow: /opportunities
@@ -9,11 +11,13 @@ Allow: /community
 Allow: /learning
 Allow: /subscription
 
-# Private / authenticated routes
+# Private / authenticated routes — exclude from index
+Disallow: /auth
 Disallow: /admin
 Disallow: /dashboard
 Disallow: /dashboard-gamified
 Disallow: /profile
+Disallow: /settings
 Disallow: /onboarding
 Disallow: /discovery
 Disallow: /portfolio

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Clock, Activity, TrendingUp, Star } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 /* ─── Types ─────────────────────────────────────────────── */
 interface CourseProgressRow {
@@ -109,6 +110,7 @@ function StatCard({ icon, iconBg, value, label, sub }: StatCardProps) {
 /* ─── Component ──────────────────────────────────────────── */
 export const ProgressTracker = () => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [totalHours, setTotalHours] = useState<number>(0);
   const [courseProgress, setCourseProgress] = useState<CourseProgressRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -185,7 +187,7 @@ export const ProgressTracker = () => {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
+          gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, 1fr)",
           gap: 16,
           marginBottom: 24,
         }}

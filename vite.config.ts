@@ -44,7 +44,7 @@ export default defineConfig(({ mode }) => ({
         },
       },
     },
-    // Raise warning threshold — some page chunks will be < 500 kB after splitting
-    chunkSizeWarningLimit: 600,
+    // icons chunk is intentionally large (lucide-react consolidated) — suppress warning
+    chunkSizeWarningLimit: 900,
   },
 }));

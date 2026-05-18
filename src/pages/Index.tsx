@@ -21,8 +21,11 @@ const CheckSVG = () => (
 
 /* ─── Nav ─── */
 const Nav = ({ navigate }: { navigate: ReturnType<typeof useNavigate> }) => {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen]     = useState(false);
+  const [solusiOpen, setSolusiOpen] = useState(false);
+  const [mobileSolusi, setMobileSolusi] = useState(true); // expanded by default in mobile
+  const [scrolled, setScrolled]     = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -30,19 +33,20 @@ const Nav = ({ navigate }: { navigate: ReturnType<typeof useNavigate> }) => {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const navItems = [
-    { label: "Beranda", href: "#beranda" },
-    { label: "Fitur", href: "#fitur" },
-    { label: "Cara Kerja", href: "#cara-kerja" },
-    { label: "Harga", href: "#harga" },
-    { label: "Testimoni", href: "#testimoni" },
-    { label: "Artikel", href: "/articles" },
-    { label: "Talentika Junior", href: "/talentika-junior", junior: true },
-  ];
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setSolusiOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
-  const handleNav = (e: React.MouseEvent, href: string) => {
-    e.preventDefault();
+  const handleNav = (href: string) => {
     setMenuOpen(false);
+    setSolusiOpen(false);
     if (href.startsWith("#")) {
       document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
     } else {
@@ -50,46 +54,126 @@ const Nav = ({ navigate }: { navigate: ReturnType<typeof useNavigate> }) => {
     }
   };
 
+  const mainLinks = [
+    { label: "Fitur",        href: "#fitur" },
+    { label: "Tentang Kami", href: "/tentang-kami" },
+    { label: "Harga",        href: "#harga" },
+    { label: "Artikel",      href: "/articles" },
+    { label: "Mitra",        href: "/mitra" },
+  ];
+
+  const solusiItems = [
+    {
+      href: "/for-schools",
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M3 21V8l9-5 9 5v13"/><path d="M9 21V12h6v9"/>
+        </svg>
+      ),
+      iconBg: "#D1FAE5", iconColor: "#059669",
+      label: "For School",
+      desc: "Platform untuk sekolah & institusi",
+    },
+    {
+      href: "/talentika-junior",
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2l1.7 6.3L20 10l-6.3 1.7L12 18l-1.7-6.3L4 10l6.3-1.7z"/>
+        </svg>
+      ),
+      iconBg: "#EEF2FF", iconColor: "#4F46E5",
+      label: "Talentika Junior",
+      desc: "Untuk pelajar SD–SMP",
+    },
+    {
+      href: "/mitra",
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+        </svg>
+      ),
+      iconBg: "#FFF0EB", iconColor: "#FF6A00",
+      label: "Bergabung Mitra",
+      desc: "Untuk sekolah, brand & komunitas",
+    },
+  ];
+
   return (
-    <nav className="lp-nav" style={{ boxShadow: scrolled ? "0 2px 20px -4px rgba(11,29,58,.08)" : "none" }}>
+    <nav className="lp-nav" style={{ boxShadow: scrolled ? "0 2px 20px -4px rgba(11,29,58,.10)" : "none" }}>
       <div className="lp-nav-inner">
-        {/* Brand */}
+
+        {/* ── Brand ── */}
         <a className="lp-brand" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
-          <div className="lp-brand-mark">
-            <StarSVG size={22} />
-            <span className="lp-star">✦</span>
-          </div>
+          <img src="/logo.png" alt="Talentika" className="lp-brand-mark" />
           <div className="lp-brand-name">
             <b>Talentika</b>
             <small>Discover your full potential</small>
           </div>
         </a>
 
-        {/* Desktop Links */}
+        {/* ── Desktop Links ── */}
         <div className="lp-nav-links">
-          {navItems.map((item) => (
-            <a
+          {mainLinks.map(item => (
+            <button
               key={item.label}
-              className={`lp-nav-link${item.junior ? " junior" : ""}`}
-              href={item.href}
-              onClick={(e) => handleNav(e, item.href)}
+              className="lp-nav-link"
+              onClick={() => handleNav(item.href)}
             >
               {item.label}
-            </a>
+            </button>
           ))}
+
+          {/* Solusi dropdown */}
+          <div className="lp-nav-dropdown" ref={dropdownRef}>
+            <button
+              className={`lp-nav-link lp-dropdown-trigger${solusiOpen ? " active" : ""}`}
+              onClick={() => setSolusiOpen(v => !v)}
+              aria-expanded={solusiOpen}
+            >
+              Solusi
+              <svg
+                width="14" height="14" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"
+                style={{ transition: "transform .2s", transform: solusiOpen ? "rotate(180deg)" : "rotate(0deg)" }}
+              >
+                <path d="M6 9l6 6 6-6"/>
+              </svg>
+            </button>
+
+            {solusiOpen && (
+              <div className="lp-dropdown-menu">
+                {solusiItems.map(item => (
+                  <button key={item.href} className="lp-dropdown-item" onClick={() => handleNav(item.href)}>
+                    <div className="lp-dropdown-icon" style={{ background: item.iconBg, color: item.iconColor }}>
+                      {item.icon}
+                    </div>
+                    <div className="lp-dropdown-text">
+                      <span className="lp-dropdown-label">{item.label}</span>
+                      <span className="lp-dropdown-desc">{item.desc}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Desktop CTAs */}
+        {/* ── Desktop CTAs ── */}
         <div className="lp-nav-cta">
           <button className="lp-btn lp-btn-ghost" onClick={() => navigate("/auth")}>Masuk</button>
-          <button className="lp-btn lp-btn-primary" onClick={() => navigate("/auth")}>Daftar Gratis</button>
+          <button className="lp-btn lp-btn-primary" onClick={() => navigate("/auth")}>
+            Daftar Gratis
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </button>
         </div>
 
-        {/* Hamburger */}
+        {/* ── Hamburger ── */}
         <button
           className="lp-hamburger"
-          aria-label="Menu"
-          onClick={() => setMenuOpen(!menuOpen)}
+          aria-label={menuOpen ? "Tutup menu" : "Buka menu"}
+          onClick={() => setMenuOpen(v => !v)}
         >
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
             {menuOpen
@@ -100,21 +184,56 @@ const Nav = ({ navigate }: { navigate: ReturnType<typeof useNavigate> }) => {
         </button>
       </div>
 
-      {/* Mobile Menu */}
+      {/* ── Mobile Menu ── */}
       <div className={`lp-mobile-menu${menuOpen ? " open" : ""}`}>
-        {navItems.map((item) => (
-          <a
-            key={item.label}
-            className={`lp-nav-link${item.junior ? " junior" : ""}`}
-            href={item.href}
-            onClick={(e) => handleNav(e, item.href)}
-          >
+
+        {/* Main links */}
+        {mainLinks.map(item => (
+          <button key={item.label} className="lp-nav-link" onClick={() => handleNav(item.href)}>
             {item.label}
-          </a>
+          </button>
         ))}
-        <div className="lp-nav-cta" style={{ marginTop: 12 }}>
-          <button className="lp-btn lp-btn-ghost lp-btn-block" onClick={() => { setMenuOpen(false); navigate("/auth"); }}>Masuk</button>
-          <button className="lp-btn lp-btn-primary lp-btn-block" onClick={() => { setMenuOpen(false); navigate("/auth"); }}>Daftar Gratis</button>
+
+        {/* Solusi accordion */}
+        <div className="lp-mobile-solusi">
+          <button
+            className="lp-mobile-solusi-toggle"
+            onClick={() => setMobileSolusi(v => !v)}
+          >
+            <span>Solusi</span>
+            <svg
+              width="14" height="14" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"
+              style={{ transition: "transform .2s", transform: mobileSolusi ? "rotate(180deg)" : "rotate(0deg)" }}
+            >
+              <path d="M6 9l6 6 6-6"/>
+            </svg>
+          </button>
+          {mobileSolusi && (
+            <div className="lp-mobile-solusi-items">
+              {solusiItems.map(item => (
+                <button key={item.href} className="lp-mobile-solusi-item" onClick={() => handleNav(item.href)}>
+                  <div className="lp-dropdown-icon" style={{ background: item.iconBg, color: item.iconColor, width: 36, height: 36, borderRadius: 10 }}>
+                    {item.icon}
+                  </div>
+                  <div className="lp-dropdown-text">
+                    <span className="lp-dropdown-label">{item.label}</span>
+                    <span className="lp-dropdown-desc">{item.desc}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Mobile CTAs */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 12 }}>
+          <button className="lp-btn lp-btn-ghost lp-btn-block" onClick={() => { setMenuOpen(false); navigate("/auth"); }}>
+            Masuk
+          </button>
+          <button className="lp-btn lp-btn-primary lp-btn-block" onClick={() => { setMenuOpen(false); navigate("/auth"); }}>
+            Daftar Gratis →
+          </button>
         </div>
       </div>
     </nav>
@@ -178,16 +297,8 @@ const Hero = ({ navigate }: { navigate: ReturnType<typeof useNavigate> }) => (
           </svg>
         </div>
 
-        {/* Hero Photo Placeholder */}
-        <div className="lp-hero-photo">
-          <div className="lp-hero-photo-placeholder">
-            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#7FA8FF" strokeWidth="1.5">
-              <rect x="3" y="3" width="18" height="18" rx="3" />
-              <circle cx="8.5" cy="8.5" r="1.5" />
-              <path d="M21 15l-5-5L5 21" />
-            </svg>
-            <p>Hero Image</p>
-          </div>
+        {/* Hero Photo */}
+        <div className="lp-hero-photo" style={{ backgroundImage: "url('/hero-students.png')", backgroundSize: "cover", backgroundPosition: "center" }}>
         </div>
 
         {/* Floating Info Card */}
@@ -663,25 +774,33 @@ const Testimoni = () => {
 
 /* ─── Harga / Pricing ─── */
 const Harga = ({ navigate }: { navigate: ReturnType<typeof useNavigate> }) => {
-  const individualFeatures = [
-    "Tes minat & bakat untuk kenali potensi",
-    "Rekomendasi jalur studi sesuai hasil assestment",
-    "Kursus online dasar untuk mulai belajar skill yang sesuai minatmu",
-    "Progress tracking agar tahu perkembangan diri",
-    "Akses kepada Peluang Mengembangkan diri (Beasiswa, Kompetisi, Karier, dll)",
-    "Akses forum komunitas untuk sharing & belajar bareng",
+  const [annual, setAnnual] = useState(false);
+
+  const freeFeatures = [
+    "Tes minat & bakat RIASEC",
+    "Hasil asesmen singkat",
+    "Rekomendasi karier dasar",
+    "Akses forum komunitas",
+  ];
+  const basicFeatures = [
+    "Semua fitur Gratis",
+    "Laporan asesmen 1x/bulan",
+    "Rekomendasi jalur studi lengkap",
+    "Progress tracking & dashboard",
+    "Akses peluang (beasiswa, karier, kompetisi)",
+    "Kursus online dasar",
+    "Sertifikat digital",
   ];
   const premiumFeatures = [
-    "Semua fitur Individual",
-    "Analisis potensi & skill lebih lengkap",
-    "Konsultasi dengan mentor berpengalaman",
-    "Akses kursus & program premium",
-    "Portofolio builder untuk beasiswa/magang",
-    "Networking dengan profesional & industri",
-    "Akses lengkap kepada Peluang Mengembangkan diri",
-    "Sertifikat & pencatatan skill",
+    "Semua fitur Basic",
+    "Laporan asesmen tak terbatas",
+    "Mentoring 1-on-1 (2x/bulan)",
+    "VOD Bootcamp eksklusif",
+    "Diskon 30% Live Bootcamp",
+    "Portofolio builder premium",
+    "LinkedIn achievement badge",
+    "Komunitas & networking eksklusif",
   ];
-
   return (
     <section id="harga" className="lp-section">
       <div className="lp-section-inner">
@@ -693,24 +812,100 @@ const Harga = ({ navigate }: { navigate: ReturnType<typeof useNavigate> }) => {
             Harga sederhana, dampak luar biasa
           </span>
           <h2>Pilih Paket yang <span className="accent">Tepat</span></h2>
-          <p>Mulai perjalanan penemuan minat dan bakat Anda dengan paket yang sesuai kebutuhan.</p>
+          <p>Mulai gratis, upgrade kapan saja. Bayar bulanan atau tahunan — selalu bisa diubah.</p>
         </div>
 
-        <div className="lp-pricing-grid">
-          {/* Individual */}
+        {/* ── Billing Toggle ── */}
+        <div className="lp-billing-toggle reveal">
+          <div className="lp-billing-pill">
+            <button
+              className={`lp-billing-btn${!annual ? " active" : ""}`}
+              onClick={() => setAnnual(false)}
+            >
+              Bulanan
+            </button>
+            <button
+              className={`lp-billing-btn${annual ? " active" : ""}`}
+              onClick={() => setAnnual(true)}
+            >
+              Tahunan
+              {!annual && <span className="lp-billing-save">Hemat 2 bulan!</span>}
+            </button>
+          </div>
+        </div>
+
+        {/* ── Report One-time Callout ── */}
+        <div className="lp-report-callout reveal">
+          <div className="lp-report-callout-left">
+            <div className="lp-report-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+              </svg>
+            </div>
+            <div>
+              <div style={{ fontFamily: "var(--lp-display)", fontWeight: 700, fontSize: 15, color: "#92400E", marginBottom: 2 }}>
+                📊 Laporan Asesmen Lengkap — Rp 29.000 sekali bayar
+              </div>
+              <div style={{ fontSize: 13, color: "#B45309", lineHeight: 1.5 }}>
+                Tidak ingin berlangganan? Dapatkan laporan mendalam + rekomendasi personal sekali bayar, berlaku selamanya.
+              </div>
+            </div>
+          </div>
+          <button
+            className="lp-btn lp-btn-secondary"
+            style={{ whiteSpace: "nowrap", background: "#fff", borderColor: "#FED7AA", color: "#C2410C", flexShrink: 0 }}
+            onClick={() => navigate("/assessment")}
+          >
+            Beli Laporan →
+          </button>
+        </div>
+
+        {/* ── 4-Column Pricing Grid ── */}
+        <div className="lp-pricing-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)", maxWidth: 1100 }}>
+
+          {/* Free */}
+          <div className="lp-pricing-card free-card reveal">
+            <div className="lp-pc-banner">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              Mulai Gratis
+            </div>
+            <div className="lp-pc-body">
+              <div className="lp-pc-icon">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12l2.5 2.5L16 9"/></svg>
+              </div>
+              <h3 className="lp-pc-tier">Gratis</h3>
+              <div className="lp-pc-price" style={{ fontSize: 28, color: "#64748B" }}>Rp 0<small style={{ fontSize: 13 }}>/selamanya</small></div>
+              <ul className="lp-pc-features">
+                {freeFeatures.map((f) => (
+                  <li key={f}>
+                    <span className="lp-check"><CheckSVG /></span>
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <button className="lp-btn lp-btn-block" style={{ background: "#F1F5FB", color: "#475569", border: "1.5px solid #CBD5E1", fontWeight: 600, borderRadius: 12, padding: "12px 20px", cursor: "pointer", width: "100%" }} onClick={() => navigate("/auth")}>
+                Mulai Gratis
+              </button>
+            </div>
+          </div>
+
+          {/* Basic */}
           <div className="lp-pricing-card reveal">
             <div className="lp-pc-banner">
-              <StarSVG size={14} />
+              <StarSVG size={13} />
               Untuk Pelajar
             </div>
             <div className="lp-pc-body">
               <div className="lp-pc-icon">
-                <StarSVG size={28} />
+                <StarSVG size={26} />
               </div>
-              <h3 className="lp-pc-tier">Individual</h3>
-              <div className="lp-pc-price">Rp 39.000<small>/bulan</small></div>
+              <h3 className="lp-pc-tier">Basic</h3>
+              {annual && <div className="lp-pc-price-old">Rp 468.000/thn</div>}
+              <div className="lp-pc-price">
+                {annual ? <>Rp 390.000<small>/tahun</small></> : <>Rp 39.000<small>/bulan</small></>}
+              </div>
               <ul className="lp-pc-features">
-                {individualFeatures.map((f) => (
+                {basicFeatures.map((f) => (
                   <li key={f}>
                     <span className="lp-check"><CheckSVG /></span>
                     {f}
@@ -718,25 +913,37 @@ const Harga = ({ navigate }: { navigate: ReturnType<typeof useNavigate> }) => {
                 ))}
               </ul>
               <button className="lp-btn lp-btn-secondary lp-btn-block lp-btn-lg" onClick={() => navigate("/subscription")}>
-                Berlangganan Sekarang
+                Berlangganan
               </button>
             </div>
           </div>
 
-          {/* Premium */}
+          {/* Premium — Featured */}
           <div className="lp-pricing-card featured reveal">
             <div className="lp-pc-banner">
-              <StarSVG size={14} />
-              Paling Populer
+              <StarSVG size={13} />
+              🔥 Paling Populer
             </div>
             <div className="lp-pc-body">
               <div className="lp-pc-icon">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M3 18h18M3 18l2-10 5 5 2-7 2 7 5-5 2 10" />
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M5 3l3.057-3 11.943 12-11.943 12-3.057-3 9-9z"/>
                 </svg>
               </div>
               <h3 className="lp-pc-tier">Premium</h3>
-              <div className="lp-pc-price">Rp 99.000<small>/bulan</small></div>
+              {annual && <div className="lp-pc-price-old" style={{ color: "#93C5FD" }}>Rp 1.068.000/thn</div>}
+              <div className="lp-pc-price">
+                {annual
+                  ? <><span style={{ fontSize: 22 }}>Rp 890.000</span><small>/tahun</small></>
+                  : <>Rp 89.000<small>/bulan</small></>}
+              </div>
+              {annual && (
+                <div style={{ textAlign: "center", marginTop: -14, marginBottom: 14 }}>
+                  <span style={{ background: "rgba(255,255,255,.15)", color: "#fff", fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 99 }}>
+                    ✓ Hemat 2 bulan!
+                  </span>
+                </div>
+              )}
               <ul className="lp-pc-features">
                 {premiumFeatures.map((f) => (
                   <li key={f}>
@@ -750,6 +957,21 @@ const Harga = ({ navigate }: { navigate: ReturnType<typeof useNavigate> }) => {
               </button>
             </div>
           </div>
+
+        </div>
+
+        {/* ── Footer note ── */}
+        <div style={{ textAlign: "center", marginTop: 32, fontSize: 13, color: "#94A3B8" }} className="reveal">
+          Semua paket dilengkapi uji coba 7 hari · Batalkan kapan saja · Tidak ada biaya tersembunyi
+        </div>
+        <div style={{ textAlign: "center", marginTop: 14, fontSize: 13 }} className="reveal">
+          <span style={{ color: "#94A3B8" }}>Mewakili sekolah atau institusi? </span>
+          <button
+            onClick={() => navigate("/for-schools")}
+            style={{ background: "none", border: "none", cursor: "pointer", color: "#2563EB", fontWeight: 700, fontSize: 13, padding: 0, textDecoration: "underline" }}
+          >
+            Lihat Paket Sekolah →
+          </button>
         </div>
       </div>
     </section>
@@ -971,15 +1193,15 @@ const Mitra = () => {
             </div>
           </div>
 
-          <button className="lp-btn-wa" onClick={handleWhatsApp}>
-            <span className="lp-wa-icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M20.5 3.5A11 11 0 003 19l-1 5 5-1.3a11 11 0 0013.5-19.2z" />
+          <button className="lp-btn-wa" onClick={() => navigate("/mitra")}>
+            <span className="lp-wa-icon" style={{ background: "rgba(255,255,255,.25)" }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
               </svg>
             </span>
-            Hubungi Kami Sekarang
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M9 18l6-6-6-6" />
+            Daftar Jadi Mitra
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 12h14M13 5l7 7-7 7" />
             </svg>
           </button>
           <div className="lp-privacy-note">
@@ -1009,16 +1231,8 @@ const Mitra = () => {
             </svg>
           ))}
 
-          {/* Photo placeholder */}
-          <div className="lp-mitra-photo">
-            <div style={{ textAlign: "center", color: "#7FA8FF", opacity: .5 }}>
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <rect x="3" y="3" width="18" height="18" rx="3" />
-                <circle cx="8.5" cy="8.5" r="1.5" />
-                <path d="M21 15l-5-5L5 21" />
-              </svg>
-            </div>
-          </div>
+          {/* Mitra Photo */}
+          <div className="lp-mitra-photo" style={{ backgroundImage: "url('/mitra-mentor.png')", backgroundSize: "cover", backgroundPosition: "center top" }} />
 
           {mitraCards.map((card) => (
             <div key={card.title} className={`lp-mitra-card ${card.cls}`}>
@@ -1061,10 +1275,7 @@ const Footer = ({ navigate }: { navigate: ReturnType<typeof useNavigate> }) => (
       {/* Brand + desc + socials */}
       <div>
         <div className="lp-foot-brand">
-          <div className="lp-foot-brand-mark">
-            <StarSVG size={22} />
-            <span className="lp-foot-brand-star">✦</span>
-          </div>
+          <img src="/logo.png" alt="Talentika" className="lp-foot-brand-mark" />
           <div>
             <b>Talentika</b>
             <small>Discover Your Full Potential</small>

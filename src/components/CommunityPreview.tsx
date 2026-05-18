@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Users, MessageCircle, ArrowRight, Check, MessageSquare, Heart } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface CommunityPreviewProps {
   userAssessment?: any;
@@ -245,6 +246,7 @@ function CommCard({
 // ─── Main component ──────────────────────────────────────────────────────────
 const CommunityPreview = ({ userAssessment, userInterests, profile }: CommunityPreviewProps) => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [communities, setCommunities] = useState(FALLBACK_COMMUNITIES);
   const [loading, setLoading]         = useState(true);
   const [page, setPage]               = useState(0);
@@ -349,7 +351,7 @@ const CommunityPreview = ({ userAssessment, userInterests, profile }: CommunityP
       </div>
 
       {/* ── 3-col community cards ──────────────────────────────── */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 18 }}>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 18 }}>
         {visible.map(c => (
           <CommCard
             key={c.id}

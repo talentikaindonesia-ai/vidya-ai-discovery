@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // ─── colour tints map ────────────────────────────────────────────────────────
 const TINTS: Record<string, [string, string]> = {
@@ -326,6 +327,7 @@ const PAGE_SIZE = 5;
 
 export const CoursesSection = () => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   const [enrolledContent,   setEnrolledContent]   = useState<any[]>([]);
   const [personalizedContent, setPersonalizedContent] = useState<any[]>([]);
@@ -450,7 +452,7 @@ export const CoursesSection = () => {
       {/* ── 4-col stat cards ───────────────────────────────────── */}
       <div
         className="grid gap-4 mb-5"
-        style={{ gridTemplateColumns: "repeat(4, 1fr)" }}
+        style={{ gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, 1fr)" }}
       >
         {loading ? (
           Array.from({ length: 4 }).map((_, i) => (
@@ -475,7 +477,7 @@ export const CoursesSection = () => {
       </div>
 
       {/* ── Main 2-col area ────────────────────────────────────── */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 360px", gap: 20 }}>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 360px", gap: 20 }}>
         {/* LEFT: course list */}
         <div
           className="rounded-2xl overflow-hidden"

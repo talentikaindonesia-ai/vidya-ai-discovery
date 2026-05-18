@@ -237,7 +237,7 @@ export const SubscriptionPlan = ({
         </div>
 
         {/* Yearly save badge */}
-        {billingCycle === "yearly" && !isFree && (
+        {billingCycle === "yearly" && !isFree && plan.type !== "school" && (
           <div
             style={{
               display: "inline-flex",
@@ -253,13 +253,24 @@ export const SubscriptionPlan = ({
               fontFamily: "var(--tk-font-display)",
             }}
           >
-            Hemat {savePercent}%
+            🎉 Hemat 2 bulan!
+          </div>
+        )}
+
+        {/* School note: per-school pricing */}
+        {plan.type === "school" && (
+          <div style={{ fontSize: 12, color: theme.accentColor, fontWeight: 600, marginTop: 6, fontFamily: "var(--tk-font-sans)" }}>
+            per sekolah · min. 50 siswa
           </div>
         )}
 
         {/* Users label */}
-        <div style={{ fontSize: 12.5, color: "var(--tk-gray-500)", marginTop: 8, fontFamily: "var(--tk-font-sans)" }}>
-          {plan.max_users > 1 ? `Untuk ${plan.max_users} pengguna` : "Untuk pengguna individu"}
+        <div style={{ fontSize: 12.5, color: "var(--tk-gray-500)", marginTop: plan.type === "school" ? 4 : 8, fontFamily: "var(--tk-font-sans)" }}>
+          {plan.type === "school"
+            ? "Akses penuh untuk seluruh siswa"
+            : plan.max_users > 1
+            ? `Untuk ${plan.max_users} pengguna`
+            : "Untuk pengguna individu"}
         </div>
       </div>
 
@@ -286,42 +297,76 @@ export const SubscriptionPlan = ({
 
       {/* ── CTA button ──────────────────────────────────────────────────── */}
       <div style={{ padding: "0 22px 22px" }}>
-        <button
-          disabled={loading || isCurrentPlan}
-          onClick={() => onSelectPlan(plan.id, billingCycle)}
-          style={{
-            width: "100%",
-            padding: "13px 0",
-            borderRadius: 14,
-            border: "none",
-            cursor: loading || isCurrentPlan ? "not-allowed" : "pointer",
-            background: isCurrentPlan
-              ? "var(--tk-gray-100)"
-              : plan.type === "premium_individual"
-              ? "linear-gradient(135deg, var(--tk-blue-600), var(--tk-orange))"
-              : theme.btnBg,
-            color: isCurrentPlan ? "var(--tk-gray-400)" : "#fff",
-            fontFamily: "var(--tk-font-display)",
-            fontWeight: 700,
-            fontSize: 14.5,
-            opacity: loading ? 0.7 : 1,
-            transition: "opacity .2s, filter .2s",
-            letterSpacing: ".01em",
-          }}
-          onMouseEnter={(e) => {
-            if (!isCurrentPlan && !loading)
+        {plan.type === "school" && !isCurrentPlan ? (
+          /* School plan: WhatsApp contact instead of subscribe flow */
+          <a
+            href="https://wa.me/6282249148433?text=Halo%20Talentika%2C%20saya%20tertarik%20dengan%20Paket%20Sekolah%20untuk%20institusi%20kami"
+            target="_blank"
+            rel="noreferrer"
+            style={{
+              display: "block",
+              width: "100%",
+              padding: "13px 0",
+              borderRadius: 14,
+              border: "none",
+              textAlign: "center",
+              textDecoration: "none",
+              background: theme.btnBg,
+              color: "#fff",
+              fontFamily: "var(--tk-font-display)",
+              fontWeight: 700,
+              fontSize: 14.5,
+              letterSpacing: ".01em",
+              boxSizing: "border-box",
+              transition: "filter .2s",
+            }}
+            onMouseEnter={(e) => {
               (e.currentTarget as HTMLElement).style.filter = "brightness(1.08)";
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLElement).style.filter = "none";
-          }}
-        >
-          {isCurrentPlan
-            ? "✓ Paket Aktif"
-            : isFree
-            ? "Mulai Gratis"
-            : "Berlangganan Sekarang →"}
-        </button>
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLElement).style.filter = "none";
+            }}
+          >
+            💬 Hubungi Kami →
+          </a>
+        ) : (
+          <button
+            disabled={loading || isCurrentPlan}
+            onClick={() => onSelectPlan(plan.id, billingCycle)}
+            style={{
+              width: "100%",
+              padding: "13px 0",
+              borderRadius: 14,
+              border: "none",
+              cursor: loading || isCurrentPlan ? "not-allowed" : "pointer",
+              background: isCurrentPlan
+                ? "var(--tk-gray-100)"
+                : plan.type === "premium_individual"
+                ? "linear-gradient(135deg, var(--tk-blue-600), var(--tk-orange))"
+                : theme.btnBg,
+              color: isCurrentPlan ? "var(--tk-gray-400)" : "#fff",
+              fontFamily: "var(--tk-font-display)",
+              fontWeight: 700,
+              fontSize: 14.5,
+              opacity: loading ? 0.7 : 1,
+              transition: "opacity .2s, filter .2s",
+              letterSpacing: ".01em",
+            }}
+            onMouseEnter={(e) => {
+              if (!isCurrentPlan && !loading)
+                (e.currentTarget as HTMLElement).style.filter = "brightness(1.08)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLElement).style.filter = "none";
+            }}
+          >
+            {isCurrentPlan
+              ? "✓ Paket Aktif"
+              : isFree
+              ? "Mulai Gratis"
+              : "Berlangganan Sekarang →"}
+          </button>
+        )}
       </div>
     </div>
   );

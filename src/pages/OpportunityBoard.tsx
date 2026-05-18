@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Search, MapPin, Trophy, Briefcase, GraduationCap, Building2,
   ExternalLink, Globe, Star, Clock, Gift, Bookmark, ChevronLeft, ChevronRight, Mic, Users,
@@ -104,6 +105,7 @@ function getRecencyBoost(createdAt: string): number {
 // ─── Main component ───────────────────────────────────────────────────────────
 const OpportunityBoard = () => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   // ── State (PRESERVED) ──────────────────────────────────────────────────────
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
@@ -346,7 +348,7 @@ const OpportunityBoard = () => {
 
             {/* ── Loading skeleton ──────────────────────────────────────────── */}
             {loading ? (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 18 }}>
+              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 18 }}>
                 {[...Array(6)].map((_, i) => (
                   <div
                     key={i}
@@ -387,7 +389,7 @@ const OpportunityBoard = () => {
                     Tidak ada peluang yang ditemukan
                   </div>
                 ) : (
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 18 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 18 }}>
                     {pageItems.map((opp) => {
                       const TypeIcon  = TYPE_ICONS[opp.type] ?? GraduationCap;
                       const [gradFrom, gradTo] = GRADIENT_COLORS[opp.type] ?? ["#3B82F6", "#1D4ED8"];

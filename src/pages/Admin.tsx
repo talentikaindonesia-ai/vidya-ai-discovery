@@ -443,7 +443,7 @@ function LearningContentCMS({ categories }: { categories: Category[] }) {
             </button>
             {Array.from({ length: totalPages }, (_, i) => (
               <button key={i} onClick={() => setPage(i)}
-                style={{ width: 32, height: 32, borderRadius: 7, border: "none", background: page === i ? "#2563EB" : "white", color: page === i ? "white" : "#475569", cursor: "pointer", fontSize: 13, fontWeight: 600, border: page === i ? "none" : "1px solid #E2E8F0" } as any}>
+                style={{ width: 32, height: 32, borderRadius: 7, border: page === i ? "none" : "1px solid #E2E8F0", background: page === i ? "#2563EB" : "white", color: page === i ? "white" : "#475569", cursor: "pointer", fontSize: 13, fontWeight: 600 }}>
                 {i + 1}
               </button>
             ))}
@@ -1182,10 +1182,9 @@ function ArticlesCMS() {
 interface Opportunity {
   id: string; title: string; description: string | null;
   category: string; organizer: string | null; location: string | null;
-  is_remote: boolean | null; deadline: string | null;
-  external_url: string | null; image_url: string | null;
-  tags: string[] | null; is_published: boolean | null;
-  is_featured: boolean | null; view_count: number | null;
+  deadline: string | null; url: string | null; poster_url: string | null;
+  tags: string[] | null; is_active: boolean | null;
+  source_website: string; content_type: string;
   created_at: string;
 }
 
@@ -1216,7 +1215,7 @@ function OpportunitiesCMS() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const { data } = await supabase.from("opportunities").select("*").order("created_at", { ascending: false });
+    const { data } = await supabase.from("scraped_content").select("*").order("created_at", { ascending: false });
     setItems(data ?? []);
     setLoading(false);
   }, []);
@@ -1225,7 +1224,7 @@ function OpportunitiesCMS() {
 
   const filtered = items.filter(o => {
     const q = search.toLowerCase();
-    if (q && !o.title.toLowerCase().includes(q) && !(o.organizer ?? "").toLowerCase().includes(q)) return false;
+    if (q && !o.title.toLowerCase().includes(q) && !(o.organizer ?? "").toLowerCase().includes(q) && !(o.source_website ?? "").toLowerCase().includes(q)) return false;
     if (filterCat !== "all" && o.category !== filterCat) return false;
     return true;
   });
@@ -1233,7 +1232,7 @@ function OpportunitiesCMS() {
   const totalPages = Math.ceil(filtered.length / PAGE);
 
   function openCreate() {
-    setEditItem({ title: "", description: "", category: "program", organizer: "", location: "", is_remote: false, is_published: false, is_featured: false, tags: [] });
+    setEditItem({ title: "", description: "", category: "program", organizer: "", location: "", is_active: false, url: "", poster_url: "", tags: [], source_website: "manual", content_type: "program" });
     setTagInput(""); setModal("create");
   }
   function openEdit(o: Opportunity) { setEditItem({ ...o }); setTagInput(""); setModal("edit"); }
@@ -1246,22 +1245,23 @@ function OpportunitiesCMS() {
       title: editItem.title,
       description: editItem.description || null,
       category: editItem.category || "program",
+      content_type: editItem.category || "program",
       organizer: editItem.organizer || null,
       location: editItem.location || null,
-      is_remote: editItem.is_remote ?? false,
       deadline: editItem.deadline || null,
-      external_url: editItem.external_url || null,
-      image_url: editItem.image_url || null,
+      url: editItem.url || "",
+      poster_url: editItem.poster_url || null,
       tags: editItem.tags ?? [],
-      is_published: editItem.is_published ?? false,
-      is_featured: editItem.is_featured ?? false,
+      is_active: editItem.is_active ?? false,
+      is_manual: true,
+      source_website: editItem.source_website || "manual",
     };
     if (modal === "create") {
-      const { error } = await supabase.from("opportunities").insert(payload);
+      const { error } = await supabase.from("scraped_content").insert(payload);
       if (error) { toast.error("Gagal: " + error.message); }
       else { toast.success("Peluang ditambahkan"); close(); load(); }
     } else {
-      const { error } = await supabase.from("opportunities").update(payload).eq("id", editItem.id!);
+      const { error } = await supabase.from("scraped_content").update(payload).eq("id", editItem.id!);
       if (error) { toast.error("Gagal: " + error.message); }
       else { toast.success("Peluang diperbarui"); close(); load(); }
     }
@@ -1271,16 +1271,16 @@ function OpportunitiesCMS() {
   async function deleteItem() {
     if (!delId) return;
     setDeleting(true);
-    await supabase.from("opportunities").delete().eq("id", delId);
+    await supabase.from("scraped_content").delete().eq("id", delId);
     toast.success("Peluang dihapus"); setDelId(null); load();
     setDeleting(false);
   }
 
   async function togglePub(o: Opportunity) {
     setTogglingId(o.id);
-    const is_published = !o.is_published;
-    await supabase.from("opportunities").update({ is_published }).eq("id", o.id);
-    setItems(prev => prev.map(x => x.id === o.id ? { ...x, is_published } : x));
+    const is_active = !o.is_active;
+    await supabase.from("scraped_content").update({ is_active }).eq("id", o.id);
+    setItems(prev => prev.map(x => x.id === o.id ? { ...x, is_active } : x));
     setTogglingId(null);
   }
 
@@ -1325,12 +1325,12 @@ function OpportunitiesCMS() {
             <div key={o.id} style={{ display: "grid", gridTemplateColumns: "1fr 130px 160px 130px 80px 90px", padding: "14px 20px", borderBottom: i < paginated.length - 1 ? "1px solid #F1F5F9" : "none", gap: 12, alignItems: "center" }}>
               <div>
                 <div style={{ fontWeight: 600, fontSize: 13.5, color: "#0F172A", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 280 }}>{cfg.emoji} {o.title}</div>
-                {o.is_remote && <span style={{ fontSize: 10, background: "#ECFDF5", color: "#047857", borderRadius: 4, padding: "1px 6px", fontWeight: 600 }}>Remote</span>}
+                {o.source_website && o.source_website !== "manual" && <span style={{ fontSize: 10, background: "#EEF2FF", color: "#4338CA", borderRadius: 4, padding: "1px 6px", fontWeight: 600 }}>{o.source_website}</span>}
               </div>
               <div><Pill bg={cfg.bg} color={cfg.color}>{cfg.label}</Pill></div>
               <div style={{ fontSize: 12, color: "#64748B", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{o.organizer ?? "—"}</div>
               <div style={{ fontSize: 12, color: expired ? "#DC2626" : "#64748B", fontWeight: expired ? 600 : 400 }}>{deadline}{expired && " ⚠"}</div>
-              <div><Toggle on={!!o.is_published} onToggle={() => togglePub(o)} loading={togglingId === o.id} /></div>
+              <div><Toggle on={!!o.is_active} onToggle={() => togglePub(o)} loading={togglingId === o.id} /></div>
               <div style={{ display: "flex", gap: 6 }}>
                 <button onClick={() => openEdit(o)} style={{ padding: "5px 10px", borderRadius: 7, border: "1px solid #E2E8F0", background: "white", cursor: "pointer", display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "#475569" }}>
                   <Edit2 size={12} /> Edit
@@ -1377,11 +1377,11 @@ function OpportunitiesCMS() {
             <Field label="Deadline" half>
               <input type="datetime-local" value={editItem.deadline ? editItem.deadline.slice(0, 16) : ""} onChange={e => setEditItem(p => ({ ...p, deadline: e.target.value ? new Date(e.target.value).toISOString() : null }))} style={inputStyle} />
             </Field>
-            <Field label="Link Pendaftaran" half>
-              <input value={editItem.external_url ?? ""} onChange={e => setEditItem(p => ({ ...p, external_url: e.target.value }))} placeholder="https://daftarkan.di/sini" style={inputStyle} />
+            <Field label="Link Pendaftaran / URL" half>
+              <input value={editItem.url ?? ""} onChange={e => setEditItem(p => ({ ...p, url: e.target.value }))} placeholder="https://daftarkan.di/sini" style={inputStyle} />
             </Field>
-            <Field label="Image URL" half>
-              <input value={editItem.image_url ?? ""} onChange={e => setEditItem(p => ({ ...p, image_url: e.target.value }))} placeholder="https://..." style={inputStyle} />
+            <Field label="Poster / Image URL" half>
+              <input value={editItem.poster_url ?? ""} onChange={e => setEditItem(p => ({ ...p, poster_url: e.target.value }))} placeholder="https://..." style={inputStyle} />
             </Field>
             <Field label="Tags">
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 6 }}>
@@ -1396,15 +1396,12 @@ function OpportunitiesCMS() {
                 <button onClick={addTag} style={{ padding: "8px 14px", borderRadius: 8, border: "1px solid #E2E8F0", background: "#F8FAFC", cursor: "pointer", fontSize: 13, color: "#475569", fontWeight: 600 }}>+</button>
               </div>
             </Field>
-            <div style={{ gridColumn: "span 2", display: "flex", gap: 24, flexWrap: "wrap" }}>
+            <Field label="Sumber Website" half>
+              <input value={editItem.source_website ?? "manual"} onChange={e => setEditItem(p => ({ ...p, source_website: e.target.value }))} placeholder="manual / kemendikbud.go.id / dll" style={inputStyle} />
+            </Field>
+            <div style={{ gridColumn: "span 2", display: "flex", gap: 24, flexWrap: "wrap", alignItems: "center" }}>
               <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13, fontWeight: 600, color: "#374151" }}>
-                <Toggle on={editItem.is_remote ?? false} onToggle={() => setEditItem(p => ({ ...p, is_remote: !p?.is_remote }))} /> Remote / Online
-              </label>
-              <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13, fontWeight: 600, color: "#374151" }}>
-                <Toggle on={editItem.is_published ?? false} onToggle={() => setEditItem(p => ({ ...p, is_published: !p?.is_published }))} /> Published
-              </label>
-              <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13, fontWeight: 600, color: "#374151" }}>
-                <Toggle on={editItem.is_featured ?? false} onToggle={() => setEditItem(p => ({ ...p, is_featured: !p?.is_featured }))} /> Featured
+                <Toggle on={editItem.is_active ?? false} onToggle={() => setEditItem(p => ({ ...p, is_active: !p?.is_active }))} /> Aktif / Published
               </label>
             </div>
             <div style={{ gridColumn: "span 2", display: "flex", gap: 12, justifyContent: "flex-end", paddingTop: 16, borderTop: "1px solid #F1F5F9" }}>

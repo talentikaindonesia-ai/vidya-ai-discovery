@@ -40,6 +40,9 @@ const MembershipDashboard   = lazy(() => import("./pages/MembershipDashboard"));
 const Settings              = lazy(() => import("./pages/Settings"));
 const Articles              = lazy(() => import("./pages/Articles"));
 const TalentikaForSchools   = lazy(() => import("./pages/TalentikaForSchools"));
+const TentangKami           = lazy(() => import("./pages/TentangKami"));
+const TalentikaMitra        = lazy(() => import("./pages/TalentikaMitra"));
+const SchoolDashboard       = lazy(() => import("./pages/SchoolDashboard"));
 
 // Named-export components wrapped for lazy()
 const ContentDetailView = lazy(() =>
@@ -139,6 +142,9 @@ const App = () => {
             <Route path="/talentika-junior/games" element={user ? <TalentikaJuniorGames /> : <Navigate to="/auth" />} />
             <Route path="/talentika-junior/rewards" element={user ? <TalentikaJuniorRewards /> : <Navigate to="/auth" />} />
             <Route path="/for-schools" element={<TalentikaForSchools />} />
+            <Route path="/tentang-kami" element={<TentangKami />} />
+            <Route path="/mitra" element={<TalentikaMitra />} />
+            <Route path="/school-dashboard" element={user ? <SchoolDashboard /> : <Navigate to="/auth" />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           </Suspense>

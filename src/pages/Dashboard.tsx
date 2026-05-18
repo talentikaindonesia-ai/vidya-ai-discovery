@@ -25,6 +25,7 @@ import { toast } from "sonner";
 import WelcomeNudge from "@/components/WelcomeNudge";
 import { OnboardingChecklist } from "@/components/dashboard/OnboardingChecklist";
 import { ReferralWidget } from "@/components/dashboard/ReferralWidget";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Dashboard = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -37,6 +38,7 @@ const Dashboard = () => {
   const [showSubscription, setShowSubscription] = useState(false);
   const [userInterests, setUserInterests] = useState<any[]>([]);
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     // Load initial session once — no duplicate fetch
@@ -393,7 +395,7 @@ const Dashboard = () => {
         {/* Page content */}
         <main
           className="flex-1 overflow-auto pb-20 md:pb-6 tk-page-in"
-          style={{ padding: "0 28px 60px" }}
+          style={{ padding: isMobile ? "0 12px 80px" : "0 28px 60px" }}
         >
           <div className="max-w-full mx-auto pt-2">
             {renderActiveSection()}

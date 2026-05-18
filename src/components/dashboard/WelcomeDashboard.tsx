@@ -8,6 +8,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface WelcomeDashboardProps {
   user: User | null;
@@ -90,6 +91,7 @@ const CAT_COLORS = ["#1D4ED8","#A47000","#6D28D9","#0F7A3E","#BE185D","#0F766E"]
 
 export const WelcomeDashboard = ({ user, profile }: WelcomeDashboardProps) => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [stats, setStats] = useState({
     coursesEnrolled: 0,
     coursesCompleted: 0,
@@ -188,7 +190,7 @@ export const WelcomeDashboard = ({ user, profile }: WelcomeDashboardProps) => {
       style={{
         paddingTop: 8,
         display: "grid",
-        gridTemplateColumns: "1fr 360px",
+        gridTemplateColumns: isMobile ? "1fr" : "1fr 360px",
         gap: 20,
         alignItems: "start",
       }}
@@ -397,7 +399,7 @@ export const WelcomeDashboard = ({ user, profile }: WelcomeDashboardProps) => {
 
           {stats.coursesEnrolled === 0 && stats.coursesCompleted === 0 && stats.achievements === 0 ? (
             /* ── Empty state: 4 actionable starter cards ── */
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 10 }}>
               {[
                 {
                   emoji: "🧠", label: "Ikuti Assessment",

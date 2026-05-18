@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // ─── RIASEC type definitions ─────────────────────────────────────────────────
 const riasecTypes = {
@@ -183,6 +184,7 @@ const LETTERS = ["A", "B", "C", "D", "E", "F"];
 // ─── Main Component ───────────────────────────────────────────────────────────
 const Assessment = () => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [phase, setPhase] = useState<"intro" | "quiz" | "results">("intro");
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<{ [key: number]: number }>({});
@@ -339,7 +341,7 @@ const Assessment = () => {
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "18px 32px",
+          padding: isMobile ? "14px 16px" : "18px 32px",
           background: "rgba(255,255,255,.85)",
           backdropFilter: "blur(12px)",
           borderBottom: "1px solid var(--tk-gray-200)",
@@ -458,11 +460,11 @@ const Assessment = () => {
           </p>
         </div>
 
-        {/* 6 personality type cards (3×2) */}
+        {/* 6 personality type cards (3×2 desktop, 2×3 mobile) */}
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(3, 1fr)",
+            gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(3, 1fr)",
             gap: 14,
             maxWidth: 780,
             width: "100%",
@@ -806,7 +808,7 @@ const Assessment = () => {
             borderRadius: 28,
             border: "1px solid var(--tk-gray-200)",
             boxShadow: "0 16px 48px rgba(0,0,0,.1)",
-            padding: "44px 40px",
+            padding: isMobile ? "32px 20px" : "44px 40px",
             textAlign: "center",
             marginBottom: 24,
             position: "relative",
@@ -925,7 +927,7 @@ const Assessment = () => {
             background: "white",
             borderRadius: 24,
             border: "1px solid var(--tk-gray-200)",
-            padding: "28px 32px",
+            padding: isMobile ? "20px 16px" : "28px 32px",
             marginBottom: 24,
           }}
         >
@@ -972,7 +974,7 @@ const Assessment = () => {
             background: "white",
             borderRadius: 24,
             border: "1px solid var(--tk-gray-200)",
-            padding: "28px 32px",
+            padding: isMobile ? "20px 16px" : "28px 32px",
             marginBottom: 24,
           }}
         >
@@ -987,7 +989,7 @@ const Assessment = () => {
           >
             Detail Skor RIASEC
           </h3>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(3, 1fr)", gap: 14 }}>
             {(Object.entries(riasecTypes) as [keyof typeof riasecTypes, (typeof riasecTypes)[keyof typeof riasecTypes]][]).map(([key, t]) => {
               const sc = scores[key] || 0;
               const pct = totalScore > 0 ? (sc / totalScore) * 100 : 0;
@@ -1054,7 +1056,7 @@ const Assessment = () => {
             background: "white",
             borderRadius: 24,
             border: "1px solid var(--tk-gray-200)",
-            padding: "28px 32px",
+            padding: isMobile ? "20px 16px" : "28px 32px",
             marginBottom: 32,
           }}
         >
@@ -1077,14 +1079,14 @@ const Assessment = () => {
             Beasiswa, magang &amp; kompetisi yang cocok dengan kepribadianmu
           </p>
           {loadingOpps ? (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 14 }}>
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3,1fr)", gap: 14 }}>
               {[0, 1, 2].map(i => (
                 <div key={i} style={{ height: 130, borderRadius: 14, background: "var(--tk-gray-100)" }} className="animate-pulse" />
               ))}
             </div>
           ) : relatedOpportunities.length > 0 ? (
             <>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 14, marginBottom: 18 }}>
+              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3,1fr)", gap: 14, marginBottom: 18 }}>
                 {relatedOpportunities.map(opp => (
                   <div
                     key={opp.id}
@@ -1256,7 +1258,7 @@ const Assessment = () => {
                 background: "white",
                 borderRadius: 24,
                 border: "1px solid var(--tk-gray-200)",
-                padding: "28px 32px",
+                padding: isMobile ? "20px 16px" : "28px 32px",
                 marginBottom: 32,
               }}
             >
@@ -1278,7 +1280,7 @@ const Assessment = () => {
               <p style={{ color: "var(--tk-gray-500)", fontSize: 13, marginBottom: 20 }}>
                 Mulai belajar sekarang dengan kursus yang dirancang khusus untuk tipe kepribadianmu.
               </p>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14, marginBottom: 18 }}>
+              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 14, marginBottom: 18 }}>
                 {courses.map((course, i) => (
                   <div
                     key={i}
@@ -1371,6 +1373,83 @@ const Assessment = () => {
             </div>
           );
         })()}
+
+        {/* ── Laporan Lengkap CTA ── */}
+        <div
+          style={{
+            background: "linear-gradient(135deg, #FFF7ED 0%, #FFFBEB 50%, #FEF3C7 100%)",
+            border: "2px solid #FED7AA",
+            borderRadius: 24,
+            padding: isMobile ? "24px 20px" : "32px 40px",
+            marginBottom: 28,
+            position: "relative",
+            overflow: "hidden",
+          }}
+        >
+          {/* decorative blob */}
+          <div style={{ position: "absolute", top: -40, right: -40, width: 160, height: 160, borderRadius: "50%", background: "radial-gradient(circle, rgba(251,191,36,.15) 0%, transparent 70%)", pointerEvents: "none" }} />
+
+          <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "flex-start" : "center", gap: 24, position: "relative" }}>
+            {/* Left: icon + copy */}
+            <div style={{ flex: 1 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
+                <div style={{ width: 48, height: 48, borderRadius: 14, background: "linear-gradient(135deg,#F97316,#EA580C)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                  </svg>
+                </div>
+                <div>
+                  <div style={{ fontFamily: "var(--tk-font-display)", fontWeight: 800, fontSize: 17, color: "#92400E", letterSpacing: "-.01em" }}>
+                    Laporan Asesmen Lengkap
+                  </div>
+                  <div style={{ fontSize: 13, color: "#B45309", fontWeight: 600 }}>
+                    Rp 29.000 · bayar sekali, berlaku selamanya
+                  </div>
+                </div>
+              </div>
+              <p style={{ fontSize: 13.5, color: "#92400E", lineHeight: 1.6, margin: 0 }}>
+                Dapatkan analisis mendalam tentang tipe <strong>{personalityData.name}</strong>-mu, jalur karier yang paling tepat, rekomendasi kuliah & jurusan, serta roadmap pengembangan diri — dalam format PDF profesional yang bisa kamu simpan & bagikan.
+              </p>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 14 }}>
+                {["✓ 15+ halaman analisis", "✓ Rekomendasi jurusan", "✓ Roadmap karier", "✓ Format PDF profesional"].map(item => (
+                  <span key={item} style={{ fontSize: 12, fontWeight: 600, color: "#B45309", background: "rgba(251,191,36,.2)", padding: "3px 10px", borderRadius: 99 }}>{item}</span>
+                ))}
+              </div>
+            </div>
+
+            {/* Right: price + CTA */}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: isMobile ? "stretch" : "center", gap: 10, flexShrink: 0, minWidth: isMobile ? undefined : 160 }}>
+              <div style={{ textAlign: "center", fontFamily: "var(--tk-font-display)", fontWeight: 800, fontSize: 26, color: "#C2410C" }}>
+                Rp 29.000
+              </div>
+              <button
+                onClick={() => navigate("/subscription")}
+                style={{
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                  padding: "13px 24px",
+                  borderRadius: 14,
+                  border: "none",
+                  background: "linear-gradient(135deg,#F97316,#EA580C)",
+                  color: "#fff",
+                  fontFamily: "var(--tk-font-display)",
+                  fontWeight: 700,
+                  fontSize: 14,
+                  cursor: "pointer",
+                  boxShadow: "0 8px 20px -4px rgba(234,88,12,.4)",
+                  whiteSpace: "nowrap",
+                }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "linear-gradient(135deg,#EA580C,#C2410C)"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "linear-gradient(135deg,#F97316,#EA580C)"; }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                Beli Laporan
+              </button>
+              <div style={{ textAlign: "center", fontSize: 11, color: "#B45309", fontWeight: 500 }}>
+                Tidak perlu berlangganan
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* CTA: Lihat Dashboard + Retake */}
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}>

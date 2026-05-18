@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Gift, Shield, MapPin, Bookmark, ChevronRight, ChevronLeft, GraduationCap, Trophy, Briefcase, Users, Mic } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // ─── Type badge colours ──────────────────────────────────────────────────────
 const TYPE_COLORS: Record<string, [string, string]> = {
@@ -282,6 +283,7 @@ function OppCard({
 // ─── Main component ──────────────────────────────────────────────────────────
 export const OpportunitiesSection = () => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [tab,     setTab]     = useState("Semua");
   const [focusId, setFocusId] = useState(MOCK_OPPORTUNITIES[0].id);
   const [page,    setPage]    = useState(1);
@@ -334,10 +336,10 @@ export const OpportunitiesSection = () => {
       </div>
 
       {/* ── Category tabs ──────────────────────────────────────── */}
-      <div className="flex justify-center mb-6">
+      <div className="flex justify-center mb-6" style={isMobile ? { overflowX: "auto", justifyContent: "flex-start" } : {}}>
         <div
           className="flex items-center gap-1 rounded-2xl p-1"
-          style={{ background: "var(--tk-gray-100)", border: "1px solid var(--tk-gray-200)" }}
+          style={{ background: "var(--tk-gray-100)", border: "1px solid var(--tk-gray-200)", flexShrink: 0 }}
         >
           {CATS.map(c => {
             const active = c === tab;
@@ -382,7 +384,7 @@ export const OpportunitiesSection = () => {
       </div>
 
       {/* ── 3-col card grid ────────────────────────────────────── */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 18 }}>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 18 }}>
         {pageItems.map(o => (
           <OppCard
             key={o.id}

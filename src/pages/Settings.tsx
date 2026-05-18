@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useUpgradeModal } from "@/contexts/UpgradeModalContext";
 import { supabase } from "@/integrations/supabase/client";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
@@ -264,6 +265,7 @@ const SectionHeading = ({ children }: { children: React.ReactNode }) => (
 const Settings = () => {
   const navigate = useNavigate();
   const { openUpgradeModal } = useUpgradeModal();
+  const isMobile = useIsMobile();
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<any>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
@@ -945,7 +947,7 @@ const Settings = () => {
         {/* Page content */}
         <main
           className="flex-1 overflow-auto pb-20 md:pb-6 tk-page-in"
-          style={{ padding: "28px 28px 60px" }}
+          style={{ padding: isMobile ? "16px 12px 80px" : "28px 28px 60px" }}
         >
           {/* Page title */}
           <div style={{ marginBottom: 24 }}>
@@ -977,22 +979,28 @@ const Settings = () => {
           <div
             style={{
               display: "flex",
+              flexDirection: isMobile ? "column" : "row",
               gap: 0,
               background: "white",
               borderRadius: 16,
               border: "1px solid var(--tk-gray-200)",
               overflow: "hidden",
-              minHeight: 520,
+              minHeight: isMobile ? "auto" : 520,
             }}
           >
             {/* Settings sidebar nav */}
             <nav
               style={{
-                width: 240,
+                width: isMobile ? "100%" : 240,
                 flexShrink: 0,
-                borderRight: "1px solid var(--tk-gray-200)",
+                borderRight: isMobile ? "none" : "1px solid var(--tk-gray-200)",
+                borderBottom: isMobile ? "1px solid var(--tk-gray-200)" : "none",
                 padding: "16px 12px",
                 background: "white",
+                display: "flex",
+                flexDirection: isMobile ? "row" : "column",
+                overflowX: isMobile ? "auto" : "visible",
+                gap: isMobile ? 4 : 0,
               }}
             >
               {navItems.map((item) => {
@@ -1005,8 +1013,9 @@ const Settings = () => {
                       display: "flex",
                       alignItems: "center",
                       gap: 10,
-                      width: "100%",
-                      padding: "10px 12px",
+                      width: isMobile ? "auto" : "100%",
+                      flexShrink: isMobile ? 0 : undefined,
+                      padding: isMobile ? "8px 12px" : "10px 12px",
                       borderRadius: 10,
                       border: "none",
                       background: isActive ? "var(--tk-blue-50)" : "transparent",
@@ -1015,11 +1024,12 @@ const Settings = () => {
                         : "var(--tk-gray-700)",
                       fontFamily: "var(--tk-font-display)",
                       fontWeight: isActive ? 600 : 500,
-                      fontSize: 14,
+                      fontSize: isMobile ? 13 : 14,
                       cursor: "pointer",
-                      marginBottom: 4,
+                      marginBottom: isMobile ? 0 : 4,
                       textAlign: "left",
                       transition: "all 0.15s",
+                      whiteSpace: "nowrap",
                     }}
                   >
                     <span

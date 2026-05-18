@@ -84,6 +84,7 @@ export const SubscriptionManager = ({
       .from("subscription_packages")
       .select("*")
       .eq("is_active", true)
+      .neq("type", "school")
       .order("price_monthly");
 
     if (error) {
@@ -454,7 +455,7 @@ export const SubscriptionManager = ({
                     {cycle === "monthly" ? "Bulanan" : "Tahunan"}
                     {cycle === "yearly" && (
                       <span className="ml-2 text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full">
-                        Hemat ~17%
+                        Hemat 2 bulan!
                       </span>
                     )}
                   </button>
