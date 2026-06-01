@@ -1,5 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+
+interface UserProfile {
+  full_name: string | null;
+  email: string | null;
+  avatar_url: string | null;
+}
 
 const Header = () => {
   const navigate  = useNavigate();
@@ -8,7 +15,10 @@ const Header = () => {
   const [solusiOpen, setSolusiOpen]     = useState(false);
   const [mobileSolusi, setMobileSolusi] = useState(true);
   const [scrolled, setScrolled]         = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [user, setUser]                 = useState<UserProfile | null>(null);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const dropdownRef  = useRef<HTMLDivElement>(null);
+  const userMenuRef  = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -27,7 +37,64 @@ const Header = () => {
   }, []);
 
   // Close mobile menu on route change
-  useEffect(() => { setMenuOpen(false); setSolusiOpen(false); }, [location.pathname]);
+  useEffect(() => { setMenuOpen(false); setSolusiOpen(false); setUserMenuOpen(false); }, [location.pathname]);
+
+  // ── Auth state ─────────────────────────────────────────────────────────────
+  useEffect(() => {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) fetchProfile(session.user.id, session.user.email);
+      else setUser(null);
+    });
+
+    // Listen for auth changes (login / logout)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) fetchProfile(session.user.id, session.user.email);
+      else setUser(null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  async function fetchProfile(uid: string, email?: string | null) {
+    const { data } = await supabase
+      .from("profiles")
+      .select("full_name, avatar_url")
+      .eq("user_id", uid)
+      .maybeSingle();
+    setUser({
+      full_name: data?.full_name ?? null,
+      email: email ?? null,
+      avatar_url: data?.avatar_url ?? null,
+    });
+  }
+
+  // Close user dropdown when clicking outside
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node))
+        setUserMenuOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const handleSignOut = async () => {
+    setUserMenuOpen(false);
+    await supabase.auth.signOut();
+    navigate("/");
+  };
+
+  // Initials from full name or email
+  const initials = (() => {
+    if (user?.full_name) {
+      const parts = user.full_name.trim().split(" ");
+      return parts.length >= 2
+        ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+        : parts[0].slice(0, 2).toUpperCase();
+    }
+    return (user?.email ?? "?").slice(0, 2).toUpperCase();
+  })();
 
   const handleNav = (href: string) => {
     setMenuOpen(false);
@@ -297,13 +364,119 @@ const Header = () => {
 
           {/* ── Desktop CTAs ── */}
           <div style={s.cta} className="hdr-cta">
-            <button className="hdr-ghost" style={s.btnGhost} onClick={() => navigate("/auth")}>Masuk</button>
-            <button className="hdr-primary" style={s.btnPrimary} onClick={() => navigate("/auth")}>
-              Daftar Gratis
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                <path d="M5 12h14M12 5l7 7-7 7"/>
-              </svg>
-            </button>
+            {user ? (
+              /* ── Logged-in: avatar + dropdown ── */
+              <div style={{ position: "relative" }} ref={userMenuRef}>
+                <button
+                  onClick={() => setUserMenuOpen(v => !v)}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 9,
+                    padding: "6px 12px 6px 6px",
+                    borderRadius: 99, border: "1.5px solid #E5E7EB",
+                    background: userMenuOpen ? "#F9FAFB" : "white",
+                    cursor: "pointer", transition: "all .15s",
+                  }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "#2563EB"; }}
+                  onMouseLeave={e => { if (!userMenuOpen) (e.currentTarget as HTMLElement).style.borderColor = "#E5E7EB"; }}
+                >
+                  {/* Avatar */}
+                  {user.avatar_url ? (
+                    <img src={user.avatar_url} alt={user.full_name ?? "Avatar"}
+                      style={{ width: 30, height: 30, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />
+                  ) : (
+                    <div style={{
+                      width: 30, height: 30, borderRadius: "50%",
+                      background: "linear-gradient(135deg,#2563EB,#7C3AED)",
+                      color: "white", display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 11, fontWeight: 800, flexShrink: 0, letterSpacing: ".02em",
+                    }}>
+                      {initials}
+                    </div>
+                  )}
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", lineHeight: 1.2 }}>
+                    <span style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 13, color: "#0B1D3A", maxWidth: 110, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {user.full_name ?? user.email?.split("@")[0] ?? "Pengguna"}
+                    </span>
+                    <span style={{ fontSize: 10.5, color: "#9CA3AF", maxWidth: 110, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {user.email}
+                    </span>
+                  </div>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2.5" strokeLinecap="round"
+                    style={{ transition: "transform .2s", transform: userMenuOpen ? "rotate(180deg)" : "none", marginLeft: 2 }}>
+                    <path d="M6 9l6 6 6-6"/>
+                  </svg>
+                </button>
+
+                {/* User dropdown */}
+                {userMenuOpen && (
+                  <div style={{
+                    position: "absolute", top: "calc(100% + 10px)", right: 0,
+                    minWidth: 220, background: "#fff",
+                    border: "1.5px solid #E5E7EB", borderRadius: 16,
+                    boxShadow: "0 16px 40px -8px rgba(11,29,58,.16)",
+                    padding: 6, zIndex: 200,
+                    animation: "hdr-drop-in .16s cubic-bezier(.22,1,.36,1) both",
+                  }}>
+                    {/* Profile summary */}
+                    <div style={{ padding: "10px 14px 8px", borderBottom: "1px solid #F3F4F6", marginBottom: 4 }}>
+                      <div style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 13, color: "#0B1D3A" }}>
+                        {user.full_name ?? "Pengguna"}
+                      </div>
+                      <div style={{ fontSize: 11.5, color: "#9CA3AF", marginTop: 1 }}>{user.email}</div>
+                    </div>
+
+                    {[
+                      { label: "🏠  Dashboard",    href: "/dashboard" },
+                      { label: "👤  Profil Saya",  href: "/profile" },
+                      { label: "💎  Berlangganan", href: "/subscription" },
+                      { label: "⚙️  Pengaturan",   href: "/settings" },
+                    ].map(({ label, href }) => (
+                      <button key={href}
+                        onClick={() => { setUserMenuOpen(false); navigate(href); }}
+                        style={{
+                          display: "block", width: "100%", textAlign: "left",
+                          padding: "9px 14px", borderRadius: 10, border: "none",
+                          background: "transparent", cursor: "pointer",
+                          fontFamily: "'Poppins',sans-serif", fontSize: 13.5,
+                          fontWeight: 500, color: "#374151", transition: "background .12s",
+                        }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "#F9FAFB"; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+                      >
+                        {label}
+                      </button>
+                    ))}
+
+                    <div style={{ borderTop: "1px solid #F3F4F6", marginTop: 4, paddingTop: 4 }}>
+                      <button onClick={handleSignOut}
+                        style={{
+                          display: "block", width: "100%", textAlign: "left",
+                          padding: "9px 14px", borderRadius: 10, border: "none",
+                          background: "transparent", cursor: "pointer",
+                          fontFamily: "'Poppins',sans-serif", fontSize: 13.5,
+                          fontWeight: 600, color: "#EF4444", transition: "background .12s",
+                        }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "#FEF2F2"; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+                      >
+                        🚪  Keluar
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* ── Guest: login / register buttons ── */
+              <>
+                <button className="hdr-ghost" style={s.btnGhost} onClick={() => navigate("/auth")}>Masuk</button>
+                <button className="hdr-primary" style={s.btnPrimary} onClick={() => navigate("/auth")}>
+                  Daftar Gratis
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                  </svg>
+                </button>
+              </>
+            )}
           </div>
 
           {/* ── Hamburger ── */}
@@ -357,14 +530,56 @@ const Header = () => {
             </div>
 
             {/* Mobile CTAs */}
-            <div style={{ display:"flex", flexDirection:"column", gap:8, marginTop:12 }}>
-              <button style={{ ...s.btnGhost, width:"100%", textAlign:"center" }} onClick={() => { setMenuOpen(false); navigate("/auth"); }}>
-                Masuk
-              </button>
-              <button style={{ ...s.btnPrimary, width:"100%", justifyContent:"center" }} onClick={() => { setMenuOpen(false); navigate("/auth"); }}>
-                Daftar Gratis →
-              </button>
-            </div>
+            {user ? (
+              /* Logged-in mobile: profile block + menu */
+              <div style={{ marginTop: 12, borderTop: "1px solid #F3F4F6", paddingTop: 12, display: "flex", flexDirection: "column", gap: 4 }}>
+                {/* User info chip */}
+                <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", background: "#F9FAFB", borderRadius: 12, marginBottom: 4 }}>
+                  {user.avatar_url ? (
+                    <img src={user.avatar_url} alt="" style={{ width: 36, height: 36, borderRadius: "50%", objectFit: "cover" }} />
+                  ) : (
+                    <div style={{ width: 36, height: 36, borderRadius: "50%", background: "linear-gradient(135deg,#2563EB,#7C3AED)", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 800 }}>
+                      {initials}
+                    </div>
+                  )}
+                  <div>
+                    <div style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 13, color: "#0B1D3A" }}>
+                      {user.full_name ?? user.email?.split("@")[0]}
+                    </div>
+                    <div style={{ fontSize: 11, color: "#9CA3AF" }}>{user.email}</div>
+                  </div>
+                </div>
+                {[
+                  { label: "🏠  Dashboard",    href: "/dashboard" },
+                  { label: "👤  Profil Saya",  href: "/profile" },
+                  { label: "💎  Berlangganan", href: "/subscription" },
+                  { label: "⚙️  Pengaturan",   href: "/settings" },
+                ].map(({ label, href }) => (
+                  <button key={href}
+                    style={{ ...s.link, width: "100%", justifyContent: "flex-start", padding: "11px 14px" }}
+                    onClick={() => { setMenuOpen(false); navigate(href); }}
+                  >
+                    {label}
+                  </button>
+                ))}
+                <button
+                  style={{ ...s.link, width: "100%", justifyContent: "flex-start", padding: "11px 14px", color: "#EF4444", fontWeight: 600 }}
+                  onClick={handleSignOut}
+                >
+                  🚪  Keluar
+                </button>
+              </div>
+            ) : (
+              /* Guest mobile: login / register */
+              <div style={{ display:"flex", flexDirection:"column", gap:8, marginTop:12 }}>
+                <button style={{ ...s.btnGhost, width:"100%", textAlign:"center" }} onClick={() => { setMenuOpen(false); navigate("/auth"); }}>
+                  Masuk
+                </button>
+                <button style={{ ...s.btnPrimary, width:"100%", justifyContent:"center" }} onClick={() => { setMenuOpen(false); navigate("/auth"); }}>
+                  Daftar Gratis →
+                </button>
+              </div>
+            )}
           </div>
         )}
       </nav>
