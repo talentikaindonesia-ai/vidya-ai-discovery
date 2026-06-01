@@ -140,13 +140,16 @@ Deno.serve(async (req) => {
     const fourteenDaysAgo = new Date(now.getTime() - 14 * 86_400_000).toISOString();
     const ninetyDaysAgo   = new Date(now.getTime() - 90 * 86_400_000).toISOString();
 
-    // Free users active in the last 90 days but older than 14 days
+    // Free users active in the last 90 days, older than 14 days,
+    // AND who have NOT been nudged in the last 30 days (suppression check)
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 86_400_000).toISOString();
     const { data: profiles, error } = await supabase
       .from("profiles")
-      .select("user_id, full_name, email, created_at, subscription_status, subscription_type")
+      .select("user_id, full_name, email, created_at, subscription_status, subscription_type, upgrade_nudge_sent_at")
       .in("subscription_status", ["free", "inactive", null as any])
       .lt("created_at", fourteenDaysAgo)   // account older than 14 days
       .gt("updated_at", ninetyDaysAgo)     // still somewhat active
+      .or(`upgrade_nudge_sent_at.is.null,upgrade_nudge_sent_at.lt.${thirtyDaysAgo}`) // suppression
       .limit(100);
 
     if (error) throw error;
@@ -192,6 +195,11 @@ Deno.serve(async (req) => {
 
       if (res.ok) {
         sent++;
+        // ── Suppression: stamp the send time so we don't re-send for 30 days
+        await supabase
+          .from("profiles")
+          .update({ upgrade_nudge_sent_at: now.toISOString() })
+          .eq("user_id", profile.user_id);
       } else {
         const body = await res.text();
         errors.push(`${profile.email}: ${body}`);

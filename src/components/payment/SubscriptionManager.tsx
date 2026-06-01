@@ -31,6 +31,8 @@ import {
   XCircle,
   Calendar,
   RefreshCw,
+  PauseCircle,
+  Tag,
 } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/utils";
 
@@ -56,6 +58,9 @@ export const SubscriptionManager = ({
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
   const [loading, setLoading] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [showChurnFlow, setShowChurnFlow] = useState(false);
+  const [churnReason, setChurnReason] = useState("");
+  const [pausing, setPausing] = useState(false);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [selectedVoucher, setSelectedVoucher] = useState<any>(null);
   const [discount, setDiscount] = useState(0);
@@ -164,19 +169,35 @@ export const SubscriptionManager = ({
         .from("user_subscriptions")
         .update({ status: "cancelled", auto_renew: false })
         .eq("id", currentSubscription.id);
-
       if (error) throw error;
-
-      toast({
-        title: "Berlangganan dibatalkan",
-        description: "Akses premium Anda akan tetap aktif hingga akhir periode berlangganan.",
-      });
+      toast({ title: "Berlangganan dibatalkan", description: "Akses premium tetap aktif hingga akhir periode." });
+      setShowChurnFlow(false);
       loadCurrentSubscription();
       onSubscriptionChange?.();
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } finally {
       setCancelling(false);
+    }
+  };
+
+  const handlePauseSubscription = async () => {
+    if (!currentSubscription) return;
+    setPausing(true);
+    try {
+      const resumeAt = new Date(Date.now() + 30 * 86_400_000).toISOString();
+      const { error } = await supabase
+        .from("user_subscriptions")
+        .update({ paused_at: new Date().toISOString(), resume_at: resumeAt, pause_reason: churnReason })
+        .eq("id", currentSubscription.id);
+      if (error) throw error;
+      toast({ title: "Berlangganan dijeda 30 hari ✅", description: "Akses premium dibekukan sementara. Resume otomatis setelah 30 hari." });
+      setShowChurnFlow(false);
+      loadCurrentSubscription();
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } finally {
+      setPausing(false);
     }
   };
 
@@ -355,36 +376,99 @@ export const SubscriptionManager = ({
               Unduh Invoice
             </Button>
 
-            {/* Cancel — only if active and not already cancelled */}
+            {/* Cancel — opens churn-prevention flow */}
             {!isCancelled && !isExpired && currentSubscription.expires_at && (
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10">
-                    Batalkan Berlangganan
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Batalkan Berlangganan?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Akses premium Anda akan tetap aktif hingga{" "}
-                      <strong>{formatDate(currentSubscription.expires_at)}</strong>.
-                      Setelah itu akun akan beralih ke paket gratis secara otomatis.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Kembali</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={handleCancelSubscription}
-                      className="bg-destructive hover:bg-destructive/90"
-                      disabled={cancelling}
-                    >
-                      {cancelling && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                      Ya, Batalkan
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+              <>
+                <Button
+                  variant="ghost" size="sm"
+                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                  onClick={() => setShowChurnFlow(true)}
+                >
+                  Batalkan Berlangganan
+                </Button>
+
+                {/* ── Churn prevention modal ── */}
+                {showChurnFlow && (
+                  <div style={{
+                    position: "fixed", inset: 0, zIndex: 999,
+                    background: "rgba(0,0,0,0.5)", display: "flex",
+                    alignItems: "center", justifyContent: "center", padding: 16,
+                  }}>
+                    <div style={{
+                      background: "white", borderRadius: 20, padding: "28px 28px 24px",
+                      maxWidth: 440, width: "100%", boxShadow: "0 24px 64px rgba(0,0,0,.2)",
+                    }}>
+                      <div style={{ fontSize: 28, marginBottom: 8, textAlign: "center" }}>😢</div>
+                      <h3 style={{ textAlign: "center", fontWeight: 800, fontSize: 18, color: "#0F172A", marginBottom: 6 }}>
+                        Sayang sekali kamu mau pergi
+                      </h3>
+                      <p style={{ textAlign: "center", fontSize: 13, color: "#64748B", marginBottom: 20 }}>
+                        Sebelum batalkan, boleh kami tahu alasannya?
+                      </p>
+
+                      <select
+                        value={churnReason}
+                        onChange={e => setChurnReason(e.target.value)}
+                        style={{ width: "100%", padding: "10px 14px", borderRadius: 10, border: "1px solid #E2E8F0", fontSize: 13, color: "#0F172A", marginBottom: 16, background: "#F8FAFC" }}
+                      >
+                        <option value="">Pilih alasan...</option>
+                        <option value="too_expensive">Harganya terlalu mahal</option>
+                        <option value="not_using">Jarang digunakan</option>
+                        <option value="found_alternative">Menemukan platform lain</option>
+                        <option value="temporary">Sementara tidak butuh</option>
+                        <option value="other">Alasan lain</option>
+                      </select>
+
+                      {/* Offer 1: Discount if too expensive */}
+                      {churnReason === "too_expensive" && (
+                        <div style={{ background: "#FFFBEB", border: "1px solid #FDE68A", borderRadius: 12, padding: "14px 16px", marginBottom: 14 }}>
+                          <div style={{ fontWeight: 700, color: "#92400E", fontSize: 13, marginBottom: 4 }}>
+                            🎁 Khusus untukmu — diskon 20%
+                          </div>
+                          <div style={{ fontSize: 12.5, color: "#78350F" }}>
+                            Perpanjang sekarang dengan voucher <strong>TETAP20</strong> dan hemat langsung 20% untuk periode berikutnya.
+                          </div>
+                          <Button size="sm" className="mt-3 w-full bg-amber-500 hover:bg-amber-600"
+                            onClick={() => { setShowChurnFlow(false); window.location.href = "/subscription?voucher=TETAP20"; }}>
+                            <Tag className="w-3.5 h-3.5 mr-1" /> Pakai Voucher TETAP20 →
+                          </Button>
+                        </div>
+                      )}
+
+                      {/* Offer 2: Pause if not using / temporary */}
+                      {(churnReason === "not_using" || churnReason === "temporary") && (
+                        <div style={{ background: "#EFF6FF", border: "1px solid #BFDBFE", borderRadius: 12, padding: "14px 16px", marginBottom: 14 }}>
+                          <div style={{ fontWeight: 700, color: "#1E40AF", fontSize: 13, marginBottom: 4 }}>
+                            ⏸ Jeda berlangganan 30 hari — gratis
+                          </div>
+                          <div style={{ fontSize: 12.5, color: "#1E3A8A" }}>
+                            Bekukan akunmu selama 30 hari tanpa biaya. Akses otomatis pulih setelahnya.
+                          </div>
+                          <Button size="sm" className="mt-3 w-full" variant="outline"
+                            disabled={pausing} onClick={handlePauseSubscription}>
+                            {pausing && <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />}
+                            <PauseCircle className="w-3.5 h-3.5 mr-1" /> Jeda 30 Hari
+                          </Button>
+                        </div>
+                      )}
+
+                      <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
+                        <Button variant="outline" size="sm" className="flex-1" onClick={() => setShowChurnFlow(false)}>
+                          Kembali
+                        </Button>
+                        <Button variant="ghost" size="sm"
+                          className="flex-1 text-destructive hover:bg-destructive/10"
+                          disabled={cancelling || !churnReason}
+                          onClick={handleCancelSubscription}
+                        >
+                          {cancelling && <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />}
+                          Tetap Batalkan
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </CardContent>

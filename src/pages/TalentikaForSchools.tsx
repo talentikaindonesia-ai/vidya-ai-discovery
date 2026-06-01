@@ -734,18 +734,27 @@ const TalentikaForSchools = () => {
                       </div>
                     ))}
                   </div>
-                  <div style={{ padding: "0 28px 28px" }}>
+                  <div style={{ padding: "0 28px 28px", display: "flex", flexDirection: "column", gap: 8 }}>
+                    {/* Self-serve: checkout online immediately */}
                     <a
-                      href="https://wa.me/6282249148433?text=Halo%20Talentika%2C%20saya%20tertarik%20dengan%20Paket%20Sekolah%20Rp%207%2C5%20juta%2Ftahun"
-                      target="_blank" rel="noreferrer"
+                      href="/subscription?planId=school&seats=100"
                       style={{ display: "block", textAlign: "center", padding: "13px 0", borderRadius: 14, background: "linear-gradient(135deg, #3B82F6, #1D4ED8)", color: "#fff", fontFamily: "var(--sp-display)", fontWeight: 700, fontSize: 15, textDecoration: "none", boxShadow: "0 8px 20px -4px rgba(29,78,216,.4)", transition: "filter .2s" }}
                       onMouseEnter={e => { (e.currentTarget as HTMLElement).style.filter = "brightness(1.08)"; }}
                       onMouseLeave={e => { (e.currentTarget as HTMLElement).style.filter = "none"; }}
                     >
-                      💬 Hubungi Tim Kami →
+                      🏫 Daftar & Bayar Online →
                     </a>
-                    <div style={{ textAlign: "center", fontSize: 12, color: "#9CA3AF", marginTop: 10 }}>
-                      Harga khusus untuk &gt;200 siswa tersedia
+                    <a
+                      href="https://wa.me/6282249148433?text=Halo%20Talentika%2C%20saya%20tertarik%20dengan%20Paket%20Sekolah%20Rp%207%2C5%20juta%2Ftahun"
+                      target="_blank" rel="noreferrer"
+                      style={{ display: "block", textAlign: "center", padding: "11px 0", borderRadius: 14, background: "white", border: "1.5px solid #BFDBFE", color: "#1D4ED8", fontFamily: "var(--sp-display)", fontWeight: 700, fontSize: 14, textDecoration: "none", transition: "filter .2s" }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.filter = "brightness(0.95)"; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.filter = "none"; }}
+                    >
+                      💬 Konsultasi via WhatsApp
+                    </a>
+                    <div style={{ textAlign: "center", fontSize: 11.5, color: "#9CA3AF" }}>
+                      Invoice NPWP · Dana BOS · &gt;200 siswa harga khusus
                     </div>
                   </div>
                 </div>

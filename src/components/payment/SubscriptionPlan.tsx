@@ -236,24 +236,40 @@ export const SubscriptionPlan = ({
           )}
         </div>
 
-        {/* Yearly save badge */}
-        {billingCycle === "yearly" && !isFree && plan.type !== "school" && (
+        {/* Yearly save badge — shows exact % based on actual plan prices */}
+        {billingCycle === "yearly" && !isFree && plan.type !== "school" && savePercent > 0 && (
+          <div style={{ display: "flex", justifyContent: "center", gap: 6, marginTop: 8 }}>
+            <div
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 4,
+                padding: "3px 12px",
+                borderRadius: 99,
+                background: "#D1FAE5",
+                color: "#065F46",
+                fontSize: 11.5,
+                fontWeight: 800,
+                fontFamily: "var(--tk-font-display)",
+                border: "1px solid #A7F3D0",
+              }}
+            >
+              🎉 Hemat {savePercent}% · Setara 2 bulan gratis
+            </div>
+          </div>
+        )}
+        {/* Monthly billing: show "switch to yearly" teaser */}
+        {billingCycle === "monthly" && !isFree && plan.type !== "school" && savePercent > 0 && (
           <div
             style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 4,
-              marginTop: 8,
-              padding: "3px 10px",
-              borderRadius: 99,
-              background: theme.badgeBg,
-              color: theme.badgeText,
-              fontSize: 11.5,
-              fontWeight: 700,
-              fontFamily: "var(--tk-font-display)",
+              marginTop: 7,
+              fontSize: 11,
+              color: "#059669",
+              fontWeight: 600,
+              fontFamily: "var(--tk-font-sans)",
             }}
           >
-            🎉 Hemat 2 bulan!
+            💡 Pilih Tahunan — hemat {savePercent}%
           </div>
         )}
 

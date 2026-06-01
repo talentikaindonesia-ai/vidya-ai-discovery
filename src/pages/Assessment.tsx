@@ -1217,6 +1217,85 @@ const Assessment = () => {
           )}
         </div>
 
+        {/* ── Premium Report Upsell ────────────────────────────────────────── */}
+        {(() => {
+          const primaryType = getPrimaryRiasecType();
+          const typeInfo = riasecTypes[primaryType];
+          return (
+            <div style={{
+              margin: "0 0 28px",
+              borderRadius: 20,
+              overflow: "hidden",
+              border: "1.5px solid #BFDBFE",
+              background: "linear-gradient(135deg, #EFF6FF 0%, #F0F9FF 50%, #EDE9FE 100%)",
+              position: "relative",
+            }}>
+              {/* Decorative */}
+              <div style={{ position: "absolute", right: -40, top: -40, width: 200, height: 200,
+                borderRadius: "50%", background: "rgba(37,99,235,0.06)", pointerEvents: "none" }} />
+              <div style={{ padding: isMobile ? "22px 20px" : "28px 32px" }}>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 16, flexWrap: "wrap" }}>
+                  <div style={{ flex: 1, minWidth: 240 }}>
+                    <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 12px",
+                      borderRadius: 99, background: "#DBEAFE", color: "#1E40AF",
+                      fontSize: 11, fontWeight: 800, letterSpacing: ".05em", marginBottom: 12 }}>
+                      🔒 LAPORAN PREMIUM
+                    </div>
+                    <h3 style={{ fontFamily: "var(--tk-font-display)", fontWeight: 800, fontSize: isMobile ? 18 : 22,
+                      color: "var(--tk-ink)", margin: "0 0 8px", letterSpacing: "-.01em" }}>
+                      Buka Laporan Karir Lengkap {typeInfo.emoji}
+                    </h3>
+                    <p style={{ fontSize: 13.5, color: "var(--tk-gray-500)", lineHeight: 1.6, margin: "0 0 16px" }}>
+                      Dapatkan analisis mendalam tipe <strong style={{ color: "var(--tk-blue-700)" }}>{typeInfo.name}</strong> kamu:
+                      10 rekomendasi karir spesifik, jalur pendidikan ideal, kekuatan & kelemahan tersembunyi,
+                      dan roadmap pengembangan diri 6 bulan.
+                    </p>
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 18 }}>
+                      {["10+ Rekomendasi Karir", "Analisis Kepribadian Mendalam", "Roadmap 6 Bulan", "PDF Siap Cetak"].map(f => (
+                        <span key={f} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11.5,
+                          fontWeight: 600, color: "#1E40AF", background: "rgba(255,255,255,0.7)",
+                          border: "1px solid #BFDBFE", padding: "3px 10px", borderRadius: 99 }}>
+                          ✓ {f}
+                        </span>
+                      ))}
+                    </div>
+                    <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+                      <button onClick={() => navigate("/subscription")}
+                        style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "12px 24px",
+                          borderRadius: 12, border: "none", cursor: "pointer",
+                          background: "linear-gradient(135deg, #2563EB, #7C3AED)", color: "white",
+                          fontFamily: "var(--tk-font-display)", fontWeight: 700, fontSize: 14,
+                          boxShadow: "0 4px 16px rgba(37,99,235,.35)" }}>
+                        <Sparkles size={16} /> Upgrade & Buka Laporan →
+                      </button>
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 800, color: "#1E40AF" }}>
+                          <span style={{ textDecoration: "line-through", color: "#94A3B8", fontWeight: 400, marginRight: 4 }}>Rp199.000</span>
+                          Rp99.000/bulan
+                        </div>
+                        <div style={{ fontSize: 11, color: "#94A3B8" }}>🛡 Garansi 30 hari · Batalkan kapan saja</div>
+                      </div>
+                    </div>
+                  </div>
+                  {!isMobile && (
+                    <div style={{ flexShrink: 0, width: 140, height: 180, borderRadius: 16, overflow: "hidden",
+                      background: `linear-gradient(135deg, ${typeInfo.gradient})`,
+                      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                      boxShadow: "0 8px 24px rgba(0,0,0,.1)" }}>
+                      <div style={{ fontSize: 52 }}>{typeInfo.emoji}</div>
+                      <div style={{ fontFamily: "var(--tk-font-display)", fontWeight: 800, fontSize: 13,
+                        color: typeInfo.accent, marginTop: 8 }}>{typeInfo.name}</div>
+                      <div style={{ fontSize: 10, color: typeInfo.accent, opacity: .7, marginTop: 2 }}>
+                        Laporan Karir
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
         {/* Recommended courses based on RIASEC type */}
         {(() => {
           const courseMap: Record<string, { emoji: string; title: string; desc: string; tag: string }[]> = {
