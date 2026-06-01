@@ -41,10 +41,10 @@ export default defineConfig(({ mode }) => ({
 
           // Radix UI primitives (shadcn/ui internals)
           if (id.includes('node_modules/@radix-ui')) return 'radix';
-
-          // Recharts — used in Dashboard + PaymentsCMS analytics tab
-          // Consolidate to avoid it being bundled into each lazy chunk that imports it
-          if (id.includes('node_modules/recharts') || id.includes('node_modules/d3-') || id.includes('node_modules/victory-vendor')) return 'charts';
+          // NOTE: recharts / d3-* intentionally NOT in manualChunks.
+          // d3 has internal cross-package imports that break when split from
+          // the lazy chunks that consume them → blank page.  Accept the
+          // larger PaymentsCMS chunk instead.
         },
       },
     },
