@@ -140,19 +140,38 @@ Deno.serve(async (req) => {
     const fourteenDaysAgo = new Date(now.getTime() - 14 * 86_400_000).toISOString();
     const ninetyDaysAgo   = new Date(now.getTime() - 90 * 86_400_000).toISOString();
 
-    // Free users active in the last 90 days, older than 14 days,
-    // AND who have NOT been nudged in the last 30 days (suppression check)
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 86_400_000).toISOString();
-    const { data: profiles, error } = await supabase
+
+    // Try with suppression column first; fall back if the column doesn't exist yet
+    let profiles: any[] | null = null;
+    let queryError: any = null;
+
+    const withSuppression = await supabase
       .from("profiles")
       .select("user_id, full_name, email, created_at, subscription_status, subscription_type, upgrade_nudge_sent_at")
       .in("subscription_status", ["free", "inactive", null as any])
-      .lt("created_at", fourteenDaysAgo)   // account older than 14 days
-      .gt("updated_at", ninetyDaysAgo)     // still somewhat active
-      .or(`upgrade_nudge_sent_at.is.null,upgrade_nudge_sent_at.lt.${thirtyDaysAgo}`) // suppression
+      .lt("created_at", fourteenDaysAgo)
+      .gt("updated_at", ninetyDaysAgo)
+      .or(`upgrade_nudge_sent_at.is.null,upgrade_nudge_sent_at.lt.${thirtyDaysAgo}`)
       .limit(100);
 
-    if (error) throw error;
+    if (withSuppression.error?.message?.includes("does not exist")) {
+      // Migration not yet applied — fall back without suppression column
+      const fallback = await supabase
+        .from("profiles")
+        .select("user_id, full_name, email, created_at, subscription_status, subscription_type")
+        .in("subscription_status", ["free", "inactive", null as any])
+        .lt("created_at", fourteenDaysAgo)
+        .gt("updated_at", ninetyDaysAgo)
+        .limit(100);
+      profiles = fallback.data;
+      queryError = fallback.error;
+    } else {
+      profiles = withSuppression.data;
+      queryError = withSuppression.error;
+    }
+
+    if (queryError) throw queryError;
 
     if (!profiles || profiles.length === 0) {
       return new Response(JSON.stringify({ sent: 0, message: "No eligible users" }), {

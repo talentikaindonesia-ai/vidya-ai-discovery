@@ -281,7 +281,6 @@ export const OpportunitiesSection = () => {
       .from("scraped_content")
       .select("id, title, organizer, location, category, tags, source_website, is_sponsored, sponsor_badge, sponsor_cta")
       .eq("is_active", true)
-      .order("is_sponsored", { ascending: false }) // sponsored items first
       .order("created_at", { ascending: false })
       .limit(60)
       .then(({ data }) => {
@@ -299,6 +298,8 @@ export const OpportunitiesSection = () => {
             sponsorBadge: o.sponsor_badge ?? undefined,
             sponsorCta: o.sponsor_cta ?? undefined,
           }));
+          // Pin sponsored cards first (JS sort — safe even if column doesn't exist yet)
+          mapped.sort((a, b) => (b.isSponsored ? 1 : 0) - (a.isSponsored ? 1 : 0));
           setOpps(mapped);
           setSavedMap(Object.fromEntries(mapped.map(o => [o.id, false])));
           setFocusId(mapped[0]?.id ?? "");
