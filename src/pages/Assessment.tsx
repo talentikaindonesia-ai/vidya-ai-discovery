@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
+import SEO from "@/components/SEO";
 
 // ─── RIASEC type definitions ─────────────────────────────────────────────────
 const riasecTypes = {
@@ -422,6 +423,25 @@ const Assessment = () => {
     const typeEntries = Object.entries(riasecTypes) as [keyof typeof riasecTypes, (typeof riasecTypes)[keyof typeof riasecTypes]][];
     return (
       <PageShell>
+        <SEO
+          title="Tes Minat Bakat RIASEC Gratis — Temukan Karir Idealmu"
+          description="Ikuti tes psikometri RIASEC & Holland Test gratis untuk menemukan minat bakat dan rekomendasi karir yang cocok untukmu. Berbasis riset ilmiah, akurat untuk pelajar & mahasiswa Indonesia."
+          keywords="tes minat bakat, RIASEC test, holland test, tes kepribadian karir, psikometri gratis, minat bakat pelajar, tes karir mahasiswa indonesia"
+          canonical="https://talentika.id/assessment"
+          structuredData={{
+            "@context": "https://schema.org",
+            "@type": "Quiz",
+            "name": "Tes Minat Bakat RIASEC — Talentika",
+            "description": "Tes psikometri berbasis teori RIASEC & Holland untuk menemukan tipe kepribadian karir dan rekomendasi jurusan kuliah yang cocok.",
+            "educationalLevel": "SMA, Mahasiswa",
+            "inLanguage": "id-ID",
+            "url": "https://talentika.id/assessment",
+            "provider": { "@type": "Organization", "name": "Talentika", "url": "https://talentika.id" },
+            "hasPart": [
+              { "@type": "Question", "name": "Apa tipe kepribadian RIASEC saya?", "acceptedAnswer": { "@type": "Answer", "text": "Tes RIASEC mengidentifikasi 6 tipe: Realistic, Investigative, Artistic, Social, Enterprising, Conventional. Hasil menentukan karir yang paling cocok." }}
+            ],
+          }}
+        />
         {/* Hero */}
         <div style={{ textAlign: "center", maxWidth: 620, marginBottom: 40 }}>
           <div

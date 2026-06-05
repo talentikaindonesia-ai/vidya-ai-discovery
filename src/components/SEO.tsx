@@ -1,6 +1,9 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 
+const DOMAIN = 'https://talentika.id';
+const DEFAULT_OG_IMAGE = `${DOMAIN}/logo.png`;
+
 const ROUTE_LABELS: Record<string, string> = {
   articles: "Artikel", dashboard: "Dashboard", learning: "Learning Hub",
   profile: "Profil", assessment: "Assessment", opportunities: "Peluang",
@@ -36,61 +39,87 @@ interface SEOProps {
   description?: string;
   keywords?: string;
   image?: string;
-  type?: string;
+  imageWidth?: number;
+  imageHeight?: number;
+  type?: 'website' | 'article';
   canonical?: string;
+  noindex?: boolean;
   structuredData?: object;
+  /** Article-specific: ISO date string */
+  publishedTime?: string;
+  modifiedTime?: string;
+  author?: string;
 }
 
 const SEO = ({
   title = "Talentika - Temukan Minat & Bakat Mu | Eksplorasi Karir",
-  description = "Platform terlengkap untuk menemukan minat, bakat, dan potensi diri. Tes psikometri RIASEC, Holland Test, MBTI, panduan karir untuk generasi muda Indonesia.",
-  keywords = "tes minat bakat, eksplorasi karir, psikometri online, holland test indonesia, RIASEC test, MBTI indonesia, pelajar, mahasiswa, talent discovery",
-  image = "https://storage.googleapis.com/gpt-engineer-file-uploads/Pr4m0t7zzfYISYtpn8KntqUZdFB3/social-images/social-1759226878798-Talentika.id (1).png",
+  description = "Platform terlengkap untuk menemukan minat, bakat, dan potensi diri. Tes psikometri RIASEC, Holland Test, panduan karir, beasiswa, kompetisi & magang untuk generasi muda Indonesia.",
+  keywords = "tes minat bakat, eksplorasi karir, psikometri online, holland test indonesia, RIASEC test, MBTI indonesia, pelajar, mahasiswa, talent discovery, beasiswa indonesia, magang",
+  image = DEFAULT_OG_IMAGE,
+  imageWidth = 512,
+  imageHeight = 512,
   type = "website",
   canonical,
-  structuredData
+  noindex = false,
+  structuredData,
+  publishedTime,
+  modifiedTime,
+  author = "Tim Talentika",
 }: SEOProps) => {
   const location = useLocation();
-  const currentUrl = `https://talentika.id${location.pathname}`;
+  const currentUrl = `${DOMAIN}${location.pathname}`;
   const canonicalUrl = canonical || currentUrl;
+  const fullTitle = title.includes("Talentika") ? title : `${title} — Talentika`;
 
   useEffect(() => {
-    // Update title
-    document.title = title;
+    document.title = fullTitle;
 
-    // Update or create meta tags
-    const updateMetaTag = (property: string, content: string, isProperty = false) => {
-      const attribute = isProperty ? 'property' : 'name';
-      let element = document.querySelector(`meta[${attribute}="${property}"]`);
-      
-      if (!element) {
-        element = document.createElement('meta');
-        element.setAttribute(attribute, property);
-        document.head.appendChild(element);
+    const setMeta = (attr: string, val: string, key: 'property' | 'name' = 'name') => {
+      let el = document.querySelector(`meta[${key}="${attr}"]`);
+      if (!el) {
+        el = document.createElement('meta');
+        el.setAttribute(key, attr);
+        document.head.appendChild(el);
       }
-      
-      element.setAttribute('content', content);
+      el.setAttribute('content', val);
     };
 
-    // Basic meta tags
-    updateMetaTag('description', description);
-    updateMetaTag('keywords', keywords);
+    // ── Core ──────────────────────────────────────────────────────────
+    setMeta('description', description);
+    setMeta('keywords', keywords);
+    setMeta('robots', noindex ? 'noindex,nofollow' : 'index,follow,max-image-preview:large');
+    setMeta('language', 'Indonesian');
 
-    // Open Graph tags
-    updateMetaTag('og:title', title, true);
-    updateMetaTag('og:description', description, true);
-    updateMetaTag('og:image', image, true);
-    updateMetaTag('og:url', currentUrl, true);
-    updateMetaTag('og:type', type, true);
-    updateMetaTag('og:site_name', 'Talentika', true);
+    // ── Open Graph ────────────────────────────────────────────────────
+    setMeta('og:title',       fullTitle,           'property');
+    setMeta('og:description', description,          'property');
+    setMeta('og:image',       image,                'property');
+    setMeta('og:image:width', String(imageWidth),   'property');
+    setMeta('og:image:height',String(imageHeight),  'property');
+    setMeta('og:image:alt',   fullTitle,            'property');
+    setMeta('og:url',         currentUrl,           'property');
+    setMeta('og:type',        type,                 'property');
+    setMeta('og:site_name',   'Talentika',          'property');
+    setMeta('og:locale',      'id_ID',              'property');
 
-    // Twitter tags
-    updateMetaTag('twitter:title', title);
-    updateMetaTag('twitter:description', description);
-    updateMetaTag('twitter:image', image);
-    updateMetaTag('twitter:card', 'summary_large_image');
+    // Article-specific OG
+    if (type === 'article') {
+      if (publishedTime) setMeta('article:published_time', publishedTime, 'property');
+      if (modifiedTime)  setMeta('article:modified_time',  modifiedTime,  'property');
+      if (author)        setMeta('article:author',         author,        'property');
+      setMeta('article:publisher', 'https://www.facebook.com/talentikaid', 'property');
+    }
 
-    // Update canonical link
+    // ── Twitter / X ───────────────────────────────────────────────────
+    setMeta('twitter:card',        'summary_large_image');
+    setMeta('twitter:site',        '@talentikaid');
+    setMeta('twitter:creator',     '@talentikaid');
+    setMeta('twitter:title',       fullTitle);
+    setMeta('twitter:description', description);
+    setMeta('twitter:image',       image);
+    setMeta('twitter:image:alt',   fullTitle);
+
+    // ── Canonical ─────────────────────────────────────────────────────
     let canonicalLink = document.querySelector('link[rel="canonical"]');
     if (!canonicalLink) {
       canonicalLink = document.createElement('link');
@@ -99,7 +128,21 @@ const SEO = ({
     }
     canonicalLink.setAttribute('href', canonicalUrl);
 
-    // Page-specific structured data
+    // ── Hreflang ─────────────────────────────────────────────────────
+    const ensureHreflang = (lang: string, href: string) => {
+      let el = document.querySelector(`link[rel="alternate"][hreflang="${lang}"]`);
+      if (!el) {
+        el = document.createElement('link');
+        el.setAttribute('rel', 'alternate');
+        el.setAttribute('hreflang', lang);
+        document.head.appendChild(el);
+      }
+      el.setAttribute('href', href);
+    };
+    ensureHreflang('id',        canonicalUrl);
+    ensureHreflang('x-default', canonicalUrl);
+
+    // ── Page-specific structured data ─────────────────────────────────
     if (structuredData) {
       let script = document.querySelector('script[type="application/ld+json"][data-dynamic="page"]');
       if (!script) {
@@ -111,7 +154,7 @@ const SEO = ({
       script.textContent = JSON.stringify(structuredData);
     }
 
-    // BreadcrumbList — always injected, updated on route change
+    // ── BreadcrumbList ────────────────────────────────────────────────
     if (location.pathname !== '/') {
       let bcScript = document.querySelector('script[type="application/ld+json"][data-dynamic="breadcrumb"]');
       if (!bcScript) {
@@ -122,7 +165,7 @@ const SEO = ({
       }
       bcScript.textContent = JSON.stringify(buildBreadcrumb(location.pathname));
     }
-  }, [title, description, keywords, image, type, currentUrl, canonicalUrl, structuredData, location.pathname]);
+  }, [fullTitle, description, keywords, image, imageWidth, imageHeight, type, currentUrl, canonicalUrl, noindex, structuredData, publishedTime, modifiedTime, author, location.pathname]);
 
   return null;
 };

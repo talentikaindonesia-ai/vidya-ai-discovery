@@ -523,11 +523,35 @@ const Articles = () => {
         <SEO
           title={selectedArticle.seo_title || selectedArticle.title}
           description={selectedArticle.seo_description || selectedArticle.excerpt}
-          keywords={(selectedArticle.tags || []).join(", ")}
-          image={selectedArticle.featured_image_url}
+          keywords={[...(selectedArticle.tags || []), selectedArticle.category, "talentika", "artikel karir"].join(", ")}
+          image={selectedArticle.featured_image_url || "https://talentika.id/logo.png"}
+          imageWidth={selectedArticle.featured_image_url ? 1200 : 512}
+          imageHeight={selectedArticle.featured_image_url ? 630 : 512}
           type="article"
           canonical={`https://talentika.id/articles/${selectedArticle.slug}`}
-          structuredData={{ "@context":"https://schema.org","@type":"Article","headline":selectedArticle.title,"description":selectedArticle.excerpt,"image":selectedArticle.featured_image_url,"author":{"@type":"Organization","name":"Tim Talentika"},"publisher":{"@type":"Organization","name":"Talentika","logo":{"@type":"ImageObject","url":"https://talentika.id/logo.png"}},"datePublished":selectedArticle.published_at||selectedArticle.created_at,"dateModified":selectedArticle.created_at,"mainEntityOfPage":{"@type":"WebPage","@id":`https://talentika.id/articles/${selectedArticle.slug}`} }}
+          publishedTime={selectedArticle.published_at || selectedArticle.created_at}
+          modifiedTime={selectedArticle.created_at}
+          author="Tim Talentika"
+          structuredData={{
+            "@context": "https://schema.org",
+            "@type": "Article",
+            "headline": selectedArticle.title,
+            "description": selectedArticle.excerpt,
+            "image": selectedArticle.featured_image_url ? {
+              "@type": "ImageObject",
+              "url": selectedArticle.featured_image_url,
+              "width": 1200, "height": 630
+            } : "https://talentika.id/logo.png",
+            "author": { "@type": "Organization", "name": "Tim Talentika", "url": "https://talentika.id" },
+            "publisher": { "@type": "Organization", "name": "Talentika", "logo": { "@type": "ImageObject", "url": "https://talentika.id/logo.png" } },
+            "datePublished": selectedArticle.published_at || selectedArticle.created_at,
+            "dateModified": selectedArticle.created_at,
+            "mainEntityOfPage": { "@type": "WebPage", "@id": `https://talentika.id/articles/${selectedArticle.slug}` },
+            "inLanguage": "id-ID",
+            "keywords": (selectedArticle.tags || []).join(", "),
+            "articleSection": selectedArticle.category,
+            "wordCount": Math.round((selectedArticle.content?.length || 0) / 5),
+          }}
         />
         <Header />
 

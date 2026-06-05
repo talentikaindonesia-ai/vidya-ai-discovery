@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import SEO from "@/components/SEO";
 import {
   Loader2,
   Eye,
@@ -321,6 +322,8 @@ const Auth = () => {
 
   // ─────────────────────────────────────────────────────────────────────────────
   return (
+    <>
+    <SEO title="Masuk atau Daftar — Talentika" description="Login atau buat akun Talentika gratis." noindex={true} />
     <div
       className="tk-page-in auth-grid"
       style={{
@@ -1302,6 +1305,7 @@ const Auth = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 
