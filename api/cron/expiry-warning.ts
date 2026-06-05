@@ -1,9 +1,8 @@
-import type { VercelRequest, VercelResponse } from "@vercel/node";
 
 const SUPABASE_URL     = process.env.SUPABASE_URL     ?? "https://doogbcrodipaeahgbjuj.supabase.co";
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
 
-export default async function handler(_req: VercelRequest, res: VercelResponse) {
+export default async function handler(_req: Request): Promise<Response> {
   try {
     const r = await fetch(`${SUPABASE_URL}/functions/v1/send-expiry-warning`, {
       method: "POST",
@@ -11,8 +10,8 @@ export default async function handler(_req: VercelRequest, res: VercelResponse) 
       body: "{}",
     });
     const data = await r.json();
-    return res.status(r.ok ? 200 : 500).json(data);
+    return Response.json(data, { status: r.ok ? 200 : 500 });
   } catch (e: any) {
-    return res.status(500).json({ error: e.message });
+    return Response.json({ error: e.message });
   }
 }
