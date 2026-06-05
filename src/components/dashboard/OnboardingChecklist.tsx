@@ -50,16 +50,22 @@ export const OnboardingChecklist = ({ userId, profile }: Props) => {
       { data: assessmentData },
       { data: progressData },
       { data: interestData },
+      { data: articleReadData },
+      { data: xpData },
     ] = await Promise.all([
       supabase.from("assessment_results").select("id").eq("user_id", userId).limit(1),
       supabase.from("learning_progress").select("id").eq("user_id", userId).limit(1),
       supabase.from("user_interests").select("id").eq("user_id", userId).limit(1),
+      supabase.from("article_reads").select("article_id").eq("user_id", userId).limit(1),
+      supabase.from("user_xp").select("current_xp").eq("user_id", userId).maybeSingle(),
     ]);
 
-    const hasBio       = !!(profile?.bio || profile?.description);
+    const hasBio        = !!(profile?.bio || profile?.description || profile?.full_name);
     const hasAssessment = (assessmentData?.length ?? 0) > 0;
     const hasProgress   = (progressData?.length ?? 0) > 0;
     const hasInterests  = (interestData?.length ?? 0) > 0;
+    const hasReadArticle = (articleReadData?.length ?? 0) > 0;
+    const totalXP       = xpData?.current_xp ?? 0;
 
     const built: Step[] = [
       {
@@ -71,6 +77,14 @@ export const OnboardingChecklist = ({ userId, profile }: Props) => {
         href: "/profile",
       },
       {
+        id: "assessment",
+        emoji: "🧠",
+        label: "Ikuti Tes RIASEC",
+        desc: "Temukan tipe kepribadian & karir cocok — dapat 200 XP!",
+        done: hasAssessment,
+        href: "/assessment",
+      },
+      {
         id: "interests",
         emoji: "🎯",
         label: "Pilih Minat",
@@ -79,28 +93,28 @@ export const OnboardingChecklist = ({ userId, profile }: Props) => {
         href: "/settings",
       },
       {
-        id: "bio",
-        emoji: "✍️",
-        label: "Lengkapi Profil",
-        desc: "Tambahkan foto dan bio singkatmu",
-        done: hasBio,
-        href: "/settings",
-      },
-      {
-        id: "assessment",
-        emoji: "🧠",
-        label: "Ikuti Assessment",
-        desc: "Temukan tipe kepribadian dan rekomendasimu",
-        done: hasAssessment,
-        href: "/assessment",
+        id: "article",
+        emoji: "📖",
+        label: "Baca 1 Artikel",
+        desc: "Scroll sampai habis dan dapat 50 XP otomatis",
+        done: hasReadArticle,
+        href: "/articles",
       },
       {
         id: "learning",
         emoji: "📚",
         label: "Mulai Belajar",
-        desc: "Buka kursus pertamamu dan mulai belajar",
+        desc: "Buka konten pembelajaran pertamamu",
         done: hasProgress,
         href: "/learning",
+      },
+      {
+        id: "xp",
+        emoji: "⚡",
+        label: "Kumpulkan 100 XP",
+        desc: `Progress: ${totalXP}/100 XP — login harian, baca artikel, simpan peluang`,
+        done: totalXP >= 100,
+        href: "/dashboard",
       },
     ];
 

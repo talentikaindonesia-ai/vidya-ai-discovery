@@ -8,29 +8,54 @@ const corsHeaders = {
 // RSS feeds and JSON APIs — structured data only, no fragile HTML scraping
 const SOURCES = {
   beasiswa: [
+    // ── International ──────────────────────────────────────────
     { url: 'https://www.scholars4dev.com/feed/', type: 'rss' },
     { url: 'https://opportunitydesk.org/category/scholarships/feed/', type: 'rss' },
     { url: 'https://youthop.com/category/scholarships/feed/', type: 'rss' },
     { url: 'https://worldscholarshipforum.com/feed/', type: 'rss' },
     { url: 'https://scholarshipscorner.website/feed/', type: 'rss' },
+    { url: 'https://scholarships360.org/feed/', type: 'rss' },
+    { url: 'https://www.afterschoolafrica.com/category/scholarships/feed/', type: 'rss' },
+    // ── Indonesia-relevant (English-language coverage) ─────────
+    { url: 'https://www.chevening.org/feed/', type: 'rss' },
+    { url: 'https://www.daad.de/en/rss/scholarships/', type: 'rss' },
+    { url: 'https://opportunitydesk.org/tag/indonesia/feed/', type: 'rss' },
+    { url: 'https://youthop.com/tag/indonesia/feed/', type: 'rss' },
   ],
   magang: [
     { url: 'https://opportunitydesk.org/category/internships/feed/', type: 'rss' },
     { url: 'https://youthop.com/category/internships/feed/', type: 'rss' },
+    { url: 'https://www.afterschoolafrica.com/category/internships/feed/', type: 'rss' },
+    { url: 'https://internships.com/feed/', type: 'rss' },
   ],
   lowongan_kerja: [
     { url: 'https://opportunitydesk.org/category/fellowships/feed/', type: 'rss' },
     { url: 'https://youthop.com/category/opportunities/feed/', type: 'rss' },
+    { url: 'https://www.un.org/en/rss.xml', type: 'rss' },
+    { url: 'https://careers.un.org/lc/en/rss/jobs', type: 'rss' },
   ],
   kompetisi: [
     { url: 'https://devpost.com/hackathons.json?status[]=upcoming&per_page=20', type: 'json_devpost' },
     { url: 'https://opportunitydesk.org/category/competitions/feed/', type: 'rss' },
     { url: 'https://youthop.com/category/competitions/feed/', type: 'rss' },
+    { url: 'https://www.topcoder.com/blog/feed/', type: 'rss' },
+    { url: 'https://challenges.openideo.com/feed.rss', type: 'rss' },
   ],
   konferensi: [
     { url: 'https://opportunitydesk.org/category/conferences/feed/', type: 'rss' },
     { url: 'https://youthop.com/category/events/feed/', type: 'rss' },
     { url: 'https://opportunitydesk.org/category/workshops/feed/', type: 'rss' },
+    { url: 'https://www.ted.com/feeds/talks.rss', type: 'rss' },
+  ],
+  volunteer: [
+    { url: 'https://opportunitydesk.org/category/volunteer/feed/', type: 'rss' },
+    { url: 'https://youthop.com/category/volunteer/feed/', type: 'rss' },
+    { url: 'https://www.goabroad.com/rss/volunteer', type: 'rss' },
+  ],
+  program: [
+    { url: 'https://opportunitydesk.org/category/fellowships/feed/', type: 'rss' },
+    { url: 'https://youthop.com/category/training/feed/', type: 'rss' },
+    { url: 'https://opportunitydesk.org/category/exchange-programs/feed/', type: 'rss' },
   ],
 }
 
@@ -248,7 +273,7 @@ Deno.serve(async (req) => {
       .eq('is_manual', false)
 
     // Step 3: Determine which categories to scrape
-    const ALL_CATEGORIES = ['beasiswa', 'magang', 'lowongan_kerja', 'kompetisi', 'konferensi']
+    const ALL_CATEGORIES = ['beasiswa', 'magang', 'lowongan_kerja', 'kompetisi', 'konferensi', 'volunteer', 'program']
     const categoriesToScrape =
       category === 'ALL'
         ? ALL_CATEGORIES

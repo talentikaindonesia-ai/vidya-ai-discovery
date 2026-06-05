@@ -191,6 +191,40 @@ All colors MUST be HSL.
   --tk-font-mono: 'JetBrains Mono', ui-monospace, monospace;
 }
 
+/* ── Dark mode token overrides ─────────────────────────────────────────────
+   The ThemeProvider adds/removes `.dark` on <html>.
+   Override design tokens so all var(--tk-*) users get dark values for free.
+   ─────────────────────────────────────────────────────────────────────── */
+.dark {
+  --tk-ink:      #F1F5F9;
+  --tk-gray-0:   #0F172A;
+  --tk-gray-50:  #1E293B;
+  --tk-gray-100: #1E293B;
+  --tk-gray-150: #253348;
+  --tk-gray-200: #334155;
+  --tk-gray-300: #475569;
+  --tk-gray-400: #64748B;
+  --tk-gray-500: #94A3B8;
+  --tk-gray-600: #CBD5E1;
+  --tk-gray-700: #E2E8F0;
+  --tk-gray-900: #F8FAFC;
+  --tk-blue-50:  #1D3461;
+  --tk-blue-100: #1E3A8A;
+  --tk-orange-soft: #3a1f10;
+  --tk-yellow-soft: #2d2200;
+  --tk-mint:     #0d2d1e;
+  --tk-lilac:    #2e1a4a;
+  --tk-pink-soft:#2d0f1e;
+  --tk-shadow-sm: 0 1px 2px rgba(0,0,0,.3);
+  --tk-shadow:    0 6px 22px -8px rgba(0,0,0,.4), 0 2px 6px -2px rgba(0,0,0,.3);
+  --tk-shadow-lg: 0 24px 60px -20px rgba(0,0,0,.5), 0 8px 20px -10px rgba(0,0,0,.4);
+  color-scheme: dark;
+}
+
+/* Tailwind base overrides for dark mode */
+.dark body { background-color: #0F172A; color: #F1F5F9; }
+.dark .tk-card { background: #1E293B; border-color: #334155; }
+
 /* Talentika utility classes for dashboard */
 @layer components {
   /* Card */

@@ -12,7 +12,18 @@ export interface SearchResult {
   tags?: string[];
 }
 
-const DEBOUNCE_MS = 300;
+const DEBOUNCE_MS = 400; // increased from 300 → reduces parallel query load
+
+// Simple in-memory rate limiter: max 10 searches per 60 seconds
+const searchTimestamps: number[] = [];
+function isRateLimited(): boolean {
+  const now = Date.now();
+  // Remove entries older than 60s
+  while (searchTimestamps.length && searchTimestamps[0] < now - 60_000) searchTimestamps.shift();
+  if (searchTimestamps.length >= 10) return true;
+  searchTimestamps.push(now);
+  return false;
+}
 
 export function useGlobalSearch(query: string) {
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -25,6 +36,11 @@ export function useGlobalSearch(query: string) {
     if (!query.trim() || query.length < 2) {
       setResults([]);
       setLoading(false);
+      return;
+    }
+
+    if (isRateLimited()) {
+      // Silently drop — user is typing too fast, debounce will catch the final value
       return;
     }
 

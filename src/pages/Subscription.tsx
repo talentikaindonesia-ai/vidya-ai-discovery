@@ -403,6 +403,61 @@ const Subscription = () => {
               ))}
             </div>
           </div>
+          {/* ── Social proof & Testimonials ───────────────────────────── */}
+          <div style={{ marginTop: 32 }}>
+            {/* Stats row */}
+            <div style={{
+              display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 14, marginBottom: 24,
+            }}>
+              {[
+                { emoji: "🧑‍🎓", num: "56+",  label: "Pengguna sudah tes assessment" },
+                { emoji: "🎯",   num: "139+", label: "Peluang aktif tersedia" },
+                { emoji: "📚",   num: "36+",  label: "Konten pembelajaran eksklusif" },
+              ].map(({ emoji, num, label }) => (
+                <div key={label} style={{
+                  background: "white", border: "1px solid var(--tk-gray-200)",
+                  borderRadius: 16, padding: "20px 16px", textAlign: "center",
+                }}>
+                  <div style={{ fontSize: 28, marginBottom: 6 }}>{emoji}</div>
+                  <div style={{ fontFamily: "var(--tk-font-display)", fontWeight: 800, fontSize: 24, color: "var(--tk-blue-600)", letterSpacing: "-.02em" }}>{num}</div>
+                  <div style={{ fontSize: 12, color: "var(--tk-gray-500)", marginTop: 4, lineHeight: 1.4 }}>{label}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Testimonials */}
+            <div style={{ marginBottom: 8 }}>
+              <p style={{ fontFamily: "var(--tk-font-display)", fontWeight: 700, fontSize: 15, color: "var(--tk-ink)", marginBottom: 14 }}>
+                💬 Cerita dari pengguna Talentika
+              </p>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))", gap: 12 }}>
+                {[
+                  { name: "Reza A.", role: "Mahasiswa Teknik, Bandung", text: "Setelah tes RIASEC di Talentika, aku jadi yakin milih jurusan Data Science. Sekarang udah dapat beasiswa S2 juga!", avatar: "RA" },
+                  { name: "Siti N.", role: "Pelajar SMA, Jakarta", text: "Banyak banget info beasiswa yang aku gak tahu sebelumnya. Alhamdulillah dapat beasiswa Kemendikbud dari sini.", avatar: "SN" },
+                  { name: "Dimas P.", role: "Fresh Graduate, Surabaya", text: "Fitur portfolio builder-nya keren banget, langsung bisa share ke recruiter. Worth it banget upgrade premium!", avatar: "DP" },
+                ].map(({ name, role, text, avatar }) => (
+                  <div key={name} style={{
+                    background: "white", border: "1px solid var(--tk-gray-200)",
+                    borderRadius: 16, padding: "18px 20px",
+                  }}>
+                    <div style={{ fontSize: 13, color: "var(--tk-gray-600)", lineHeight: 1.6, marginBottom: 14, fontStyle: "italic" }}>
+                      "{text}"
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <div style={{ width: 36, height: 36, borderRadius: "50%", background: "linear-gradient(135deg,var(--tk-blue-500),var(--tk-purple))", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800, flexShrink: 0 }}>
+                        {avatar}
+                      </div>
+                      <div>
+                        <div style={{ fontWeight: 700, fontSize: 13, color: "var(--tk-ink)" }}>{name}</div>
+                        <div style={{ fontSize: 11.5, color: "var(--tk-gray-500)" }}>{role}</div>
+                      </div>
+                      <div style={{ marginLeft: "auto", color: "#F59E0B", fontSize: 13 }}>★★★★★</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </main>
       </div>
 

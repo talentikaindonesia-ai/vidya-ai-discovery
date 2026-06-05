@@ -26,25 +26,37 @@ serve(async (req) => {
     // ── Verify Mayar callback token ──────────────────────────────────────────
     const callbackToken = req.headers.get("x-callback-token");
     const expectedToken = Deno.env.get("MAYAR_WEBHOOK_TOKEN");
-    if (expectedToken && callbackToken !== expectedToken) {
-      console.warn("Invalid Mayar callback token received");
+
+    if (!expectedToken) {
+      // Token not yet configured — allow through but warn loudly
+      console.warn("⚠️  MAYAR_WEBHOOK_TOKEN not set. Go to: Supabase Dashboard → Edge Functions → Secrets → add MAYAR_WEBHOOK_TOKEN");
+    } else if (callbackToken !== expectedToken) {
+      console.warn("❌ Invalid Mayar token. Received:", callbackToken?.slice(0, 8) ?? "none");
       return new Response("Unauthorized", { status: 401 });
     }
+
+    // Log full payload for debugging
+    const rawBody = await req.text();
+    console.log("📦 Mayar webhook raw payload:", rawBody);
+    let payload: any;
+    try { payload = JSON.parse(rawBody); }
+    catch { console.error("Invalid JSON body"); return new Response("Bad Request", { status: 400 }); }
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    const payload = await req.json();
-    console.log("Mayar webhook received:", JSON.stringify(payload, null, 2));
+    // payload already parsed above
+    console.log("✅ Mayar webhook parsed:", JSON.stringify(payload, null, 2));
 
-    // Mayar webhook fields
+    // Mayar webhook fields — handle both top-level and nested `data` envelope
+    const data = payload?.data ?? payload;
     const {
       id: mayarPaymentId,   // Mayar's payment link ID — our primary match key
       status: mayarStatus,
       amount: paidAmount,
-    } = payload;
+    } = data;
 
     // ── If no payment ID it's a test / ping — accept it ─────────────────────
     if (!mayarPaymentId) {
