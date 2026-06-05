@@ -270,7 +270,10 @@ const Assessment = () => {
         career_recommendations: careerMappings[primaryType] || [],
         talent_areas: [primaryType, ...Object.entries(s).sort(([, a], [, b]) => b - a).slice(1, 3).map(([k]) => k)],
       });
-      if (error) console.error("Error saving assessment results:", error);
+      if (error) { console.error("Error saving assessment results:", error); return; }
+
+      // Award XP for first-time assessment only (idempotent RPC)
+      await supabase.rpc("claim_assessment_xp", { p_user_id: user.id });
     } catch (err) {
       console.error("Error in saveAssessmentResults:", err);
     }

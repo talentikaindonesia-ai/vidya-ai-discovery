@@ -1,7 +1,11 @@
 import { createRoot } from 'react-dom/client'
 import { Component, ErrorInfo, ReactNode } from 'react'
+import { inject } from '@vercel/analytics'
 import App from './App.tsx'
 import './index.css'
+
+// Vercel Analytics — tracks page views + web vitals automatically
+inject();
 
 class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean; error: Error | null }> {
   constructor(props: { children: ReactNode }) {

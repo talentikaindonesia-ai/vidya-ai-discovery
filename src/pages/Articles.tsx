@@ -494,6 +494,30 @@ const Articles = () => {
       }
     };
 
+    // Award XP once per article — fire when user has scrolled past 80% of content
+    useEffect(() => {
+      let awarded = false;
+      const onScroll = async () => {
+        if (awarded) return;
+        const scrolled = window.scrollY + window.innerHeight;
+        const total    = document.documentElement.scrollHeight;
+        if (scrolled / total < 0.8) return;
+        awarded = true;
+        window.removeEventListener("scroll", onScroll);
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        const { data } = await supabase.rpc("mark_article_read", {
+          p_user_id:   user.id,
+          p_article_id: selectedArticle.id,
+        });
+        if (data?.awarded !== false) {
+          toast(`+50 XP — Artikel selesai dibaca 📖`, { duration: 3000 });
+        }
+      };
+      window.addEventListener("scroll", onScroll, { passive: true });
+      return () => window.removeEventListener("scroll", onScroll);
+    }, [selectedArticle.id]);
+
     return (
       <div className="min-h-screen bg-background">
         <SEO

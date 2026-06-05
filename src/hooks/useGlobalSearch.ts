@@ -36,31 +36,41 @@ export function useGlobalSearch(query: string) {
         const like = `%${q}%`;
 
         // Run three searches in parallel
-        const [{ data: articles }, { data: opps }, { data: learning }] = await Promise.all([
+        // Try full-text search first; fall back to ilike if search_vec doesn't exist
+        const ftsQuery = q.split(/\s+/).filter(Boolean).join(' | ');
+
+        const [{ data: articles, error: artErr }, { data: opps, error: oppErr }, { data: learning, error: lrnErr }] = await Promise.all([
           supabase
             .from("articles")
             .select("id, title, excerpt, category, slug")
             .eq("is_published", true)
-            .or(`title.ilike.${like},excerpt.ilike.${like}`)
+            .textSearch("search_vec", ftsQuery, { type: "websearch", config: "indonesian" })
             .limit(4),
 
           supabase
             .from("scraped_content")
             .select("id, title, description, category, url, tags")
             .eq("is_active", true)
-            .or(`title.ilike.${like},description.ilike.${like}`)
+            .textSearch("search_vec", ftsQuery, { type: "websearch", config: "indonesian" })
             .limit(4),
 
           supabase
             .from("learning_content")
             .select("id, title, description, content_type")
             .eq("is_active", true)
-            .or(`title.ilike.${like},description.ilike.${like}`)
+            .textSearch("search_vec", ftsQuery, { type: "websearch", config: "indonesian" })
             .limit(3),
         ]);
 
+        // Fallback: if FTS fails (column not yet available), retry with ilike
+        const [artData, oppData, lrnData] = await Promise.all([
+          artErr ? supabase.from("articles").select("id, title, excerpt, category, slug").eq("is_published", true).or(`title.ilike.${like},excerpt.ilike.${like}`).limit(4).then(r => r.data) : Promise.resolve(articles),
+          oppErr ? supabase.from("scraped_content").select("id, title, description, category, url, tags").eq("is_active", true).or(`title.ilike.${like},description.ilike.${like}`).limit(4).then(r => r.data) : Promise.resolve(opps),
+          lrnErr ? supabase.from("learning_content").select("id, title, description, content_type").eq("is_active", true).or(`title.ilike.${like},description.ilike.${like}`).limit(3).then(r => r.data) : Promise.resolve(learning),
+        ]);
+
         const mapped: SearchResult[] = [
-          ...(articles || []).map((a) => ({
+          ...(artData || []).map((a) => ({
             id: a.id,
             title: a.title,
             description: a.excerpt ?? undefined,
@@ -69,7 +79,7 @@ export function useGlobalSearch(query: string) {
             path: `/articles/${a.slug}`,
             category: a.category ?? undefined,
           })),
-          ...(opps || []).map((o) => ({
+          ...(oppData || []).map((o) => ({
             id: o.id,
             title: o.title,
             description: o.description ?? undefined,
@@ -78,7 +88,7 @@ export function useGlobalSearch(query: string) {
             category: o.category,
             tags: o.tags ?? undefined,
           })),
-          ...(learning || []).map((l) => ({
+          ...(lrnData || []).map((l) => ({
             id: l.id,
             title: l.title,
             description: l.description ?? undefined,

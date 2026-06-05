@@ -69,6 +69,13 @@ const Dashboard = () => {
 
   const loadUserData = async (userId: string) => {
     try {
+      // Award daily login XP (idempotent — safe to call every load)
+      supabase.rpc('claim_daily_login_xp', { p_user_id: userId }).then(({ data }) => {
+        if (data && data.awarded !== false) {
+          toast(`+25 XP — Login harian 🌟`, { duration: 3000 });
+        }
+      });
+
       // Run all 4 queries in parallel — no waterfall
       const [
         { data: profileData,   error: profileError },

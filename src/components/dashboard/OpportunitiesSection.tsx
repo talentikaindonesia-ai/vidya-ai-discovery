@@ -3,6 +3,7 @@ import { Gift, Shield, MapPin, Bookmark, ChevronRight, ChevronLeft, GraduationCa
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { toast } from "sonner";
 
 // ─── Type badge colours ──────────────────────────────────────────────────────
 const TYPE_COLORS: Record<string, [string, string]> = {
@@ -322,7 +323,24 @@ export const OpportunitiesSection = () => {
   const pageItems  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const handleTab = (t: string) => { setTab(t); setPage(1); };
-  const toggleSave = (id: string) => setSavedMap(m => ({ ...m, [id]: !m[id] }));
+  const toggleSave = async (id: string) => {
+    const willSave = !savedMap[id];
+    setSavedMap(m => ({ ...m, [id]: willSave }));
+    // Award XP on first save (idempotent via award_xp)
+    if (willSave) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data } = await supabase.rpc('award_xp', {
+          p_user_id: user.id, p_amount: 10, p_reason: 'Peluang disimpan 🔖',
+        });
+        if (data?.leveled_up) {
+          toast(`🎉 Level Up! Kamu mencapai Level ${data.current_level}!`, { duration: 5000 });
+        } else if (data) {
+          toast(`+10 XP — Peluang disimpan 🔖`, { duration: 2500 });
+        }
+      }
+    }
+  };
 
   return (
     <div className="tk-page-in" style={{ paddingTop: 8 }}>

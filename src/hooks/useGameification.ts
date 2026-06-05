@@ -90,34 +90,36 @@ export const useGameification = () => {
       const userId = userIdRef.current;
       if (!userId) return;
 
-      const newXP = userXP.current_xp + amount;
-      const newLevel = Math.floor(newXP / 1000) + 1; // 1000 XP per level
-      const levelUp = newLevel > userXP.current_level;
-
-      const { data, error } = await supabase
-        .from('user_xp')
-        .update({
-          current_xp: newXP,
-          current_level: newLevel,
-          total_xp_earned: userXP.total_xp_earned + amount
-        })
-        .eq('user_id', userId)
-        .select()
-        .single();
+      // Use atomic DB RPC — eliminates race condition from read-modify-write
+      const { data, error } = await supabase.rpc('award_xp', {
+        p_user_id: userId,
+        p_amount:  amount,
+        p_reason:  reason,
+      });
 
       if (error) throw error;
 
-      setUserXP(data);
+      const result = data as {
+        current_xp: number; current_level: number;
+        leveled_up: boolean; amount: number;
+      };
+
+      setUserXP(prev => ({
+        ...prev,
+        current_xp:      result.current_xp,
+        current_level:   result.current_level,
+        total_xp_earned: prev.total_xp_earned + amount,
+      }));
 
       sonnerToast(`+${amount} XP`, { description: reason, duration: 3000 });
-      if (levelUp) {
+      if (result.leveled_up) {
         sonnerToast('🎉 Level Up!', {
-          description: `Selamat! Kamu mencapai level ${newLevel}!`,
+          description: `Selamat! Kamu mencapai Level ${result.current_level}!`,
           duration: 5000,
         });
       }
 
-      return { levelUp, newLevel };
+      return { levelUp: result.leveled_up, newLevel: result.current_level };
     } catch (error) {
       console.error('Error awarding XP:', error);
       return null;
