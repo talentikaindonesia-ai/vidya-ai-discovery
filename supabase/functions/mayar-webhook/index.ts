@@ -52,32 +52,48 @@ serve(async (req) => {
 
     // Mayar webhook fields — handle both top-level and nested `data` envelope
     const data = payload?.data ?? payload;
+    // Mayar sends event-level `id` at top level and payment `id` inside `data`
     const {
-      id: mayarPaymentId,   // Mayar's payment link ID — our primary match key
+      id: mayarPaymentId,   // payment link ID (inside data envelope)
       status: mayarStatus,
       amount: paidAmount,
+      referenceNo,          // maps to our invoice_number — fallback match key
     } = data;
 
     // ── If no payment ID it's a test / ping — accept it ─────────────────────
-    if (!mayarPaymentId) {
-      console.log("No payment ID in payload — treating as test ping, returning 200");
+    if (!mayarPaymentId && !referenceNo) {
+      console.log("No payment ID or referenceNo — treating as test ping");
       return new Response("OK", { headers: corsHeaders, status: 200 });
     }
 
     const newStatus = mapMayarStatus(mayarStatus);
-    console.log(`Mayar payment ${mayarPaymentId}: status ${mayarStatus} -> ${newStatus}`);
+    console.log(`Mayar: id=${mayarPaymentId} ref=${referenceNo} status=${mayarStatus} → ${newStatus}`);
 
-    // ── Find our transaction by external_transaction_id = Mayar payment ID ───
-    // (we stored this via update_transaction_status after creating the Mayar link)
-    const { data: tx, error: findError } = await supabase
-      .from("payment_transactions")
-      .select("*")
-      .eq("external_transaction_id", mayarPaymentId)
-      .maybeSingle();
+    // ── Find transaction: try external_transaction_id first, fallback to invoice_number ──
+    let tx: any = null;
 
-    if (findError || !tx) {
-      // For test calls Mayar sends a dummy payment ID that won't match — that's OK
-      console.log("Transaction not found for Mayar payment ID:", mayarPaymentId, "— may be a test event");
+    if (mayarPaymentId) {
+      const { data: byId } = await supabase
+        .from("payment_transactions")
+        .select("*")
+        .eq("external_transaction_id", mayarPaymentId)
+        .maybeSingle();
+      tx = byId;
+    }
+
+    // Fallback: match by referenceNo → invoice_number (Mayar may use event id at top level)
+    if (!tx && referenceNo) {
+      console.log("Falling back to referenceNo match:", referenceNo);
+      const { data: byRef } = await supabase
+        .from("payment_transactions")
+        .select("*")
+        .eq("invoice_number", referenceNo)
+        .maybeSingle();
+      tx = byRef;
+    }
+
+    if (!tx) {
+      console.log("⚠️  Transaction not found for id:", mayarPaymentId, "ref:", referenceNo, "— test event or mismatch");
       return new Response("OK", { headers: corsHeaders, status: 200 });
     }
 

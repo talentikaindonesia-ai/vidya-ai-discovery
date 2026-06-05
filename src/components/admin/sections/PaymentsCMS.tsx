@@ -83,6 +83,33 @@ export default function PaymentsCMS() {
 
   async function refresh() { setRefreshing(true); await loadAll(); setRefreshing(false); }
 
+  // Sync all pending transactions with Mayar API
+  const [syncing, setSyncing] = useState(false);
+  async function syncMayar() {
+    setSyncing(true);
+    const pending = txs.filter(t => t.status === "pending");
+    let updated = 0;
+    for (const tx of pending) {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const res = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL ?? "https://doogbcrodipaeahgbjuj.supabase.co"}/functions/v1/check-mayar-payment`,
+          {
+            method: "POST",
+            headers: { Authorization: `Bearer ${session?.access_token}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ invoiceNumber: tx.invoice_number }),
+          }
+        );
+        const result = await res.json();
+        if (result.newStatus && result.newStatus !== result.previousStatus) updated++;
+      } catch { /* continue */ }
+      await new Promise(r => setTimeout(r, 200)); // avoid rate limiting
+    }
+    toast.success(`Sync selesai — ${updated} transaksi diperbarui`, { duration: 4000 });
+    setSyncing(false);
+    loadAll();
+  }
+
   function openCreatePkg() {
     setPkgEdit({ name: "", type: "premium", price_monthly: 0, price_yearly: 0, features: [], max_users: 1, is_active: true });
     setFeatInput(""); setPkgModal("create");
@@ -212,9 +239,15 @@ export default function PaymentsCMS() {
             <Icon size={14} /> {label}
           </button>
         ))}
-        <button onClick={refresh} disabled={refreshing} style={{ marginLeft: 8, padding: "8px 12px", borderRadius: 9, border: "none", cursor: "pointer", background: "transparent", color: "#94A3B8", display: "flex", alignItems: "center" }}>
+        <button onClick={refresh} disabled={refreshing} style={{ marginLeft: 8, padding: "8px 12px", borderRadius: 9, border: "none", cursor: "pointer", background: "transparent", color: "#94A3B8", display: "flex", alignItems: "center" }} title="Refresh data">
           <RefreshCw size={14} style={{ animation: refreshing ? "spin 1s linear infinite" : "none" }} />
         </button>
+        {txs.some(t => t.status === "pending") && (
+          <button onClick={syncMayar} disabled={syncing} style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 9, border: "1px solid #FDE68A", background: syncing ? "#FEF9C3" : "#FFFBEB", cursor: syncing ? "not-allowed" : "pointer", fontSize: 12.5, fontWeight: 700, color: "#92400E" }}>
+            {syncing ? <Loader2 size={13} className="animate-spin" /> : <RefreshCw size={13} />}
+            {syncing ? "Syncing..." : `Sync Mayar (${txs.filter(t => t.status === "pending").length} pending)`}
+          </button>
+        )}
       </div>
 
       {loading ? (
