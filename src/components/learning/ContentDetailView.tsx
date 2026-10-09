@@ -27,6 +27,8 @@ import {
   ExternalLink
 } from "lucide-react";
 import { toast } from "sonner";
+import { useSubscription } from "@/hooks/useSubscription";
+import { UpgradeGate } from "@/components/payment/UpgradeGate";
 
 interface LearningContent {
   id: string;
@@ -48,6 +50,7 @@ interface LearningContent {
   average_rating: number;
   is_active: boolean;
   created_at: string;
+  learning_objectives?: string[] | null;
   learning_categories?: {
     name: string;
     icon: string;
@@ -69,6 +72,10 @@ export const ContentDetailView = () => {
   const [progress, setProgress] = useState<ContentProgress | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  // Free tier: first 3 contents (by started progress) are the free allocation.
+  // New content beyond that shows the premium gate. Already-started stays open.
+  const [freeQuotaExceeded, setFreeQuotaExceeded] = useState(false);
+  const sub = useSubscription();
   const [activeTab, setActiveTab] = useState("overview");
   const [activeSection, setActiveSection] = useState("courses");
 
@@ -126,6 +133,18 @@ export const ContentDetailView = () => {
           .single();
 
         setProgress(progressData);
+
+        // Free quota check: this content is NEW to the user and they already
+        // used their 3 free slots → gate it (premium check happens at render)
+        if (!progressData) {
+          const { count } = await supabase
+            .from('learning_progress')
+            .select('content_id', { count: 'exact', head: true })
+            .eq('user_id', user.id);
+          setFreeQuotaExceeded((count ?? 0) >= 3);
+        } else {
+          setFreeQuotaExceeded(false);
+        }
       }
     } catch (error: any) {
       toast.error("Gagal memuat detail konten: " + error.message);
@@ -239,6 +258,43 @@ export const ContentDetailView = () => {
             Kembali ke Learning Hub
           </Button>
         </div>
+      </div>
+    );
+  }
+
+  // ── Premium gate: free users get 3 contents; new content beyond that is locked ──
+  if (freeQuotaExceeded && !sub.loading && sub.isFree && !isAdmin) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-6 max-w-3xl">
+          <Button
+            variant="ghost"
+            onClick={() => navigate('/learning')}
+            className="flex items-center gap-2 mb-6"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Kembali ke Learning Hub
+          </Button>
+
+          <UpgradeGate
+            feature="Kamu sudah memakai 3 konten gratis. Upgrade Premium untuk akses semua konten pembelajaran tanpa batas + sertifikat."
+            fromPath={`/learning/content/${contentId}`}
+          >
+            {/* Blurred preview of the locked content */}
+            <Card>
+              <CardContent className="p-6">
+                <div className="aspect-video bg-muted rounded-lg mb-4 overflow-hidden">
+                  {content.thumbnail_url && (
+                    <img src={content.thumbnail_url} alt={content.title} className="w-full h-full object-cover" />
+                  )}
+                </div>
+                <h1 className="text-2xl font-bold mb-2">{content.title}</h1>
+                <p className="text-muted-foreground">{content.description}</p>
+              </CardContent>
+            </Card>
+          </UpgradeGate>
+        </div>
+        <BottomNavigationBar />
       </div>
     );
   }
@@ -399,6 +455,14 @@ export const ContentDetailView = () => {
           </CardContent>
         </Card>
 
+        {/* Quiz card — shown when the content has quiz questions attached */}
+        {contentId && <ContentQuizCard contentId={contentId} progressStatus={progress?.status ?? null} onPassed={loadContentDetails} />}
+
+        {/* Rating card — only for users who have started this content */}
+        {contentId && progress && (
+          <ContentRatingCard contentId={contentId} onRated={loadContentDetails} />
+        )}
+
         {/* Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-4">
@@ -417,7 +481,21 @@ export const ContentDetailView = () => {
                   </CardHeader>
                   <CardContent>
                     <p className="text-muted-foreground mb-4">{content.description}</p>
-                    
+
+                    {(content.learning_objectives?.length ?? 0) > 0 && (
+                      <div className="mb-4">
+                        <h4 className="font-semibold mb-2">Yang akan kamu pelajari:</h4>
+                        <ul className="space-y-1.5">
+                          {content.learning_objectives!.map((o, i) => (
+                            <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
+                              <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                              <span>{o}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
                     {(content.tags?.length ?? 0) > 0 && (
                       <div>
                         <h4 className="font-semibold mb-2">Tags:</h4>
@@ -560,3 +638,230 @@ export const ContentDetailView = () => {
     </SidebarProvider>
   );
 };
+
+// ─── ContentQuizCard: student-facing quiz (server-graded via submit_content_quiz) ───
+function ContentQuizCard({ contentId, progressStatus, onPassed }: {
+  contentId: string;
+  progressStatus: string | null;
+  onPassed: () => void;
+}) {
+  const [questions, setQuestions] = useState<{ id: string; question: string; options: string[] | null }[]>([]);
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [result, setResult] = useState<{
+    score: number; correct: number; total: number; passed: boolean;
+    results: { question_id: string; correct: boolean; correct_answer: string; explanation: string | null }[];
+  } | null>(null);
+  const [open, setOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    (supabase.rpc as any)("get_content_quiz", { p_content_id: contentId }).then(({ data }: any) => {
+      setQuestions(Array.isArray(data) ? data : []);
+    });
+  }, [contentId]);
+
+  if (questions.length === 0) return null;
+
+  const submit = async () => {
+    if (Object.keys(answers).length < questions.length) {
+      toast.error("Jawab semua pertanyaan dulu ya");
+      return;
+    }
+    setSubmitting(true);
+    const { data, error } = await (supabase.rpc as any)("submit_content_quiz", {
+      p_content_id: contentId,
+      p_answers: answers,
+    });
+    setSubmitting(false);
+    if (error) { toast.error(error.message); return; }
+    setResult(data);
+    if (data?.passed) {
+      toast.success(`🎉 Lulus dengan skor ${data.score}%! Konten ditandai selesai.`);
+      onPassed();
+    } else {
+      toast.error(`Skor ${data?.score}% — belum lulus (minimal 70%). Coba lagi!`);
+    }
+  };
+
+  const retry = () => { setResult(null); setAnswers({}); };
+  const resultFor = (qid: string) => result?.results.find(r => r.question_id === qid);
+
+  return (
+    <Card className="mb-6 border-purple-200">
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div>
+            <h3 className="text-lg font-bold flex items-center gap-2">
+              📝 Kuis Pemahaman
+              {progressStatus === "completed" && <Badge className="bg-green-100 text-green-700">Selesai ✓</Badge>}
+            </h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              {questions.length} soal · lulus ≥70% otomatis menandai konten selesai
+            </p>
+          </div>
+          {!open && (
+            <Button onClick={() => setOpen(true)} className="bg-purple-600 hover:bg-purple-700">
+              {progressStatus === "completed" ? "Kerjakan Lagi" : "Kerjakan Kuis"}
+            </Button>
+          )}
+        </div>
+
+        {open && (
+          <div className="mt-5 space-y-5">
+            {questions.map((q, i) => {
+              const res = resultFor(q.id);
+              return (
+                <div key={q.id} className="border rounded-xl p-4">
+                  <div className="font-semibold text-sm mb-3">{i + 1}. {q.question}</div>
+                  <div className="grid gap-2">
+                    {(q.options ?? []).map(opt => {
+                      const chosen = answers[q.id] === opt;
+                      const showCorrect = result && res && opt === res.correct_answer;
+                      const showWrong = result && chosen && !res?.correct;
+                      return (
+                        <button
+                          key={opt}
+                          disabled={!!result}
+                          onClick={() => setAnswers(prev => ({ ...prev, [q.id]: opt }))}
+                          className={`text-left text-sm px-4 py-2.5 rounded-lg border transition-colors ${
+                            showCorrect ? "bg-green-50 border-green-400 text-green-800 font-semibold"
+                            : showWrong ? "bg-red-50 border-red-300 text-red-700"
+                            : chosen ? "bg-blue-50 border-blue-400 text-blue-800 font-semibold"
+                            : "bg-background hover:bg-muted border-border"
+                          }`}
+                        >
+                          {showCorrect ? "✓ " : showWrong ? "✗ " : ""}{opt}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {result && res?.explanation && (
+                    <div className="mt-3 text-xs text-muted-foreground bg-muted rounded-lg px-3 py-2">
+                      💡 {res.explanation}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+
+            {!result ? (
+              <Button onClick={submit} disabled={submitting} className="w-full bg-purple-600 hover:bg-purple-700" size="lg">
+                {submitting ? "Menilai…" : "Kumpulkan Jawaban"}
+              </Button>
+            ) : (
+              <div className={`rounded-xl p-4 text-center ${result.passed ? "bg-green-50 border border-green-200" : "bg-amber-50 border border-amber-200"}`}>
+                <div className="text-3xl font-extrabold" style={{ color: result.passed ? "#059669" : "#B45309" }}>
+                  {result.score}%
+                </div>
+                <div className="text-sm mt-1 text-muted-foreground">
+                  {result.correct}/{result.total} benar · {result.passed ? "🎉 Lulus! Konten ditandai selesai." : "Belum lulus — minimal 70%."}
+                </div>
+                {!result.passed && (
+                  <Button onClick={retry} variant="outline" className="mt-3">Coba Lagi</Button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// ─── ContentRatingCard: star rating + optional review (server-side rate_content) ───
+function ContentRatingCard({ contentId, onRated }: { contentId: string; onRated: () => void }) {
+  const [rating, setRating] = useState(0);
+  const [hover, setHover] = useState(0);
+  const [review, setReview] = useState("");
+  const [saved, setSaved] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase
+        .from("content_ratings")
+        .select("rating, review")
+        .eq("content_id", contentId)
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (active && data) {
+        setRating(data.rating);
+        setReview(data.review ?? "");
+        setSaved(true);
+      }
+    })();
+    return () => { active = false; };
+  }, [contentId]);
+
+  const submit = async () => {
+    if (rating < 1) { toast.error("Pilih bintang dulu ya"); return; }
+    setSubmitting(true);
+    const { error } = await (supabase.rpc as any)("rate_content", {
+      p_content_id: contentId,
+      p_rating: rating,
+      p_review: review.trim() || null,
+    });
+    setSubmitting(false);
+    if (error) { toast.error(error.message); return; }
+    setSaved(true);
+    toast.success("Terima kasih atas penilaianmu! ⭐");
+    onRated();
+  };
+
+  return (
+    <Card className="mb-6 border-amber-200">
+      <CardContent className="p-6">
+        <h3 className="text-lg font-bold flex items-center gap-2">
+          ⭐ Beri Penilaian
+          {saved && <Badge className="bg-green-100 text-green-700">Tersimpan ✓</Badge>}
+        </h3>
+        <p className="text-sm text-muted-foreground mt-1">
+          Seberapa bermanfaat konten ini untukmu?
+        </p>
+
+        <div className="flex items-center gap-1.5 mt-4">
+          {[1, 2, 3, 4, 5].map(n => (
+            <button
+              key={n}
+              type="button"
+              onMouseEnter={() => setHover(n)}
+              onMouseLeave={() => setHover(0)}
+              onClick={() => setRating(n)}
+              className="transition-transform hover:scale-110"
+              aria-label={`Beri ${n} bintang`}
+            >
+              <Star
+                className="w-8 h-8"
+                style={{
+                  fill: (hover || rating) >= n ? "#FBBF24" : "transparent",
+                  color: (hover || rating) >= n ? "#FBBF24" : "#D1D5DB",
+                }}
+              />
+            </button>
+          ))}
+          {rating > 0 && <span className="ml-2 text-sm font-semibold text-amber-600">{rating}/5</span>}
+        </div>
+
+        <textarea
+          value={review}
+          onChange={e => setReview(e.target.value)}
+          placeholder="Tulis ulasan singkat (opsional)…"
+          rows={3}
+          maxLength={500}
+          className="mt-4 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-amber-300"
+        />
+
+        <Button
+          onClick={submit}
+          disabled={submitting}
+          className="mt-3 bg-amber-500 hover:bg-amber-600"
+        >
+          {submitting ? "Menyimpan…" : saved ? "Perbarui Penilaian" : "Kirim Penilaian"}
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}

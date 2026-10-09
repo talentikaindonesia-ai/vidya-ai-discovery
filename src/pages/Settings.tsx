@@ -18,7 +18,14 @@ import {
   Globe,
   Diamond,
   Check,
+  Loader2,
+  Eye,
+  EyeOff,
+  X,
+  Download,
 } from "lucide-react";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { useTheme } from "@/contexts/ThemeContext";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -36,7 +43,19 @@ interface ProfileData {
   phone: string | null;
   date_of_birth: string | null;
   avatar_url: string | null;
+  bio: string | null;
 }
+
+interface NotifPrefs {
+  kursus: boolean;
+  komunitas: boolean;
+  marketing: boolean;
+  channel_email: boolean;
+  channel_push: boolean;
+}
+const DEFAULT_NOTIF_PREFS: NotifPrefs = {
+  kursus: true, komunitas: true, marketing: false, channel_email: true, channel_push: false,
+};
 
 // ── Toggle component ──────────────────────────────────────────────────────────
 
@@ -260,12 +279,45 @@ const SectionHeading = ({ children }: { children: React.ReactNode }) => (
   </h2>
 );
 
+// ── PWA Push Subscription Row ────────────────────────────────────────────────
+const PushSubscriptionRow = ({ userId }: { userId?: string }) => {
+  const { permission, isSubscribed, isLoading, subscribe, unsubscribe } = usePushNotifications(userId);
+
+  if (permission === "unsupported") return null;
+
+  return (
+    <div style={{ marginTop: 16, padding: "14px 18px", borderRadius: 14, border: "1.5px solid var(--tk-blue-200)", background: "var(--tk-blue-50)", display: "flex", alignItems: "center", gap: 12 }}>
+      <Bell size={18} style={{ color: "var(--tk-blue-600)", flexShrink: 0 }} />
+      <div style={{ flex: 1 }}>
+        <div style={{ fontFamily: "var(--tk-font-display)", fontWeight: 700, fontSize: 14, color: "var(--tk-ink)" }}>Notifikasi Browser (PWA)</div>
+        <div style={{ fontSize: 12, color: "var(--tk-gray-500)" }}>
+          {permission === "denied" ? "Notifikasi diblokir. Aktifkan di pengaturan browser." :
+            isSubscribed ? "✅ Aktif — kamu akan menerima notifikasi dari Talentika" :
+              "Aktifkan untuk menerima pengingat dan update peluang"}
+        </div>
+      </div>
+      {permission !== "denied" && (
+        <button
+          onClick={isSubscribed ? unsubscribe : subscribe}
+          disabled={isLoading}
+          style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 10, border: "none", background: isSubscribed ? "var(--tk-gray-200)" : "var(--tk-blue-600)", color: isSubscribed ? "var(--tk-gray-600)" : "white", fontFamily: "var(--tk-font-display)", fontWeight: 700, fontSize: 13, cursor: isLoading ? "not-allowed" : "pointer", flexShrink: 0 }}
+        >
+          {isLoading ? <Loader2 size={13} style={{ animation: "spin .8s linear infinite" }} /> : null}
+          {isSubscribed ? "Nonaktifkan" : "Aktifkan"}
+        </button>
+      )}
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+    </div>
+  );
+};
+
 // ── Main Settings component ───────────────────────────────────────────────────
 
 const Settings = () => {
   const navigate = useNavigate();
   const { openUpgradeModal } = useUpgradeModal();
   const isMobile = useIsMobile();
+  const { themeMode, setThemeMode } = useTheme();
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<any>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
@@ -280,25 +332,20 @@ const Settings = () => {
     phone: "",
     date_of_birth: "",
     avatar_url: null,
+    bio: "",
   });
   const [saving, setSaving] = useState(false);
 
-  // Notifikasi toggles
-  const [notifKursus, setNotifKursus] = useState(true);
-  const [notifKomunitas, setNotifKomunitas] = useState(true);
-  const [notifMarketing, setNotifMarketing] = useState(false);
-  const [channelEmail, setChannelEmail] = useState(true);
-  const [channelPush, setChannelPush] = useState(false);
+  // Notifikasi — persisted in profiles.notif_prefs (jsonb), was pure local state before
+  const [notifPrefs, setNotifPrefs] = useState<NotifPrefs>(DEFAULT_NOTIF_PREFS);
+  const [notifSavingKey, setNotifSavingKey] = useState<string | null>(null);
 
-  // Keamanan toggles
-  const [twoFA, setTwoFA] = useState(false);
-  const [loginAlert, setLoginAlert] = useState(true);
+  // Keamanan
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
 
-  // Tampilan
-  const [theme, setTheme] = useState<"terang" | "gelap" | "sistem">("sistem");
-
-  // Bahasa
-  const [bahasa, setBahasa] = useState("Bahasa Indonesia");
+  // Bahasa — persisted in profiles.language_preference; only "id" is functional today
+  const [bahasa, setBahasa] = useState("id");
+  const [exportingData, setExportingData] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -342,7 +389,10 @@ const Settings = () => {
         phone: profileData?.phone || "",
         date_of_birth: profileData?.date_of_birth || "",
         avatar_url: profileData?.avatar_url || null,
+        bio: profileData?.bio || "",
       });
+      setNotifPrefs({ ...DEFAULT_NOTIF_PREFS, ...(profileData?.notif_prefs ?? {}) });
+      setBahasa(profileData?.language_preference || "id");
     } catch (err) {
       console.error("Error loading settings data:", err);
     } finally {
@@ -370,6 +420,7 @@ const Settings = () => {
           full_name: form.full_name,
           phone: form.phone,
           date_of_birth: form.date_of_birth || null,
+          bio: form.bio || null,
         })
         .eq("user_id", user.id);
 
@@ -391,8 +442,65 @@ const Settings = () => {
       phone: profile?.phone || "",
       date_of_birth: profile?.date_of_birth || "",
       avatar_url: profile?.avatar_url || null,
+      bio: profile?.bio || "",
     });
     setEditMode(false);
+  };
+
+  // Each notification toggle persists immediately — no separate "save" step needed
+  const persistNotifPref = async (key: keyof NotifPrefs, value: boolean) => {
+    if (!user) return;
+    const next = { ...notifPrefs, [key]: value };
+    setNotifPrefs(next);
+    setNotifSavingKey(key);
+    const { error } = await supabase.from("profiles").update({ notif_prefs: next }).eq("user_id", user.id);
+    setNotifSavingKey(null);
+    if (error) {
+      toast.error("Gagal menyimpan preferensi: " + error.message);
+      setNotifPrefs(notifPrefs); // revert on failure
+    }
+  };
+
+  const persistLanguage = async (lang: string) => {
+    if (!user) return;
+    setBahasa(lang);
+    const { error } = await supabase.from("profiles").update({ language_preference: lang }).eq("user_id", user.id);
+    if (error) toast.error("Gagal menyimpan bahasa: " + error.message);
+  };
+
+  const handleExportData = async () => {
+    if (!user) return;
+    setExportingData(true);
+    try {
+      const [assessments, progress, certs, bookings, applications] = await Promise.all([
+        supabase.from("assessment_results").select("*").eq("user_id", user.id),
+        supabase.from("learning_progress").select("*").eq("user_id", user.id),
+        supabase.from("certificates").select("*").eq("user_id", user.id),
+        supabase.from("mentor_bookings").select("*").eq("user_id", user.id),
+        supabase.from("saved_opportunities").select("*").eq("user_id", user.id),
+      ]);
+      const payload = {
+        exported_at: new Date().toISOString(),
+        profile,
+        assessment_results: assessments.data ?? [],
+        learning_progress: progress.data ?? [],
+        certificates: certs.data ?? [],
+        mentor_bookings: bookings.data ?? [],
+        saved_opportunities: applications.data ?? [],
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `talentika-data-${user.id.slice(0, 8)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Data kamu berhasil diunduh!");
+    } catch (err: any) {
+      toast.error("Gagal mengunduh data: " + err.message);
+    } finally {
+      setExportingData(false);
+    }
   };
 
   const getInitials = (name: string) =>
@@ -479,6 +587,20 @@ const Settings = () => {
             onChange={(v) => setForm((f) => ({ ...f, date_of_birth: v }))}
             type="date"
           />
+          <div style={{ marginBottom: 18 }}>
+            <div style={{ fontFamily: "var(--tk-font-display)", fontWeight: 600, fontSize: 12, color: "var(--tk-gray-600)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+              Bio
+            </div>
+            <textarea
+              value={form.bio || ""}
+              onChange={(e) => setForm((f) => ({ ...f, bio: e.target.value }))}
+              placeholder="Ceritakan sedikit tentang dirimu..."
+              rows={3}
+              maxLength={280}
+              style={{ width: "100%", border: "1px solid var(--tk-gray-200)", borderRadius: 10, padding: "10px 14px", fontSize: 14, fontFamily: "var(--tk-font-sans)", color: "var(--tk-ink)", background: "white", outline: "none", boxSizing: "border-box", resize: "vertical" }}
+            />
+            <div style={{ fontSize: 11, color: "var(--tk-gray-400)", marginTop: 4, textAlign: "right" }}>{(form.bio || "").length}/280</div>
+          </div>
           <div style={{ display: "flex", gap: 12, marginTop: 8 }}>
             <button
               onClick={handleSaveProfile}
@@ -537,6 +659,12 @@ const Settings = () => {
             actionLabel={profile?.date_of_birth ? "Ubah" : "Tambah"}
             onAction={() => setEditMode(true)}
           />
+          <FieldDisplay
+            label="Bio"
+            value={profile?.bio || ""}
+            actionLabel={profile?.bio ? "Ubah" : "Tambah"}
+            onAction={() => setEditMode(true)}
+          />
           <button
             onClick={() => setEditMode(true)}
             style={{
@@ -568,22 +696,43 @@ const Settings = () => {
         label="Password"
         value="••••••••••••"
         actionLabel="Ubah"
-        onAction={() => toast.info("Fitur ubah password segera hadir!")}
+        onAction={() => setShowPasswordModal(true)}
       />
 
-      <div style={{ marginTop: 8 }}>
-        <ToggleRow
-          label="Autentikasi 2 Faktor"
-          desc="Tambah lapisan keamanan dengan verifikasi tambahan"
-          on={twoFA}
-          onChange={setTwoFA}
-        />
-        <ToggleRow
-          label="Login Alert"
-          desc="Dapatkan notifikasi saat ada login dari perangkat baru"
-          on={loginAlert}
-          onChange={setLoginAlert}
-        />
+      <div style={{ marginTop: 8, marginBottom: 28 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, padding: "14px 0", borderBottom: "1px solid var(--tk-gray-100)" }}>
+          <div>
+            <div style={{ fontFamily: "var(--tk-font-display)", fontWeight: 600, fontSize: 14, color: "var(--tk-ink)" }}>Autentikasi 2 Faktor</div>
+            <div style={{ fontSize: 13, color: "var(--tk-gray-500)", marginTop: 2 }}>Tambah lapisan keamanan dengan verifikasi tambahan</div>
+          </div>
+          <span style={{ fontSize: 11, fontWeight: 700, color: "var(--tk-gray-500)", background: "var(--tk-gray-100)", padding: "5px 10px", borderRadius: 99, whiteSpace: "nowrap" }}>Segera Hadir</span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, padding: "14px 0", borderBottom: "1px solid var(--tk-gray-100)" }}>
+          <div>
+            <div style={{ fontFamily: "var(--tk-font-display)", fontWeight: 600, fontSize: 14, color: "var(--tk-ink)" }}>Login Alert</div>
+            <div style={{ fontSize: 13, color: "var(--tk-gray-500)", marginTop: 2 }}>Notifikasi saat ada login dari perangkat baru</div>
+          </div>
+          <span style={{ fontSize: 11, fontWeight: 700, color: "var(--tk-gray-500)", background: "var(--tk-gray-100)", padding: "5px 10px", borderRadius: 99, whiteSpace: "nowrap" }}>Segera Hadir</span>
+        </div>
+      </div>
+
+      {/* Privasi & Data */}
+      <div style={{ fontFamily: "var(--tk-font-mono)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--tk-gray-400)", marginBottom: 12 }}>
+        Privasi & Data
+      </div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, padding: "14px 0" }}>
+        <div>
+          <div style={{ fontFamily: "var(--tk-font-display)", fontWeight: 600, fontSize: 14, color: "var(--tk-ink)" }}>Unduh Data Pribadi</div>
+          <div style={{ fontSize: 13, color: "var(--tk-gray-500)", marginTop: 2 }}>Ekspor semua data kamu (profil, progres, sertifikat, dll) sebagai file JSON</div>
+        </div>
+        <button
+          onClick={handleExportData}
+          disabled={exportingData}
+          style={{ display: "flex", alignItems: "center", gap: 7, flexShrink: 0, padding: "10px 16px", borderRadius: 10, border: "1px solid var(--tk-gray-200)", background: "white", fontFamily: "var(--tk-font-display)", fontWeight: 600, fontSize: 13, color: "var(--tk-blue-600)", cursor: exportingData ? "wait" : "pointer" }}
+        >
+          {exportingData ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
+          {exportingData ? "Menyiapkan..." : "Unduh"}
+        </button>
       </div>
     </div>
   );
@@ -594,20 +743,20 @@ const Settings = () => {
       <ToggleRow
         label="Pengingat Kursus"
         desc="Reminder harian agar konsisten belajar"
-        on={notifKursus}
-        onChange={setNotifKursus}
+        on={notifPrefs.kursus}
+        onChange={(v) => persistNotifPref("kursus", v)}
       />
       <ToggleRow
         label="Aktivitas Komunitas"
         desc="Diskusi & balasan dari komunitas yang kamu ikuti"
-        on={notifKomunitas}
-        onChange={setNotifKomunitas}
+        on={notifPrefs.komunitas}
+        onChange={(v) => persistNotifPref("komunitas", v)}
       />
       <ToggleRow
         label="Email Marketing"
         desc="Tips, peluang, dan promosi terkurasi"
-        on={notifMarketing}
-        onChange={setNotifMarketing}
+        on={notifPrefs.marketing}
+        onChange={(v) => persistNotifPref("marketing", v)}
       />
 
       <div
@@ -624,21 +773,29 @@ const Settings = () => {
       >
         Channel
       </div>
-      <ToggleRow label="Email" on={channelEmail} onChange={setChannelEmail} />
+      <ToggleRow label="Email" on={notifPrefs.channel_email} onChange={(v) => persistNotifPref("channel_email", v)} />
       <ToggleRow
         label="Push Notification"
-        on={channelPush}
-        onChange={setChannelPush}
+        on={notifPrefs.channel_push}
+        onChange={(v) => persistNotifPref("channel_push", v)}
       />
+      {notifSavingKey && (
+        <div style={{ fontSize: 11.5, color: "var(--tk-gray-400)", marginTop: 6, display: "flex", alignItems: "center", gap: 5 }}>
+          <Loader2 size={11} className="animate-spin" /> Menyimpan...
+        </div>
+      )}
+
+      {/* PWA Push Subscription */}
+      <PushSubscriptionRow userId={user?.id} />
     </div>
   );
 
   const renderTampilan = () => {
-    const themeOptions: { key: "terang" | "gelap" | "sistem"; label: string }[] =
+    const themeOptions: { key: "light" | "dark" | "system"; label: string }[] =
       [
-        { key: "terang", label: "Terang" },
-        { key: "gelap", label: "Gelap" },
-        { key: "sistem", label: "Sistem" },
+        { key: "light", label: "Terang" },
+        { key: "dark", label: "Gelap" },
+        { key: "system", label: "Sistem" },
       ];
 
     return (
@@ -655,20 +812,20 @@ const Settings = () => {
           {themeOptions.map((opt) => (
             <button
               key={opt.key}
-              onClick={() => setTheme(opt.key)}
+              onClick={() => setThemeMode(opt.key)}
               style={{
                 padding: "18px 12px",
                 borderRadius: 12,
                 border:
-                  theme === opt.key
+                  themeMode === opt.key
                     ? "2px solid var(--tk-blue-600)"
                     : "2px solid var(--tk-gray-200)",
-                background: theme === opt.key ? "var(--tk-blue-50)" : "white",
+                background: themeMode === opt.key ? "var(--tk-blue-50)" : "white",
                 fontFamily: "var(--tk-font-display)",
-                fontWeight: theme === opt.key ? 700 : 500,
+                fontWeight: themeMode === opt.key ? 700 : 500,
                 fontSize: 14,
                 color:
-                  theme === opt.key ? "var(--tk-blue-700)" : "var(--tk-gray-700)",
+                  themeMode === opt.key ? "var(--tk-blue-700)" : "var(--tk-gray-700)",
                 cursor: "pointer",
                 transition: "all 0.15s",
                 textAlign: "center",
@@ -693,43 +850,53 @@ const Settings = () => {
   };
 
   const renderBahasa = () => {
-    const bahasaOptions = ["Bahasa Indonesia", "English", "日本語"];
+    const bahasaOptions: { code: string; label: string; available: boolean }[] = [
+      { code: "id", label: "Bahasa Indonesia", available: true },
+      { code: "en", label: "English", available: false },
+      { code: "ja", label: "日本語", available: false },
+    ];
 
     return (
       <div>
         <SectionHeading>Bahasa</SectionHeading>
         <div style={{ display: "flex", flexDirection: "column", gap: 8, maxWidth: 360 }}>
-          {bahasaOptions.map((lang) => (
-            <button
-              key={lang}
-              onClick={() => setBahasa(lang)}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "14px 16px",
-                borderRadius: 12,
-                border:
-                  bahasa === lang
-                    ? "2px solid var(--tk-blue-600)"
-                    : "2px solid var(--tk-gray-200)",
-                background: bahasa === lang ? "var(--tk-blue-50)" : "white",
-                cursor: "pointer",
-                fontFamily: "var(--tk-font-display)",
-                fontWeight: bahasa === lang ? 700 : 500,
-                fontSize: 14,
-                color:
-                  bahasa === lang ? "var(--tk-blue-700)" : "var(--tk-gray-700)",
-                transition: "all 0.15s",
-              }}
-            >
-              <span>{lang}</span>
-              {bahasa === lang && (
-                <Check size={16} style={{ color: "var(--tk-blue-600)" }} />
-              )}
-            </button>
-          ))}
+          {bahasaOptions.map((lang) => {
+            const active = bahasa === lang.code;
+            return (
+              <button
+                key={lang.code}
+                onClick={() => lang.available && persistLanguage(lang.code)}
+                disabled={!lang.available}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: "14px 16px",
+                  borderRadius: 12,
+                  border: active ? "2px solid var(--tk-blue-600)" : "2px solid var(--tk-gray-200)",
+                  background: active ? "var(--tk-blue-50)" : "white",
+                  cursor: lang.available ? "pointer" : "not-allowed",
+                  opacity: lang.available ? 1 : 0.55,
+                  fontFamily: "var(--tk-font-display)",
+                  fontWeight: active ? 700 : 500,
+                  fontSize: 14,
+                  color: active ? "var(--tk-blue-700)" : "var(--tk-gray-700)",
+                  transition: "all 0.15s",
+                }}
+              >
+                <span>{lang.label}</span>
+                {active ? (
+                  <Check size={16} style={{ color: "var(--tk-blue-600)" }} />
+                ) : !lang.available ? (
+                  <span style={{ fontSize: 10.5, fontWeight: 700, color: "var(--tk-gray-500)", background: "var(--tk-gray-100)", padding: "3px 9px", borderRadius: 99 }}>Segera Hadir</span>
+                ) : null}
+              </button>
+            );
+          })}
         </div>
+        <p style={{ marginTop: 16, fontSize: 13, color: "var(--tk-gray-500)", fontFamily: "var(--tk-font-sans)" }}>
+          Talentika saat ini sepenuhnya dalam Bahasa Indonesia. Bahasa lain akan hadir di pembaruan mendatang.
+        </p>
       </div>
     );
   };
@@ -1069,8 +1236,90 @@ const Settings = () => {
           }}
         />
       </div>
+
+      {showPasswordModal && (
+        <PasswordChangeModal email={user?.email ?? ""} onClose={() => setShowPasswordModal(false)} />
+      )}
     </div>
   );
 };
+
+// ─── Password change modal — re-verifies current password before updating ────
+function PasswordChangeModal({ email, onClose }: { email: string; onClose: () => void }) {
+  const [current, setCurrent] = useState("");
+  const [next, setNext] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showNext, setShowNext] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const submit = async () => {
+    if (!current) { toast.error("Masukkan password saat ini"); return; }
+    if (next.length < 6) { toast.error("Password baru minimal 6 karakter"); return; }
+    if (next !== confirm) { toast.error("Konfirmasi password tidak cocok"); return; }
+
+    setSaving(true);
+    try {
+      // Re-verify identity with the current password before allowing the change
+      const { error: verifyError } = await supabase.auth.signInWithPassword({ email, password: current });
+      if (verifyError) { toast.error("Password saat ini salah"); setSaving(false); return; }
+
+      const { error } = await supabase.auth.updateUser({ password: next });
+      if (error) throw error;
+      toast.success("Password berhasil diubah!");
+      onClose();
+    } catch (err: any) {
+      toast.error("Gagal mengubah password: " + err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const inputStyle: React.CSSProperties = {
+    width: "100%", border: "1px solid var(--tk-gray-200)", borderRadius: 10,
+    padding: "10px 40px 10px 14px", fontSize: 14, fontFamily: "var(--tk-font-sans)",
+    color: "var(--tk-ink)", background: "white", outline: "none", boxSizing: "border-box",
+  };
+  const eyeBtnStyle: React.CSSProperties = {
+    position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)",
+    background: "none", border: "none", cursor: "pointer", color: "var(--tk-gray-400)", padding: 0,
+  };
+
+  return (
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.5)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ background: "white", borderRadius: 20, padding: "24px 26px", width: "100%", maxWidth: 400, position: "relative" }}>
+        <button onClick={onClose} style={{ position: "absolute", top: 16, right: 16, background: "var(--tk-gray-100)", border: "none", borderRadius: 8, width: 30, height: 30, cursor: "pointer", color: "var(--tk-gray-500)", display: "grid", placeItems: "center" }}>
+          <X size={17} />
+        </button>
+        <div style={{ fontFamily: "var(--tk-font-display)", fontWeight: 800, fontSize: 18, color: "var(--tk-ink)", marginBottom: 18 }}>🔒 Ubah Password</div>
+
+        <div style={{ marginBottom: 14 }}>
+          <label style={{ display: "block", fontFamily: "var(--tk-font-display)", fontWeight: 600, fontSize: 12.5, color: "var(--tk-ink)", marginBottom: 5 }}>Password Saat Ini</label>
+          <div style={{ position: "relative" }}>
+            <input type={showCurrent ? "text" : "password"} value={current} onChange={(e) => setCurrent(e.target.value)} style={inputStyle} />
+            <button type="button" onClick={() => setShowCurrent((s) => !s)} style={eyeBtnStyle}>{showCurrent ? <EyeOff size={16} /> : <Eye size={16} />}</button>
+          </div>
+        </div>
+
+        <div style={{ marginBottom: 14 }}>
+          <label style={{ display: "block", fontFamily: "var(--tk-font-display)", fontWeight: 600, fontSize: 12.5, color: "var(--tk-ink)", marginBottom: 5 }}>Password Baru</label>
+          <div style={{ position: "relative" }}>
+            <input type={showNext ? "text" : "password"} value={next} onChange={(e) => setNext(e.target.value)} style={inputStyle} placeholder="Minimal 6 karakter" />
+            <button type="button" onClick={() => setShowNext((s) => !s)} style={eyeBtnStyle}>{showNext ? <EyeOff size={16} /> : <Eye size={16} />}</button>
+          </div>
+        </div>
+
+        <div style={{ marginBottom: 20 }}>
+          <label style={{ display: "block", fontFamily: "var(--tk-font-display)", fontWeight: 600, fontSize: 12.5, color: "var(--tk-ink)", marginBottom: 5 }}>Konfirmasi Password Baru</label>
+          <input type={showNext ? "text" : "password"} value={confirm} onChange={(e) => setConfirm(e.target.value)} style={{ ...inputStyle, padding: "10px 14px" }} />
+        </div>
+
+        <button onClick={submit} disabled={saving} style={{ width: "100%", background: saving ? "var(--tk-gray-300)" : "var(--tk-blue-600)", color: "white", border: "none", borderRadius: 12, padding: "12px 0", fontFamily: "var(--tk-font-display)", fontWeight: 700, fontSize: 14, cursor: saving ? "not-allowed" : "pointer" }}>
+          {saving ? "Menyimpan…" : "Simpan Password Baru"}
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default Settings;

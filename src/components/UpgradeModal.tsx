@@ -1,26 +1,25 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  X, Diamond, CheckCircle2, Zap, BookOpen, Users,
-  Award, HeadphonesIcon, ArrowRight,
-} from "lucide-react";
+import { X, Diamond, CheckCircle2, ArrowRight } from "lucide-react";
+import { usePaketLangganan } from "@/hooks/usePaketLangganan";
 
 interface UpgradeModalProps {
   open: boolean;
   onClose: () => void;
 }
 
-const FEATURES = [
-  { icon: Zap,             text: "Assessment RIASEC lengkap & analitik mendalam" },
-  { icon: BookOpen,        text: "Akses semua kursus & materi premium" },
-  { icon: Users,           text: "Komunitas eksklusif & mentorship langsung" },
-  { icon: Award,           text: "Sertifikat digital resmi Talentika" },
-  { icon: Diamond,         text: "Rekomendasi karier personal berbasis AI" },
-  { icon: HeadphonesIcon,  text: "Priority support 24/7" },
-];
-
+// Paket, harga & fiturnya dibaca dari subscription_packages (paket yang
+// ditandai populer). Dulu tertulis "Pro Rp99.000 / Rp799.000 per tahun" —
+// berbeda dari harga yang ditagih.
 export const UpgradeModal = ({ open, onClose }: UpgradeModalProps) => {
   const navigate = useNavigate();
+  const { paket } = usePaketLangganan();
+  const berbayar = paket.filter(p => p.price_monthly > 0);
+  const sorotan = berbayar.find(p => p.is_popular) ?? berbayar[0];
+  const hemat = sorotan
+    ? Math.round(((sorotan.price_monthly * 12 - sorotan.price_yearly) / (sorotan.price_monthly * 12)) * 100)
+    : 0;
+  const rp = (n: number) => "Rp " + n.toLocaleString("id-ID");
 
   // Lock body scroll when modal is open
   useEffect(() => {
@@ -127,11 +126,11 @@ export const UpgradeModal = ({ open, onClose }: UpgradeModalProps) => {
               color: "var(--tk-ink)", letterSpacing: "-.02em", margin: 0,
             }}
           >
-            Upgrade ke <span style={{ color: "var(--tk-blue-600)" }}>Pro</span>
+            Upgrade ke <span style={{ color: "var(--tk-blue-600)" }}>{sorotan?.name ?? "Premium"}</span>
           </h2>
         </div>
         <p style={{ color: "var(--tk-gray-500)", fontSize: 14, marginBottom: 22, lineHeight: 1.5 }}>
-          Buka akses penuh ke semua fitur premium Talentika dan akselerasi perjalananmu.
+          {sorotan?.description ?? "Buka akses penuh ke fitur premium Talentika."}
         </p>
 
         {/* Plan highlight card */}
@@ -150,7 +149,7 @@ export const UpgradeModal = ({ open, onClose }: UpgradeModalProps) => {
                 color: "var(--tk-orange)", marginBottom: 4,
               }}
             >
-              Talentika Pro
+              Talentika {sorotan?.name ?? ""}
             </div>
             <div
               style={{
@@ -158,14 +157,16 @@ export const UpgradeModal = ({ open, onClose }: UpgradeModalProps) => {
                 fontSize: 26, color: "var(--tk-ink)", lineHeight: 1,
               }}
             >
-              Rp 99.000
+              {sorotan ? rp(sorotan.price_monthly) : "—"}
               <span style={{ fontSize: 13, fontWeight: 500, color: "var(--tk-gray-500)", marginLeft: 4 }}>
                 /bulan
               </span>
             </div>
-            <div style={{ fontSize: 12, color: "var(--tk-gray-500)", marginTop: 4 }}>
-              atau Rp 799.000/tahun — hemat 33%
-            </div>
+            {sorotan && sorotan.price_yearly > 0 && (
+              <div style={{ fontSize: 12, color: "var(--tk-gray-500)", marginTop: 4 }}>
+                atau {rp(sorotan.price_yearly)}/tahun{hemat > 0 ? ` — hemat ${hemat}%` : ""}
+              </div>
+            )}
           </div>
           <div
             style={{
@@ -181,7 +182,7 @@ export const UpgradeModal = ({ open, onClose }: UpgradeModalProps) => {
 
         {/* Feature list */}
         <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
-          {FEATURES.map(({ icon: Icon, text }) => (
+          {(sorotan?.features ?? []).slice(0, 6).map((text) => (
             <div
               key={text}
               style={{ display: "flex", alignItems: "center", gap: 10 }}
@@ -213,7 +214,7 @@ export const UpgradeModal = ({ open, onClose }: UpgradeModalProps) => {
           onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "var(--tk-blue-700)"; }}
           onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "var(--tk-blue-600)"; }}
         >
-          Mulai Upgrade ke Pro <ArrowRight size={16} />
+          Lihat Semua Paket <ArrowRight size={16} />
         </button>
 
         {/* Secondary link */}

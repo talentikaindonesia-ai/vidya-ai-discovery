@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { UpgradeGate } from "@/components/payment/UpgradeGate";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -190,6 +191,12 @@ const PortfolioBuilder = () => {
               Bangun identitas digital profesional sejak dini
             </p>
           </div>
+
+          <UpgradeGate
+            feature="Bangun portfolio profesional & bagikan ke rekruter — fitur Premium"
+            fromPath="/portfolio"
+          >
+          <>
 
           {/* Profile Section */}
           <Card className="shadow-card mb-8">
@@ -404,6 +411,8 @@ const PortfolioBuilder = () => {
               </div>
             </TabsContent>
           </Tabs>
+          </>
+          </UpgradeGate>
         </div>
       </div>
     </div>

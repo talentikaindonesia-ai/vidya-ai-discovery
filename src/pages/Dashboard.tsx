@@ -10,22 +10,20 @@ import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { NotificationDropdown } from "@/components/dashboard/NotificationDropdown";
 import { WelcomeDashboard } from "@/components/dashboard/WelcomeDashboard";
-import CoursesPreview from "@/components/CoursesPreview";
 import OpportunitiesPreview from "@/components/OpportunitiesPreview";
-import CommunityPreview from "@/components/CommunityPreview";
 import { BottomNavigationBar } from "@/components/dashboard/BottomNavigationBar";
 import { CoursesSection } from "@/components/dashboard/CoursesSection";
-import { ChallengesSection } from "@/components/dashboard/ChallengesSection";
 import { ChallengesPreview } from "@/components/dashboard/ChallengesPreview";
-import { OpportunitiesSection } from "@/components/dashboard/OpportunitiesSection";
+import { LearningPathCard } from "@/components/dashboard/LearningPathCard";
+import { OpportunityPipeline } from "@/components/dashboard/OpportunityPipeline";
 import { ProgressTracker } from "@/components/dashboard/ProgressTracker";
 import { Achievements } from "@/components/dashboard/Achievements";
 import { User, Session } from "@supabase/supabase-js";
 import { Crown, Check, X } from "lucide-react";
 import { toast } from "sonner";
-import WelcomeNudge from "@/components/WelcomeNudge";
 import { OnboardingChecklist } from "@/components/dashboard/OnboardingChecklist";
 import { ReferralWidget } from "@/components/dashboard/ReferralWidget";
+import { XpLeaderboard } from "@/components/dashboard/XpLeaderboard";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const Dashboard = () => {
@@ -158,18 +156,12 @@ const Dashboard = () => {
 
       // Check if it's a free plan
       if (selectedPlan.type === 'free') {
-        // Activate free plan directly
-        const { error } = await supabase
-          .from('profiles')
-          .update({
-            subscription_status: 'active',
-            subscription_type: 'free',
-            subscription_end_date: null // Free plans don't expire
-          })
-          .eq('user_id', user.id);
-
-        if (error) throw error;
-
+        /* Paket gratis = tidak premium. Tidak ada yang perlu ditulis.
+           Versi lama menulis subscription_status='active' + subscription_type
+           ='free' dari browser — dan constraint profiles_subscription_type_check
+           menolak nilai 'free', jadi tombol ini SELALU gagal sejak awal.
+           Kolom langganan kini juga hanya bisa diubah server
+           (trigger lindungi_kolom_akses_profil). */
         toast.success("Paket Free berhasil diaktifkan!");
         setShowSubscription(false);
         
@@ -194,32 +186,46 @@ const Dashboard = () => {
   const renderActiveSection = () => {
     switch (activeSection) {
       case "overview":
+        // Beranda sengaja dibatasi 3 blok inti + checklist onboarding.
+        // Sebelumnya menumpuk 12 widget sekaligus, sehingga tidak ada satu pun
+        // langkah yang menonjol. Widget lain dipindah ke Progress/Pencapaian,
+        // tidak ada yang dihapus.
         return (
           <div className="space-y-6">
-            {user?.id && <WelcomeNudge userId={user.id} />}
-            {/* Onboarding checklist — only for new users */}
+            {/* Onboarding checklist — hanya untuk pengguna baru */}
             {user?.id && <OnboardingChecklist userId={user.id} profile={profile} />}
             <WelcomeDashboard user={user} profile={profile} />
-            {/* Challenges — shown inline (temporary/ephemeral, no dedicated tab) */}
-            <ChallengesPreview />
-            <CoursesPreview profile={profile} />
+            {/* Lanjutkan belajar — langkah utama */}
+            <LearningPathCard />
+            {/* Peluang untukmu */}
             <OpportunitiesPreview profile={profile} />
-            <CommunityPreview userAssessment={profile} userInterests={userInterests} profile={profile} />
-            {/* Referral Widget */}
-            {user?.id && <ReferralWidget userId={user.id} />}
           </div>
         );
       case "courses":
         return <CoursesSection />;
       case "challenges":
-        // Tab removed — challenges now live on the overview page
+        // Tab removed — challenges now live under Pencapaian
         return null;
       case "opportunities":
-        return <OpportunitiesSection />;
+        // Navigates to /opportunities in handleSectionChange
+        return null;
       case "progress":
-        return <ProgressTracker />;
+        return (
+          <div className="space-y-6">
+            <ProgressTracker />
+            {/* Pipeline lamaran — rumahnya di sini, bukan di Beranda */}
+            <OpportunityPipeline />
+          </div>
+        );
       case "achievements":
-        return <Achievements />;
+        return (
+          <div className="space-y-6">
+            <XpLeaderboard />
+            <Achievements />
+            <ChallengesPreview />
+            {user?.id && <ReferralWidget userId={user.id} />}
+          </div>
+        );
       case "gamified":
         return (
           <div className="min-h-screen">
@@ -243,16 +249,13 @@ const Dashboard = () => {
       case "timeline":
         return null;
       default:
+        // Sama dengan "overview" — dijaga tetap ringkas
         return (
           <div className="space-y-6">
-            {user?.id && <WelcomeNudge userId={user.id} />}
             {user?.id && <OnboardingChecklist userId={user.id} profile={profile} />}
             <WelcomeDashboard user={user} profile={profile} />
-            <ChallengesPreview />
-            <CoursesPreview profile={profile} />
+            <LearningPathCard />
             <OpportunitiesPreview profile={profile} />
-            <CommunityPreview userAssessment={profile} userInterests={userInterests} profile={profile} />
-            {user?.id && <ReferralWidget userId={user.id} />}
           </div>
         );
     }
@@ -379,6 +382,9 @@ const Dashboard = () => {
   const handleSectionChange = (section: string) => {
     if (section === 'community') { navigate('/community'); return; }
     if (section === 'timeline')  { navigate('/discovery');  return; }
+    // Send Peluang to the real personalized board (RIASEC match, deadline,
+    // save counts) instead of the old static section
+    if (section === 'opportunities') { navigate('/opportunities'); return; }
     setActiveSection(section);
   };
 

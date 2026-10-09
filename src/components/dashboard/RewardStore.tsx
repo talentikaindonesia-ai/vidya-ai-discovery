@@ -62,11 +62,12 @@ export const RewardStore = () => {
         .select('*')
         .eq('user_id', user.id);
 
-      setRewardItems(itemsData || mockRewardItems);
+      // Real items only — no mock fallback. Empty table → honest "Segera Hadir".
+      setRewardItems(itemsData || []);
       setUserRewards(userRewardsData || []);
     } catch (error) {
       console.error('Error loading reward store:', error);
-      setRewardItems(mockRewardItems);
+      setRewardItems([]);
     } finally {
       setLoading(false);
     }
@@ -148,58 +149,6 @@ export const RewardStore = () => {
       default: return 'text-orange-600 bg-orange-100';
     }
   };
-
-  // Mock data for demonstration
-  const mockRewardItems = [
-    {
-      id: '1',
-      title: '10% Course Discount',
-      description: 'Get 10% off any premium course',
-      item_type: 'discount',
-      xp_cost: 500,
-      is_available: true
-    },
-    {
-      id: '2',
-      title: 'Talentika T-Shirt',
-      description: 'Official Talentika branded t-shirt',
-      item_type: 'merchandise',
-      xp_cost: 2000,
-      is_available: true
-    },
-    {
-      id: '3',
-      title: 'Premium Dashboard Theme',
-      description: 'Unlock exclusive dark theme for your dashboard',
-      item_type: 'customization',
-      xp_cost: 800,
-      is_available: true
-    },
-    {
-      id: '4',
-      title: 'Exclusive Webinar Access',
-      description: 'Access to VIP-only career webinars',
-      item_type: 'premium_content',
-      xp_cost: 1200,
-      is_available: true
-    },
-    {
-      id: '5',
-      title: '25% Bootcamp Discount',
-      description: 'Get 25% off any Talentika bootcamp',
-      item_type: 'discount',
-      xp_cost: 1500,
-      is_available: true
-    },
-    {
-      id: '6',
-      title: 'Custom Avatar Badge',
-      description: 'Design your own special achievement badge',
-      item_type: 'customization',
-      xp_cost: 1000,
-      is_available: true
-    }
-  ];
 
   if (loading) {
     return (
@@ -298,15 +247,16 @@ export const RewardStore = () => {
         {rewardItems.length === 0 && (
           <div className="text-center py-8">
             <Gift className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-            <p className="text-muted-foreground">
-              No rewards available at the moment. Check back soon!
+            <p className="font-semibold mb-1">Toko Reward — Segera Hadir 🎁</p>
+            <p className="text-sm text-muted-foreground">
+              Terus kumpulkan XP dari belajar & kuis. Saat toko dibuka, XP-mu siap ditukar hadiah nyata.
             </p>
           </div>
         )}
 
         <div className="mt-6 p-4 bg-secondary/10 rounded-lg border border-secondary/20">
           <p className="text-sm text-muted-foreground">
-            💡 Earn XP by completing quests, courses, and daily activities. Redeem your XP for exclusive rewards!
+            💡 Kumpulkan XP dengan menyelesaikan kursus, kuis, dan aktivitas harian.
           </p>
         </div>
       </CardContent>

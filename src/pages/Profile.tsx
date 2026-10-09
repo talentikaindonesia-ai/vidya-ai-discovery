@@ -12,6 +12,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { LABEL_TUJUAN, type Tujuan } from "@/hooks/useIdentitasSiswa";
 import { User } from "@supabase/supabase-js";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
@@ -28,10 +29,11 @@ import {
   User as UserIcon, Lock, Bell, Sun, LogOut,
   Crown, Star, Target, FileText, Calendar,
   TrendingUp, CheckCircle, Clock, Zap,
-  BookOpen, Users, Diamond,
+  BookOpen, Users, Diamond, Camera, Loader2,
 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { AffiliateWidget } from "@/components/dashboard/AffiliateWidget";
 
 /* ─────────────────────────────────── helpers ── */
 const getInitials = (name: string) =>
@@ -75,6 +77,7 @@ const Profile = () => {
   const [user, setUser]           = useState<User | null>(null);
   const [profile, setProfile]     = useState<any>(null);
   const [userRole, setUserRole]   = useState<string | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [interests, setInterests] = useState<any[]>([]);
   const [progress, setProgress]   = useState<any[]>([]);
   const [assessment, setAssessment]   = useState<any>(null);
@@ -122,9 +125,10 @@ const Profile = () => {
         supabase.from("learning_progress")
           .select("*, learning_content(title, learning_categories(name))")
           .eq("user_id", userId).limit(5),
-        supabase.from("assessment_results")
-          .select("personality_type, career_recommendations, talent_areas, completed_at")
-          .eq("user_id", userId).order("created_at", { ascending: false }).limit(1).maybeSingle(),
+        // View kanonik `identitas_siswa` — lihat src/hooks/useIdentitasSiswa.ts
+        (supabase.from("identitas_siswa" as any) as any)
+          .select("personality_type:tipe_utama, career_recommendations, talent_areas, completed_at:diperbarui_pada, holland_code, keyakinan, tipe_mi, tujuan")
+          .eq("user_id", userId).maybeSingle(),
         supabase.from("achievements").select("id").eq("user_id", userId),
         supabase.from("user_subscriptions")
           .select("*, subscription_packages(*)")
@@ -181,6 +185,28 @@ const Profile = () => {
     if (section === "community") { navigate("/community"); return; }
     if (section === "timeline")  { navigate("/discovery"); return; }
     navigate("/dashboard");
+  };
+
+  const handleAvatarUpload = async (file: File) => {
+    if (!user) return;
+    if (!file.type.startsWith("image/")) { toast.error("File harus berupa gambar"); return; }
+    if (file.size > 3 * 1024 * 1024) { toast.error("Ukuran gambar maksimal 3MB"); return; }
+    setUploadingAvatar(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `${user.id}/avatar-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+      if (upErr) throw upErr;
+      const { data } = supabase.storage.from("avatars").getPublicUrl(path);
+      const { error: dbErr } = await supabase.from("profiles").update({ avatar_url: data.publicUrl }).eq("user_id", user.id);
+      if (dbErr) throw dbErr;
+      setProfile((prev: any) => ({ ...prev, avatar_url: data.publicUrl }));
+      toast.success("Foto profil berhasil diperbarui!");
+    } catch (err: any) {
+      toast.error("Gagal unggah foto: " + err.message);
+    } finally {
+      setUploadingAvatar(false);
+    }
   };
 
   /* ── derived ── */
@@ -323,15 +349,30 @@ const Profile = () => {
                     </button>
                   )}
 
-                  {/* Avatar */}
-                  {profile?.avatar_url ? (
-                    <img src={profile.avatar_url} alt={displayName}
-                      style={{ width: 80, height: 80, borderRadius: "50%", objectFit: "cover", margin: "0 auto 12px", display: "block", border: "3px solid var(--tk-gray-100)" }} />
-                  ) : (
-                    <div style={{ width: 80, height: 80, borderRadius: "50%", background: "linear-gradient(135deg,#1D4ED8,#3B82F6)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 30, color: "#fff", fontFamily: "var(--tk-font-display)", fontWeight: 700, margin: "0 auto 12px" }}>
-                      {initials}
-                    </div>
-                  )}
+                  {/* Avatar (click camera badge to upload) */}
+                  <div style={{ position: "relative", width: 80, margin: "0 auto 12px" }}>
+                    {profile?.avatar_url ? (
+                      <img src={profile.avatar_url} alt={displayName}
+                        style={{ width: 80, height: 80, borderRadius: "50%", objectFit: "cover", display: "block", border: "3px solid var(--tk-gray-100)" }} />
+                    ) : (
+                      <div style={{ width: 80, height: 80, borderRadius: "50%", background: "linear-gradient(135deg,#1D4ED8,#3B82F6)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 30, color: "#fff", fontFamily: "var(--tk-font-display)", fontWeight: 700 }}>
+                        {initials}
+                      </div>
+                    )}
+                    <label
+                      title="Ganti foto profil"
+                      style={{
+                        position: "absolute", bottom: -2, right: -2, width: 28, height: 28, borderRadius: "50%",
+                        background: "var(--tk-blue-600)", border: "2.5px solid #fff", display: "flex",
+                        alignItems: "center", justifyContent: "center", cursor: uploadingAvatar ? "wait" : "pointer",
+                        boxShadow: "0 2px 6px rgba(0,0,0,.2)",
+                      }}
+                    >
+                      {uploadingAvatar ? <Loader2 size={13} color="#fff" className="animate-spin" /> : <Camera size={13} color="#fff" />}
+                      <input type="file" accept="image/*" hidden disabled={uploadingAvatar}
+                        onChange={(e) => { const f = e.target.files?.[0]; if (f) handleAvatarUpload(f); e.target.value = ""; }} />
+                    </label>
+                  </div>
 
                   <h3 style={{ fontFamily: "var(--tk-font-display)", fontWeight: 700, fontSize: 19, color: "var(--tk-ink)", margin: "0 0 4px" }}>{displayName}</h3>
                   <p style={{ fontFamily: "var(--tk-font-sans)", fontSize: 13, color: "var(--tk-gray-500)", margin: "0 0 14px", wordBreak: "break-all" }}>{user.email}</p>
@@ -459,7 +500,45 @@ const Profile = () => {
                           {assessment.personality_type && (
                             <div>
                               <div style={{ fontFamily: "var(--tk-font-sans)", fontSize: 11, color: "var(--tk-gray-500)", marginBottom: 4, fontWeight: 600, textTransform: "uppercase", letterSpacing: ".05em" }}>Tipe Kepribadian</div>
-                              <span style={{ background: "var(--tk-blue-600)", color: "#fff", fontFamily: "var(--tk-font-display)", fontWeight: 700, fontSize: 13, padding: "4px 12px", borderRadius: 999 }}>{assessment.personality_type}</span>
+                              <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                                <span style={{ background: "var(--tk-blue-600)", color: "#fff", fontFamily: "var(--tk-font-display)", fontWeight: 700, fontSize: 13, padding: "4px 12px", borderRadius: 999 }}>{assessment.personality_type}</span>
+                                {assessment.holland_code && (
+                                  <span title="Kode Holland — tiga minat terkuatmu berurutan"
+                                    style={{ fontFamily: "var(--tk-font-mono)", fontWeight: 700, fontSize: 12, letterSpacing: ".12em", color: "var(--tk-blue-700, #1D4ED8)", background: "var(--tk-blue-50, #EFF6FF)", padding: "4px 10px", borderRadius: 999, cursor: "help" }}>
+                                    {assessment.holland_code}
+                                  </span>
+                                )}
+                              </div>
+                              {/* Keyakinan ditampilkan apa adanya — 48 dari 181 hasil
+                                  sebenarnya nyaris seri, dan itu dulu disembunyikan. */}
+                              {assessment.keyakinan === "seimbang" && (
+                                <div style={{ fontSize: 11.5, color: "#B45309", marginTop: 5 }}>
+                                  Hasilmu nyaris seimbang — dua minat teratas sama kuat
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          {/* Kecerdasan majemuk: bagian kedua dari identitas.
+                              RIASEC = apa yang diminati; MI = bagaimana belajarnya. */}
+                          <div>
+                            <div style={{ fontFamily: "var(--tk-font-sans)", fontSize: 11, color: "var(--tk-gray-500)", marginBottom: 4, fontWeight: 600, textTransform: "uppercase", letterSpacing: ".05em" }}>Kecerdasan Menonjol</div>
+                            {assessment.tipe_mi ? (
+                              <span style={{ background: "#7C3AED", color: "#fff", fontFamily: "var(--tk-font-display)", fontWeight: 700, fontSize: 13, padding: "4px 12px", borderRadius: 999 }}>
+                                {assessment.tipe_mi}
+                              </span>
+                            ) : (
+                              <button onClick={() => navigate("/multiple-intelligence")}
+                                style={{ border: "1px dashed #DDD6FE", background: "#F5F3FF", color: "#6D28D9", fontWeight: 700, fontSize: 12.5, padding: "5px 12px", borderRadius: 999, cursor: "pointer" }}>
+                                Belum diikuti — mulai tes (±4 menit)
+                              </button>
+                            )}
+                          </div>
+                          {assessment.tujuan && (
+                            <div>
+                              <div style={{ fontFamily: "var(--tk-font-sans)", fontSize: 11, color: "var(--tk-gray-500)", marginBottom: 4, fontWeight: 600, textTransform: "uppercase", letterSpacing: ".05em" }}>Tujuan</div>
+                              <span style={{ background: "#047857", color: "#fff", fontFamily: "var(--tk-font-display)", fontWeight: 700, fontSize: 13, padding: "4px 12px", borderRadius: 999 }}>
+                                {LABEL_TUJUAN[assessment.tujuan as Tujuan] ?? assessment.tujuan}
+                              </span>
                             </div>
                           )}
                           {assessment.talent_areas?.length > 0 && (
@@ -626,6 +705,9 @@ const Profile = () => {
                         </button>
                       </div>
                     </div>
+
+                    {/* Affiliate Widget for teachers */}
+                    {user && <AffiliateWidget userId={user.id} profile={profile} />}
 
                     {/* Account settings list */}
                     <div style={{ background: "#fff", borderRadius: 16, padding: 20, boxShadow: "0 2px 12px rgba(0,0,0,.05)", border: "1px solid var(--tk-gray-100)" }}>

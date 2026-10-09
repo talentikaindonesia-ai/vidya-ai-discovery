@@ -101,6 +101,7 @@ export const WelcomeDashboard = ({ user, profile }: WelcomeDashboardProps) => {
   });
   const [recentCourses, setRecentCourses] = useState<any[]>([]);
   const [assessmentResults, setAssessmentResults] = useState<any>(null);
+  const [activities, setActivities] = useState<{ icon: React.ElementType; color: string; title: string; subject: string; ts: string }[]>([]);
 
   useEffect(() => {
     if (user?.id) loadDashboardData(user.id);
@@ -113,18 +114,18 @@ export const WelcomeDashboard = ({ user, profile }: WelcomeDashboardProps) => {
         { data: achievementsData },
         { data: assessmentData },
         { data: recentProgressData },
+        { data: certData },
       ] = await Promise.all([
         supabase
           .from("learning_progress")
           .select("content_id, status, progress_percentage, time_spent_minutes, last_accessed_at")
           .eq("user_id", userId),
         supabase.from("achievements").select("id").eq("user_id", userId),
-        supabase
-          .from("assessment_results")
-          .select("personality_type, career_recommendations, talent_areas, score_breakdown, interest_categories, created_at")
+        // View kanonik `identitas_siswa` — satu definisi identitas untuk
+        // seluruh aplikasi. Alias dipertahankan agar kode di bawah tak berubah.
+        (supabase.from("identitas_siswa" as any) as any)
+          .select("personality_type:tipe_utama, career_recommendations, talent_areas, score_breakdown, interest_categories, created_at:diperbarui_pada, holland_code, keyakinan, tipe_kedua")
           .eq("user_id", userId)
-          .order("created_at", { ascending: false })
-          .limit(1)
           .maybeSingle(),
         supabase
           .from("learning_progress")
@@ -132,6 +133,12 @@ export const WelcomeDashboard = ({ user, profile }: WelcomeDashboardProps) => {
           .eq("user_id", userId)
           .order("last_accessed_at", { ascending: false })
           .limit(3),
+        supabase
+          .from("certificates")
+          .select("title, issue_date")
+          .eq("user_id", userId)
+          .order("issue_date", { ascending: false })
+          .limit(2),
       ]);
 
       setStats({
@@ -156,6 +163,33 @@ export const WelcomeDashboard = ({ user, profile }: WelcomeDashboardProps) => {
           last_accessed_at: p.last_accessed_at,
         }));
       setRecentCourses(courses);
+
+      // Real activity feed: course touches + certificates + latest assessment,
+      // merged and sorted by time (replaces the old hardcoded examples)
+      const acts: { icon: React.ElementType; color: string; title: string; subject: string; ts: string }[] = [];
+      for (const p of (recentProgressData ?? []) as any[]) {
+        if (!p.learning_content || !p.last_accessed_at) continue;
+        acts.push({
+          icon: p.status === "completed" ? CheckCircle : BookOpen,
+          color: p.status === "completed" ? "green" : "blue",
+          title: p.status === "completed" ? "Kursus Selesai" : "Kursus Dilanjutkan",
+          subject: p.learning_content.title,
+          ts: p.last_accessed_at,
+        });
+      }
+      for (const c of (certData ?? []) as any[]) {
+        if (!c.issue_date) continue;
+        acts.push({ icon: Star, color: "yellow", title: "Sertifikat Diraih", subject: c.title || "Sertifikat", ts: c.issue_date });
+      }
+      if (assessmentData?.created_at && assessmentData.personality_type) {
+        acts.push({
+          icon: Brain, color: "purple", title: "Tes Minat Selesai",
+          subject: RIASEC[assessmentData.personality_type]?.name || assessmentData.personality_type,
+          ts: assessmentData.created_at,
+        });
+      }
+      acts.sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime());
+      setActivities(acts.slice(0, 4));
     } catch (err) {
       console.error("Error loading dashboard data:", err);
     }
@@ -372,12 +406,23 @@ export const WelcomeDashboard = ({ user, profile }: WelcomeDashboardProps) => {
               Lihat Semua
             </a>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 16 }}>
-            <ActivityItem icon={BookOpen}   color="blue"   title="Kursus Dilanjutkan" subject="UI/UX Design Fundamental" time="2 jam lalu" />
-            <ActivityItem icon={Trophy}     color="purple" title="Tantangan Diikuti"  subject="Data Science Challenge" time="5 jam lalu" />
-            <ActivityItem icon={Star}       color="yellow" title="Badge Diperoleh"    subject="Consistent Learner 🏆" time="1 hari lalu" />
-            <ActivityItem icon={TrendingUp} color="green"  title="Progress Naik"      subject="Persentase naik +8%" time="2 hari lalu" />
-          </div>
+          {activities.length === 0 ? (
+            <div className="text-center py-5" style={{ color: "var(--tk-gray-500)", fontSize: 13 }}>
+              Belum ada aktivitas — mulai belajar untuk mengisi riwayatmu! 🚀
+              <div style={{ marginTop: 10 }}>
+                <button onClick={() => navigate("/learning")}
+                  style={{ padding: "8px 18px", borderRadius: 10, border: "none", cursor: "pointer", background: "var(--tk-blue-600)", color: "#fff", fontFamily: "var(--tk-font-display)", fontWeight: 700, fontSize: 13 }}>
+                  Mulai Belajar
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 }}>
+              {activities.map((a, i) => (
+                <ActivityItem key={i} icon={a.icon} color={a.color} title={a.title} subject={a.subject} time={formatTimeAgo(a.ts)} />
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

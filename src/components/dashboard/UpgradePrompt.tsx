@@ -112,7 +112,7 @@ export const UpgradePrompt = ({
         <p className="text-xs text-center text-muted-foreground">
           {plan
             ? `Mulai dari ${formatRp(plan.price_monthly)}/bulan • Batalkan kapan saja`
-            : "Mulai dari Rp 39K/bulan • Batalkan kapan saja"}
+            : "Batalkan kapan saja"}
         </p>
       </CardContent>
     </Card>

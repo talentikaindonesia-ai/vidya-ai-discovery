@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Lock, Crown, Star, BookOpen, Trophy, Users, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useUpgradeModal } from "@/contexts/UpgradeModalContext";
+import { useHargaMulai } from "@/hooks/usePaketLangganan";
 
 interface LockedContentProps {
   type: 'courses' | 'opportunities' | 'mentors' | 'premium-content' | 'certificates' | 'networking';
@@ -16,6 +17,7 @@ interface LockedContentProps {
 export const LockedContent = ({ type, title, description, features, className = "" }: LockedContentProps) => {
   const navigate = useNavigate();
   const { openUpgradeModal } = useUpgradeModal();
+  const hargaMulai = useHargaMulai();
 
   const getIcon = () => {
     switch (type) {
@@ -77,7 +79,7 @@ export const LockedContent = ({ type, title, description, features, className = 
             <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
           <p className="text-xs text-center text-muted-foreground mt-2">
-            Mulai dari Rp 39K/bulan • Akses unlimited
+            {hargaMulai ? `Mulai dari ${hargaMulai}/bulan • Akses unlimited` : "Akses unlimited"}
           </p>
         </div>
       </CardContent>

@@ -4,6 +4,58 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEO from "@/components/SEO";
 import "./TalentikaForSchools.css";
+import SchoolInquiryModal, { type PaketSekolah } from "@/components/school/SchoolInquiryModal";
+
+/* ── Paket sekolah — semua "hubungi kami", tanpa harga publik ── */
+const PAKET_SEKOLAH: {
+  id: PaketSekolah;
+  tahap: string;
+  nama: string;
+  warna: { aksen: string; latar: string; lembut: string };
+  pengantar?: string;
+  grup: { judul?: string; item: string[] }[];
+  target?: string;
+  outcome?: string;
+}[] = [
+  {
+    id: "essential",
+    tahap: "DISCOVER",
+    nama: "School Essential",
+    warna: { aksen: "#1D4ED8", latar: "linear-gradient(135deg, #EFF6FF, #DBEAFE)", lembut: "#DBEAFE" },
+    grup: [{ item: [
+      "Talent assessment", "Interest assessment", "Strength profile", "Career interest",
+      "Student Talent Profile", "Opportunity Portal", "Basic school dashboard", "Talent mapping",
+    ] }],
+    outcome: "School understands its student talent landscape.",
+  },
+  {
+    id: "core",
+    tahap: "DISCOVER + DEVELOP",
+    nama: "Talentika School Core™",
+    warna: { aksen: "#047857", latar: "linear-gradient(135deg, #ECFDF5, #D1FAE5)", lembut: "#D1FAE5" },
+    pengantar: "Includes Essential +",
+    grup: [
+      { judul: "Personalized Development", item: ["Personalized learning path", "Career pathway", "Recommended courses", "Skill roadmap", "Future career exploration"] },
+      { judul: "Portfolio", item: ["Projects", "Achievements", "Certificates", "Competition records", "CV/profile"] },
+      { judul: "Opportunity Matching", item: ["Based on Talent + Interest + Skills + Career Goals"] },
+      { judul: "School Dashboard", item: ["Talent map", "Career interest map", "Progress", "Achievements", "Opportunity engagement"] },
+      { judul: "Counselor Dashboard", item: ["Student profile", "Development progress", "Career recommendation", "Opportunity recommendation"] },
+    ],
+  },
+  {
+    id: "future_ready",
+    tahap: "DISCOVER + DEVELOP + BUILD",
+    nama: "Talentika Future Ready School™",
+    warna: { aksen: "#B45309", latar: "linear-gradient(135deg, #FFFBEB, #FEF3C7)", lembut: "#FEF3C7" },
+    pengantar: "Includes School Core + THE FUTURE OF™",
+    grup: [{ item: [
+      "Future career exploration", "Future skills", "AI literacy", "Digital skills", "Communication",
+      "Critical thinking", "Creativity", "Problem solving", "Workshops", "Playbook", "Courses", "Project", "Portfolio",
+    ] }],
+    target: "Whole-school implementation",
+    outcome: "Students become more prepared to navigate: Career + University + Technology + Global Opportunities",
+  },
+];
 
 /* ── SVG helpers ─────────────────────────────────────────── */
 const IcoSchool = () => (
@@ -110,6 +162,7 @@ function FaqItem({ q, a }: { q: string; a: string }) {
 /* ══════════════════════════════════════════════════════════ */
 const TalentikaForSchools = () => {
   const navigate = useNavigate();
+  const [formPaket, setFormPaket] = useState<PaketSekolah | null>(null);
 
   return (
     <>
@@ -649,128 +702,99 @@ const TalentikaForSchools = () => {
           <div className="sp-section-inner">
             <Reveal>
               <div className="sp-head center">
-                <span className="sp-eyebrow">Investasi Terbaik untuk Sekolah</span>
-                <h2>Harga Transparan, <span className="sp-blue">Tanpa Kejutan</span></h2>
-                <p>Satu paket lengkap untuk seluruh ekosistem sekolah Anda — siswa, guru, dan admin.</p>
+                <span className="sp-eyebrow">Paket untuk Sekolah</span>
+                <h2>Pilih Tahap yang <span className="sp-blue">Tepat</span> untuk Sekolah Anda</h2>
+                <p>Setiap sekolah berbeda. Hubungi kami untuk informasi harga dan setup yang sesuai dengan kebutuhan sekolah Anda.</p>
               </div>
             </Reveal>
 
             <Reveal>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 24, maxWidth: 960, margin: "0 auto" }}>
-
-                {/* Pilot Gratis */}
-                <div style={{ background: "#fff", borderRadius: 24, border: "1.5px solid #E2E8F0", overflow: "hidden", display: "flex", flexDirection: "column" }}>
-                  <div style={{ background: "linear-gradient(135deg, #F0FDF4, #DCFCE7)", padding: "28px 28px 20px", textAlign: "center" }}>
-                    <div style={{ width: 56, height: 56, borderRadius: 16, background: "#D1FAE5", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px" }}>
-                      <IcoSchool />
-                    </div>
-                    <div style={{ fontFamily: "var(--sp-display)", fontWeight: 700, fontSize: 20, color: "var(--sp-ink)", marginBottom: 6 }}>Pilot Gratis</div>
-                    <div style={{ fontFamily: "var(--sp-display)", fontWeight: 800, fontSize: 36, color: "#059669" }}>Rp 0</div>
-                    <div style={{ fontSize: 13, color: "#6B7280", marginTop: 4 }}>30 hari · maks. 30 siswa</div>
-                  </div>
-                  <div style={{ padding: "20px 28px", flex: 1, display: "flex", flexDirection: "column", gap: 10 }}>
-                    {[
-                      "Akses penuh semua fitur",
-                      "Onboarding tim kami",
-                      "Dashboard admin sekolah",
-                      "Asesmen untuk 30 siswa",
-                      "Laporan ringkas akhir pilot",
-                    ].map(f => (
-                      <div key={f} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-                        <div style={{ width: 20, height: 20, borderRadius: "50%", background: "#D1FAE5", color: "#059669", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
-                          <IcoCheck size={11} />
-                        </div>
-                        <span style={{ fontSize: 14, color: "#374151", lineHeight: 1.45 }}>{f}</span>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(290px, 1fr))", gap: 24, maxWidth: 1140, margin: "0 auto", alignItems: "stretch" }}>
+                {PAKET_SEKOLAH.map(p => (
+                  <div key={p.id} style={{ background: "#fff", borderRadius: 24, border: "1.5px solid #E2E8F0", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+                    <div style={{ background: p.warna.latar, padding: "26px 26px 20px", textAlign: "center" }}>
+                      <div style={{ display: "inline-block", fontFamily: "var(--sp-display)", fontWeight: 800, fontSize: 11.5, letterSpacing: ".08em", color: p.warna.aksen, background: "rgba(255,255,255,.75)", padding: "4px 12px", borderRadius: 99, marginBottom: 12 }}>
+                        {p.tahap}
                       </div>
-                    ))}
-                  </div>
-                  <div style={{ padding: "0 28px 28px" }}>
-                    <a
-                      href="https://wa.me/6282249148433?text=Halo%20Talentika%2C%20saya%20tertarik%20mencoba%20Pilot%20Gratis%20untuk%20sekolah%20kami"
-                      target="_blank" rel="noreferrer"
-                      style={{ display: "block", textAlign: "center", padding: "13px 0", borderRadius: 14, background: "#059669", color: "#fff", fontFamily: "var(--sp-display)", fontWeight: 700, fontSize: 15, textDecoration: "none", transition: "filter .2s" }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.filter = "brightness(1.08)"; }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.filter = "none"; }}
-                    >
-                      Mulai Pilot Gratis →
-                    </a>
-                  </div>
-                </div>
+                      <div style={{ fontFamily: "var(--sp-display)", fontWeight: 800, fontSize: 21, color: "var(--sp-ink)", lineHeight: 1.3 }}>{p.nama}</div>
+                      {p.pengantar && (
+                        <div style={{ fontSize: 13, fontWeight: 700, color: p.warna.aksen, marginTop: 8 }}>{p.pengantar}</div>
+                      )}
+                    </div>
 
-                {/* Paket Institusi — Featured */}
-                <div style={{ background: "#fff", borderRadius: 24, border: "2px solid #3B82F6", overflow: "hidden", boxShadow: "0 24px 60px -16px rgba(29,78,216,.25)", transform: "scale(1.02)", display: "flex", flexDirection: "column", position: "relative" }}>
-                  {/* Popular ribbon */}
-                  <div style={{ background: "linear-gradient(90deg, #2563EB, #1D4ED8)", color: "#fff", textAlign: "center", padding: "8px 0", fontSize: 12, fontFamily: "var(--sp-display)", fontWeight: 700, letterSpacing: ".04em" }}>
-                    ⭐ PALING BANYAK DIPILIH
-                  </div>
-                  <div style={{ background: "linear-gradient(135deg, #EFF6FF, #DBEAFE)", padding: "24px 28px 20px", textAlign: "center" }}>
-                    <div style={{ width: 56, height: 56, borderRadius: 16, background: "linear-gradient(135deg, #3B82F6, #1D4ED8)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px", boxShadow: "0 8px 20px -4px rgba(29,78,216,.35)" }}>
-                      <IcoSchool />
-                    </div>
-                    <div style={{ fontFamily: "var(--sp-display)", fontWeight: 700, fontSize: 20, color: "var(--sp-ink)", marginBottom: 6 }}>Paket Sekolah</div>
-                    <div style={{ fontFamily: "var(--sp-display)", fontWeight: 800, fontSize: 36, color: "#1D4ED8" }}>
-                      Rp 7,5 jt<span style={{ fontSize: 16, fontWeight: 500, color: "#6B7280" }}>/tahun</span>
-                    </div>
-                    <div style={{ fontSize: 12.5, color: "#3B82F6", fontWeight: 600, marginTop: 6, background: "#DBEAFE", display: "inline-block", padding: "3px 12px", borderRadius: 99 }}>
-                      per sekolah · min. 50 siswa
-                    </div>
-                  </div>
-                  <div style={{ padding: "20px 28px", flex: 1, display: "flex", flexDirection: "column", gap: 10 }}>
-                    {[
-                      "Semua fitur Premium untuk setiap siswa",
-                      "Dashboard admin & laporan real-time",
-                      "Bimbingan konselor via platform",
-                      "Integrasi kurikulum BK & Merdeka",
-                      "Onboarding + training staf sekolah",
-                      "Akses orang tua via portal khusus",
-                      "Dukungan prioritas 24/7",
-                      "Review program setiap semester",
-                    ].map(f => (
-                      <div key={f} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-                        <div style={{ width: 20, height: 20, borderRadius: "50%", background: "#DBEAFE", color: "#1D4ED8", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
-                          <IcoCheck size={11} />
+                    <div style={{ padding: "20px 26px", flex: 1, display: "flex", flexDirection: "column", gap: 16 }}>
+                      {p.grup.map((g, gi) => (
+                        <div key={gi}>
+                          {g.judul && (
+                            <div style={{ fontFamily: "var(--sp-display)", fontWeight: 700, fontSize: 13.5, color: "var(--sp-ink)", marginBottom: 8 }}>{g.judul}</div>
+                          )}
+                          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                            {g.item.map(f => (
+                              <div key={f} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                                <div style={{ width: 20, height: 20, borderRadius: "50%", background: p.warna.lembut, color: p.warna.aksen, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
+                                  <IcoCheck size={11} />
+                                </div>
+                                <span style={{ fontSize: 14, color: "#374151", lineHeight: 1.45 }}>{f}</span>
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                        <span style={{ fontSize: 14, color: "#374151", lineHeight: 1.45 }}>{f}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div style={{ padding: "0 28px 28px", display: "flex", flexDirection: "column", gap: 8 }}>
-                    {/* Self-serve: checkout online immediately */}
-                    <a
-                      href="/subscription?planId=school&seats=100"
-                      style={{ display: "block", textAlign: "center", padding: "13px 0", borderRadius: 14, background: "linear-gradient(135deg, #3B82F6, #1D4ED8)", color: "#fff", fontFamily: "var(--sp-display)", fontWeight: 700, fontSize: 15, textDecoration: "none", boxShadow: "0 8px 20px -4px rgba(29,78,216,.4)", transition: "filter .2s" }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.filter = "brightness(1.08)"; }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.filter = "none"; }}
-                    >
-                      🏫 Daftar & Bayar Online →
-                    </a>
-                    <a
-                      href="https://wa.me/6282249148433?text=Halo%20Talentika%2C%20saya%20tertarik%20dengan%20Paket%20Sekolah%20Rp%207%2C5%20juta%2Ftahun"
-                      target="_blank" rel="noreferrer"
-                      style={{ display: "block", textAlign: "center", padding: "11px 0", borderRadius: 14, background: "white", border: "1.5px solid #BFDBFE", color: "#1D4ED8", fontFamily: "var(--sp-display)", fontWeight: 700, fontSize: 14, textDecoration: "none", transition: "filter .2s" }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.filter = "brightness(0.95)"; }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.filter = "none"; }}
-                    >
-                      💬 Konsultasi via WhatsApp
-                    </a>
-                    <div style={{ textAlign: "center", fontSize: 11.5, color: "#9CA3AF" }}>
-                      Invoice NPWP · Dana BOS · &gt;200 siswa harga khusus
+                      ))}
+
+                      {(p.target || p.outcome) && (
+                        <div style={{ marginTop: "auto", background: "#F8FAFC", borderRadius: 14, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
+                          {p.target && (
+                            <div>
+                              <div style={{ fontSize: 11.5, fontWeight: 800, letterSpacing: ".06em", color: "#94A3B8", textTransform: "uppercase" }}>Target</div>
+                              <div style={{ fontSize: 13.5, color: "#334155", marginTop: 2 }}>{p.target}</div>
+                            </div>
+                          )}
+                          {p.outcome && (
+                            <div>
+                              <div style={{ fontSize: 11.5, fontWeight: 800, letterSpacing: ".06em", color: "#94A3B8", textTransform: "uppercase" }}>Outcome</div>
+                              <div style={{ fontSize: 13.5, color: "#334155", marginTop: 2, lineHeight: 1.5 }}>{p.outcome}</div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    <div style={{ padding: "0 26px 26px" }}>
+                      <button
+                        onClick={() => setFormPaket(p.id)}
+                        style={{ width: "100%", padding: "13px 0", borderRadius: 14, border: "none", cursor: "pointer", background: p.warna.aksen, color: "#fff", fontFamily: "var(--sp-display)", fontWeight: 700, fontSize: 15, transition: "filter .2s" }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.filter = "brightness(1.1)"; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.filter = "none"; }}
+                      >
+                        Hubungi Kami →
+                      </button>
+                      <div style={{ textAlign: "center", fontSize: 12, color: "#9CA3AF", marginTop: 8 }}>Informasi harga & setup</div>
                     </div>
                   </div>
-                </div>
+                ))}
+              </div>
+            </Reveal>
 
+            <Reveal>
+              <div style={{ textAlign: "center", marginTop: 28 }}>
+                <span style={{ fontSize: 14, color: "#6B7280" }}>Belum yakin paket mana yang cocok? </span>
+                <button onClick={() => setFormPaket("belum_yakin")}
+                  style={{ background: "none", border: "none", padding: 0, cursor: "pointer", color: "#1D4ED8", fontWeight: 700, fontSize: 14, textDecoration: "underline" }}>
+                  Konsultasikan dengan tim kami
+                </button>
               </div>
             </Reveal>
 
             {/* Trust note */}
             <Reveal>
-              <div style={{ textAlign: "center", marginTop: 36, display: "flex", flexWrap: "wrap", gap: 20, justifyContent: "center", alignItems: "center" }}>
+              <div style={{ textAlign: "center", marginTop: 28, display: "flex", flexWrap: "wrap", gap: 20, justifyContent: "center", alignItems: "center" }}>
                 {["✓ Tanpa kontrak jangka panjang", "✓ Invoice resmi & NPWP tersedia", "✓ Harga khusus sekolah negeri", "✓ Bisa tagih ke Dana BOS"].map(t => (
                   <span key={t} style={{ fontSize: 13.5, color: "#6B7280", fontWeight: 600 }}>{t}</span>
                 ))}
               </div>
             </Reveal>
           </div>
+          <SchoolInquiryModal open={formPaket !== null} paket={formPaket ?? "belum_yakin"} onClose={() => setFormPaket(null)} />
         </section>
 
         {/* ══ FAQ ════════════════════════════════════════════════ */}
@@ -787,7 +811,7 @@ const TalentikaForSchools = () => {
             <div className="sp-faq-grid">
               {[
                 { q: "Sekolah seperti apa yang cocok dengan Talentika?", a: "Talentika for School cocok untuk semua jenjang — SD, SMP, SMA, dan SMK negeri maupun swasta — yang ingin meningkatkan kualitas pengembangan siswa berbasis data dan teknologi." },
-                { q: "Apakah ada biaya untuk sekolah?", a: "Kami menawarkan beberapa paket fleksibel — dari pilot gratis untuk uji coba, hingga paket institusi penuh. Hubungi tim kami untuk konsultasi paket yang paling sesuai dengan kebutuhan dan anggaran sekolah." },
+                { q: "Apakah ada biaya untuk sekolah?", a: "Ada tiga tahap paket — School Essential, Talentika School Core™, dan Talentika Future Ready School™. Harga disesuaikan dengan kebutuhan dan jumlah siswa; isi form \"Hubungi Kami\" di bagian Paket untuk mendapatkan informasi harga dan setup." },
                 { q: "Berapa lama proses implementasi di sekolah?", a: "Proses implementasi rata-rata 2–4 minggu, mencakup onboarding admin, pelatihan guru, setup data siswa, dan briefing program. Tim Customer Success kami akan mendampingi sepanjang prosesnya." },
                 { q: "Bagaimana keamanan data siswa?", a: "Seluruh data dienkripsi end-to-end dan disimpan di server lokal dengan standar ISO 27001. Talentika tunduk pada UU PDP Indonesia dan tidak pernah membagikan data ke pihak ketiga tanpa izin." },
                 { q: "Bisakah disesuaikan dengan kurikulum sekolah?", a: "Tentu. Talentika mendukung Kurikulum Merdeka, Kurikulum 2013, IB, dan Cambridge. Konten dan asesmen dapat disesuaikan dengan visi-misi sekolah." },

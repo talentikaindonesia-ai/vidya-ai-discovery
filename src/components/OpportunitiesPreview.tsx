@@ -5,9 +5,19 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Briefcase, Calendar, MapPin, Trophy, Users, GraduationCap, Building2, ArrowRight, Lock, Globe, Star, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 interface OpportunitiesPreviewProps {
   profile?: any;
+}
+
+interface PremiumProgram {
+  id: string;
+  slug: string;
+  name: string;
+  tagline: string | null;
+  banner_url: string | null;
+  cta_label: string;
 }
 
 const SEA_KEYWORDS = [
@@ -48,10 +58,38 @@ const OpportunitiesPreview = ({ profile }: OpportunitiesPreviewProps) => {
   const [totalCount, setTotalCount] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const isFreeUser = profile?.subscription_type === 'free' || !profile?.subscription_type;
+  const [premiumPrograms, setPremiumPrograms] = useState<PremiumProgram[]>([]);
+  const [joinedPrograms, setJoinedPrograms] = useState<Set<string>>(new Set());
+  const [joiningId, setJoiningId] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
     loadOpportunities();
+    supabase.from("premium_programs" as any).select("id,slug,name,tagline,banner_url,cta_label")
+      .eq("is_active", true).order("sort_order", { ascending: true }).then(({ data }: any) => {
+        setPremiumPrograms((data as PremiumProgram[]) ?? []);
+      });
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUserId(session?.user?.id ?? null);
+      if (session?.user) {
+        supabase.from("premium_program_interest" as any).select("program_id").eq("user_id", session.user.id)
+          .then(({ data }: any) => {
+            setJoinedPrograms(new Set((data ?? []).map((r: { program_id: string }) => r.program_id)));
+          });
+      }
+    });
   }, []);
+
+  const joinWaitlist = async (program: PremiumProgram) => {
+    if (!userId) { navigate('/auth'); return; }
+    setJoiningId(program.id);
+    const { error } = await supabase.from("premium_program_interest" as any)
+      .upsert({ user_id: userId, program_id: program.id }, { onConflict: "user_id,program_id", ignoreDuplicates: true });
+    setJoiningId(null);
+    if (error) { toast.error("Gagal mendaftar minat: " + error.message); return; }
+    setJoinedPrograms(prev => new Set(prev).add(program.id));
+    toast.success("Kamu terdaftar di waitlist — tim kami akan menghubungimu saat program ini siap.");
+  };
 
   const loadOpportunities = async () => {
     try {
@@ -329,6 +367,42 @@ const OpportunitiesPreview = ({ profile }: OpportunitiesPreviewProps) => {
               <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
             </Button>
           </div>
+
+          {/* ── Program Premium (waitlist, tanpa skor match — untuk semua siswa) ── */}
+          {premiumPrograms.length > 0 && (
+            <div className="text-left pt-10">
+              <div className="font-bold text-base mb-3" style={{ fontFamily: "var(--tk-font-display, 'Poppins', sans-serif)" }}>
+                🚀 Program Premium
+              </div>
+              <div className="grid md:grid-cols-2 gap-4">
+                {premiumPrograms.map(p => {
+                  const joined = joinedPrograms.has(p.id);
+                  return (
+                    <div key={p.id} className="bg-card border rounded-2xl overflow-hidden flex flex-col">
+                      <div className="aspect-video bg-muted flex items-center justify-center">
+                        {p.banner_url
+                          ? <img src={p.banner_url} alt={p.name} loading="lazy" className="w-full h-full object-cover" />
+                          : <span className="text-sm text-muted-foreground">{p.name}</span>}
+                      </div>
+                      <div className="p-4 flex flex-col gap-2">
+                        <div className="font-bold text-base" style={{ fontFamily: "var(--tk-font-display, 'Poppins', sans-serif)" }}>{p.name}</div>
+                        {p.tagline && <div className="text-sm text-muted-foreground leading-relaxed">{p.tagline}</div>}
+                        <Button
+                          onClick={() => !joined && joinWaitlist(p)}
+                          disabled={joined || joiningId === p.id}
+                          className="mt-2 w-full"
+                          variant={joined ? "secondary" : "default"}
+                        >
+                          {joiningId === p.id ? "Memproses…" : joined ? "✓ Terdaftar di Waitlist" : `${p.cta_label} — Daftar Minat`}
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {isFreeUser && (
             <p className="text-xs text-muted-foreground">
               Akses semua peluang dengan{' '}

@@ -111,14 +111,14 @@ Deno.serve(async (req) => {
     const sevenDaysAgo   = new Date(now.getTime() - 7  * 86_400_000).toISOString();
     const thirtyDaysAgo  = new Date(now.getTime() - 30 * 86_400_000).toISOString();
 
-    // Find users: last_sign_in between 7 and 30 days ago
-    // We use auth.users via admin API via profiles table (last_login_at if tracked)
-    // Fall back: created_at within range + check if they have any learning activity
+    // Find users: last activity (updated_at) between 7 and 30 days ago.
+    // Suppression: at most one winback per user per 30 days (winback_sent_at stamp).
     const { data: profiles, error } = await supabase
       .from("profiles")
-      .select("user_id, full_name, email, created_at, subscription_status")
+      .select("user_id, full_name, email, created_at, updated_at, subscription_status, winback_sent_at")
       .lt("updated_at", sevenDaysAgo)
       .gt("updated_at", thirtyDaysAgo)
+      .or(`winback_sent_at.is.null,winback_sent_at.lt.${thirtyDaysAgo}`)
       .limit(100);
 
     if (error) throw error;
@@ -156,6 +156,11 @@ Deno.serve(async (req) => {
 
       if (res.ok) {
         sent++;
+        // Suppression stamp: no repeat winback for 30 days
+        await supabase
+          .from("profiles")
+          .update({ winback_sent_at: now.toISOString() })
+          .eq("user_id", profile.user_id);
       } else {
         const body = await res.text();
         errors.push(`${profile.email}: ${body}`);

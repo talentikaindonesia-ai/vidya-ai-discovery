@@ -11,6 +11,10 @@ interface SubscriptionPlanProps {
     features: string[];
     max_users: number;
     is_popular?: boolean;
+    tier?: string | null;
+    tagline?: string | null;
+    description?: string | null;
+    cta_label?: string | null;
   };
   billingCycle: "monthly" | "yearly";
   onSelectPlan: (planId: string, billingCycle: "monthly" | "yearly") => void;
@@ -50,6 +54,26 @@ const PLAN_THEME: Record<string, {
     accentColor: "var(--tk-blue-600)",
     borderColor: "#93C5FD",
   },
+  plus: {
+    headerGrad:  "linear-gradient(135deg, #E8F1FF, #BFDBFE)",
+    badgeBg:     "#DBEAFE",
+    badgeText:   "#1E40AF",
+    iconBg:      "#EFF6FF",
+    btnBg:       "linear-gradient(135deg, var(--tk-blue-600), var(--tk-blue-700))",
+    btnHover:    "var(--tk-blue-700)",
+    accentColor: "var(--tk-blue-600)",
+    borderColor: "#60A5FA",
+  },
+  pro: {
+    headerGrad:  "linear-gradient(135deg, #F3E8FF, #DDD6FE)",
+    badgeBg:     "#EDE9FE",
+    badgeText:   "#5B21B6",
+    iconBg:      "#F5F3FF",
+    btnBg:       "linear-gradient(135deg, #7C3AED, #5B21B6)",
+    btnHover:    "#5B21B6",
+    accentColor: "#7C3AED",
+    borderColor: "#C4B5FD",
+  },
   premium_individual: {
     headerGrad:  "linear-gradient(135deg, #E8F1FF, #FFEDE2)",
     badgeBg:     "#FEF3C7",
@@ -88,6 +112,8 @@ const getTheme = (type: string) =>
 const getPlanIcon = (type: string, priceMonthly: number) => {
   switch (type) {
     case "free":              return BookOpen;
+    case "plus":              return Star;
+    case "pro":               return Crown;
     case "premium_individual":
       return priceMonthly > 50_000 ? Crown : Star;
     case "family":            return Users;
@@ -105,15 +131,18 @@ export const SubscriptionPlan = ({
   loading,
   isHighlighted,
 }: SubscriptionPlanProps) => {
-  const theme       = getTheme(plan.type);
-  const Icon        = getPlanIcon(plan.type, plan.price_monthly);
+  const themeKey    = plan.tier ?? plan.type;
+  const theme       = getTheme(themeKey);
+  const Icon        = getPlanIcon(themeKey, plan.price_monthly);
   const price       = billingCycle === "monthly" ? plan.price_monthly : plan.price_yearly;
   const isCurrentPlan = currentPlan === plan.id;
   const isFree      = plan.type === "free";
-  const isPopular   = plan.type === "premium_individual" || isHighlighted;
-  const savePercent = Math.round(
+  // Dulu setiap paket berbayar diberi pita "Paling Populer" — kini hanya yang ditandai di database.
+  const isPopular   = !!plan.is_popular || !!isHighlighted;
+  const savePercent = plan.price_monthly > 0 ? Math.round(
     ((plan.price_monthly * 12 - plan.price_yearly) / (plan.price_monthly * 12)) * 100
-  );
+  ) : 0;
+  const bulanGratis = plan.price_monthly > 0 ? Math.round(12 - plan.price_yearly / plan.price_monthly) : 0;
 
   return (
     <div
@@ -149,7 +178,7 @@ export const SubscriptionPlan = ({
             top: 0, left: 0, right: 0,
             background: isCurrentPlan
               ? "linear-gradient(90deg,#059669,#0D9488)"
-              : "linear-gradient(90deg,var(--tk-blue-600),var(--tk-orange))",
+              : theme.btnBg,
             color: "#fff",
             textAlign: "center",
             padding: "7px 0",
@@ -212,11 +241,16 @@ export const SubscriptionPlan = ({
             fontWeight: 700,
             fontSize: 18,
             color: "var(--tk-ink)",
-            marginBottom: 10,
+            marginBottom: plan.tagline ? 2 : 10,
           }}
         >
           {plan.name}
         </div>
+        {plan.tagline && (
+          <div style={{ fontSize: 12.5, fontWeight: 700, color: theme.accentColor, marginBottom: 10, fontFamily: "var(--tk-font-display)" }}>
+            {plan.tagline}
+          </div>
+        )}
 
         {/* Price */}
         <div style={{ display: "flex", alignItems: "baseline", justifyContent: "center", gap: 4 }}>
@@ -254,8 +288,13 @@ export const SubscriptionPlan = ({
                 border: "1px solid #A7F3D0",
               }}
             >
-              🎉 Hemat {savePercent}% · Setara 2 bulan gratis
+              🎉 Hemat {savePercent}%{bulanGratis >= 1 ? ` · ${bulanGratis} bulan gratis` : ""}
             </div>
+          </div>
+        )}
+        {billingCycle === "yearly" && !isFree && plan.type !== "school" && (
+          <div style={{ fontSize: 11.5, color: "var(--tk-gray-500)", marginTop: 6, fontFamily: "var(--tk-font-sans)" }}>
+            ≈ {formatCurrency(Math.round(plan.price_yearly / 12))}/bln, ditagih setahun sekali
           </div>
         )}
         {/* Monthly billing: show "switch to yearly" teaser */}
@@ -281,8 +320,10 @@ export const SubscriptionPlan = ({
         )}
 
         {/* Users label */}
-        <div style={{ fontSize: 12.5, color: "var(--tk-gray-500)", marginTop: plan.type === "school" ? 4 : 8, fontFamily: "var(--tk-font-sans)" }}>
-          {plan.type === "school"
+        <div style={{ fontSize: 12.5, color: "var(--tk-gray-500)", marginTop: plan.type === "school" ? 4 : 8, fontFamily: "var(--tk-font-sans)", lineHeight: 1.5 }}>
+          {plan.description
+            ? plan.description
+            : plan.type === "school"
             ? "Akses penuh untuk seluruh siswa"
             : plan.max_users > 1
             ? `Untuk ${plan.max_users} pengguna`
@@ -357,8 +398,6 @@ export const SubscriptionPlan = ({
               cursor: loading || isCurrentPlan ? "not-allowed" : "pointer",
               background: isCurrentPlan
                 ? "var(--tk-gray-100)"
-                : plan.type === "premium_individual"
-                ? "linear-gradient(135deg, var(--tk-blue-600), var(--tk-orange))"
                 : theme.btnBg,
               color: isCurrentPlan ? "var(--tk-gray-400)" : "#fff",
               fontFamily: "var(--tk-font-display)",
@@ -378,6 +417,8 @@ export const SubscriptionPlan = ({
           >
             {isCurrentPlan
               ? "✓ Paket Aktif"
+              : plan.cta_label
+              ? `${plan.cta_label}${isFree ? "" : " →"}`
               : isFree
               ? "Mulai Gratis"
               : "Berlangganan Sekarang →"}

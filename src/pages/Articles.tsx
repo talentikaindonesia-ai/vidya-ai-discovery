@@ -391,7 +391,7 @@ const Articles = () => {
         {/* Featured cards skeleton */}
         <div style={{ padding: "52px 36px 0", maxWidth: 1320, margin: "0 auto" }}>
           <Skeleton className="h-8 w-48 mx-auto mb-6" />
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 20 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 20 }}>
             {[1, 2, 3].map(i => (
               <div key={i} style={{ background: "#fff", borderRadius: 20, overflow: "hidden", border: "1.5px solid #E2E8F0" }}>
                 <Skeleton className="h-48 w-full rounded-none" />
@@ -415,7 +415,7 @@ const Articles = () => {
         </div>
         <div style={{ padding: "0 36px 48px", maxWidth: 1320, margin: "0 auto" }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: 24 }}>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 22 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 22 }}>
               {[1,2,3,4,5,6].map(i => (
                 <div key={i} style={{ background: "#fff", borderRadius: 18, overflow: "hidden", border: "1.5px solid #E2E8F0" }}>
                   <Skeleton className="h-44 w-full rounded-none" />

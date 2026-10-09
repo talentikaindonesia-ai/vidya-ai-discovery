@@ -6,6 +6,8 @@ export interface SubscriptionState {
   isFree: boolean;
   isSchool: boolean;
   isEnterprise: boolean;
+  /** Where premium came from: 'paid' | 'school' | 'admin' | null */
+  source: string | null;
   type: string | null;
   status: string | null;
   expiresAt: string | null;
@@ -18,6 +20,7 @@ const DEFAULT: SubscriptionState = {
   isFree: true,
   isSchool: false,
   isEnterprise: false,
+  source: null,
   type: null,
   status: null,
   expiresAt: null,
@@ -28,6 +31,11 @@ const DEFAULT: SubscriptionState = {
 let cache: { state: SubscriptionState; ts: number } | null = null;
 const CACHE_MS = 60_000; // 1 minute
 
+/**
+ * Subscription state, backed by the server-side `my_access()` RPC —
+ * the same logic RLS uses (paid-not-expired OR school member OR admin),
+ * so the UI and the database can never disagree about who is premium.
+ */
 export function useSubscription(): SubscriptionState {
   const [state, setState] = useState<SubscriptionState>(DEFAULT);
 
@@ -43,32 +51,37 @@ export function useSubscription(): SubscriptionState {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user || cancelled) return;
 
-      const { data } = await supabase
-        .from("profiles")
-        .select("subscription_type, subscription_status, subscription_end_date")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
+      const { data, error } = await supabase.rpc("my_access");
       if (cancelled) return;
 
-      const type   = data?.subscription_type ?? "free";
-      const status = data?.subscription_status ?? "inactive";
-      const exp    = data?.subscription_end_date ?? null;
-      const daysLeft = exp
-        ? Math.ceil((new Date(exp).getTime() - Date.now()) / 86_400_000)
-        : null;
+      if (error || !data) {
+        // Fail closed (free) but don't cache errors
+        console.error("my_access RPC failed:", error);
+        setState({ ...DEFAULT, loading: false });
+        return;
+      }
 
-      const isPremium    = (type === "premium" || type === "premium_individual" || type === "individual" || type === "family") && status === "active";
-      const isSchool     = type === "school"     && status === "active";
-      const isEnterprise = type === "enterprise" && status === "active";
+      const acc = data as {
+        is_premium: boolean;
+        source: string | null;
+        expires_at: string | null;
+        type: string | null;
+      };
+
+      const exp = acc.expires_at ?? null;
+      const daysLeft =
+        (acc.source === "paid" || acc.source === "trial") && exp
+          ? Math.ceil((new Date(exp).getTime() - Date.now()) / 86_400_000)
+          : null;
 
       const next: SubscriptionState = {
-        isPremium: isPremium || isSchool || isEnterprise,
-        isFree: !isPremium && !isSchool && !isEnterprise,
-        isSchool,
-        isEnterprise,
-        type,
-        status,
+        isPremium: !!acc.is_premium,
+        isFree: !acc.is_premium,
+        isSchool: acc.source === "school",
+        isEnterprise: acc.type === "enterprise" && !!acc.is_premium,
+        source: acc.source,
+        type: acc.type ?? "free",
+        status: acc.is_premium ? "active" : "inactive",
         expiresAt: exp,
         daysLeft,
         loading: false,

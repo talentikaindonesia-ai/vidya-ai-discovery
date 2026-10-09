@@ -36,9 +36,15 @@ const INTEREST_OPTIONS = [
   { id: "sports",        label: "Olahraga & Kesehatan", icon: "⚽" },
 ];
 
-const EDU_OPTIONS = [
-  "SD / Sederajat", "SMP / Sederajat", "SMA / SMK / Sederajat",
-  "D1 / D2 / D3", "S1 / D4", "S2 / S3",
+// Nilai harus persis sama dengan yang diterima kolom profiles.jenjang
+// (lihat constraint profiles_jenjang_valid) — dipakai untuk nanti menyortir
+// pertanyaan assessment per jenjang. SD sengaja tidak ada di sini karena
+// jenjang itu sudah punya jalur onboarding sendiri di Talentika Junior.
+const EDU_OPTIONS: { value: "smp" | "sma_smk" | "kuliah" | "lulusan"; label: string }[] = [
+  { value: "smp",     label: "SMP / Sederajat" },
+  { value: "sma_smk", label: "SMA / SMK / Sederajat" },
+  { value: "kuliah",  label: "Kuliah (D1–S3)" },
+  { value: "lulusan", label: "Sudah Lulus / Bekerja" },
 ];
 
 const TRUST_ITEMS = [
@@ -77,14 +83,20 @@ const Onboarding = () => {
 
       const { error: profileError } = await supabase
         .from("profiles")
-        .update({ full_name: formData.fullName, updated_at: new Date().toISOString() })
+        .update({
+          full_name: formData.fullName,
+          jenjang: formData.educationLevel || null,
+          updated_at: new Date().toISOString(),
+        })
         .eq("user_id", user.id);
 
       if (profileError) throw profileError;
 
-      await supabase.auth.updateUser({
-        data: { education_level: formData.educationLevel, age: formData.age },
-      });
+      // Umur belum dipakai di mana pun — disimpan di metadata akun saja,
+      // bukan kolom profiles (belum ada).
+      if (formData.age) {
+        await supabase.auth.updateUser({ data: { age: formData.age } });
+      }
 
       const { data: categories } = await supabase.from("interest_categories").select("id, name");
       for (const interestId of formData.interests) {
@@ -432,21 +444,21 @@ const Onboarding = () => {
               <div style={{ display: "flex", flexDirection: "column" as const, gap: 10 }}>
                 {EDU_OPTIONS.map(opt => (
                   <button
-                    key={opt}
-                    onClick={() => setFormData(p => ({ ...p, educationLevel: opt }))}
+                    key={opt.value}
+                    onClick={() => setFormData(p => ({ ...p, educationLevel: opt.value }))}
                     style={{
                       textAlign: "left" as const, padding: "14px 18px",
-                      background: formData.educationLevel === opt ? "var(--tk-blue-50)" : "white",
-                      border: formData.educationLevel === opt ? "2px solid var(--tk-blue-600)" : "1.5px solid var(--tk-gray-200)",
+                      background: formData.educationLevel === opt.value ? "var(--tk-blue-50)" : "white",
+                      border: formData.educationLevel === opt.value ? "2px solid var(--tk-blue-600)" : "1.5px solid var(--tk-gray-200)",
                       borderRadius: 14, cursor: "pointer", fontSize: 14,
-                      color: formData.educationLevel === opt ? "var(--tk-blue-700)" : "var(--tk-ink)",
-                      fontFamily: "var(--tk-font-display)", fontWeight: formData.educationLevel === opt ? 700 : 500,
+                      color: formData.educationLevel === opt.value ? "var(--tk-blue-700)" : "var(--tk-ink)",
+                      fontFamily: "var(--tk-font-display)", fontWeight: formData.educationLevel === opt.value ? 700 : 500,
                       display: "flex", alignItems: "center", justifyContent: "space-between",
                       transition: "all .15s ease",
                     }}
                   >
-                    {opt}
-                    {formData.educationLevel === opt && <Check size={16} style={{ color: "var(--tk-blue-600)" }} />}
+                    {opt.label}
+                    {formData.educationLevel === opt.value && <Check size={16} style={{ color: "var(--tk-blue-600)" }} />}
                   </button>
                 ))}
               </div>

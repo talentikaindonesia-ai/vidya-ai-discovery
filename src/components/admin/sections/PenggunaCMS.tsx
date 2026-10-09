@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Search, Edit2, Loader2, Save } from "lucide-react";
+import { Search, Edit2, Loader2, Save, Shield, ShieldOff } from "lucide-react";
 import { inputStyle, selectStyle, Pill, Modal, Field } from "../adminShared";
 
 interface UserProfile {
@@ -33,7 +33,12 @@ export default function PenggunaCMS() {
   const [editItem, setEditItem]     = useState<UserProfile | null>(null);
   const [saving, setSaving]         = useState(false);
   const [page, setPage]             = useState(0);
+  const [filterRole, setFilterRole] = useState<"all" | "admin">("all");
+  const [myId, setMyId]             = useState<string | null>(null);
+  const [changingRole, setChangingRole] = useState(false);
   const PAGE = 20;
+
+  useEffect(() => { supabase.auth.getUser().then(({ data }) => setMyId(data.user?.id ?? null)); }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -44,7 +49,7 @@ export default function PenggunaCMS() {
 
     const { data: roles } = await supabase.from("user_roles").select("user_id, role");
     const roleMap: Record<string, string> = {};
-    (roles ?? []).forEach(r => { roleMap[r.user_id] = r.role; });
+    (roles ?? []).forEach(r => { if (roleMap[r.user_id] !== "admin") roleMap[r.user_id] = r.role; });
 
     setItems((profiles ?? []).map(p => ({ ...p, role: roleMap[p.user_id] ?? "individual" })));
     setLoading(false);
@@ -56,13 +61,31 @@ export default function PenggunaCMS() {
     const q = search.toLowerCase();
     if (q && !(u.full_name ?? "").toLowerCase().includes(q) && !(u.email ?? "").toLowerCase().includes(q)) return false;
     if (filterSub !== "all" && u.subscription_type !== filterSub) return false;
+    if (filterRole === "admin" && u.role !== "admin") return false;
     return true;
   });
+  const adminCount = items.filter(u => u.role === "admin").length;
   const paginated = filtered.slice(page * PAGE, (page + 1) * PAGE);
   const totalPages = Math.ceil(filtered.length / PAGE);
 
   function openEdit(u: UserProfile) { setEditItem({ ...u }); setModal(true); }
   function close() { setModal(false); setEditItem(null); }
+
+  async function ubahAdmin(jadikan: boolean) {
+    if (!editItem) return;
+    const nama = editItem.full_name ?? editItem.email ?? "pengguna ini";
+    const pesan = jadikan
+      ? `Jadikan ${nama} admin?\n\nAdmin punya akses penuh: semua CMS, data pengguna, dan data pembayaran.`
+      : `Cabut akses admin dari ${nama}?`;
+    if (!window.confirm(pesan)) return;
+    setChangingRole(true);
+    const { data, error } = await (supabase.rpc as any)("set_admin_role", { p_user_id: editItem.user_id, p_admin: jadikan });
+    setChangingRole(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success(`${nama}: ${data}`);
+    setEditItem(p => p ? { ...p, role: jadikan ? "admin" : "individual" } : p);
+    load();
+  }
 
   async function save() {
     if (!editItem) return;
@@ -87,6 +110,10 @@ export default function PenggunaCMS() {
         <select value={filterSub} onChange={e => { setFilterSub(e.target.value); setPage(0); }} style={{ ...selectStyle, width: 150 }}>
           <option value="all">Semua Paket</option>
           {Object.entries(SUB_TYPE_CFG).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+        </select>
+        <select value={filterRole} onChange={e => { setFilterRole(e.target.value as "all" | "admin"); setPage(0); }} style={{ ...selectStyle, width: 150 }}>
+          <option value="all">Semua Peran</option>
+          <option value="admin">🛡 Admin ({adminCount})</option>
         </select>
         <div style={{ fontSize: 13, color: "#64748B", padding: "9px 14px", background: "white", borderRadius: 9, border: "1px solid #E2E8F0" }}>
           <strong style={{ color: "#0F172A" }}>{filtered.length}</strong> pengguna
@@ -139,13 +166,33 @@ export default function PenggunaCMS() {
       )}
 
       {modal && editItem && (
-        <Modal title={`Edit Langganan — ${editItem.full_name ?? editItem.email}`} onClose={close}>
+        <Modal title={`Edit Pengguna — ${editItem.full_name ?? editItem.email}`} onClose={close}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px 20px", padding: "28px 28px 24px" }}>
             <div style={{ gridColumn: "span 2", background: "#F8FAFC", borderRadius: 10, padding: "14px 16px", border: "1px solid #E2E8F0" }}>
               <div style={{ fontSize: 12, color: "#94A3B8", marginBottom: 4, fontWeight: 600, textTransform: "uppercase", letterSpacing: ".05em" }}>Info Pengguna</div>
               <div style={{ fontSize: 14, color: "#0F172A", fontWeight: 600 }}>{editItem.full_name ?? "—"}</div>
               <div style={{ fontSize: 13, color: "#64748B" }}>{editItem.email}</div>
               <div style={{ fontSize: 12, color: "#94A3B8", marginTop: 4 }}>ID: {editItem.user_id}</div>
+            </div>
+            <div style={{ gridColumn: "span 2", borderRadius: 10, padding: "14px 16px", border: `1px solid ${editItem.role === "admin" ? "#BFDBFE" : "#E2E8F0"}`, background: editItem.role === "admin" ? "#EFF6FF" : "white", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+              <div style={{ flex: 1, minWidth: 180 }}>
+                <div style={{ fontSize: 12, color: "#94A3B8", fontWeight: 600, textTransform: "uppercase", letterSpacing: ".05em" }}>Peran</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: "#0F172A", marginTop: 2 }}>{editItem.role === "admin" ? "🛡 Admin" : "👤 Pengguna"}</div>
+                {editItem.user_id === myId && <div style={{ fontSize: 12, color: "#64748B", marginTop: 3 }}>Kamu tidak bisa mengubah peranmu sendiri.</div>}
+              </div>
+              {editItem.user_id !== myId && (
+                editItem.role === "admin" ? (
+                  <button onClick={() => ubahAdmin(false)} disabled={changingRole}
+                    style={{ display: "flex", alignItems: "center", gap: 6, padding: "9px 14px", borderRadius: 9, border: "1px solid #FECACA", background: "white", color: "#B91C1C", fontWeight: 700, fontSize: 13, cursor: changingRole ? "wait" : "pointer" }}>
+                    {changingRole ? <Loader2 size={14} className="animate-spin" /> : <ShieldOff size={14} />} Cabut Admin
+                  </button>
+                ) : (
+                  <button onClick={() => ubahAdmin(true)} disabled={changingRole}
+                    style={{ display: "flex", alignItems: "center", gap: 6, padding: "9px 14px", borderRadius: 9, border: "none", background: "#0F172A", color: "white", fontWeight: 700, fontSize: 13, cursor: changingRole ? "wait" : "pointer" }}>
+                    {changingRole ? <Loader2 size={14} className="animate-spin" /> : <Shield size={14} />} Jadikan Admin
+                  </button>
+                )
+              )}
             </div>
             <Field label="Paket Langganan" half>
               <select value={editItem.subscription_type ?? "free"} onChange={e => setEditItem(p => p ? ({ ...p, subscription_type: e.target.value }) : p)} style={selectStyle}>

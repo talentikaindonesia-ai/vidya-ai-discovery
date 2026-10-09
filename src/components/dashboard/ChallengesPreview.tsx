@@ -46,7 +46,7 @@ export const ChallengesPreview = () => {
   useEffect(() => {
     (async () => {
       const { data } = await supabase
-        .from("challenges")
+        .from("community_challenges")
         .select("id, title, description, challenge_type, difficulty, end_date, xp_reward, is_active")
         .eq("is_active", true)
         .order("end_date", { ascending: true, nullsFirst: false })

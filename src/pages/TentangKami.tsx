@@ -241,7 +241,7 @@ const TentangKami = () => {
               </p>
 
               {/* 4 icon buttons */}
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 12 }}>
                 {[
                   {
                     bg: "#1D4ED8", label: "Temukan Potensimu",
@@ -300,7 +300,7 @@ const TentangKami = () => {
               </p>
 
               {/* 4 icon buttons */}
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 12 }}>
                 {[
                   {
                     bg: "#1D4ED8", label: "Platform Terkemuka di Indonesia & Asia Tenggara",

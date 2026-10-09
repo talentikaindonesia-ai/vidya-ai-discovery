@@ -32,12 +32,15 @@ export const useGameification = () => {
       if (!user) return;
       userIdRef.current = user.id;
 
-      // Load XP data
+      // Load XP data. maybeSingle (not single) so a missing row returns null
+      // instead of throwing — a thrown error here used to fall into the else
+      // branch and insert a *new* empty row on every load, which (before the
+      // unique constraint) spiralled into dozens of duplicate rows per user.
       const { data: xpData } = await supabase
         .from('user_xp')
         .select('id,user_id,current_xp,current_level,total_xp_earned')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       if (xpData) {
         setUserXP(xpData);
@@ -64,21 +67,32 @@ export const useGameification = () => {
 
   const initializeUserXP = async (userId: string) => {
     try {
-      const { data, error } = await supabase
+      // Race-safe: insert only if missing (unique constraint on user_id).
+      // ignoreDuplicates avoids overwriting an existing row's XP with zeros.
+      await supabase
         .from('user_xp')
-        .insert([{ user_id: userId, current_xp: 0, current_level: 1, total_xp_earned: 0 }])
-        .select()
-        .single();
+        .upsert(
+          { user_id: userId, current_xp: 0, current_level: 1, total_xp_earned: 0 },
+          { onConflict: 'user_id', ignoreDuplicates: true }
+        );
+      const { data } = await supabase
+        .from('user_xp')
+        .select('id,user_id,current_xp,current_level,total_xp_earned')
+        .eq('user_id', userId)
+        .maybeSingle();
+      if (data) setUserXP(data);
 
-      if (error) throw error;
-      setUserXP(data);
-
-      // Initialize basic streaks
-      const streakTypes = ['login', 'learning', 'achievement'];
-      for (const type of streakTypes) {
+      // Initialize basic streaks (idempotent — skip types that already exist)
+      const { data: existing } = await supabase
+        .from('user_streaks')
+        .select('streak_type')
+        .eq('user_id', userId);
+      const have = new Set((existing ?? []).map(r => r.streak_type));
+      const missing = ['login', 'learning', 'achievement'].filter(t => !have.has(t));
+      if (missing.length) {
         await supabase
           .from('user_streaks')
-          .insert([{ user_id: userId, streak_type: type, current_streak: 0, longest_streak: 0 }]);
+          .insert(missing.map(type => ({ user_id: userId, streak_type: type, current_streak: 0, longest_streak: 0 })));
       }
     } catch (error) {
       console.error('Error initializing user XP:', error);
@@ -100,18 +114,26 @@ export const useGameification = () => {
       if (error) throw error;
 
       const result = data as {
-        current_xp: number; current_level: number;
+        awarded?: boolean; current_xp: number; current_level: number;
         leveled_up: boolean; amount: number;
       };
+
+      /* award_xp kini dijaga server: maks 100 XP per klaim dan 500 XP per
+         hari dari browser. Bila batas tercapai, server membalas awarded=false
+         dan amount=0 — jangan tampilkan "+X XP" yang tidak benar-benar masuk. */
+      if (result.awarded === false) {
+        return { levelUp: false, newLevel: result.current_level };
+      }
+      const masuk = result.amount ?? amount;
 
       setUserXP(prev => ({
         ...prev,
         current_xp:      result.current_xp,
         current_level:   result.current_level,
-        total_xp_earned: prev.total_xp_earned + amount,
+        total_xp_earned: prev.total_xp_earned + masuk,
       }));
 
-      sonnerToast(`+${amount} XP`, { description: reason, duration: 3000 });
+      sonnerToast(`+${masuk} XP`, { description: reason, duration: 3000 });
       if (result.leveled_up) {
         sonnerToast('🎉 Level Up!', {
           description: `Selamat! Kamu mencapai Level ${result.current_level}!`,

@@ -18,6 +18,8 @@ interface SubPackage {
   id: string; name: string; type: string;
   price_monthly: number; price_yearly: number;
   features: string[]; max_users: number; is_active: boolean;
+  tier?: string | null; tagline?: string | null; description?: string | null;
+  is_popular?: boolean; cta_label?: string | null; sort_order?: number;
 }
 interface Voucher {
   id: string; code: string; name: string | null; description: string | null;
@@ -53,6 +55,14 @@ export default function PaymentsCMS() {
   const [vcSaving, setVcSaving]   = useState(false);
   const [vcDelId, setVcDelId]     = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+
+  // Premium-gate conversion funnel (which gate converts best)
+  const [gateStats, setGateStats] = useState<{ feature: string; shown: number; clicked: number; ctr: number }[]>([]);
+  useEffect(() => {
+    (supabase.rpc as any)("gate_conversion_stats").then(({ data }: any) => {
+      if (Array.isArray(data)) setGateStats(data);
+    });
+  }, []);
 
   const loadAll = useCallback(async () => {
     setLoading(true);
@@ -111,7 +121,7 @@ export default function PaymentsCMS() {
   }
 
   function openCreatePkg() {
-    setPkgEdit({ name: "", type: "premium", price_monthly: 0, price_yearly: 0, features: [], max_users: 1, is_active: true });
+    setPkgEdit({ name: "", type: "premium_individual", price_monthly: 0, price_yearly: 0, features: [], max_users: 1, is_active: true, is_popular: false, sort_order: 0 });
     setFeatInput(""); setPkgModal("create");
   }
   function openEditPkg(p: SubPackage) { setPkgEdit({ ...p, features: [...(p.features ?? [])] }); setFeatInput(""); setPkgModal("edit"); }
@@ -121,14 +131,24 @@ export default function PaymentsCMS() {
     if (!pkgEdit?.name) { toast.error("Nama paket wajib diisi"); return; }
     setPkgSaving(true);
     const payload = {
-      name: pkgEdit.name, type: pkgEdit.type || "premium",
+      name: pkgEdit.name, type: pkgEdit.type || "premium_individual",
       price_monthly: pkgEdit.price_monthly ?? 0, price_yearly: pkgEdit.price_yearly ?? 0,
       features: pkgEdit.features ?? [], max_users: pkgEdit.max_users ?? 1,
       is_active: pkgEdit.is_active ?? true,
+      tier: pkgEdit.tier || null,
+      tagline: pkgEdit.tagline?.trim() || null,
+      description: pkgEdit.description?.trim() || null,
+      cta_label: pkgEdit.cta_label?.trim() || null,
+      is_popular: !!pkgEdit.is_popular,
+      sort_order: Number(pkgEdit.sort_order) || 0,
     };
-    const { error } = pkgModal === "create"
-      ? await supabase.from("subscription_packages").insert(payload)
-      : await supabase.from("subscription_packages").update(payload).eq("id", pkgEdit.id!);
+    const { data: tersimpan, error } = pkgModal === "create"
+      ? await supabase.from("subscription_packages").insert(payload as any).select("id").single()
+      : await supabase.from("subscription_packages").update(payload as any).eq("id", pkgEdit.id!).select("id").single();
+    // Pita "Paling Populer" hanya untuk satu paket.
+    if (!error && payload.is_popular && tersimpan?.id) {
+      await supabase.from("subscription_packages").update({ is_popular: false } as any).neq("id", tersimpan.id);
+    }
     if (error) { toast.error("Gagal: " + error.message); }
     else { toast.success(pkgModal === "create" ? "Paket dibuat" : "Paket diperbarui"); closePkg(); loadAll(); }
     setPkgSaving(false);
@@ -374,9 +394,29 @@ export default function PaymentsCMS() {
               <input value={pkgEdit.name ?? ""} onChange={e => setPkgEdit(p => ({ ...p, name: e.target.value }))} style={inputStyle} placeholder="Premium Individual" />
             </Field>
             <Field label="Tipe" half>
-              <select value={pkgEdit.type ?? "premium"} onChange={e => setPkgEdit(p => ({ ...p, type: e.target.value }))} style={selectStyle}>
-                {["free", "premium", "school", "enterprise"].map(t => <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>)}
+              <select value={pkgEdit.type ?? "premium_individual"} onChange={e => setPkgEdit(p => ({ ...p, type: e.target.value }))} style={selectStyle}>
+                {[["free", "Gratis"], ["premium_individual", "Berbayar (individu)"], ["school", "Sekolah"], ["family", "Keluarga"]].map(([v, l]) => <option key={v} value={v}>{l}</option>)}
               </select>
+            </Field>
+            <Field label="Tema kartu" half>
+              <select value={pkgEdit.tier ?? ""} onChange={e => setPkgEdit(p => ({ ...p, tier: e.target.value || null }))} style={selectStyle}>
+                <option value="">— Bawaan —</option>
+                <option value="free">Free (hijau)</option>
+                <option value="plus">Plus (biru)</option>
+                <option value="pro">Pro (ungu)</option>
+              </select>
+            </Field>
+            <Field label="Urutan tampil" half>
+              <input type="number" value={pkgEdit.sort_order ?? 0} onChange={e => setPkgEdit(p => ({ ...p, sort_order: +e.target.value }))} style={inputStyle} />
+            </Field>
+            <Field label="Tagline" half>
+              <input value={pkgEdit.tagline ?? ""} onChange={e => setPkgEdit(p => ({ ...p, tagline: e.target.value }))} style={inputStyle} placeholder="Develop Your Potential" />
+            </Field>
+            <Field label="Label tombol" half>
+              <input value={pkgEdit.cta_label ?? ""} onChange={e => setPkgEdit(p => ({ ...p, cta_label: e.target.value }))} style={inputStyle} placeholder="Berlangganan Plus" />
+            </Field>
+            <Field label="Deskripsi singkat (untuk siapa paket ini)">
+              <input value={pkgEdit.description ?? ""} onChange={e => setPkgEdit(p => ({ ...p, description: e.target.value }))} style={inputStyle} placeholder="Untuk siswa yang ingin…" />
             </Field>
             <Field label="Harga Bulanan (IDR)" half>
               <input type="number" min={0} value={pkgEdit.price_monthly ?? 0} onChange={e => setPkgEdit(p => ({ ...p, price_monthly: +e.target.value }))} style={inputStyle} />
@@ -403,6 +443,9 @@ export default function PaymentsCMS() {
             <div style={{ gridColumn: "span 2", display: "flex", alignItems: "center", gap: 10 }}>
               <Toggle on={pkgEdit.is_active ?? true} onToggle={() => setPkgEdit(p => ({ ...p, is_active: !p?.is_active }))} />
               <span style={{ fontSize: 13, fontWeight: 600, color: "#374151" }}>Aktif (ditampilkan ke pengguna)</span>
+              <span style={{ width: 20 }} />
+              <Toggle on={!!pkgEdit.is_popular} onToggle={() => setPkgEdit(p => ({ ...p, is_popular: !p?.is_popular }))} />
+              <span style={{ fontSize: 13, fontWeight: 600, color: "#374151" }}>Paling Populer (hanya satu paket)</span>
             </div>
             <div style={{ gridColumn: "span 2", display: "flex", gap: 12, justifyContent: "flex-end", paddingTop: 16, borderTop: "1px solid #F1F5F9" }}>
               <button onClick={closePkg} style={{ padding: "10px 20px", borderRadius: 9, border: "1px solid #E2E8F0", background: "white", color: "#475569", fontWeight: 600, fontSize: 14, cursor: "pointer" }}>Batal</button>
@@ -485,6 +528,51 @@ export default function PaymentsCMS() {
                 <div style={{ fontSize: 11.5, color: "#64748B", marginTop: 4 }}>{sub}</div>
               </div>
             ))}
+          </div>
+
+          {/* Premium-gate conversion funnel */}
+          <div style={{ background: "white", border: "1px solid #E2E8F0", borderRadius: 14, padding: "20px 24px" }}>
+            <div style={{ fontFamily: "var(--tk-font-display)", fontWeight: 700, fontSize: 15, color: "#0F172A", marginBottom: 4 }}>
+              🔒 Konversi Gate Premium
+            </div>
+            <div style={{ fontSize: 12, color: "#94A3B8", marginBottom: 16 }}>
+              Gate mana yang paling sering ditabrak free user & paling mendorong klik upgrade
+            </div>
+            {gateStats.length === 0 ? (
+              <div style={{ padding: "28px 0", textAlign: "center", color: "#94A3B8", fontSize: 13 }}>
+                Belum ada data — event tercatat otomatis setiap free user menabrak gate.
+              </div>
+            ) : (
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                  <thead>
+                    <tr style={{ borderBottom: "1.5px solid #E2E8F0", textAlign: "left" }}>
+                      <th style={{ padding: "8px 10px", color: "#64748B", fontWeight: 700, fontSize: 11.5, textTransform: "uppercase", letterSpacing: ".05em" }}>Fitur / Gate</th>
+                      <th style={{ padding: "8px 10px", color: "#64748B", fontWeight: 700, fontSize: 11.5, textTransform: "uppercase", letterSpacing: ".05em", textAlign: "right" }}>Prompt Muncul</th>
+                      <th style={{ padding: "8px 10px", color: "#64748B", fontWeight: 700, fontSize: 11.5, textTransform: "uppercase", letterSpacing: ".05em", textAlign: "right" }}>Klik Upgrade</th>
+                      <th style={{ padding: "8px 10px", color: "#64748B", fontWeight: 700, fontSize: 11.5, textTransform: "uppercase", letterSpacing: ".05em", textAlign: "right" }}>CTR</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {gateStats.map(g => (
+                      <tr key={g.feature} style={{ borderBottom: "1px solid #F1F5F9" }}>
+                        <td style={{ padding: "10px", fontWeight: 600, color: "#0F172A" }}>{g.feature}</td>
+                        <td style={{ padding: "10px", textAlign: "right", color: "#334155" }}>{g.shown}</td>
+                        <td style={{ padding: "10px", textAlign: "right", color: "#334155" }}>{g.clicked}</td>
+                        <td style={{ padding: "10px", textAlign: "right" }}>
+                          <span style={{
+                            fontWeight: 800,
+                            color: g.ctr >= 20 ? "#059669" : g.ctr >= 8 ? "#D97706" : "#94A3B8",
+                          }}>
+                            {g.ctr}%
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
 
           {/* Weekly revenue chart */}

@@ -1,3 +1,14 @@
+// ⚠ TIDAK LAGI DI-DEPLOY (sejak 2026-09-07).
+//
+// Yang berjalan di produksi sekarang adalah versi stub yang mengembalikan
+// { disabled: true } tanpa mengambil apa pun. Alasannya: SEMUA feed di bawah
+// adalah situs internasional — hasilnya 468 peluang aktif dengan 443 berlokasi
+// "Internasional" dan hanya 6 Indonesia, metadata tipis, dan satu feed pernah
+// dibajak jadi spam judi. Peluang sekarang dikurasi manual lewat CMS Admin.
+//
+// Cron 'scrape-fast-categories' + 'scrape-daily-all' sudah di-unschedule.
+// File ini disimpan sebagai rujukan kalau nanti ada sumber Indonesia terverifikasi.
+
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
@@ -12,7 +23,9 @@ const SOURCES = {
     { url: 'https://www.scholars4dev.com/feed/', type: 'rss' },
     { url: 'https://opportunitydesk.org/category/scholarships/feed/', type: 'rss' },
     { url: 'https://youthop.com/category/scholarships/feed/', type: 'rss' },
-    { url: 'https://worldscholarshipforum.com/feed/', type: 'rss' },
+    // DIHAPUS 2026-07-18: worldscholarshipforum.com ternyata dibajak — 72 dari
+    // 72 itemnya adalah spam kasino/judi dan konten telanjang AI (DeepNude,
+    // Undresser), semuanya masuk sebagai "beasiswa". Nol peluang sah.
     { url: 'https://scholarshipscorner.website/feed/', type: 'rss' },
     { url: 'https://scholarships360.org/feed/', type: 'rss' },
     { url: 'https://www.afterschoolafrica.com/category/scholarships/feed/', type: 'rss' },
@@ -27,11 +40,13 @@ const SOURCES = {
     { url: 'https://youthop.com/category/internships/feed/', type: 'rss' },
     { url: 'https://www.afterschoolafrica.com/category/internships/feed/', type: 'rss' },
     { url: 'https://internships.com/feed/', type: 'rss' },
+    { url: 'https://www.opportunitiescircle.com/category/internships/feed/', type: 'rss' }, // probed: 10 items, global
   ],
   lowongan_kerja: [
     { url: 'https://opportunitydesk.org/category/fellowships/feed/', type: 'rss' },
     { url: 'https://youthop.com/category/opportunities/feed/', type: 'rss' },
-    { url: 'https://www.un.org/en/rss.xml', type: 'rss' },
+    // NOTE: un.org/en/rss.xml removed — it is a general NEWS feed (photo cards
+    // like "#UNGA78 - Wrap Day 4"), not vacancies. careers.un.org is the jobs one.
     { url: 'https://careers.un.org/lc/en/rss/jobs', type: 'rss' },
   ],
   kompetisi: [
@@ -40,12 +55,14 @@ const SOURCES = {
     { url: 'https://youthop.com/category/competitions/feed/', type: 'rss' },
     { url: 'https://www.topcoder.com/blog/feed/', type: 'rss' },
     { url: 'https://challenges.openideo.com/feed.rss', type: 'rss' },
+    { url: 'https://www.opportunitiescircle.com/category/competitions/feed/', type: 'rss' }, // probed: 5 items, global
   ],
   konferensi: [
     { url: 'https://opportunitydesk.org/category/conferences/feed/', type: 'rss' },
     { url: 'https://youthop.com/category/events/feed/', type: 'rss' },
     { url: 'https://opportunitydesk.org/category/workshops/feed/', type: 'rss' },
-    { url: 'https://www.ted.com/feeds/talks.rss', type: 'rss' },
+    // NOTE: ted.com/feeds/talks.rss removed — TED talks are VIDEOS, not
+    // opportunities students can apply to. It was polluting 11% of the board.
   ],
   volunteer: [
     { url: 'https://opportunitydesk.org/category/volunteer/feed/', type: 'rss' },
@@ -56,6 +73,7 @@ const SOURCES = {
     { url: 'https://opportunitydesk.org/category/fellowships/feed/', type: 'rss' },
     { url: 'https://youthop.com/category/training/feed/', type: 'rss' },
     { url: 'https://opportunitydesk.org/category/exchange-programs/feed/', type: 'rss' },
+    { url: 'https://www.opportunitiescircle.com/category/fellowships/feed/', type: 'rss' }, // probed: 10 items, global
   ],
 }
 
@@ -101,24 +119,100 @@ function parseDate(raw: string): string | null {
   }
 }
 
-// Find a deadline-like date in the description text
-function extractDeadlineFromText(text: string): string | null {
-  // Patterns: "31 December 2025", "December 31, 2025", "2025-12-31"
-  const patterns = [
-    /\b(\d{1,2})\s+(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})\b/i,
-    /\b(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2}),?\s+(\d{4})\b/i,
-    /\b(\d{4}-\d{2}-\d{2})\b/,
-  ]
-  for (const pattern of patterns) {
-    const match = text.match(pattern)
-    if (match) {
-      const d = new Date(match[0])
-      if (!isNaN(d.getTime()) && d > new Date()) {
-        return d.toISOString()
-      }
-    }
+// Month name → 0-based index. Covers English (full + 3-letter abbrev) and
+// Indonesian (full + common abbrev), since many feeds mix languages.
+const MONTHS: Record<string, number> = {
+  jan: 0, january: 0, januari: 0,
+  feb: 1, february: 1, februari: 1, pebruari: 1,
+  mar: 2, march: 2, maret: 2,
+  apr: 3, april: 3,
+  may: 4, mei: 4,
+  jun: 5, june: 5, juni: 5,
+  jul: 6, july: 6, juli: 6,
+  aug: 7, august: 7, agu: 7, agustus: 7, agt: 7,
+  sep: 8, sept: 8, september: 8,
+  oct: 9, october: 9, okt: 9, oktober: 9,
+  nov: 10, november: 10, nopember: 10,
+  dec: 11, december: 11, des: 11, desember: 11,
+}
+const MONTH_ALT = Object.keys(MONTHS).join('|')
+
+// Words that signal a real submission/application deadline (EN + ID). Dates
+// appearing near these are strongly preferred over publish/event dates.
+const DEADLINE_CUES = /(deadline|dead\s*line|apply\s*(?:by|before)?|application[s]?\s*(?:close|deadline|due)|closing\s*date|closes?\s*on|due\s*(?:date|on|by)?|last\s*date|submit\s*by|register\s*by|batas\s*(?:akhir|waktu|pendaftaran)?|paling\s*lambat|ditutup|penutupan|hingga|sampai\s*(?:dengan|tgl)?|s\.?d\.?)/gi
+
+function mkDate(y: number, m: number, d: number): Date | null {
+  if (m < 0 || m > 11 || d < 1 || d > 31) return null
+  // Year sanity: feeds sometimes carry 2-digit or garbage years
+  if (y < 100) y += 2000
+  if (y < 2000 || y > 2100) return null
+  const dt = new Date(Date.UTC(y, m, d, 23, 59, 0)) // end-of-day: deadline valid all day
+  return isNaN(dt.getTime()) ? null : dt
+}
+
+// Collect every plausible date in the text with its character position.
+function collectDates(text: string): { date: Date; pos: number }[] {
+  const found: { date: Date; pos: number }[] = []
+  const push = (date: Date | null, pos: number) => { if (date) found.push({ date, pos }) }
+
+  // "31 December 2025" / "31st Dec 2025" / "31 Desember 2025"
+  const reDMY = new RegExp(`\\b(\\d{1,2})(?:st|nd|rd|th)?\\s+(${MONTH_ALT})[a-z]*\\.?,?\\s+(\\d{4})\\b`, 'gi')
+  // "December 31, 2025" / "Dec 31 2025"
+  const reMDY = new RegExp(`\\b(${MONTH_ALT})[a-z]*\\.?\\s+(\\d{1,2})(?:st|nd|rd|th)?,?\\s+(\\d{4})\\b`, 'gi')
+  // ISO "2025-12-31"
+  const reISO = /\b(\d{4})-(\d{1,2})-(\d{1,2})\b/g
+  // Numeric day-first "31/12/2025", "31-12-2025", "31.12.2025" (ID/EU convention)
+  const reNum = /\b(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2,4})\b/g
+
+  const monthIdx = (w: string): number => {
+    const k = w.toLowerCase()
+    return MONTHS[k] ?? MONTHS[k.slice(0, 3)] ?? -1
   }
-  return null
+
+  let m: RegExpExecArray | null
+  while ((m = reDMY.exec(text)) !== null)
+    push(mkDate(+m[3], monthIdx(m[2]), +m[1]), m.index)
+  while ((m = reMDY.exec(text)) !== null)
+    push(mkDate(+m[3], monthIdx(m[1]), +m[2]), m.index)
+  while ((m = reISO.exec(text)) !== null)
+    push(mkDate(+m[1], +m[2] - 1, +m[3]), m.index)
+  while ((m = reNum.exec(text)) !== null) {
+    // day-first; if first number > 12 it must be the day, which confirms DD/MM
+    const day = +m[1], mon = +m[2]
+    if (day <= 31 && mon <= 12) push(mkDate(+m[3], mon - 1, day), m.index)
+  }
+
+  return found
+}
+
+// Find the best deadline in text: prefer a future date near a deadline cue,
+// else the earliest future date, else null.
+function extractDeadlineFromText(text: string): string | null {
+  if (!text) return null
+  const now = Date.now()
+  const dates = collectDates(text).filter(d => d.date.getTime() > now)
+  if (dates.length === 0) return null
+
+  // Positions of deadline cue words
+  const cuePositions: number[] = []
+  let c: RegExpExecArray | null
+  DEADLINE_CUES.lastIndex = 0
+  while ((c = DEADLINE_CUES.exec(text)) !== null) cuePositions.push(c.index)
+
+  // Score each date: closest to a cue within 60 chars wins big
+  let best = dates[0]
+  let bestScore = -Infinity
+  for (const cand of dates) {
+    let score = 0
+    if (cuePositions.length > 0) {
+      const nearest = Math.min(...cuePositions.map(p => Math.abs(p - cand.pos)))
+      if (nearest <= 60) score += 1000 - nearest // strong preference for cue-adjacent
+    }
+    // Tie-break: earlier future deadline is more likely the real one
+    score -= cand.date.getTime() / 1e12
+    if (score > bestScore) { bestScore = score; best = cand }
+  }
+  return best.date.toISOString()
 }
 
 // Infer category tags from title + description
@@ -145,6 +239,18 @@ function inferTags(title: string, description: string, baseCategory: string): st
 }
 
 // Parse an RSS/Atom feed, return array of opportunity objects
+// Penyaring keamanan: tolak judi & konten dewasa SEBELUM masuk database.
+// Dipicu oleh insiden worldscholarshipforum.com — feed beasiswa yang dibajak
+// menyuntikkan 72 item kasino + konten telanjang AI ke papan peluang siswa.
+// Sumber mana pun bisa dibajak, jadi penyaringan dilakukan per item.
+const SPAM_RE = /(1win|casino|kasino|kazino|casinos|judi|poker|gambl|betting|bookmaker|mostbet|melbet|riobet|22bet|jojobet|bahis|slot machine|free spins|welcome bonus|deposit bonus|taruhan)/i
+const ADULT_RE = /(deepnude|nudify|\bai nudes?\b|undress|\bporn|\bxxx\b|escort|sex ?cam|onlyfans)/i
+
+function isSpamOrAdult(title: string, description: string): boolean {
+  const t = `${title} ${description}`
+  return SPAM_RE.test(t) || ADULT_RE.test(t)
+}
+
 function parseRSS(xml: string, sourceUrl: string, category: string): any[] {
   const hostname = new URL(sourceUrl).hostname
   const items: any[] = []
@@ -168,17 +274,15 @@ function parseRSS(xml: string, sourceUrl: string, category: string): any[] {
       extractTag(block, 'summary') ||
       extractTag(block, 'content:encoded') || ''
 
-    const pubDate =
-      extractTag(block, 'pubDate') ||
-      extractTag(block, 'published') ||
-      extractTag(block, 'updated') || ''
-
     const organizer =
       extractTag(block, 'dc:creator') ||
       extractTag(block, 'author') || hostname
 
     // Skip very short or meaningless titles
     if (title.length < 8) continue
+
+    // Tolak judi / konten dewasa dari feed yang dibajak
+    if (isSpamOrAdult(title, description)) continue
 
     // Try to find a deadline in the description
     const deadline = extractDeadlineFromText(description) || extractDeadlineFromText(title)
@@ -255,6 +359,33 @@ Deno.serve(async (req) => {
     const category: string = (body.category || 'ALL').toUpperCase()
     const now = new Date().toISOString()
 
+    // ── Backfill mode: re-run the improved parser over existing active rows
+    // that never got a deadline, so the parser upgrade helps historical data
+    // (not just newly-scraped items). Trigger with { mode: 'backfill' }.
+    if (body.mode === 'backfill') {
+      const { data: rows, error: fetchErr } = await supabaseClient
+        .from('scraped_content')
+        .select('id, title, description')
+        .is('deadline', null)
+        .eq('is_active', true)
+        .eq('is_manual', false)
+        .limit(2000)
+      if (fetchErr) throw fetchErr
+
+      let updated = 0
+      for (const row of rows || []) {
+        const dl = extractDeadlineFromText(row.description || '') || extractDeadlineFromText(row.title || '')
+        if (dl) {
+          await supabaseClient.from('scraped_content').update({ deadline: dl }).eq('id', row.id)
+          updated++
+        }
+      }
+      return new Response(
+        JSON.stringify({ success: true, mode: 'backfill', scanned: (rows || []).length, updated }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 },
+      )
+    }
+
     // Step 1: Auto-deactivate any items past their deadline
     await supabaseClient
       .from('scraped_content')
@@ -308,8 +439,11 @@ Deno.serve(async (req) => {
             items = parseRSS(xml, source.url, cat)
           }
 
-          allResults.push(...items)
-          console.log(`  → ${items.length} items from ${source.url}`)
+          // Cap per feed so a single large source (e.g. UN careers) can't
+          // flood the board and dilute curation.
+          const capped = items.slice(0, 25)
+          allResults.push(...capped)
+          console.log(`  → ${capped.length}/${items.length} items from ${source.url}`)
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err)
           errors.push(`${source.url}: ${msg}`)
@@ -318,17 +452,30 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Step 4: Deduplicate by URL — only insert URLs not already in DB
+    // Step 4: Deduplicate by URL — only insert URLs not already in DB.
+    // The existing-URL lookup is CHUNKED: a single .in() with thousands of
+    // URLs silently returns nothing (URL length limit) → dedup fails → every
+    // item re-inserts. Chunking keeps each query small and reliable. We also
+    // dedupe within this batch itself so one run can't insert intra-batch dups.
     let saved = 0
     if (allResults.length > 0) {
-      const urls = allResults.map(r => r.url)
-      const { data: existing } = await supabaseClient
-        .from('scraped_content')
-        .select('url')
-        .in('url', urls)
+      const uniqueUrls = [...new Set(allResults.map(r => r.url))]
+      const existingUrls = new Set<string>()
+      const CHUNK = 200
+      for (let i = 0; i < uniqueUrls.length; i += CHUNK) {
+        const { data: existing } = await supabaseClient
+          .from('scraped_content')
+          .select('url')
+          .in('url', uniqueUrls.slice(i, i + CHUNK))
+        for (const r of existing || []) existingUrls.add((r as any).url)
+      }
 
-      const existingUrls = new Set((existing || []).map((r: any) => r.url))
-      const newItems = allResults.filter(r => !existingUrls.has(r.url))
+      const seen = new Set<string>()
+      const newItems = allResults.filter(r => {
+        if (existingUrls.has(r.url) || seen.has(r.url)) return false
+        seen.add(r.url)
+        return true
+      })
 
       if (newItems.length > 0) {
         const { error } = await supabaseClient

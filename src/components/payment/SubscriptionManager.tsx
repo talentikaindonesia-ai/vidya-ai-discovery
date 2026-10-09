@@ -35,6 +35,7 @@ import {
   Tag,
 } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/utils";
+import { invalidateSubscriptionCache } from "@/hooks/useSubscription";
 
 interface SubscriptionManagerProps {
   userId: string;
@@ -67,6 +68,19 @@ export const SubscriptionManager = ({
   const [showPaymentGateway, setShowPaymentGateway] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
   const { toast } = useToast();
+  const [resuming, setResuming] = useState(false);
+  /* Tawaran voucher TETAP20 dulu selalu tampil, padahal voucher itu tidak
+     ada di voucher_codes (tabelnya kosong) — siswa dijanjikan diskon yang
+     akan ditolak saat checkout. Sekarang tawaran hanya muncul bila voucher
+     benar-benar ada dan masih berlaku (kebijakan RLS voucher_codes hanya
+     menampilkan yang aktif & dalam masa berlaku). */
+  const [adaVoucherRetensi, setAdaVoucherRetensi] = useState(false);
+
+  useEffect(() => {
+    if (!showChurnFlow) return;
+    supabase.from("voucher_codes").select("id").eq("code", "TETAP20").maybeSingle()
+      .then(({ data }) => setAdaVoucherRetensi(!!data));
+  }, [showChurnFlow]);
 
   useEffect(() => {
     loadPlans();
@@ -90,6 +104,7 @@ export const SubscriptionManager = ({
       .select("*")
       .eq("is_active", true)
       .neq("type", "school")
+      .order("sort_order")
       .order("price_monthly");
 
     if (error) {
@@ -100,11 +115,16 @@ export const SubscriptionManager = ({
   };
 
   const loadCurrentSubscription = async () => {
+    // "cancelled" ikut diambil: pembatalan tidak mencabut akses sampai masa
+    // aktif habis, jadi statusnya harus tetap terlihat. Dulu hanya "active"
+    // yang diambil, sehingga langganan yang dibatalkan hilang dari layar.
     const { data } = await supabase
       .from("user_subscriptions")
       .select("*, subscription_packages (*)")
       .eq("user_id", userId)
-      .eq("status", "active")
+      .in("status", ["active", "cancelled"])
+      .order("created_at", { ascending: false })
+      .limit(1)
       .maybeSingle();
 
     setCurrentSubscription(data ?? null);
@@ -165,12 +185,21 @@ export const SubscriptionManager = ({
     if (!currentSubscription) return;
     setCancelling(true);
     try {
-      const { error } = await supabase
-        .from("user_subscriptions")
-        .update({ status: "cancelled", auto_renew: false })
-        .eq("id", currentSubscription.id);
+      /* Dulu .update() langsung ke user_subscriptions — pengguna tidak punya
+         kebijakan UPDATE di tabel itu, jadi RLS menolak diam-diam (0 baris)
+         dan pesan "dibatalkan" tetap muncul. Sekarang lewat RPC server yang
+         mengembalikan error sungguhan bila gagal. */
+      const { data, error } = await (supabase.rpc as any)("batalkan_langganan", {
+        p_alasan: churnReason || null,
+      });
       if (error) throw error;
-      toast({ title: "Berlangganan dibatalkan", description: "Akses premium tetap aktif hingga akhir periode." });
+      const sampai = data?.aktif_sampai ? formatDate(data.aktif_sampai) : null;
+      toast({
+        title: "Berlangganan dibatalkan",
+        description: sampai
+          ? `Tidak akan diperpanjang. Akses premium tetap aktif sampai ${sampai}.`
+          : "Tidak akan diperpanjang. Akses premium tetap aktif hingga akhir periode.",
+      });
       setShowChurnFlow(false);
       loadCurrentSubscription();
       onSubscriptionChange?.();
@@ -185,19 +214,49 @@ export const SubscriptionManager = ({
     if (!currentSubscription) return;
     setPausing(true);
     try {
-      const resumeAt = new Date(Date.now() + 30 * 86_400_000).toISOString();
-      const { error } = await supabase
-        .from("user_subscriptions")
-        .update({ paused_at: new Date().toISOString(), resume_at: resumeAt, pause_reason: churnReason })
-        .eq("id", currentSubscription.id);
+      /* Jeda dulu hanya menulis tanggal (dan itu pun ditolak RLS diam-diam);
+         pembekuan akses dan pemulihan otomatis tidak ada di mana pun. Kini
+         RPC jeda_langganan() membekukan sisa masa aktif, dan cron
+         lanjutkan-langganan-terjeda mengembalikannya utuh setelah 30 hari. */
+      const { data, error } = await (supabase.rpc as any)("jeda_langganan", {
+        p_alasan: churnReason || null,
+      });
       if (error) throw error;
-      toast({ title: "Berlangganan dijeda 30 hari ✅", description: "Akses premium dibekukan sementara. Resume otomatis setelah 30 hari." });
+      invalidateSubscriptionCache();
+      toast({
+        title: "Berlangganan dijeda 30 hari",
+        description: `Sisa ${data?.sisa_hari ?? "masa"} hari masa aktifmu dibekukan dan kembali utuh pada ${
+          data?.dijeda_sampai ? formatDate(data.dijeda_sampai) : "akhir masa jeda"
+        }. Kamu juga bisa melanjutkan lebih awal kapan saja.`,
+      });
+      onSubscriptionChange?.();
       setShowChurnFlow(false);
       loadCurrentSubscription();
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } finally {
       setPausing(false);
+    }
+  };
+
+  const handleResumeSubscription = async () => {
+    setResuming(true);
+    try {
+      const { data, error } = await (supabase.rpc as any)("lanjutkan_langganan_saya");
+      if (error) throw error;
+      invalidateSubscriptionCache();
+      toast({
+        title: "Langganan dilanjutkan",
+        description: data?.aktif_sampai
+          ? `Akses premium aktif kembali sampai ${formatDate(data.aktif_sampai)}.`
+          : "Akses premium aktif kembali.",
+      });
+      loadCurrentSubscription();
+      onSubscriptionChange?.();
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } finally {
+      setResuming(false);
     }
   };
 
@@ -272,11 +331,19 @@ export const SubscriptionManager = ({
   const renderCurrentSubscription = () => {
     if (!currentSubscription) return null;
 
+    // Saat dijeda, expires_at menyimpan tanggal berakhir yang DIBEKUKAN —
+    // hitungan mundur dan peringatan "segera berakhir" tidak berlaku.
+    const isPaused = !!currentSubscription.paused_at;
     const days = daysRemaining(currentSubscription.expires_at);
-    const isExpiringSoon = days <= 7 && days !== Infinity;
-    const isExpired = days < 0;
+    const isExpiringSoon = !isPaused && days <= 7 && days !== Infinity;
+    const isExpired = !isPaused && days < 0;
     const isCancelled = currentSubscription.status === "cancelled";
     const pkg = currentSubscription.subscription_packages;
+    const hariDibekukan = isPaused && currentSubscription.expires_at
+      ? Math.max(0, Math.ceil(
+          (new Date(currentSubscription.expires_at).getTime() - new Date(currentSubscription.paused_at).getTime()) / 86_400_000,
+        ))
+      : 0;
 
     // Progress bar for time remaining (out of the full billing period)
     const totalDays = currentSubscription.billing_cycle === "monthly" ? 30 : 365;
@@ -292,12 +359,13 @@ export const SubscriptionManager = ({
             </div>
             <Badge
               className={
+                isPaused ? "bg-blue-100 text-blue-700" :
                 isCancelled ? "bg-red-100 text-red-700" :
                 isExpired ? "bg-gray-100 text-gray-600" :
                 "bg-green-100 text-green-700"
               }
             >
-              {isCancelled ? "Dibatalkan" : isExpired ? "Kedaluwarsa" : "Aktif"}
+              {isPaused ? "Dijeda" : isCancelled ? "Dibatalkan" : isExpired ? "Kedaluwarsa" : "Aktif"}
             </Badge>
           </div>
         </CardHeader>
@@ -313,8 +381,26 @@ export const SubscriptionManager = ({
             </p>
           </div>
 
+          {/* Status jeda — sisa masa aktif dibekukan, bukan hangus */}
+          {isPaused && (
+            <div className="flex flex-col gap-2 p-3 rounded-lg bg-blue-50 border border-blue-200 text-sm text-blue-900">
+              <div className="flex items-start gap-2">
+                <PauseCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                <span>
+                  Langganan dijeda. <strong>{hariDibekukan} hari</strong> masa aktif dibekukan dan kembali utuh
+                  {currentSubscription.resume_at ? <> pada <strong>{formatDate(currentSubscription.resume_at)}</strong></> : null}.
+                  Selama dijeda, akses premium tidak aktif.
+                </span>
+              </div>
+              <Button size="sm" variant="outline" className="self-start" disabled={resuming} onClick={handleResumeSubscription}>
+                {resuming && <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />}
+                Lanjutkan sekarang
+              </Button>
+            </div>
+          )}
+
           {/* Days remaining + progress */}
-          {currentSubscription.expires_at && (
+          {currentSubscription.expires_at && !isPaused && (
             <div className="space-y-2">
               <div className="flex items-center justify-between text-sm">
                 <span className="flex items-center gap-1 text-muted-foreground">
@@ -377,7 +463,7 @@ export const SubscriptionManager = ({
             </Button>
 
             {/* Cancel — opens churn-prevention flow */}
-            {!isCancelled && !isExpired && currentSubscription.expires_at && (
+            {!isCancelled && !isExpired && !isPaused && currentSubscription.expires_at && (
               <>
                 <Button
                   variant="ghost" size="sm"
@@ -420,17 +506,24 @@ export const SubscriptionManager = ({
                       </select>
 
                       {/* Offer 1: Discount if too expensive */}
-                      {churnReason === "too_expensive" && (
+                      {churnReason === "too_expensive" && adaVoucherRetensi && (
                         <div style={{ background: "#FFFBEB", border: "1px solid #FDE68A", borderRadius: 12, padding: "14px 16px", marginBottom: 14 }}>
                           <div style={{ fontWeight: 700, color: "#92400E", fontSize: 13, marginBottom: 4 }}>
                             🎁 Khusus untukmu — diskon 20%
                           </div>
                           <div style={{ fontSize: 12.5, color: "#78350F" }}>
-                            Perpanjang sekarang dengan voucher <strong>TETAP20</strong> dan hemat langsung 20% untuk periode berikutnya.
+                            Perpanjang dengan voucher <strong>TETAP20</strong> dan hemat 20% untuk periode berikutnya.
+                            Masukkan kodenya di kolom voucher saat checkout.
                           </div>
+                          {/* Dulu tombol ini membuka /subscription?voucher=TETAP20 —
+                              parameter itu tidak pernah dibaca halaman mana pun. */}
                           <Button size="sm" className="mt-3 w-full bg-amber-500 hover:bg-amber-600"
-                            onClick={() => { setShowChurnFlow(false); window.location.href = "/subscription?voucher=TETAP20"; }}>
-                            <Tag className="w-3.5 h-3.5 mr-1" /> Pakai Voucher TETAP20 →
+                            onClick={() => {
+                              setShowChurnFlow(false);
+                              document.getElementById("plans-tab")?.click();
+                              toast({ title: "Kode voucher: TETAP20", description: "Masukkan di kolom voucher sebelum membayar." });
+                            }}>
+                            <Tag className="w-3.5 h-3.5 mr-1" /> Perpanjang dengan TETAP20 →
                           </Button>
                         </div>
                       )}
@@ -505,6 +598,11 @@ export const SubscriptionManager = ({
     );
   }
 
+  // Label toggle mengikuti harga sungguhan, bukan teks tetap.
+  const hematTahunan = Math.max(0, ...plans
+    .filter((p: any) => p.price_monthly > 0)
+    .map((p: any) => Math.round(((p.price_monthly * 12 - p.price_yearly) / (p.price_monthly * 12)) * 100)));
+
   // ── Main UI ───────────────────────────────────────────────────────────────
   return (
     <div className="space-y-6">
@@ -537,9 +635,9 @@ export const SubscriptionManager = ({
                     }`}
                   >
                     {cycle === "monthly" ? "Bulanan" : "Tahunan"}
-                    {cycle === "yearly" && (
+                    {cycle === "yearly" && hematTahunan > 0 && (
                       <span className="ml-2 text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full">
-                        Hemat 2 bulan!
+                        Hemat {hematTahunan}%
                       </span>
                     )}
                   </button>

@@ -6,6 +6,7 @@ import { GlobalSearch } from "@/components/GlobalSearch";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useNavigate } from "react-router-dom";
 import { useUpgradeModal } from "@/contexts/UpgradeModalContext";
+import { useSubscription } from "@/hooks/useSubscription";
 
 interface DashboardHeaderProps {
   user: SupaUser | null;
@@ -24,9 +25,20 @@ export const DashboardHeader = ({ user, profile, onSignOut }: DashboardHeaderPro
     name.split(" ").map((w) => w.charAt(0)).join("").toUpperCase().slice(0, 2);
 
   const displayName = profile?.full_name || user?.email?.split("@")[0] || "Pengguna";
-  const planLabel =
-    profile?.subscription_type === "premium" ? "Premium" :
-    profile?.subscription_type === "school"  ? "School"  : "Individual";
+
+  // Live access state (server truth via my_access) — not the stale profile prop
+  const sub = useSubscription();
+  const isTrial = sub.source === "trial";
+  const planLabel = sub.loading
+    ? ""
+    : isTrial
+    ? `⭐ Trial Premium${sub.daysLeft != null ? ` · ${sub.daysLeft}h` : ""}`
+    : sub.isSchool
+    ? "⭐ Premium Sekolah"
+    : sub.isPremium
+    ? `⭐ Premium${sub.source === "paid" && sub.daysLeft != null && sub.daysLeft <= 14 ? ` · sisa ${sub.daysLeft}h` : ""}`
+    : "Free";
+  const planColor = sub.isPremium ? "#B45309" : "var(--tk-gray-500)";
 
   const iconBtn: React.CSSProperties = {
     display: "flex", alignItems: "center", justifyContent: "center",
@@ -149,7 +161,7 @@ export const DashboardHeader = ({ user, profile, onSignOut }: DashboardHeaderPro
               }}>
                 {displayName.split(" ")[0]}
               </div>
-              <div style={{ fontSize: 11, color: "var(--tk-gray-500)" }}>{planLabel}</div>
+              <div style={{ fontSize: 11, fontWeight: sub.isPremium ? 700 : 400, color: planColor }}>{planLabel}</div>
             </div>
             <ChevronDown size={14} style={{ color: "var(--tk-gray-500)", flexShrink: 0 }} />
           </button>

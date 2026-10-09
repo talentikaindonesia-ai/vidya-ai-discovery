@@ -2,7 +2,7 @@ import { useState } from "react";
 import {
   BookOpen, Trophy, BarChart3, Home, User, LogOut,
   Users, Clock, Settings, Shield, Award, Briefcase,
-  ChevronRight, ChevronLeft, Diamond, HelpCircle, Zap,
+  ChevronRight, ChevronLeft, Diamond, HelpCircle, Zap, GraduationCap, Brain,
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useNavigate as useNav } from "react-router-dom";
@@ -17,17 +17,31 @@ interface DashboardSidebarProps {
   onCollapsedChange?: (v: boolean) => void;
 }
 
-const NAV_ITEMS = [
-  { id: "overview",      label: "Dashboard",    icon: Home,     route: "/dashboard" },
-  { id: "courses",       label: "Kursus Saya",  icon: BookOpen, route: "/learning" },
-  { id: "opportunities", label: "Peluang",      icon: Briefcase,route: "/opportunities" },
-  { id: "progress",      label: "Progress",     icon: BarChart3,route: "/dashboard" },
-  { id: "achievements",  label: "Pencapaian",   icon: Award,    route: "/dashboard" },
-  { id: "community",     label: "Community",    icon: Users,    route: "/community" },
-  { id: "timeline",      label: "Timeline",     icon: Clock,    route: "/discovery" },
-  { id: "profile",       label: "Profile",      icon: User,     route: "/profile" },
-  { id: "settings",      label: "Pengaturan",   icon: Settings, route: "/settings" },
+/* Navigasi dipangkas: 4 tujuan utama selalu terlihat, sisanya di grup
+   "Lainnya" yang bisa dibuka. Tidak ada fitur yang dihapus — hanya berhenti
+   bersaing dengan langkah utama siswa (belajar). */
+const PRIMARY_NAV = [
+  { id: "overview",      label: "Beranda", icon: Home,      route: "/dashboard" },
+  { id: "courses",       label: "Belajar", icon: BookOpen,  route: "/learning" },
+  { id: "opportunities", label: "Peluang", icon: Briefcase, route: "/opportunities" },
+  { id: "profile",       label: "Profil",  icon: User,      route: "/profile" },
 ];
+
+const MORE_NAV = [
+  // Tes Kecerdasan Majemuk dulu hanya bisa dicapai dari satu kartu di halaman
+  // hasil RIASEC — dari 98 siswa yang tes RIASEC, cuma 4 yang menemukannya.
+  { id: "kecerdasan",    label: "Tes Kecerdasan", icon: Brain,       route: "/multiple-intelligence" },
+  { id: "progress",      label: "Progress",     icon: BarChart3,     route: "/progress" },
+  { id: "achievements",  label: "Pencapaian",   icon: Award,         route: "/dashboard" },
+  // "Focus Action" dipindah ke halaman Belajar (seksi Alur Belajar) 2026-09-22
+  // — tidak lagi jadi menu terpisah, tapi /focus masih bisa diakses langsung.
+  { id: "mentors",       label: "Mentor",       icon: GraduationCap, route: "/mentors" },
+  { id: "community",     label: "Community",    icon: Users,         route: "/community" },
+  { id: "timeline",      label: "Timeline",     icon: Clock,         route: "/discovery" },
+  { id: "settings",      label: "Pengaturan",   icon: Settings,      route: "/settings" },
+];
+
+const NAV_ITEMS = [...PRIMARY_NAV, ...MORE_NAV];
 
 export const DashboardSidebar = ({
   activeSection,
@@ -41,12 +55,13 @@ export const DashboardSidebar = ({
   const location = useLocation();
   const { openUpgradeModal } = useUpgradeModal();
   const [internalCollapsed, setInternalCollapsed] = useState(false);
+  const [showMore, setShowMore] = useState(false);
 
   const collapsed = collapsedProp ?? internalCollapsed;
   const setCollapsed = onCollapsedChange ?? setInternalCollapsed;
 
   const handleMenuClick = (item: typeof NAV_ITEMS[0]) => {
-    if (item.route === "/dashboard") {
+    if (item.route === "/dashboard" && location.pathname === "/dashboard") {
       setActiveSection(item.id);
     } else {
       navigate(item.route);
@@ -136,7 +151,7 @@ export const DashboardSidebar = ({
 
       {/* ── Nav items ─────────────────────────────────────────── */}
       <nav className="flex-1 overflow-y-auto px-3 py-3">
-        {NAV_ITEMS.map((item) => {
+        {(showMore ? NAV_ITEMS : PRIMARY_NAV).map((item) => {
           const active = isActive(item);
           const Icon = item.icon;
           return (
@@ -182,6 +197,34 @@ export const DashboardSidebar = ({
             </button>
           );
         })}
+
+        {/* Toggle "Lainnya" — menyembunyikan menu sekunder agar 4 tujuan
+            utama tidak tenggelam di antara 11 pilihan */}
+        <button
+          onClick={() => setShowMore(v => !v)}
+          title={collapsed ? "Lainnya" : ""}
+          className="w-full flex items-center mt-1 rounded-xl transition-colors"
+          style={{
+            gap: 14,
+            padding: collapsed ? "12px" : "10px 14px",
+            justifyContent: collapsed ? "center" : "flex-start",
+            background: "transparent",
+            color: "var(--tk-gray-500)",
+            border: "none",
+            cursor: "pointer",
+            fontFamily: "var(--tk-font-display)",
+            fontWeight: 500,
+            fontSize: 13,
+          }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--tk-gray-100)"; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+        >
+          <ChevronRight
+            size={16}
+            style={{ transform: showMore ? "rotate(90deg)" : "none", transition: "transform .18s" }}
+          />
+          {!collapsed && <span>{showMore ? "Sembunyikan" : "Lainnya"}</span>}
+        </button>
 
         {/* Admin CMS */}
         {userRole === "admin" && (

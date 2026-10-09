@@ -382,12 +382,10 @@ export const CoursesSection = () => {
             .from("user_interests")
             .select("*, interest_categories(*)")
             .eq("user_id", user.id),
-          supabase
-            .from("assessment_results")
-            .select("*")
+          // View kanonik `identitas_siswa` — lihat src/hooks/useIdentitasSiswa.ts
+          (supabase.from("identitas_siswa" as any) as any)
+            .select("*, personality_type:tipe_utama")
             .eq("user_id", user.id)
-            .order("created_at", { ascending: false })
-            .limit(1)
             .maybeSingle(),
         ]);
 

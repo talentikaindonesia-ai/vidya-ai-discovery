@@ -40,7 +40,7 @@ interface UserChallenge {
 export const CommunityHub = () => {
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [userChallenges, setUserChallenges] = useState<UserChallenge[]>([]);
-  const [leaderboard, setLeaderboard] = useState([]);
+  const [leaderboard, setLeaderboard] = useState<{ name: string; xp: number; level: number; rank: number; is_me: boolean }[]>([]);
   const [loading, setLoading] = useState(true);
   const { awardXP } = useGameification();
   const { toast } = useToast();
@@ -70,14 +70,11 @@ export const CommunityHub = () => {
       setChallenges(challengesData || []);
       setUserChallenges(userChallengesData || []);
 
-      // Mock leaderboard data (in real app, this would be calculated)
-      setLeaderboard([
-        { rank: 1, name: "Alex Chen", xp: 15420, level: 15 },
-        { rank: 2, name: "Sarah Kim", xp: 14280, level: 14 },
-        { rank: 3, name: "David Park", xp: 13150, level: 13 },
-        { rank: 4, name: "You", xp: 2500, level: 3 },
-        { rank: 5, name: "Maya Singh", xp: 2100, level: 2 }
-      ]);
+      /* Papan peringkat dari data sungguhan (RPC xp_leaderboard). Dulu isinya
+         lima nama karangan — "Alex Chen 15.420 XP" dst. — padahal XP tertinggi
+         pengguna nyata per 2026-09-14 hanya 350. */
+      const { data: papan } = await (supabase.rpc as any)("xp_leaderboard", { p_limit: 10 });
+      setLeaderboard(Array.isArray(papan?.top) ? papan.top : []);
     } catch (error) {
       console.error('Error loading community data:', error);
     } finally {
@@ -235,14 +232,19 @@ export const CommunityHub = () => {
           </TabsContent>
           
           <TabsContent value="leaderboard" className="space-y-4">
+            {leaderboard.length === 0 && (
+              <p className="text-sm text-muted-foreground text-center py-6">
+                Belum ada yang mengumpulkan XP. Selesaikan tes, materi, atau kuis untuk masuk papan peringkat.
+              </p>
+            )}
             {leaderboard.map((user, index) => {
               const { icon: RankIcon, color, bg } = getRankBadge(user.rank);
               
               return (
                 <div 
-                  key={user.rank} 
+                  key={index} 
                   className={`p-4 rounded-lg border flex items-center justify-between ${
-                    user.name === "You" ? "bg-primary/10 border-primary/20" : "bg-card"
+                    user.is_me ? "bg-primary/10 border-primary/20" : "bg-card"
                   } hover-scale`}
                 >
                   <div className="flex items-center gap-4">
@@ -250,8 +252,8 @@ export const CommunityHub = () => {
                       <RankIcon className={`h-4 w-4 ${color}`} />
                     </div>
                     <div>
-                      <p className={`font-semibold ${user.name === "You" ? "text-primary" : ""}`}>
-                        #{user.rank} {user.name}
+                      <p className={`font-semibold ${user.is_me ? "text-primary" : ""}`}>
+                        #{user.rank} {user.name}{user.is_me ? " (kamu)" : ""}
                       </p>
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Star className="h-3 w-3" />

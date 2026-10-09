@@ -297,6 +297,15 @@ All colors MUST be HSL.
     75%     { transform: rotate(-10deg); }
   }
 
+  /* Horizontal card slider — scrollbar disembunyikan, geser tetap jalan */
+  .tk-hscroll {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .tk-hscroll::-webkit-scrollbar {
+    display: none;
+  }
+
   /* Page slide-in */
   .tk-page-in {
     animation: tk-pageIn .35s var(--tk-ease-lift) both;

@@ -62,17 +62,11 @@ interface OppItem {
   sponsorCta?: string;
 }
 
-// ─── Fallback mock data (shown only when Supabase returns nothing) ─────────────
-const MOCK_OPPORTUNITIES: OppItem[] = [
-  { id: "1", title: "LPDP Scholarship 2025", source: "Kemendikbudristek", type: "Beasiswa", loc: "Indonesia & Global", tags: ["full-scholarship", "s2/s3", "riset"], saved: false, featured: true },
-  { id: "2", title: "Software Engineer Intern – TechCorp", source: "TechCorp Indonesia", type: "Magang", loc: "Jakarta", tags: ["react", "typescript", "remote-friendly"], saved: false, featured: false },
-  { id: "3", title: "National UI/UX Design Competition", source: "Creative Foundation", type: "Kompetisi", loc: "Bandung", tags: ["design", "figma", "hadiah-50jt"], saved: false, featured: false },
-  { id: "4", title: "Data Analyst – FinTech Startup", source: "PayLater.id", type: "Lowongan Kerja", loc: "Jakarta", tags: ["sql", "python", "fresh-grad"], saved: false, featured: false },
-  { id: "5", title: "Beasiswa Unggulan Kemendikbud", source: "Kemendikbudristek", type: "Beasiswa", loc: "Indonesia", tags: ["s1", "berprestasi", "fully-funded"], saved: false, featured: false },
-  { id: "6", title: "Google Developer Student Club Conference", source: "Google", type: "Konferensi", loc: "Online", tags: ["google", "web", "gratis"], saved: false, featured: false },
-  { id: "7", title: "Marketing Intern – E-Commerce Giant", source: "Tokopedia", type: "Magang", loc: "Jakarta", tags: ["marketing", "digital", "paid"], saved: false, featured: false },
-  { id: "8", title: "Startup Pitch Competition – 100jt Prize", source: "Innovation Hub", type: "Kompetisi", loc: "Surabaya", tags: ["startup", "pitch", "prize"], saved: false, featured: false },
-];
+/* Dulu ada MOCK_OPPORTUNITIES — 8 peluang karangan ("Software Engineer
+   Intern – TechCorp", "Marketing Intern – Tokopedia", dll.) yang tampil ke
+   siswa setiap kali papan kosong. Sejak scraper dimatikan (2026-09-07) papan
+   memang kosong, jadi siswa melihat peluang palsu di /dashboard-gamified.
+   Sekarang papan kosong ditampilkan apa adanya. */
 
 const PAGE_SIZE = 6;
 
@@ -272,7 +266,7 @@ export const OpportunitiesSection = () => {
   const [tab,       setTab]       = useState("Semua");
   const [focusId,   setFocusId]   = useState<string>("");
   const [page,      setPage]      = useState(1);
-  const [opps,      setOpps]      = useState<OppItem[]>(MOCK_OPPORTUNITIES);
+  const [opps,      setOpps]      = useState<OppItem[]>([]);
   const [savedMap,  setSavedMap]  = useState<Record<string, boolean>>({});
   const [dbLoaded,  setDbLoaded]  = useState(false);
 
@@ -305,8 +299,9 @@ export const OpportunitiesSection = () => {
           setSavedMap(Object.fromEntries(mapped.map(o => [o.id, false])));
           setFocusId(mapped[0]?.id ?? "");
         } else {
-          setFocusId(MOCK_OPPORTUNITIES[0].id);
-          setSavedMap(Object.fromEntries(MOCK_OPPORTUNITIES.map(o => [o.id, o.saved])));
+          setOpps([]);
+          setFocusId("");
+          setSavedMap({});
         }
         setDbLoaded(true);
       });
@@ -335,7 +330,8 @@ export const OpportunitiesSection = () => {
         });
         if (data?.leveled_up) {
           toast(`🎉 Level Up! Kamu mencapai Level ${data.current_level}!`, { duration: 5000 });
-        } else if (data) {
+        } else if (data && data.awarded !== false) {
+          // awarded=false → batas XP harian tercapai; jangan klaim XP yang tidak masuk
           toast(`+10 XP — Peluang disimpan 🔖`, { duration: 2500 });
         }
       }
@@ -416,6 +412,16 @@ export const OpportunitiesSection = () => {
           })}
         </div>
       </div>
+
+      {dbLoaded && opps.length === 0 && (
+        <div style={{ textAlign: "center", padding: "40px 20px", background: "white", borderRadius: 16, border: "1px solid var(--tk-gray-200)", color: "var(--tk-gray-500)" }}>
+          <div style={{ fontSize: 30, marginBottom: 8 }}>🌱</div>
+          <div style={{ fontWeight: 700, color: "var(--tk-ink)", fontSize: 15 }}>Peluang sedang dikurasi ulang</div>
+          <div style={{ fontSize: 13.5, marginTop: 6, lineHeight: 1.6, maxWidth: 440, margin: "6px auto 0" }}>
+            Kami memilih peluang satu per satu dari situs resmi penyelenggara. Peluang baru akan muncul di sini.
+          </div>
+        </div>
+      )}
 
       {/* ── 3-col card grid ────────────────────────────────────── */}
       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 18 }}>

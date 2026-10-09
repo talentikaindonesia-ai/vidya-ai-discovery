@@ -8,6 +8,10 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { BottomNavigationBar } from "@/components/dashboard/BottomNavigationBar";
 import { ArrowLeft, Diamond, CreditCard, ShieldCheck, RotateCcw, Headphones } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { invalidateSubscriptionCache } from "@/hooks/useSubscription";
+
+/** sessionStorage key: feature path that sent the user here (upgrade loop) */
+const UPGRADE_FROM_KEY = "tk_upgrade_from";
 
 const Subscription = () => {
   const [user, setUser]       = useState<any>(null);
@@ -24,10 +28,19 @@ const Subscription = () => {
   const preSelectedPlanName = searchParams.get("planName");
   const paymentResult       = searchParams.get("payment");  // "success" | "failed"
   const paymentRef          = searchParams.get("ref");       // transaction id
+  const fromFeature         = searchParams.get("from");      // locked feature that sent user here
 
   useEffect(() => {
     checkUser();
   }, []);
+
+  // Remember which locked feature sent the user here — survives the Mayar
+  // checkout round-trip (Mayar's redirect back won't carry our ?from= param)
+  useEffect(() => {
+    if (fromFeature && fromFeature.startsWith("/")) {
+      sessionStorage.setItem(UPGRADE_FROM_KEY, fromFeature);
+    }
+  }, [fromFeature]);
 
   // Handle Mayar redirect-back: show feedback, strip URL params, poll for status
   useEffect(() => {
@@ -66,9 +79,16 @@ const Subscription = () => {
 
         if (data?.status === "completed") {
           clearInterval(iv);
+          invalidateSubscriptionCache();
           toast({ title: "Langganan Aktif ✅", description: "Selamat! Akses premium Anda sudah aktif." });
-          // Reload page so SubscriptionManager re-fetches current subscription
-          window.location.reload();
+          // Return the user to the feature that was locked, or reload to refresh state
+          const backTo = sessionStorage.getItem(UPGRADE_FROM_KEY);
+          sessionStorage.removeItem(UPGRADE_FROM_KEY);
+          if (backTo) {
+            window.location.href = backTo; // full nav → every hook re-fetches fresh premium state
+          } else {
+            window.location.reload();
+          }
         } else if (data?.status === "failed" || tries >= 10) {
           clearInterval(iv);
           if (data?.status === "failed") {
@@ -282,7 +302,17 @@ const Subscription = () => {
           </div>
 
           {/* ── Payment status checker ─────────────────────────────────── */}
-          {user && <PaymentStatusChecker userId={user.id} />}
+          {user && (
+            <PaymentStatusChecker
+              userId={user.id}
+              onPaymentCompleted={() => {
+                invalidateSubscriptionCache();
+                const backTo = sessionStorage.getItem(UPGRADE_FROM_KEY);
+                sessionStorage.removeItem(UPGRADE_FROM_KEY);
+                if (backTo) window.location.href = backTo;
+              }}
+            />
+          )}
 
           {/* ── Subscription manager ───────────────────────────────────── */}
           {user && (
@@ -407,7 +437,7 @@ const Subscription = () => {
           <div style={{ marginTop: 32 }}>
             {/* Stats row */}
             <div style={{
-              display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 14, marginBottom: 24,
+              display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 14, marginBottom: 24,
             }}>
               {[
                 { emoji: "🧑‍🎓", num: "56+",  label: "Pengguna sudah tes assessment" },

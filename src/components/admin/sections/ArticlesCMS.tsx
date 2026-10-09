@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import UnggahGambar from "../UnggahGambar";
 import { toast } from "sonner";
 import { Search, Plus, Edit2, Trash2, Loader2, Save } from "lucide-react";
 import { inputStyle, selectStyle, textareaStyle, Pill, Toggle, Modal, Confirm, Field } from "../adminShared";
@@ -215,8 +216,9 @@ export default function ArticlesCMS() {
             <Field label="Konten">
               <textarea value={editItem.content ?? ""} onChange={e => setEditItem(p => ({ ...p, content: e.target.value }))} placeholder="Isi artikel lengkap (Markdown atau plain text)" style={{ ...textareaStyle, minHeight: 160 }} />
             </Field>
-            <Field label="Featured Image URL" half>
-              <input value={editItem.featured_image_url ?? ""} onChange={e => setEditItem(p => ({ ...p, featured_image_url: e.target.value }))} placeholder="https://..." style={inputStyle} />
+            <Field label="Gambar utama — juga tampil saat artikel dibagikan ke WhatsApp/LinkedIn">
+              <UnggahGambar value={editItem.featured_image_url} onChange={url => setEditItem(p => ({ ...p, featured_image_url: url }))}
+                folder="artikel" rasio="1200 / 630" saran="1200 × 630 px" />
             </Field>
             <Field label="Waktu Baca (menit)" half>
               <input type="number" min={1} value={editItem.reading_time_minutes ?? 5} onChange={e => setEditItem(p => ({ ...p, reading_time_minutes: Number(e.target.value) }))} style={inputStyle} />

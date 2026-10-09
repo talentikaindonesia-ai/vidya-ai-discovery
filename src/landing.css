@@ -1117,6 +1117,12 @@
   max-width: 880px;
   margin: 0 auto;
 }
+/* 3-tier pricing (Gratis/Basic/Premium): 3 cols on desktop; the existing
+   @media(max-width:1100px) .lp-pricing-grid rule stacks it to 1fr below that. */
+.lp-wrap .lp-pricing-grid-3 {
+  grid-template-columns: repeat(3, 1fr);
+  max-width: 1100px;
+}
 .lp-wrap .lp-pricing-card {
   background: #fff;
   border: 1.5px solid var(--lp-gray-200);

@@ -307,7 +307,7 @@ export default function TalentikaJuniorLanding() {
 
         {/* ═══════════════════════ STATS BAND ═══════════════════════ */}
         <div style={{ background: "#fff", borderTop: `1px solid ${C.gray200}`, borderBottom: `1px solid ${C.gray200}`, padding: "28px 32px" }}>
-          <div style={{ maxWidth: 1280, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(4,1fr)" }}>
+          <div style={{ maxWidth: 1280, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))" }}>
             {[
               { n: "10K+", l: "Anak & Remaja Tergabung", color: C.orange },
               { n: "5+", l: "Jalur Talenta (Tracks)", color: C.blue },
@@ -332,7 +332,7 @@ export default function TalentikaJuniorLanding() {
               </h2>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 16, marginBottom: 28 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 16, marginBottom: 28 }}>
               {[
                 { emoji: "🔬", title: "Scientist", desc: "Eksplorasi sains dan penelitian", cls: "tr-scientist", accent: C.purple, topBg: C.purple, iconBg: "linear-gradient(135deg,#EDE9FE,#DDD6FE)" },
                 { emoji: "💻", title: "Technologist", desc: "Teknologi dan inovasi digital", cls: "tr-tech", accent: C.blue, topBg: C.blue, iconBg: "linear-gradient(135deg,#DBEAFE,#BFDBFE)" },
@@ -395,7 +395,7 @@ export default function TalentikaJuniorLanding() {
                   </div>
                 </div>
                 {/* Milestones */}
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(70px, 1fr))", gap: 8 }}>
                   {[
                     { emoji: "⚡", val: "2.450", lbl: "XP", bg: C.blue50 },
                     { emoji: "🏅", val: "12", lbl: "Badges", bg: "#FFEDE2" },
@@ -430,7 +430,7 @@ export default function TalentikaJuniorLanding() {
               </h2>
               <p style={{ fontSize: 16, color: C.gray500, maxWidth: "56ch", margin: "0 auto", lineHeight: 1.6 }}>Rasakan keseruan langsung di Talentika Experience Center (bermitra dengan Indonesia Science Center).</p>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 20, marginTop: 36 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 20, marginTop: 36 }}>
               {[
                 { emoji: "🔍", title: "Discovery Zone", desc: "Eksplorasi interaktif untuk menemukan minat dan bakat tersembunyi yang belum pernah kamu bayangkan sebelumnya.", bg: C.blue50, color: C.blue },
                 { emoji: "⚡", title: "Development Zone", desc: "Praktik langsung mengembangkan kemampuan spesifik dengan bimbingan mentor ahli dari berbagai bidang industri.", bg: C.orangeSoft, color: C.orange },
@@ -536,7 +536,7 @@ export default function TalentikaJuniorLanding() {
               </h2>
               <p style={{ fontSize: 16, color: C.gray500, maxWidth: "56ch", margin: "0 auto", lineHeight: 1.6 }}>Talentika Junior bukan sekadar platform belajar — ini adalah ekosistem pertumbuhan yang menyeluruh untuk buah hati Anda.</p>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 18 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 18 }}>
               {[
                 { emoji: "🧠", title: "Asesmen Ilmiah", desc: "Kenali potensi anak secara akurat dengan metode psikometri tervalidasi." },
                 { emoji: "📊", title: "Dashboard Orang Tua", desc: "Pantau perkembangan, XP, badge, dan progres belajar anak secara real-time." },
@@ -564,7 +564,7 @@ export default function TalentikaJuniorLanding() {
               <p style={{ fontSize: 16, color: C.gray500, maxWidth: "56ch", margin: "0 auto", lineHeight: 1.6 }}>Modul pembelajaran bertema seru yang membangun skill nyata — dari laboratorium sains hingga studio kreatif digital.</p>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 20 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 20 }}>
               {[
                 { num: "01", emoji: "🔬", title: "Si Jagoan Sains", tag: "Scientist Track · 12 Modul", headerBg: "linear-gradient(145deg,#4F46E5,#7C3AED)", dotColor: C.purple, items: ["Eksperimen kimia & fisika mini", "Proyek riset ilmiah sederhana", "Science fair competition", "Portofolio penelitian digital"], age: "Usia 8–15 tahun", ageBg: C.purpleSoft, ageColor: C.purple, badge: "⚡ Popular" },
                 { num: "02", emoji: "💻", title: "Si Jagoan Tech", tag: "Technologist Track · 15 Modul", headerBg: `linear-gradient(145deg,${C.blueDark},${C.blue})`, dotColor: C.blue, items: ["Coding & pemrograman dasar", "Membuat game & aplikasi sederhana", "Robotika & Arduino untuk anak", "Hackathon Junior"], age: "Usia 9–15 tahun", ageBg: C.blue50, ageColor: C.blue, badge: "🔥 Trending" },
@@ -665,7 +665,7 @@ export default function TalentikaJuniorLanding() {
               <p style={{ fontSize: 16, color: C.gray500, maxWidth: "56ch", margin: "0 auto", lineHeight: 1.6 }}>Ikuti event, kompetisi, dan workshop seru yang diselenggarakan oleh Talentika Junior setiap bulannya.</p>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 18 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 18 }}>
               {[
                 { bannerBg: "linear-gradient(135deg,#EDE9FE,#C4B5FD)", emoji: "🔬", date: "25 Mei 2026", trackLabel: "Scientist", trackBg: C.purpleSoft, trackColor: C.purple, title: "Junior Science Fair 2026", location: "GBK, Jakarta", slots: "32 slot tersisa" },
                 { bannerBg: "linear-gradient(135deg,#DBEAFE,#93C5FD)", emoji: "💻", date: "1 Jun 2026", trackLabel: "Technologist", trackBg: C.blue50, trackColor: C.blue, title: 'Hackathon Junior "Build the Future"', location: "Online + Offline", slots: "18 slot tersisa" },
@@ -707,7 +707,7 @@ export default function TalentikaJuniorLanding() {
               <p style={{ fontSize: 16, color: C.gray500, maxWidth: "56ch", margin: "0 auto", lineHeight: 1.6 }}>Semua mentor Talentika Junior adalah profesional terverifikasi yang berpengalaman membimbing anak dan remaja.</p>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 18 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 18 }}>
               {[
                 { initials: "Dr. R", name: "Dr. Rini Suryani", role: "PhD Biologi, UI", roleColor: C.purple, track: "🔬 Scientist", trackBg: C.purpleSoft, trackColor: C.purple, avBg: "linear-gradient(135deg,#4F46E5,#7C3AED)", bio: "10+ tahun membimbing anak-anak cinta sains melalui eksperimen menyenangkan." },
                 { initials: "Bg. T", name: "Bagus Teguh", role: "Software Engineer, Tokopedia", roleColor: C.blue, track: "💻 Technologist", trackBg: C.blue50, trackColor: C.blue, avBg: `linear-gradient(135deg,${C.blueDark},${C.blue})`, bio: "Mengajarkan coding dengan cara yang fun dan relevan untuk generasi digital." },
@@ -738,7 +738,7 @@ export default function TalentikaJuniorLanding() {
               <p style={{ fontSize: 16, color: C.gray500, maxWidth: "56ch", margin: "0 auto", lineHeight: 1.6 }}>Orang tua, anak, dan guru yang merasakan dampak nyata dari Talentika Junior.</p>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 20 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 20 }}>
               {[
                 { quote: "Anak saya yang tadinya pemalu sekarang berani presentasi di depan puluhan orang. Challenge dan komunitas Talentika Junior benar-benar mengubahnya!", avBg: `linear-gradient(135deg,#4F46E5,${C.purple})`, initials: "Ibu R", name: "Ibu Ratna Dewi", role: "Orang Tua · Jakarta Selatan", tagBg: C.purpleSoft, tagColor: C.purple, tag: "🔬 Scientist Track" },
                 { quote: "Aku suka banget belajar coding di Talentika Junior! Mentornya sabar dan seru. Sekarang aku udah bisa bikin game sendiri lho!", avBg: `linear-gradient(135deg,${C.blueDark},${C.blue})`, initials: "Rio", name: "Rio Kurniawan", role: "Siswa SD, 12 tahun · Bandung", tagBg: C.blue50, tagColor: C.blue, tag: "💻 Tech Track" },
@@ -773,7 +773,7 @@ export default function TalentikaJuniorLanding() {
               <p style={{ fontSize: 16, color: C.gray500, maxWidth: "56ch", margin: "0 auto", lineHeight: 1.6 }}>Investasi yang terjangkau untuk masa depan anak yang luar biasa. Coba gratis selama 7 hari!</p>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 22, maxWidth: 1100, margin: "0 auto" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 22, maxWidth: 1100, margin: "0 auto" }}>
               {/* Explorer */}
               <div className="jr-price-card" style={{ background: "#fff", border: `1.5px solid ${C.gray200}`, borderRadius: 40, overflow: "hidden" }}>
                 <div style={{ padding: 10, textAlign: "center", fontFamily: display, fontWeight: 800, fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: `linear-gradient(90deg,${C.blue},${C.blueLight})`, color: "#fff" }}>🌟 Starter</div>

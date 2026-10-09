@@ -25,17 +25,29 @@ export const useNotifications = (userId?: string) => {
     if (!userId) return;
 
     try {
-      const { data, error } = await supabase
-        .from('notifications')
-        .select('id,title,message,type,priority,is_read,action_url,metadata,created_at')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(50);
+      // Dihitung terpisah dari daftar yang ditampilkan — dulu jumlah "belum
+      // dibaca" diturunkan dari 50 baris teratas saja, jadi berhenti tepat di
+      // angka 50 begitu ada 50+ notifikasi belum dibaca, seolah macet di situ
+      // selamanya walau yang sebenarnya jauh lebih banyak.
+      const [{ data, error }, { count, error: countError }] = await Promise.all([
+        supabase
+          .from('notifications')
+          .select('id,title,message,type,priority,is_read,action_url,metadata,created_at')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(50),
+        supabase
+          .from('notifications')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', userId)
+          .eq('is_read', false),
+      ]);
 
       if (error) throw error;
+      if (countError) throw countError;
 
       setNotifications(data || []);
-      setUnreadCount(data?.filter(n => !n.is_read).length || 0);
+      setUnreadCount(count ?? 0);
     } catch (error) {
       console.error('Error fetching notifications:', error);
     } finally {

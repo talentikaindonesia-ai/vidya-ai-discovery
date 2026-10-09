@@ -108,10 +108,9 @@ function buildHtml(name: string, primaryType?: string) {
     </ul>
 
     <div class="price-box">
-      <div class="old">Rp 199.000/bulan</div>
-      <div class="new">Rp 149.000</div>
-      <div class="per">per bulan (hemat 25%)</div>
-      <div class="badge">🎁 Khusus untuk kamu — tawaran terbatas</div>
+      <div class="new">Rp 39.000</div>
+      <div class="per">per bulan · batalkan kapan saja</div>
+      <div class="badge">🎁 Harga pelajar — terjangkau untuk semua</div>
     </div>
 
     <a href="${APP_URL}/subscription" class="cta">Upgrade Sekarang →</a>
@@ -190,13 +189,13 @@ Deno.serve(async (req) => {
       // Fetch latest assessment type for personalization
       const { data: assessment } = await supabase
         .from("assessment_results")
-        .select("primary_type")
+        .select("personality_type")
         .eq("user_id", profile.user_id)
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
 
-      const html = buildHtml(profile.full_name ?? "", assessment?.primary_type ?? undefined);
+      const html = buildHtml(profile.full_name ?? "", assessment?.personality_type ?? undefined);
 
       const res = await fetch("https://api.resend.com/emails", {
         method: "POST",

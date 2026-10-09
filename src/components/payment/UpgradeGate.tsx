@@ -1,6 +1,8 @@
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSubscription } from "@/hooks/useSubscription";
 import { Lock, Sparkles } from "lucide-react";
+import { logGateEvent } from "@/lib/gateAnalytics";
 
 interface UpgradeGateProps {
   /** Short description of what's behind the gate */
@@ -11,6 +13,8 @@ interface UpgradeGateProps {
   children: React.ReactNode;
   /** Optional plan ID to pre-select on subscription page */
   planId?: string;
+  /** Path to return to after successful payment, e.g. "/learning" */
+  fromPath?: string;
 }
 
 /**
@@ -23,14 +27,12 @@ export function UpgradeGate({
   requiredPlan = "premium",
   children,
   planId,
+  fromPath,
 }: UpgradeGateProps) {
   const navigate = useNavigate();
   const sub = useSubscription();
 
-  // Still loading — render children transparently to avoid layout shift
-  if (sub.loading) return <>{children}</>;
-
-  // Access check
+  // Access check (computed before any early return so hooks stay unconditional)
   const hasAccess =
     requiredPlan === "school"
       ? sub.isSchool || sub.isEnterprise
@@ -38,11 +40,23 @@ export function UpgradeGate({
       ? sub.isEnterprise
       : sub.isPremium;
 
+  const locked = !sub.loading && !hasAccess;
+
+  // Funnel analytics: log once per mount when the gate is actually shown
+  useEffect(() => {
+    if (locked) logGateEvent("upgrade_prompt_shown", feature);
+  }, [locked]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Still loading — render children transparently to avoid layout shift
+  if (sub.loading) return <>{children}</>;
+
   if (hasAccess) return <>{children}</>;
 
-  const href = planId
-    ? `/subscription?planId=${planId}`
-    : "/subscription";
+  const params = new URLSearchParams();
+  if (planId) params.set("planId", planId);
+  if (fromPath) params.set("from", fromPath);
+  const qs = params.toString();
+  const href = qs ? `/subscription?${qs}` : "/subscription";
 
   return (
     <div style={{ position: "relative", borderRadius: 14, overflow: "hidden" }}>
@@ -115,7 +129,10 @@ export function UpgradeGate({
         </div>
 
         <button
-          onClick={() => navigate(href)}
+          onClick={() => {
+            logGateEvent("upgrade_prompt_clicked", feature);
+            navigate(href);
+          }}
           style={{
             marginTop: 6,
             display: "inline-flex",

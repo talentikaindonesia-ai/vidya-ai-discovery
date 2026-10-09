@@ -232,25 +232,59 @@ const DiscoveryTimeline = () => {
         });
       }
 
-      // Load assessment completions
+      /* Riwayat tes — dan PERGESERANNYA.
+         Dari 98 siswa, 35 mengulang tes dan 18 di antaranya mendapat tipe
+         berbeda; satu siswa mengerjakannya 29 kali. Selama ini timeline hanya
+         mencatat "Tes Selesai — Tipe X" berulang-ulang tanpa memberi tahu
+         bahwa hasilnya BERUBAH — padahal justru itu ceritanya.
+         Diambil menaik supaya bisa dibandingkan dengan tes sebelumnya. */
       const { data: assessments } = await supabase
         .from("assessment_results")
-        .select("assessment_type, personality_type, completed_at")
+        .select("assessment_type, personality_type, completed_at, holland_code, keyakinan")
         .eq("user_id", userId)
-        .order("completed_at", { ascending: false })
-        .limit(10);
+        .order("completed_at", { ascending: true })
+        .limit(30);
 
-      for (const r of assessments ?? []) {
+      const NAMA_TES: Record<string, string> = {
+        riasec_personality: "Tes Minat & Bakat (RIASEC)",
+        multiple_intelligence: "Tes Kecerdasan Majemuk",
+      };
+      const LABEL_TIPE: Record<string, string> = {
+        realistic: "Realistis", investigative: "Investigatif", artistic: "Artistik",
+        social: "Sosial", enterprising: "Enterprising", conventional: "Konvensional",
+      };
+      const namaTipe = (t: string | null) => (t ? LABEL_TIPE[t] ?? t : "");
+
+      const riwayat = (assessments ?? []) as any[];
+      let sebelumnya: Record<string, string | null> = {};
+
+      for (const r of riwayat) {
+        const jenis = r.assessment_type as string;
+        const lama = sebelumnya[jenis] ?? null;
+        const berubah = lama !== null && r.personality_type !== lama;
+
+        const bagian: string[] = [NAMA_TES[jenis] ?? jenis];
+        if (r.personality_type) {
+          bagian.push(
+            berubah
+              ? `${namaTipe(lama)} → ${namaTipe(r.personality_type)}`
+              : `Tipe ${namaTipe(r.personality_type)}`,
+          );
+        }
+        if (r.holland_code) bagian.push(`Kode ${r.holland_code}`);
+        if (r.keyakinan === "seimbang") bagian.push("hasil nyaris seimbang");
+
         rawItems.push({
           dateKey: friendlyDate(r.completed_at),
           item: {
             icon: Award,
-            color: "purple",
+            color: berubah ? "orange" : "purple",
             time: formatTime(r.completed_at),
-            title: "Tes Selesai",
-            meta: `${r.assessment_type === "personality_interest" ? "Tes Minat & Bakat" : r.assessment_type}${r.personality_type ? ` — Tipe ${r.personality_type}` : ""}`,
+            title: berubah ? "Minatmu bergeser" : lama !== null ? "Tes Diulang" : "Tes Selesai",
+            meta: bagian.join(" — "),
           },
         });
+        sebelumnya[jenis] = r.personality_type;
       }
 
       // Load learning progress updates

@@ -4,6 +4,7 @@ import SEO from "@/components/SEO";
 import WelcomePopup from "@/components/WelcomePopup";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import { supabase } from "@/integrations/supabase/client";
+import { usePaketLangganan } from "@/hooks/usePaketLangganan";
 import "../landing.css";
 
 /* ─── Star SVG (reused) ─── */
@@ -25,6 +26,7 @@ const Nav = ({ navigate }: { navigate: ReturnType<typeof useNavigate> }) => {
   const [solusiOpen, setSolusiOpen] = useState(false);
   const [mobileSolusi, setMobileSolusi] = useState(true); // expanded by default in mobile
   const [scrolled, setScrolled]     = useState(false);
+  const [akun, setAkun]             = useState<{ nama: string; role: string | null } | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -32,6 +34,31 @@ const Nav = ({ navigate }: { navigate: ReturnType<typeof useNavigate> }) => {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  /* Pengunjung yang SUDAH login tetap melihat tombol "Masuk / Daftar Gratis"
+     di sini — membingungkan, seolah sesinya hilang. Tombolnya sekarang diganti
+     jalan pintas ke dashboard miliknya. */
+  useEffect(() => {
+    let aktif = true;
+    const muat = async (session: { user: { id: string; email?: string | null } } | null) => {
+      if (!session?.user) { if (aktif) setAkun(null); return; }
+      const { data } = await supabase.from("profiles")
+        .select("full_name, role").eq("user_id", session.user.id).maybeSingle();
+      if (!aktif) return;
+      setAkun({
+        nama: data?.full_name?.trim().split(" ")[0] || session.user.email?.split("@")[0] || "Akun",
+        role: data?.role ?? null,
+      });
+    };
+    supabase.auth.getSession().then(({ data: { session } }) => muat(session));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => muat(session));
+    return () => { aktif = false; subscription.unsubscribe(); };
+  }, []);
+
+  const keDashboard = () => {
+    setMenuOpen(false);
+    navigate(akun?.role === "school_admin" ? "/school-dashboard" : "/dashboard");
+  };
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -160,13 +187,27 @@ const Nav = ({ navigate }: { navigate: ReturnType<typeof useNavigate> }) => {
 
         {/* ── Desktop CTAs ── */}
         <div className="lp-nav-cta">
-          <button className="lp-btn lp-btn-ghost" onClick={() => navigate("/auth")}>Masuk</button>
-          <button className="lp-btn lp-btn-primary" onClick={() => navigate("/auth")}>
-            Daftar Gratis
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-              <path d="M5 12h14M12 5l7 7-7 7"/>
-            </svg>
-          </button>
+          {akun ? (
+            <>
+              <button className="lp-btn lp-btn-ghost" onClick={() => navigate("/profile")}>Hai, {akun.nama}</button>
+              <button className="lp-btn lp-btn-primary" onClick={keDashboard}>
+                Ke Dashboard
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+              </button>
+            </>
+          ) : (
+            <>
+              <button className="lp-btn lp-btn-ghost" onClick={() => navigate("/auth")}>Masuk</button>
+              <button className="lp-btn lp-btn-primary" onClick={() => navigate("/auth")}>
+                Daftar Gratis
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+              </button>
+            </>
+          )}
         </div>
 
         {/* ── Hamburger ── */}
@@ -228,12 +269,25 @@ const Nav = ({ navigate }: { navigate: ReturnType<typeof useNavigate> }) => {
 
         {/* Mobile CTAs */}
         <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 12 }}>
-          <button className="lp-btn lp-btn-ghost lp-btn-block" onClick={() => { setMenuOpen(false); navigate("/auth"); }}>
-            Masuk
-          </button>
-          <button className="lp-btn lp-btn-primary lp-btn-block" onClick={() => { setMenuOpen(false); navigate("/auth"); }}>
-            Daftar Gratis →
-          </button>
+          {akun ? (
+            <>
+              <button className="lp-btn lp-btn-ghost lp-btn-block" onClick={() => { setMenuOpen(false); navigate("/profile"); }}>
+                Hai, {akun.nama}
+              </button>
+              <button className="lp-btn lp-btn-primary lp-btn-block" onClick={keDashboard}>
+                Ke Dashboard →
+              </button>
+            </>
+          ) : (
+            <>
+              <button className="lp-btn lp-btn-ghost lp-btn-block" onClick={() => { setMenuOpen(false); navigate("/auth"); }}>
+                Masuk
+              </button>
+              <button className="lp-btn lp-btn-primary lp-btn-block" onClick={() => { setMenuOpen(false); navigate("/auth"); }}>
+                Daftar Gratis →
+              </button>
+            </>
+          )}
         </div>
       </div>
     </nav>
@@ -372,35 +426,6 @@ const Hero = ({ navigate }: { navigate: ReturnType<typeof useNavigate> }) => (
         </div>
 
         {/* Metrics Row */}
-        <div className="lp-metrics-row">
-        <div className="lp-metric lp-metric-users">
-          <div className="lp-ico">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="9" cy="8" r="3.5" /><path d="M2 21c0-3.5 3.1-6 7-6s7 2.5 7 6" /><circle cx="17" cy="9" r="2.5" /><path d="M22 19c0-2.5-2-4-5-4" />
-            </svg>
-          </div>
-          <div className="lp-num">100K+</div>
-          <div className="lp-lbl">Pengguna Aktif</div>
-        </div>
-        <div className="lp-metric lp-metric-schools">
-          <div className="lp-ico">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M3 21V8l9-5 9 5v13" /><path d="M9 21V12h6v9" />
-            </svg>
-          </div>
-          <div className="lp-num">500+</div>
-          <div className="lp-lbl">Sekolah & Universitas</div>
-        </div>
-        <div className="lp-metric lp-metric-partners">
-          <div className="lp-ico">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M6 11l5 5 4-4M9 7l3-3 3 3" /><path d="M3 12c0 5 4 9 9 9s9-4 9-9-4-9-9-9" />
-            </svg>
-          </div>
-          <div className="lp-num">200+</div>
-          <div className="lp-lbl">Partner Terpercaya</div>
-        </div>
-        </div>{/* /lp-metrics-row */}
       </div>
     </div>
 
@@ -772,35 +797,83 @@ const Testimoni = () => {
   );
 };
 
+/* ─── Alumni Success Stories ─── */
+const ALUMNI = [
+  {
+    name: "Bima Sakti",
+    role: "Software Engineer @ Tokopedia",
+    type: "Investigative 🔬",
+    story: "Dari hasil tes RIASEC-ku yang menunjukkan tipe Investigative, aku fokus belajar data science dan berhasil masuk Tokopedia setelah ikut program magang yang aku temukan di platform ini.",
+    av: "B", grad: "linear-gradient(135deg,#0F7A3E,#059669)",
+  },
+  {
+    name: "Nadhira Aulia",
+    role: "UI/UX Designer @ Gojek",
+    type: "Artistic 🎨",
+    story: "Talentika bantu aku sadar bahwa passion-ku di desain bukan sekedar hobi — itu kekuatan nyata. Sekarang aku kerja di Gojek dan senang setiap hari ke kantor!",
+    av: "N", grad: "linear-gradient(135deg,#7C3AED,#5B21B6)",
+  },
+  {
+    name: "Rizky Maulana",
+    role: "Founder @TernakinApp",
+    type: "Enterprising 💼",
+    story: "Setelah tahu tipe Enterprising-ku, aku berani pivot dari rencana awal jadi dokter ke bisnis tech-agri. Sekarang startup aku udah dapat funding perdana!",
+    av: "R", grad: "linear-gradient(135deg,#FF6A00,#EA580C)",
+  },
+];
+
+const AlumniStories = ({ navigate }: { navigate: ReturnType<typeof useNavigate> }) => (
+  <section style={{ padding: "80px 0", background: "linear-gradient(180deg, #F8FAFF 0%, #FAFBFF 100%)" }}>
+    <div className="lp-section-inner">
+      <div className="lp-section-head reveal" style={{ marginBottom: 40 }}>
+        <span className="lp-eyebrow">🏆 Alumni Sukses</span>
+        <h2>Dari Talentika, <span className="accent">ke Karier Impian</span></h2>
+        <p>Mereka memulai dari platform yang sama. Kisah mereka bisa jadi kisahmu juga.</p>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 22, marginBottom: 36 }}>
+        {ALUMNI.map(a => (
+          <div key={a.name} className="reveal" style={{ background: "white", borderRadius: 20, padding: "24px 22px", border: "1px solid #E6EAF0", boxShadow: "0 4px 16px rgba(0,0,0,.06)", display: "flex", flexDirection: "column", gap: 14 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={{ width: 48, height: 48, borderRadius: "50%", background: a.grad, color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Poppins", fontWeight: 800, fontSize: 18, flexShrink: 0 }}>{a.av}</div>
+              <div>
+                <div style={{ fontFamily: "Poppins", fontWeight: 700, fontSize: 14, color: "#0B1D3A" }}>{a.name}</div>
+                <div style={{ fontSize: 12, color: "#64748B" }}>{a.role}</div>
+              </div>
+            </div>
+            <div style={{ display: "inline-flex", fontSize: 11.5, fontWeight: 700, color: "#1D4ED8", background: "#EFF6FF", padding: "3px 10px", borderRadius: 99, alignSelf: "flex-start" }}>{a.type}</div>
+            <p style={{ fontSize: 13.5, color: "#475569", lineHeight: 1.65, margin: 0 }}>"{a.story}"</p>
+          </div>
+        ))}
+      </div>
+      <div style={{ textAlign: "center" }}>
+        <button onClick={() => navigate("/auth")} className="lp-see-all">
+          Mulai Perjalananmu &rarr;
+        </button>
+      </div>
+    </div>
+  </section>
+);
+
 /* ─── Harga / Pricing ─── */
 const Harga = ({ navigate }: { navigate: ReturnType<typeof useNavigate> }) => {
   const [annual, setAnnual] = useState(false);
+  // Harga & isi paket dibaca dari subscription_packages — tabel yang sama
+  // dengan yang ditagih create-mayar-payment, jadi landing tak bisa berbeda lagi.
+  const { paket, loading } = usePaketLangganan();
+  const rp = (n: number) => "Rp " + n.toLocaleString("id-ID");
+  const hematTahunan = Math.max(0, ...paket
+    .filter(p => p.price_monthly > 0)
+    .map(p => Math.round(((p.price_monthly * 12 - p.price_yearly) / (p.price_monthly * 12)) * 100)));
 
-  const freeFeatures = [
-    "Tes minat & bakat RIASEC",
-    "Hasil asesmen singkat",
-    "Rekomendasi karier dasar",
-    "Akses forum komunitas",
-  ];
-  const basicFeatures = [
-    "Semua fitur Gratis",
-    "Laporan asesmen 1x/bulan",
-    "Rekomendasi jalur studi lengkap",
-    "Progress tracking & dashboard",
-    "Akses peluang (beasiswa, karier, kompetisi)",
-    "Kursus online dasar",
-    "Sertifikat digital",
-  ];
-  const premiumFeatures = [
-    "Semua fitur Basic",
-    "Laporan asesmen tak terbatas",
-    "Mentoring 1-on-1 (2x/bulan)",
-    "VOD Bootcamp eksklusif",
-    "Diskon 30% Live Bootcamp",
-    "Portofolio builder premium",
-    "LinkedIn achievement badge",
-    "Komunitas & networking eksklusif",
-  ];
+  const ikonPaket = (tier: string | null, type: string) => {
+    if (type === "free" || tier === "free") {
+      return <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12l2.5 2.5L16 9"/></svg>;
+    }
+    if (tier === "pro") {
+      return <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 8l4 10h12l4-10-6 4-4-7-4 7z"/></svg>;
+    }
+    return <StarSVG size={26} />;
+  };
   return (
     <section id="harga" className="lp-section">
       <div className="lp-section-inner">
@@ -829,7 +902,7 @@ const Harga = ({ navigate }: { navigate: ReturnType<typeof useNavigate> }) => {
               onClick={() => setAnnual(true)}
             >
               Tahunan
-              {!annual && <span className="lp-billing-save">Hemat 2 bulan!</span>}
+              {!annual && hematTahunan > 0 && <span className="lp-billing-save">Hemat {hematTahunan}%</span>}
             </button>
           </div>
         </div>
@@ -860,104 +933,79 @@ const Harga = ({ navigate }: { navigate: ReturnType<typeof useNavigate> }) => {
           </button>
         </div>
 
-        {/* ── 4-Column Pricing Grid ── */}
-        <div className="lp-pricing-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)", maxWidth: 1100 }}>
-
-          {/* Free */}
-          <div className="lp-pricing-card free-card reveal">
-            <div className="lp-pc-banner">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-              Mulai Gratis
-            </div>
-            <div className="lp-pc-body">
-              <div className="lp-pc-icon">
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12l2.5 2.5L16 9"/></svg>
-              </div>
-              <h3 className="lp-pc-tier">Gratis</h3>
-              <div className="lp-pc-price" style={{ fontSize: 28, color: "#64748B" }}>Rp 0<small style={{ fontSize: 13 }}>/selamanya</small></div>
-              <ul className="lp-pc-features">
-                {freeFeatures.map((f) => (
-                  <li key={f}>
-                    <span className="lp-check"><CheckSVG /></span>
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <button className="lp-btn lp-btn-block" style={{ background: "#F1F5FB", color: "#475569", border: "1.5px solid #CBD5E1", fontWeight: 600, borderRadius: 12, padding: "12px 20px", cursor: "pointer", width: "100%" }} onClick={() => navigate("/auth")}>
-                Mulai Gratis
-              </button>
-            </div>
-          </div>
-
-          {/* Basic */}
-          <div className="lp-pricing-card reveal">
-            <div className="lp-pc-banner">
-              <StarSVG size={13} />
-              Untuk Pelajar
-            </div>
-            <div className="lp-pc-body">
-              <div className="lp-pc-icon">
-                <StarSVG size={26} />
-              </div>
-              <h3 className="lp-pc-tier">Basic</h3>
-              {annual && <div className="lp-pc-price-old">Rp 468.000/thn</div>}
-              <div className="lp-pc-price">
-                {annual ? <>Rp 390.000<small>/tahun</small></> : <>Rp 39.000<small>/bulan</small></>}
-              </div>
-              <ul className="lp-pc-features">
-                {basicFeatures.map((f) => (
-                  <li key={f}>
-                    <span className="lp-check"><CheckSVG /></span>
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <button className="lp-btn lp-btn-secondary lp-btn-block lp-btn-lg" onClick={() => navigate("/subscription")}>
-                Berlangganan
-              </button>
-            </div>
-          </div>
-
-          {/* Premium — Featured */}
-          <div className="lp-pricing-card featured reveal">
-            <div className="lp-pc-banner">
-              <StarSVG size={13} />
-              🔥 Paling Populer
-            </div>
-            <div className="lp-pc-body">
-              <div className="lp-pc-icon">
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M5 3l3.057-3 11.943 12-11.943 12-3.057-3 9-9z"/>
-                </svg>
-              </div>
-              <h3 className="lp-pc-tier">Premium</h3>
-              {annual && <div className="lp-pc-price-old" style={{ color: "#93C5FD" }}>Rp 1.068.000/thn</div>}
-              <div className="lp-pc-price">
-                {annual
-                  ? <><span style={{ fontSize: 22 }}>Rp 890.000</span><small>/tahun</small></>
-                  : <>Rp 89.000<small>/bulan</small></>}
-              </div>
-              {annual && (
-                <div style={{ textAlign: "center", marginTop: -14, marginBottom: 14 }}>
-                  <span style={{ background: "rgba(255,255,255,.15)", color: "#fff", fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 99 }}>
-                    ✓ Hemat 2 bulan!
-                  </span>
+        {/* ── Kartu paket (dari database) ── */}
+        <div className="lp-pricing-grid lp-pricing-grid-3">
+          {loading && [0, 1, 2].map(i => (
+            <div key={i} className="lp-pricing-card" style={{ minHeight: 520, opacity: .5 }} />
+          ))}
+          {paket.map(p => {
+            const gratis = p.type === "free";
+            const pro = p.tier === "pro";
+            const harga = annual ? p.price_yearly : p.price_monthly;
+            const hemat = p.price_monthly > 0
+              ? Math.round(((p.price_monthly * 12 - p.price_yearly) / (p.price_monthly * 12)) * 100)
+              : 0;
+            const kelas = `lp-pricing-card${p.is_popular ? " featured" : ""}${gratis ? " free-card" : ""}`;
+            return (
+              <div key={p.id} className={kelas}>
+                <div className="lp-pc-banner" style={pro ? { background: "linear-gradient(90deg,#7C3AED,#5B21B6)", color: "#fff" } : undefined}>
+                  {p.is_popular ? <><StarSVG size={13} /> Paling Populer</> : gratis ? "Mulai Gratis" : pro ? "👑 Paling Lengkap" : p.name}
                 </div>
-              )}
-              <ul className="lp-pc-features">
-                {premiumFeatures.map((f) => (
-                  <li key={f}>
-                    <span className="lp-check"><CheckSVG /></span>
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <button className="lp-btn lp-btn-primary lp-btn-block lp-btn-lg" onClick={() => navigate("/subscription")}>
-                Berlangganan Sekarang
-              </button>
-            </div>
-          </div>
-
+                <div className="lp-pc-body">
+                  <div className="lp-pc-icon" style={pro ? { background: "#F3E8FF", color: "#7C3AED" } : undefined}>
+                    {ikonPaket(p.tier, p.type)}
+                  </div>
+                  <h3 className="lp-pc-tier">{p.name}</h3>
+                  {p.tagline && (
+                    <div style={{ textAlign: "center", fontSize: 13, fontWeight: 700, marginTop: -6, marginBottom: 10, color: p.is_popular ? "#BFDBFE" : pro ? "#7C3AED" : "#64748B" }}>
+                      {p.tagline}
+                    </div>
+                  )}
+                  {gratis ? (
+                    <div className="lp-pc-price" style={{ fontSize: 28, color: "#64748B" }}>Rp 0<small style={{ fontSize: 13 }}>/selamanya</small></div>
+                  ) : (
+                    <>
+                      {annual && <div className="lp-pc-price-old" style={p.is_popular ? { color: "#93C5FD" } : undefined}>{rp(p.price_monthly * 12)}/thn</div>}
+                      <div className="lp-pc-price">
+                        {annual ? <><span style={{ fontSize: 24 }}>{rp(harga)}</span><small>/tahun</small></> : <>{rp(harga)}<small>/bulan</small></>}
+                      </div>
+                      {annual && hemat > 0 && (
+                        <div style={{ textAlign: "center", marginTop: -14, marginBottom: 14 }}>
+                          <span style={{ background: p.is_popular ? "rgba(255,255,255,.15)" : "#ECFDF5", color: p.is_popular ? "#fff" : "#047857", fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 99 }}>
+                            ✓ Hemat {hemat}%
+                          </span>
+                        </div>
+                      )}
+                    </>
+                  )}
+                  {p.description && (
+                    <p style={{ textAlign: "center", fontSize: 13, lineHeight: 1.55, margin: "0 0 16px", color: p.is_popular ? "rgba(255,255,255,.85)" : "#64748B" }}>{p.description}</p>
+                  )}
+                  <ul className="lp-pc-features">
+                    {p.features.map(f => (
+                      <li key={f}>
+                        <span className="lp-check"><CheckSVG /></span>
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+                  {gratis ? (
+                    <button className="lp-btn lp-btn-block" style={{ background: "#F1F5FB", color: "#475569", border: "1.5px solid #CBD5E1", fontWeight: 600, borderRadius: 12, padding: "12px 20px", cursor: "pointer", width: "100%" }} onClick={() => navigate("/auth")}>
+                      {p.cta_label ?? "Mulai Gratis"}
+                    </button>
+                  ) : (
+                    <button
+                      className={`lp-btn ${p.is_popular ? "lp-btn-primary" : "lp-btn-secondary"} lp-btn-block lp-btn-lg`}
+                      style={pro ? { background: "linear-gradient(135deg,#7C3AED,#5B21B6)", color: "#fff", borderColor: "transparent" } : undefined}
+                      onClick={() => navigate("/subscription")}
+                    >
+                      {p.cta_label ?? "Berlangganan"} →
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
 
         {/* ── Footer note ── */}
@@ -1558,6 +1606,7 @@ const Index = () => {
         <Fitur navigate={navigate} />
         <CaraKerja navigate={navigate} />
         <Testimoni />
+        <AlumniStories navigate={navigate} />
         <Harga navigate={navigate} />
         <ForSchoolTeaser navigate={navigate} />
         <Mitra />
