@@ -12,6 +12,8 @@ on:
   workflow_dispatch:
   push:
     tags: ["v*"]
+    # Build uji otomatis di branch aplikasi mobile (workflow_dispatch baru muncul setelah merge ke main)
+    branches: ["feat/talentika-mobile-app"]
 
 jobs:
   android:
