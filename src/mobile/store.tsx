@@ -242,6 +242,9 @@ export async function askAi(mode: string, payload: Record<string, any>): Promise
  * Info.plist; WAJIB juga ditambahkan di Supabase → Auth → Redirect URLs). */
 export const NATIVE_SCHEME = "id.talentika.app";
 export const isNative = () => !!(window as any).Capacitor?.isNativePlatform?.();
+/** Pembelian digital hanya di web. Di app native, Apple/Google mewajibkan IAP —
+ *  untuk v1 tombol beli & harga disembunyikan; Pro dari web/sekolah tetap berlaku. */
+export const canPurchase = () => !isNative();
 /** Link verifikasi email selalu ke domain web — App Links/Universal Links membukanya di aplikasi. */
 export const authRedirect = () => (isNative() ? "https://talentika.id/app/start" : `${window.location.origin}/app/start`);
 

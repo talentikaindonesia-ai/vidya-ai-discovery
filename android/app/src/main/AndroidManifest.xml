@@ -41,6 +41,10 @@
             </intent-filter>
         </activity>
 
+        <!-- Warna & saluran default untuk notifikasi FCM -->
+        <meta-data android:name="com.google.firebase.messaging.default_notification_color" android:resource="@color/colorPrimary" />
+        <meta-data android:name="com.google.firebase.messaging.default_notification_channel_id" android:value="learning" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
@@ -54,6 +58,8 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Android 13+: izin menampilkan notifikasi (diminta sekali setelah onboarding) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <!-- Aplikasi tidak memakai ID iklan (formulir Data safety: "tidak ada pelacakan") -->
     <uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove" />

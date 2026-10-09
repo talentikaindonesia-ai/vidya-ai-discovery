@@ -7,6 +7,7 @@ import { Avatar, Body, Btn, Card, CardTitle, ChipBtn, Empty, HScroll, Input, Kic
 import { C, F, SH, avatarColors, daysUntil, deadlineColor } from "../theme";
 import { archetypes, AXES, dnaTitle, fmtDate, rankAxes } from "../logic";
 import authSchool from "../assets/auth-school.webp";
+import { keluar } from "../push";
 
 export default function Roles({ screen }: { screen: "parent" | "mentor" | "school" }) {
   if (screen === "mentor") return <MentorDash />;
@@ -22,7 +23,7 @@ function TopBar({ avatar, kicker, title, extra }: { avatar: React.ReactNode; kic
       {avatar}
       <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontSize: 12.5, color: C.muted, fontWeight: 600 }}>{kicker}</div><div style={{ fontSize: 19, fontWeight: 700, fontFamily: F.display, letterSpacing: "-.3px" }}>{title}</div></div>
       {extra}
-      <button onClick={async () => { await supabase.auth.signOut(); nav("/app", { replace: true }); }} style={{ border: "none", background: "#fff", boxShadow: SH.btn, borderRadius: 11, fontFamily: "inherit", fontSize: 12, fontWeight: 700, color: C.muted, padding: "9px 12px", cursor: "pointer" }}>{t("Keluar", "Sign out")}</button>
+      <button onClick={async () => { await keluar(); nav("/app", { replace: true }); }} style={{ border: "none", background: "#fff", boxShadow: SH.btn, borderRadius: 11, fontFamily: "inherit", fontSize: 12, fontWeight: 700, color: C.muted, padding: "9px 12px", cursor: "pointer" }}>{t("Keluar", "Sign out")}</button>
     </div>
   );
 }
@@ -251,7 +252,7 @@ function SchoolDash() {
       <div style={{ padding: "calc(env(safe-area-inset-top, 0px) + 20px) 20px 0", display: "flex", alignItems: "center", gap: 12 }}>
         <img src={authSchool} alt="" style={{ width: 44, height: 44, borderRadius: "50%", objectFit: "cover", flex: "none" }} />
         <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontSize: 12.5, color: C.muted, fontWeight: 600 }}>{profile?.school_name ?? "Sekolah"} · Guru BK</div><div style={{ fontSize: 19, fontWeight: 700, fontFamily: F.display, letterSpacing: "-.3px" }}>{t("Halo", "Hi")}, {((profile as any)?.pic_name ?? profile?.full_name ?? "").split(" ")[0] || "Bu/Pak"} 👋</div></div>
-        <button onClick={async () => { await supabase.auth.signOut(); window.location.href = "/app"; }} style={{ border: "none", background: "#fff", boxShadow: SH.btn, borderRadius: 11, fontFamily: "inherit", fontSize: 12, fontWeight: 700, color: C.muted, padding: "9px 12px", cursor: "pointer" }}>{t("Keluar", "Sign out")}</button>
+        <button onClick={async () => { await keluar(); window.location.href = "/app"; }} style={{ border: "none", background: "#fff", boxShadow: SH.btn, borderRadius: 11, fontFamily: "inherit", fontSize: 12, fontWeight: 700, color: C.muted, padding: "9px 12px", cursor: "pointer" }}>{t("Keluar", "Sign out")}</button>
       </div>
       <Body>
         {!code && <Empty icon="🏫" title={t("Akun ini belum terhubung ke sekolah", "This account isn't linked to a school")} body={t("Dashboard sekolah memakai akun sekolah terverifikasi.", "The school dashboard uses a verified school account.")} action={<Btn h={44} onClick={() => { window.location.href = "/for-schools"; }}>{t("Daftarkan sekolah", "Register school")}</Btn>} />}

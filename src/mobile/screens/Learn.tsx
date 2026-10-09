@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { askAi, db, errMsg, openExternal, signedUrl, uploadEvidence, useApp } from "../store";
+import { askAi, canPurchase, db, errMsg, openExternal, signedUrl, uploadEvidence, useApp } from "../store";
 import { AiLabel, Body, Btn, Card, CardTitle, DarkCard, Empty, Header, HeroCard, HScroll, Input, Kicker, Label, Loading, Pill, Row, Screen, Sheet, TabTitle, TextArea } from "../ui";
 import { C, F, SH, rpShort } from "../theme";
 import stemCover from "../assets/stem-cover-portrait.webp";
@@ -672,11 +672,11 @@ function Playbooks() {
               <div style={{ fontSize: 13.5, fontWeight: 700, fontFamily: F.display, lineHeight: 1.3 }}>{p.title}</div>
               <div style={{ marginTop: 3, fontSize: 12, color: C.muted, lineHeight: 1.4 }}>{p.description}</div>
               <div style={{ marginTop: 9, display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ flex: 1, fontSize: 12.5, fontWeight: 700, fontFamily: F.display, color: p.owned ? C.green : C.text }}>{p.owned ? (p.price === 0 ? t("Gratis", "Free") : p.free_for_pro && isPro ? t("Gratis untuk Pro", "Free for Pro") : t("Dimiliki", "Owned")) : rpShort(p.price)}</span>
+                <span style={{ flex: 1, fontSize: 12.5, fontWeight: 700, fontFamily: F.display, color: p.owned ? C.green : C.text }}>{p.owned ? (p.price === 0 ? t("Gratis", "Free") : p.free_for_pro && isPro ? t("Gratis untuk Pro", "Free for Pro") : t("Dimiliki", "Owned")) : canPurchase() ? rpShort(p.price) : t("Belum dimiliki", "Not owned")}</span>
                 {p.owned ? (<>
                   <button onClick={() => read(p)} style={{ border: "none", background: C.tintBlue, color: C.blueDark, fontFamily: "inherit", fontSize: 12, fontWeight: 700, padding: "7px 11px", borderRadius: 99, cursor: "pointer" }}>{t("Baca", "Read")}</button>
                   <button onClick={() => addPlan(p)} style={{ border: "none", background: C.tintGreen, color: C.green, fontFamily: "inherit", fontSize: 12, fontWeight: 700, padding: "7px 11px", borderRadius: 99, cursor: "pointer" }}>+ Plan</button>
-                </>) : <button onClick={() => setBuy(p)} style={{ border: "none", background: C.blue, color: "#fff", fontFamily: "inherit", fontSize: 12, fontWeight: 700, padding: "7px 13px", borderRadius: 99, cursor: "pointer" }}>{t("Beli", "Buy")}</button>}
+                </>) : canPurchase() && <button onClick={() => setBuy(p)} style={{ border: "none", background: C.blue, color: "#fff", fontFamily: "inherit", fontSize: 12, fontWeight: 700, padding: "7px 13px", borderRadius: 99, cursor: "pointer" }}>{t("Beli", "Buy")}</button>}
               </div>
             </div>
           </Card>

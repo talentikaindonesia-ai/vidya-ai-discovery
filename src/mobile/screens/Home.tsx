@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { askAi, db, useApp, useCareers, useDna, useOpportunities, useReadiness, useTracker } from "../store";
+import { askAi, canPurchase, db, useApp, useCareers, useDna, useOpportunities, useReadiness, useTracker } from "../store";
 import { Body, Card, CardTitle, ChipBtn, DarkCard, Empty, Header, HeroCard, HScroll, Loading, Pill, Ring, Row, Screen, Skeleton } from "../ui";
 import { C, F, SH, daysUntil, deadlineColor } from "../theme";
 import { deepLink, greeting, JOURNEY, NOTIF_CATS, NOTIF_STYLE, notifCat, oppMatch, oppTypeOf, READINESS_META, timeAgo, TYPEC, TYPE_ID } from "../logic";
@@ -206,7 +206,7 @@ function HomeScreen() {
           </div>
         )}
 
-        {!isPro && (
+        {!isPro && canPurchase() && (
           <div onClick={() => nav("/app/pro")} style={{ background: "#fff", border: `1.5px dashed ${C.lightBlue}`, borderRadius: 22, padding: "16px 18px", cursor: "pointer", display: "flex", gap: 12, alignItems: "center" }}>
             <span style={{ fontSize: 22 }}>👑</span>
             <div style={{ flex: 1 }}><div style={{ fontSize: 14, fontWeight: 800 }}>Talentika Pro</div><div style={{ marginTop: 2, fontSize: 12, color: C.muted }}>{t("Full Talent DNA, mentoring, Application Assistant", "Full Talent DNA, mentoring, Application Assistant")}</div></div>

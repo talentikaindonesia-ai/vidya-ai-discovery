@@ -1,15 +1,17 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { usePaketLangganan } from "@/hooks/usePaketLangganan";
 import { invalidateSubscriptionCache } from "@/hooks/useSubscription";
-import { db, openExternal, useApp } from "../store";
+import { canPurchase, db, openExternal, useApp } from "../store";
 import { Btn, Confetti, Header, Input, Label, Loading, Radio } from "../ui";
 import { C, F, SH, rp, rpShort } from "../theme";
 import { fmtDate } from "../logic";
 
 export default function Pro({ screen }: { screen: "pro" | "checkout" | "paid" }) {
+  // Di app native tidak ada pembelian (kebijakan App Store / Google Play) — lihat canPurchase()
+  if (!canPurchase() && screen !== "paid") return <NativeProInfo />;
   if (screen === "checkout") return <Checkout />;
   if (screen === "paid") return <Paid />;
   return <ProScreen />;
@@ -35,6 +37,38 @@ const FEATURES: [string, string, string, string, string][] = [
   ["📚", C.tintOrange, "Semua learning track + sertifikat", "Materi tanpa batas & sertifikat terverifikasi", "Unlimited courses & verified certificates"],
   ["🌐", C.tintPurple, "Community & Public Talent Profile", "Posting di komunitas & profil publik untuk aplikasi", "Post in the community & a public profile for applications"],
 ];
+
+/* Versi native: informasi fitur Pro tanpa harga, tombol beli, atau tautan ke pembayaran luar
+   (App Store Review Guideline 3.1.1/3.1.3 & kebijakan Google Play Payments). */
+function NativeProInfo() {
+  const nav = useNavigate();
+  const qc = useQueryClient();
+  const { t, lang, isPro, toast } = useApp();
+  if (window.location.pathname.endsWith("/checkout")) return <Navigate to="/app/pro" replace />;
+  return (
+    <div style={{ position: "absolute", inset: 0, overflow: "auto", background: C.bg, paddingBottom: 40 }}>
+      <div style={{ background: C.navy, padding: "calc(env(safe-area-inset-top, 0px) + 20px) 22px 26px", borderRadius: "0 0 28px 28px", color: "#fff", position: "relative", overflow: "hidden" }}>
+        <div style={{ position: "absolute", top: -60, right: -60, width: 200, height: 200, borderRadius: "50%", background: "rgba(255,255,255,.06)" }} />
+        <button onClick={() => nav(-1)} aria-label={t("Tutup", "Close")} style={{ width: 38, height: 38, border: "none", borderRadius: 12, background: "rgba(255,255,255,.12)", cursor: "pointer", fontSize: 15, color: "#fff", fontFamily: "inherit", position: "relative" }}>✕</button>
+        <div style={{ marginTop: 16, display: "inline-flex", alignItems: "center", gap: 7, background: "rgba(255,193,7,.18)", padding: "6px 12px", borderRadius: 99, position: "relative" }}><span>👑</span><span style={{ fontSize: 11.5, fontWeight: 700, fontFamily: F.display, color: C.yellow, letterSpacing: ".5px" }}>TALENTIKA PRO</span></div>
+        <h1 style={{ margin: "12px 0 0", fontSize: 25, fontWeight: 700, fontFamily: F.display, letterSpacing: "-.4px", lineHeight: 1.25, position: "relative" }}>{isPro ? t("Talentika Pro aktif", "Talentika Pro is active") : t("Fitur Talentika Pro", "Talentika Pro features")}</h1>
+        <p style={{ margin: "8px 0 0", fontSize: 13.5, lineHeight: 1.55, color: "rgba(255,255,255,.8)", maxWidth: 290, position: "relative" }}>
+          {isPro ? t("Semua fitur di bawah sudah terbuka untukmu.", "All features below are unlocked for you.") : t("Fitur ini tersedia untuk akun Talentika Pro, termasuk akun dari sekolah mitra.", "These features are available to Talentika Pro accounts, including partner-school accounts.")}
+        </p>
+      </div>
+      <div style={{ padding: "18px 20px 0", display: "flex", flexDirection: "column", gap: 9 }}>
+        {FEATURES.map(([ic, bg, ti, d, de]) => (
+          <div key={ti} style={{ display: "flex", gap: 12, background: "#fff", borderRadius: 15, padding: "13px 14px", boxShadow: SH.cardSm }}>
+            <span style={{ width: 30, height: 30, borderRadius: 10, background: bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, flex: "none", color: C.gold }}>{ic}</span>
+            <div style={{ flex: 1 }}><div style={{ fontSize: 13.5, fontWeight: 700 }}>{ti} {isPro && <span style={{ color: C.green }}>✓</span>}</div><div style={{ marginTop: 2, fontSize: 12, color: C.muted, lineHeight: 1.4 }}>{lang === "en" ? de : d}</div></div>
+          </div>
+        ))}
+        <Btn kind="outline" h={48} onClick={async () => { invalidateSubscriptionCache(); await qc.invalidateQueries({ queryKey: ["m-access"] }); toast(t("Status akun diperbarui", "Account status refreshed")); }} style={{ marginTop: 8 }}>{t("Muat ulang status akun", "Refresh account status")}</Btn>
+        {isPro && <Btn h={48} onClick={() => nav("/app/mentors")}>{t("Booking mentor", "Book a mentor")}</Btn>}
+      </div>
+    </div>
+  );
+}
 
 /* TALENTIKA PRO (PAY-01) */
 function ProScreen() {

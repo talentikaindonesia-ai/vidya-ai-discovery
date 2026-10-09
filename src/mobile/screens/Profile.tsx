@@ -8,6 +8,8 @@ import { AiLabel, Avatar, Body, Btn, Card, CardTitle, DarkCard, Empty, Header, I
 import { C, F, SH } from "../theme";
 import { fmtDate, rankAxes } from "../logic";
 import { PublicProfileBody } from "../PublicTalentProfile";
+import { initPush, keluar } from "../push";
+import { canPurchase, isNative } from "../store";
 
 export default function Profile({ screen }: { screen: "profile" | "portfolio" | "public" | "goals" | "privacy" | "settings" | "achievements" }) {
   switch (screen) {
@@ -163,7 +165,7 @@ function ProfileHome() {
           { icon: "🛠️", label: "Projects", onClick: () => nav("/app/projects") },
           { icon: "🤝", label: "Mentorship", onClick: () => nav("/app/mentors") },
           { icon: "💬", label: "Community", onClick: () => nav("/app/community") },
-          { icon: "👑", label: isPro ? "Talentika Pro · Aktif" : t("Upgrade ke Talentika Pro", "Upgrade to Talentika Pro"), onClick: () => nav("/app/pro") },
+          { icon: "👑", label: isPro ? "Talentika Pro · Aktif" : canPurchase() ? t("Upgrade ke Talentika Pro", "Upgrade to Talentika Pro") : "Talentika Pro", onClick: () => nav("/app/pro") },
           { icon: "🌐", label: "Public Talent Profile", onClick: () => profile?.username ? nav("/app/public") : setUSheet(true) },
           { icon: "📅", label: "Deadline Calendar", onClick: () => nav("/app/calendar") },
           { icon: "📚", label: "Talentika Playbooks", onClick: () => nav("/app/playbooks") },
@@ -171,7 +173,7 @@ function ProfileHome() {
           ...(data?.mentor ? [{ icon: "🧭", label: t("Mode Mentor", "Mentor mode"), onClick: () => nav("/app/mentor-dashboard") }] : []),
           { icon: "🔒", label: "Privacy & Sharing", onClick: () => nav("/app/privacy") },
           { icon: "⚙️", label: "Settings & Preferences", onClick: () => nav("/app/settings") },
-          { icon: "🚪", label: t("Keluar", "Sign out"), danger: true, onClick: async () => { await supabase.auth.signOut(); nav("/app", { replace: true }); } },
+          { icon: "🚪", label: t("Keluar", "Sign out"), danger: true, onClick: async () => { await keluar(); nav("/app", { replace: true }); } },
         ]} />
       </Body>
       <UsernameSheet open={uSheet} onClose={() => setUSheet(false)} />
@@ -501,6 +503,8 @@ function Settings() {
   const nav = useNavigate();
   const { t, lang, user, profile, textSize, gam, updatePrefs, refreshProfile, toast } = useApp();
   const push = usePushNotifications(user?.id);
+  const [nativePush, setNativePush] = useState<string>("prompt");
+  React.useEffect(() => { if (isNative() && user) initPush(user.id, false).then(setNativePush); }, [user]);
   const prefs = profile?.app_prefs || {};
   const notif = prefs.notif || {};
   const [offline, setOffline] = useState(() => { try { return JSON.parse(localStorage.getItem("tk-offline-courses") || "{}"); } catch { return {}; } });
@@ -523,7 +527,7 @@ function Settings() {
     setBusy(false);
     if (error) { toast(t("Gagal memproses. Hubungi support.", "Couldn't process. Contact support."), "error"); return; }
     toast(data?.pending ? data.message : t("Akunmu sudah dihapus.", "Your account has been deleted."));
-    await supabase.auth.signOut(); nav("/app", { replace: true });
+    await keluar(); nav("/app", { replace: true });
   };
   return (
     <Screen>
@@ -556,7 +560,8 @@ function Settings() {
         </Card>
         <Card pad="14px 18px">
           <div style={{ fontSize: 14.5, fontWeight: 700, fontFamily: F.display, paddingBottom: 4 }}>{t("Notifikasi", "Notifications")}</div>
-          {push.permission !== "unsupported" && push.permission !== "granted" && <Btn kind="soft" h={42} onClick={push.subscribe} style={{ margin: "6px 0" }}>{t("Aktifkan notifikasi push", "Enable push notifications")}</Btn>}
+          {isNative() ? (nativePush !== "granted" && <Btn kind="soft" h={42} onClick={async () => { const r = await initPush(user!.id, true); setNativePush(r); if (r === "denied") toast(t("Izin notifikasi ditolak — aktifkan dari Pengaturan HP", "Notification permission denied — enable it in phone Settings"), "error"); }} style={{ margin: "6px 0" }}>{t("Aktifkan notifikasi push", "Enable push notifications")}</Btn>)
+            : (push.permission !== "unsupported" && push.permission !== "granted" && <Btn kind="soft" h={42} onClick={push.subscribe} style={{ margin: "6px 0" }}>{t("Aktifkan notifikasi push", "Enable push notifications")}</Btn>)}
           {cats.map(([k, l]) => (
             <div key={k} onClick={() => updatePrefs({ notif: { ...notif, [k]: notif[k] === false } })} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: `1px solid ${C.track}`, cursor: "pointer" }}>
               <span style={{ flex: 1, fontSize: 13.5, fontWeight: 600 }}>{l}</span><Toggle on={notif[k] !== false} />

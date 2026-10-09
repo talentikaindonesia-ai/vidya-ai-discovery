@@ -54,8 +54,48 @@ di Xcode untuk setiap unggahan ke toko.
 4. Product → Archive → Distribute → App Store Connect.
 5. App Store Connect: Privacy Nutrition Labels, Age Rating, URL kebijakan privasi.
 
-## Catatan kebijakan toko
-- **Langganan Pro saat ini dibayar via Mayar.** Apple & Google umumnya mewajibkan
-  In-App Purchase untuk langganan digital (PRD PAY-02). Sebelum submit, pilih:
-  integrasikan IAP/Play Billing, atau sembunyikan tombol beli di build native.
+## Build otomatis (GitHub Actions) — tanpa Android Studio/Mac
+- **Android build** (`.github/workflows/android.yml`): Actions → *Android build* → Run workflow.
+  Hasil AAB + APK ada di *Artifacts*. `versionCode` otomatis = nomor run.
+- **iOS build** (`.github/workflows/ios.yml`): tanpa secrets hanya cek kompilasi;
+  dengan secrets langsung archive + unggah ke TestFlight.
+- Push tag `v1.0.0` menjalankan keduanya.
+
+Secrets GitHub (Settings → Secrets and variables → Actions):
+
+| Secret | Isi |
+|---|---|
+| `ANDROID_KEYSTORE_BASE64` | `base64 -w0 android/talentika-release.keystore` |
+| `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD` | dari langkah keytool |
+| `GOOGLE_SERVICES_JSON` | isi `google-services.json` (Firebase → Project settings → Android app `id.talentika.app`) |
+| `PLAY_SERVICE_ACCOUNT_JSON` | opsional — unggah otomatis ke Internal testing |
+| `APPLE_TEAM_ID`, `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_P8` | App Store Connect → Users and Access → Integrations → API key |
+
+## Push notifikasi
+Alur: baris baru di `notifications` → trigger `trg_teruskan_push` → edge function
+`kirim-push` → FCM (Android) / APNs (iOS). Preferensi kategori di Settings aplikasi,
+jam tenang 21.00–06.00 WIB untuk < 18 th (ditunda & dikirim 06.05 WIB).
+Pengingat otomatis: deadline peluang H-7/H-3/H-1 (cron harian) dan sesi mentor
+24 jam & 1 jam sebelumnya (cron 10 menit).
+
+Secrets Supabase (Edge Functions → Secrets):
+
+| Secret | Isi |
+|---|---|
+| `FIREBASE_SERVICE_ACCOUNT` | JSON service account Firebase (Project settings → Service accounts → Generate key) |
+| `APNS_KEY_P8` | isi file `.p8` (Apple Developer → Keys → Apple Push Notifications service) |
+| `APNS_KEY_ID`, `APNS_TEAM_ID` | ID key & Team ID |
+| `APNS_BUNDLE_ID` | `id.talentika.app` |
+| `APNS_PRODUCTION` | `true` untuk TestFlight/App Store, `false` untuk build dari Xcode |
+
+## Pembelian di aplikasi native
+Untuk v1, **tombol beli, harga, dan checkout disembunyikan di Android/iOS**
+(`canPurchase()` di `src/mobile/store.tsx`) — sesuai App Store Guideline 3.1.1 dan
+kebijakan Google Play Payments. Pro yang dibeli di talentika.id atau lewat sekolah
+tetap aktif di aplikasi. Jangan menambahkan teks/tautan yang mengarahkan ke
+pembayaran web dari dalam aplikasi. IAP (RevenueCat) bisa ditambahkan di versi berikutnya.
+
+## Catatan lain
 - Data dihosting di Supabase; PRD meminta region Indonesia (UU PDP) — cek region project.
+- Review notes untuk Apple/Google: sertakan akun demo (email + kata sandi) yang sudah
+  onboarding, karena hampir semua layar butuh login.

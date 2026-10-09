@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { askAi, db, errMsg, uploadEvidence, useApp, useCareers } from "../store";
+import { askAi, canPurchase, db, errMsg, uploadEvidence, useApp, useCareers } from "../store";
 import { AiLabel, Avatar, Body, Btn, Card, CardTitle, ChipBtn, DarkCard, Empty, FilterChip, Header, HScroll, Input, Kicker, Label, Loading, Pill, Screen, Sheet, TextArea } from "../ui";
 import { C, F, SH, avatarColors, rpShort } from "../theme";
 import { fmtDate, timeAgo } from "../logic";
@@ -58,7 +58,7 @@ function Mentors() {
               </div>
               <div style={{ marginTop: 11, display: "flex", flexWrap: "wrap", gap: 6 }}>{(m.expertise_areas || []).slice(0, 4).map((x: string) => <Pill key={x}>{x}</Pill>)}</div>
               <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ flex: 1, fontSize: 12.5, fontWeight: 700, fontFamily: F.display, color: isPro ? C.green : C.text }}>{isPro ? t("Termasuk Pro 👑", "Included in Pro 👑") : m.price_per_session ? `${rpShort(m.price_per_session)} / ${t("sesi", "session")}` : t("Khusus Pro", "Pro only")}</span>
+                <span style={{ flex: 1, fontSize: 12.5, fontWeight: 700, fontFamily: F.display, color: isPro ? C.green : C.text }}>{isPro ? t("Termasuk Pro 👑", "Included in Pro 👑") : m.price_per_session && canPurchase() ? `${rpShort(m.price_per_session)} / ${t("sesi", "session")}` : t("Khusus Pro", "Pro only")}</span>
                 <button onClick={() => nav(`/app/mentors/${m.id}`)} style={{ border: "none", background: C.blue, color: "#fff", fontFamily: "inherit", fontSize: 12.5, fontWeight: 700, padding: "9px 16px", borderRadius: 99, cursor: "pointer" }}>Book Session</button>
               </div>
             </Card>

@@ -1,0 +1,65 @@
+# Build aplikasi iOS Talentika di runner macOS GitHub (tanpa perlu Mac sendiri).
+# Tanpa secrets: hanya cek kompilasi (simulator). Dengan secrets: archive,
+# tanda tangan otomatis (cloud signing) dan unggah ke App Store Connect/TestFlight.
+#
+# Secrets repo:
+#   APPLE_TEAM_ID             Team ID Apple Developer (10 karakter)
+#   ASC_KEY_ID, ASC_ISSUER_ID App Store Connect API key (peran Admin/App Manager)
+#   ASC_KEY_P8                isi file AuthKey_XXXX.p8
+name: iOS build
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+jobs:
+  ios:
+    runs-on: macos-15
+    env:
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install & build web
+        run: |
+          npm ci
+          npm run build
+          npx cap sync ios
+
+      - name: CocoaPods
+        working-directory: ios/App
+        run: pod install
+
+      - name: Cek kompilasi (tanpa tanda tangan)
+        if: env.ASC_KEY_P8 == ''
+        run: |
+          xcodebuild build -workspace ios/App/App.xcworkspace -scheme App -configuration Debug \
+            -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO
+
+      - name: Archive & unggah ke App Store Connect
+        if: env.ASC_KEY_P8 != ''
+        run: |
+          mkdir -p ~/private_keys
+          echo "$ASC_KEY_P8" > ~/private_keys/AuthKey_${ASC_KEY_ID}.p8
+          AUTH="-allowProvisioningUpdates -authenticationKeyPath $HOME/private_keys/AuthKey_${ASC_KEY_ID}.p8 -authenticationKeyID $ASC_KEY_ID -authenticationKeyIssuerID $ASC_ISSUER_ID"
+          xcodebuild archive -workspace ios/App/App.xcworkspace -scheme App -configuration Release \
+            -archivePath build/Talentika.xcarchive -destination 'generic/platform=iOS' \
+            DEVELOPMENT_TEAM=$APPLE_TEAM_ID CURRENT_PROJECT_VERSION=${{ github.run_number }} $AUTH
+          plutil -replace teamID -string "$APPLE_TEAM_ID" ios/ExportOptions.plist
+          xcodebuild -exportArchive -archivePath build/Talentika.xcarchive \
+            -exportOptionsPlist ios/ExportOptions.plist -exportPath build/export $AUTH
+
+      - uses: actions/upload-artifact@v4
+        if: env.ASC_KEY_P8 != ''
+        with:
+          name: talentika-ios-${{ github.run_number }}
+          path: build/export

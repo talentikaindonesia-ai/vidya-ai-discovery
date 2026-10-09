@@ -2,6 +2,9 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<!-- Push notifikasi (APNs). Xcode mengubahnya ke "production" saat archive untuk App Store. -->
+	<key>aps-environment</key>
+	<string>development</string>
 	<!-- Universal Links: talentika.id/app/* & /u/* dibuka di aplikasi.
 	     Butuh https://talentika.id/.well-known/apple-app-site-association berisi Team ID. -->
 	<key>com.apple.developer.associated-domains</key>

@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { db, errMsg, useApp, useDna } from "../store";
+import { canPurchase, db, errMsg, useApp, useDna } from "../store";
 import { BackBtn, Body, Btn, Card, CardTitle, Confetti, DarkCard, Header, HeroCard, IconTile, Loading, Pill, Radio, Screen, Sheet } from "../ui";
 import { C, F, SH } from "../theme";
 import { archetypes, AXES, MODULES, radarPoints, rankAxes } from "../logic";
@@ -172,8 +172,9 @@ function Question() {
       </div>
       <Sheet open={paywall} onClose={() => nav("/app/dna")} title={t("Lanjutkan dengan Talentika Pro", "Continue with Talentika Pro")}>
         <p style={{ margin: 0, fontSize: 13.5, color: C.text3, lineHeight: 1.6 }}>
-          {t(`Modul ${meta.name} adalah bagian dari Full Talent DNA. Jawabanmu sudah tersimpan — upgrade untuk melanjutkan dan membuka laporan PDF.`,
-             `${meta.name} is part of the Full Talent DNA. Your answer is saved — upgrade to continue and unlock the PDF report.`)}
+          {canPurchase() ? t(`Modul ${meta.name} adalah bagian dari Full Talent DNA. Jawabanmu sudah tersimpan — upgrade untuk melanjutkan dan membuka laporan PDF.`,
+             `${meta.name} is part of the Full Talent DNA. Your answer is saved — upgrade to continue and unlock the PDF report.`)
+            : t(`Modul ${meta.name} tersedia untuk akun Talentika Pro. Jawabanmu sudah tersimpan.`, `${meta.name} is available for Talentika Pro accounts. Your answer is saved.`)}
         </p>
         <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 10 }}>
           <Btn kind="orange" onClick={() => { track("paywall_viewed", { entry_point: "dna_module" }); nav("/app/pro"); }}>👑 {t("Lihat Talentika Pro", "See Talentika Pro")}</Btn>

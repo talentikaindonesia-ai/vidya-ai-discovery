@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Warna brand Talentika (menimpa default Capacitor) -->
+<resources>
+    <color name="colorPrimary">#1D4ED8</color>
+    <color name="colorPrimaryDark">#1E40AF</color>
+    <color name="colorAccent">#FF6A00</color>
+</resources>

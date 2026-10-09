@@ -1,0 +1,86 @@
+# Build aplikasi Android Talentika (AAB untuk Play Store + APK untuk uji coba).
+# Jalankan manual (Actions → Android build → Run workflow) atau push tag v*.
+#
+# Secrets repo (Settings → Secrets and variables → Actions):
+#   ANDROID_KEYSTORE_BASE64   base64 dari android/talentika-release.keystore
+#   ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD
+#   GOOGLE_SERVICES_JSON      isi google-services.json dari Firebase (push FCM)
+#   PLAY_SERVICE_ACCOUNT_JSON (opsional) unggah otomatis ke track Internal testing
+name: Android build
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    env:
+      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+      PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install & build web
+        run: |
+          npm ci
+          npm run build
+          npx cap sync android
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - name: Kunci rilis & Firebase
+        run: |
+          if [ -n "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > android/talentika-release.keystore
+            {
+              echo "storeFile=../talentika-release.keystore"
+              echo "storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}"
+              echo "keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}"
+              echo "keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}"
+            } > android/keystore.properties
+          else
+            echo "::warning::ANDROID_KEYSTORE_BASE64 kosong — AAB tidak ditandatangani (tidak bisa diunggah ke Play)."
+          fi
+          if [ -n "$GOOGLE_SERVICES_JSON" ]; then
+            echo "$GOOGLE_SERVICES_JSON" > android/app/google-services.json
+          else
+            echo "::warning::GOOGLE_SERVICES_JSON kosong — push notifikasi Android tidak aktif di build ini."
+          fi
+
+      - name: versionCode = nomor run
+        run: sed -i -E "s/versionCode [0-9]+/versionCode ${{ github.run_number }}/" android/app/build.gradle
+
+      - name: Gradle build
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew bundleRelease assembleRelease --no-daemon
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: talentika-android-${{ github.run_number }}
+          path: |
+            android/app/build/outputs/bundle/release/*.aab
+            android/app/build/outputs/apk/release/*.apk
+
+      - name: Unggah ke Play Console (Internal testing)
+        if: env.PLAY_SERVICE_ACCOUNT_JSON != '' && env.ANDROID_KEYSTORE_BASE64 != ''
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: id.talentika.app
+          releaseFiles: android/app/build/outputs/bundle/release/*.aab
+          track: internal
+          status: draft

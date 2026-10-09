@@ -1,6 +1,7 @@
 import React, { lazy, ReactNode, Suspense, useEffect } from "react";
 import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { AppProvider, handleAuthCallback, NATIVE_SCHEME, useApp } from "./store";
+import { initPush } from "./push";
 import { GLOBAL_CSS, Loading } from "./ui";
 import { C, F } from "./theme";
 import tika from "./assets/tika-mascot.webp";
@@ -81,7 +82,20 @@ function RequireAuth({ children }: { children: ReactNode }) {
 }
 
 function Shell() {
-  const { textSize } = useApp();
+  const { textSize, user, profile } = useApp();
+  const navigate = useNavigate();
+  // Tap notifikasi push → pindah layar tanpa memuat ulang aplikasi
+  useEffect(() => {
+    const h = (e: Event) => navigate((e as CustomEvent).detail);
+    window.addEventListener("tk-nav", h);
+    return () => window.removeEventListener("tk-nav", h);
+  }, [navigate]);
+  // Daftarkan push: diam-diam bila izin sudah ada; tanya sekali setelah onboarding selesai
+  useEffect(() => {
+    if (!user || !profile?.onboarding_done) return;
+    const asked = localStorage.getItem("tk-push-asked") === "1";
+    initPush(user.id, !asked).then(r => { if (r !== "unsupported") localStorage.setItem("tk-push-asked", "1"); }).catch(() => {});
+  }, [user?.id, profile?.onboarding_done]); // eslint-disable-line
   const zoom = { Kecil: 0.92, Normal: 1, Besar: 1.1 }[textSize] ?? 1;
   const loc = useLocation();
   useEffect(() => { document.title = "Talentika"; }, []);
