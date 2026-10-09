@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Universal Links: talentika.id/app/* & /u/* dibuka di aplikasi.
+	     Butuh https://talentika.id/.well-known/apple-app-site-association berisi Team ID. -->
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:talentika.id</string>
+		<string>applinks:www.talentika.id</string>
+	</array>
+	<!-- Sign in with Apple (wajib di iOS bila ada login Google — PRD AUTH-01) -->
+	<key>com.apple.developer.applesignin</key>
+	<array>
+		<string>Default</string>
+	</array>
+</dict>
+</plist>

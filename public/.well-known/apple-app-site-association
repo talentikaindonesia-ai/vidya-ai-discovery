@@ -1,0 +1,14 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["TEAMID_GANTI.id.talentika.app"],
+        "components": [
+          { "/": "/app/*", "comment": "Aplikasi Talentika" },
+          { "/": "/u/*", "comment": "Profil publik" }
+        ]
+      }
+    ]
+  },
+  "webcredentials": { "apps": ["TEAMID_GANTI.id.talentika.app"] }
+}

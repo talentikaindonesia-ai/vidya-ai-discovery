@@ -8,6 +8,8 @@ export interface LearningContent {
   category_id: string | null; tags: string[] | null;
   is_featured: boolean | null; is_premium: boolean | null;
   is_active: boolean | null; priority_score: number | null;
+  riasec_types: string[] | null; mi_types: string[] | null;
+  learning_objectives: string[] | null;
   created_at: string;
   learning_categories?: { name: string; color: string | null } | null;
 }
@@ -24,7 +26,7 @@ export interface Challenge {
   start_date: string | null; end_date: string | null; is_active: boolean | null;
 }
 
-export type NavSection = "overview" | "content" | "categories" | "challenges" | "articles" | "opportunities" | "users" | "payments";
+export type NavSection = "overview" | "content" | "paths" | "categories" | "challenges" | "articles" | "opportunities" | "premium_programs" | "bootcamps" | "events" | "users" | "payments" | "schools" | "school_inquiries" | "mentors" | "health" | "careers" | "playbooks" | "review" | "mobile_app";
 
 // ─── Design constants ─────────────────────────────────────────────────────────
 export const DIFF_CFG: Record<string, { label: string; bg: string; color: string }> = {

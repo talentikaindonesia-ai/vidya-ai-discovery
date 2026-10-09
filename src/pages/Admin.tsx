@@ -5,7 +5,8 @@ import { toast } from "sonner";
 import {
   LayoutDashboard, BookOpen, Tag, Trophy, FileText,
   Briefcase, Users, CreditCard, ChevronRight,
-  Loader2, ArrowLeft, LogOut,
+  Loader2, ArrowLeft, LogOut, School, GraduationCap, Activity, CalendarDays,
+  Compass, BookMarked, ShieldCheck, Smartphone,
 } from "lucide-react";
 import { Category, NavSection } from "@/components/admin/adminShared";
 import ErrorBoundary from "@/components/ErrorBoundary";
@@ -13,12 +14,25 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 // ─── Lazy section imports ─────────────────────────────────────────────────────
 const Overview          = lazy(() => import("@/components/admin/sections/Overview"));
 const LearningContentCMS = lazy(() => import("@/components/admin/sections/LearningContentCMS"));
+const LearningPathBuilder = lazy(() => import("@/components/admin/LearningPathBuilder").then(m => ({ default: m.LearningPathBuilder })));
 const CategoriesCMS     = lazy(() => import("@/components/admin/sections/CategoriesCMS"));
 const ChallengesCMS     = lazy(() => import("@/components/admin/sections/ChallengesCMS"));
 const ArticlesCMS       = lazy(() => import("@/components/admin/sections/ArticlesCMS"));
 const OpportunitiesCMS  = lazy(() => import("@/components/admin/sections/OpportunitiesCMS"));
+const PremiumProgramsCMS = lazy(() => import("@/components/admin/sections/PremiumProgramsCMS"));
+const BootcampsCMS      = lazy(() => import("@/components/admin/sections/BootcampsCMS"));
+const SchoolInquiriesCMS = lazy(() => import("@/components/admin/sections/SchoolInquiriesCMS"));
 const PenggunaCMS       = lazy(() => import("@/components/admin/sections/PenggunaCMS"));
 const PaymentsCMS       = lazy(() => import("@/components/admin/sections/PaymentsCMS"));
+const SchoolsCMS        = lazy(() => import("@/components/admin/sections/SchoolsCMS"));
+const MentorsCMS        = lazy(() => import("@/components/admin/sections/MentorsCMS"));
+const EventsCMS         = lazy(() => import("@/components/admin/sections/EventsCMS"));
+const SystemHealthCMS   = lazy(() => import("@/components/admin/sections/SystemHealthCMS"));
+// Aplikasi mobile (PRD Talentika Mobile v1.0)
+const CareersCMS        = lazy(() => import("@/components/admin/sections/CareersCMS"));
+const PlaybooksCMS      = lazy(() => import("@/components/admin/sections/PlaybooksCMS"));
+const ReviewQueueCMS    = lazy(() => import("@/components/admin/sections/ReviewQueueCMS"));
+const MobileAppCMS      = lazy(() => import("@/components/admin/sections/MobileAppCMS"));
 
 // ─── Design constants ─────────────────────────────────────────────────────────
 const SIDEBAR_W      = 240;
@@ -29,18 +43,33 @@ const SIDEBAR_ACTIVE = "#2563EB";
 const NAV_ITEMS: { id: NavSection; label: string; icon: React.ElementType }[] = [
   { id: "overview",      label: "Overview",         icon: LayoutDashboard },
   { id: "content",       label: "Learning Content",  icon: BookOpen },
+  { id: "paths",         label: "Jalur Belajar",     icon: GraduationCap },
+  { id: "bootcamps",     label: "Bootcamp",          icon: BookOpen },
   { id: "categories",    label: "Kategori",          icon: Tag },
   { id: "challenges",    label: "Tantangan",         icon: Trophy },
   { id: "articles",      label: "Artikel",           icon: FileText },
   { id: "opportunities", label: "Peluang",           icon: Briefcase },
+  { id: "premium_programs", label: "Program Premium", icon: Briefcase },
+  { id: "events",        label: "Event",             icon: CalendarDays },
   { id: "users",         label: "Pengguna",          icon: Users },
+  { id: "schools",       label: "Sekolah",           icon: School },
+  { id: "school_inquiries", label: "Permintaan Sekolah", icon: School },
+  { id: "mentors",       label: "Mentor",            icon: GraduationCap },
+  { id: "careers",       label: "Karier & Kampus",   icon: Compass },
+  { id: "playbooks",     label: "Playbook",          icon: BookMarked },
+  { id: "review",        label: "Verifikasi & Moderasi", icon: ShieldCheck },
+  { id: "mobile_app",    label: "Aplikasi Mobile",   icon: Smartphone },
   { id: "payments",      label: "Pembayaran",        icon: CreditCard },
+  { id: "health",        label: "Kesehatan Sistem",  icon: Activity },
 ];
 
 const PAGE_TITLES: Record<NavSection, string> = {
-  overview: "Overview", content: "Learning Content", categories: "Kategori",
+  overview: "Overview", content: "Learning Content", paths: "Jalur Belajar", categories: "Kategori",
   challenges: "Tantangan", articles: "Artikel", opportunities: "Peluang",
-  users: "Pengguna", payments: "Pembayaran",
+  premium_programs: "Program Premium", bootcamps: "Bootcamp", school_inquiries: "Permintaan Sekolah",
+  users: "Pengguna", schools: "Sekolah", mentors: "Mentor", payments: "Pembayaran",
+  health: "Kesehatan Sistem", events: "Event",
+  careers: "Karier & Kampus", playbooks: "Playbook", review: "Verifikasi & Moderasi", mobile_app: "Aplikasi Mobile",
 };
 
 const SectionFallback = () => (
@@ -161,12 +190,21 @@ const Admin = () => {
             <p style={{ fontSize: 14, color: "#64748B", margin: 0 }}>
               {section === "overview"      && "Ringkasan semua konten dan aktivitas platform"}
               {section === "content"       && "Kelola semua konten pembelajaran — tambah, edit, toggle status"}
+              {section === "paths"         && "Kelompokkan konten menjadi jalur belajar berurutan per tipe RIASEC"}
               {section === "categories"    && "Kelola kategori konten pembelajaran"}
               {section === "challenges"    && "Kelola tantangan komunitas dengan XP reward"}
               {section === "articles"      && "Kelola artikel dan blog platform"}
               {section === "opportunities" && "Kelola peluang kerja dan magang"}
               {section === "users"         && "Kelola pengguna terdaftar"}
+              {section === "schools"       && "Verifikasi sekolah terdaftar (badge NPSN)"}
+              {section === "mentors"       && "Tinjau & setujui aplikasi mentor"}
+              {section === "events"        && "Buat, terbitkan, dan kelola event — tampil di halaman Komunitas siswa"}
               {section === "payments"      && "Revenue, transaksi Mayar, paket berlangganan & voucher"}
+              {section === "health"        && "Deteksi dini kegagalan senyap — email, spam, notifikasi, pembayaran, integritas data"}
+              {section === "careers"       && "Katalog karier (Career Fit, Compare, Simulator) dan kampus untuk aplikasi mobile"}
+              {section === "playbooks"     && "Playbook Store — harga, sampul, dan PDF privat yang dibuka pembeli"}
+              {section === "review"        && "Verifikasi prestasi siswa dan tinjau laporan konten komunitas"}
+              {section === "mobile_app"    && "Bank soal Talent DNA, bobot Career Readiness, pengaturan AI, dan analitik aplikasi"}
             </p>
           </div>
 
@@ -174,12 +212,24 @@ const Admin = () => {
           <Suspense fallback={<SectionFallback />}>
             {section === "overview"      && <Overview onNav={setSection} />}
             {section === "content"       && <LearningContentCMS categories={categories} />}
+            {section === "paths"         && <LearningPathBuilder />}
             {section === "categories"    && <CategoriesCMS onReload={loadCategories} />}
             {section === "challenges"    && <ChallengesCMS />}
             {section === "articles"      && <ArticlesCMS />}
             {section === "opportunities" && <OpportunitiesCMS />}
+            {section === "premium_programs" && <PremiumProgramsCMS />}
+            {section === "bootcamps"     && <BootcampsCMS />}
+            {section === "school_inquiries" && <SchoolInquiriesCMS />}
             {section === "users"         && <PenggunaCMS />}
+            {section === "schools"       && <SchoolsCMS />}
+            {section === "mentors"       && <MentorsCMS />}
+            {section === "events"        && <EventsCMS />}
             {section === "payments"      && <PaymentsCMS />}
+            {section === "health"        && <SystemHealthCMS />}
+            {section === "careers"       && <CareersCMS />}
+            {section === "playbooks"     && <PlaybooksCMS />}
+            {section === "review"        && <ReviewQueueCMS />}
+            {section === "mobile_app"    && <MobileAppCMS />}
           </Suspense>
           </ErrorBoundary>
         </div>

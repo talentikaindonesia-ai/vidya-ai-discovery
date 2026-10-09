@@ -13,6 +13,7 @@ import { UpgradeModalProvider } from "@/contexts/UpgradeModalContext";
 // ── Eager (needed for auth state and error boundaries) ───────────────────────
 import Auth    from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import AdminGate from "@/components/admin/AdminGate";
 
 // ── Lazy (loaded only when the user navigates to that route) ────────────────
 const Index                 = lazy(() => import("./pages/Index"));
@@ -21,6 +22,8 @@ const Dashboard             = lazy(() => import("./pages/Dashboard"));
 const Admin                 = lazy(() => import("./pages/Admin"));
 const DiscoveryTimeline     = lazy(() => import("./pages/DiscoveryTimeline"));
 const LearningHub           = lazy(() => import("./pages/LearningHub"));
+const PathDetail             = lazy(() => import("./pages/PathDetail"));
+const BootcampDetail         = lazy(() => import("./pages/BootcampDetail"));
 const PortfolioBuilder      = lazy(() => import("./pages/PortfolioBuilder"));
 const OpportunityBoard      = lazy(() => import("./pages/OpportunityBoard"));
 const CommunityForum        = lazy(() => import("./pages/CommunityForum"));
@@ -43,6 +46,18 @@ const TalentikaForSchools   = lazy(() => import("./pages/TalentikaForSchools"));
 const TentangKami           = lazy(() => import("./pages/TentangKami"));
 const TalentikaMitra        = lazy(() => import("./pages/TalentikaMitra"));
 const SchoolDashboard       = lazy(() => import("./pages/SchoolDashboard"));
+const FocusAction           = lazy(() => import("./pages/FocusAction"));
+const Progress              = lazy(() => import("./pages/Progress"));
+const JoinSchool            = lazy(() => import("./pages/JoinSchool"));
+const MultipleIntelligence  = lazy(() => import("./pages/MultipleIntelligence"));
+const Mentors               = lazy(() => import("./pages/Mentors"));
+const VerifikasiSertifikat  = lazy(() => import("./pages/VerifikasiSertifikat"));
+// Aplikasi mobile (Android & iOS via Capacitor) — PRD Talentika Mobile v1.0
+const MobileApp             = lazy(() => import("./mobile/MobileApp"));
+const PublicTalentProfile   = lazy(() => import("./mobile/PublicTalentProfile"));
+
+// Di dalam aplikasi native, halaman awal web langsung diarahkan ke /app.
+const isNativeShell = typeof window !== "undefined" && !!(window as any).Capacitor?.isNativePlatform?.();
 
 // Named-export components wrapped for lazy()
 const ContentDetailView = lazy(() =>
@@ -112,17 +127,27 @@ const App = () => {
           <ErrorBoundary>
           <Suspense fallback={RouteFallback}>
           <Routes>
-            <Route path="/" element={<Index />} />
+            <Route path="/" element={isNativeShell ? <Navigate to="/app" replace /> : <Index />} />
+            <Route path="/app/*" element={<MobileApp />} />
+            <Route path="/u/:username" element={<PublicTalentProfile />} />
             <Route path="/articles" element={<Articles />} />
             <Route path="/articles/:slug" element={<Articles />} />
             <Route path="/auth" element={<Auth />} />
+            {/* Publik tanpa login — perekrut & panitia beasiswa memeriksa kode di sini */}
+            <Route path="/sertifikat/:kode" element={<VerifikasiSertifikat />} />
+            <Route path="/certificate/:kode" element={<VerifikasiSertifikat />} />
             <Route path="/onboarding" element={user ? <Onboarding /> : <Navigate to="/auth" />} />
             <Route path="/assessment" element={user ? <Assessment /> : <Navigate to="/auth" />} />
+            <Route path="/multiple-intelligence" element={user ? <MultipleIntelligence /> : <Navigate to="/auth" />} />
+            <Route path="/mentors" element={user ? <Mentors /> : <Navigate to="/auth" />} />
             <Route path="/dashboard" element={user ? <Dashboard /> : <Navigate to="/auth" />} />
             <Route path="/discovery" element={user ? <DiscoveryTimeline /> : <Navigate to="/auth" />} />
             <Route path="/learning" element={user ? <LearningHub /> : <Navigate to="/auth" />} />
             <Route path="/learning/content/:contentId" element={user ? <ContentDetailView /> : <Navigate to="/auth" />} />
             <Route path="/learning/category/:categoryId" element={user ? <CategoryView /> : <Navigate to="/auth" />} />
+            <Route path="/learning/path/:id" element={user ? <PathDetail /> : <Navigate to="/auth" />} />
+            {/* Publik — halaman jualan program; membeli baru meminta login */}
+            <Route path="/bootcamp/:slug" element={<BootcampDetail />} />
             <Route path="/portfolio" element={user ? <PortfolioBuilder /> : <Navigate to="/auth" />} />
             <Route path="/opportunities" element={user ? <OpportunityBoard /> : <Navigate to="/auth" />} />
             <Route path="/community" element={user ? <CommunityForum /> : <Navigate to="/auth" />} />
@@ -132,7 +157,7 @@ const App = () => {
             <Route path="/profile" element={user ? <Profile /> : <Navigate to="/auth" />} />
             <Route path="/settings" element={user ? <Settings /> : <Navigate to="/auth" />} />
             <Route path="/admin" element={user ? <Admin /> : <Navigate to="/auth" />} />
-            <Route path="/admin/content/edit/:contentId" element={user ? <ContentEditor /> : <Navigate to="/auth" />} />
+            <Route path="/admin/content/edit/:contentId" element={user ? <AdminGate><ContentEditor /></AdminGate> : <Navigate to="/auth" />} />
             {/* /membership merged into /profile — redirect so old links still work */}
             <Route path="/membership" element={<Navigate to="/profile" replace />} />
             <Route path="/talentika-junior" element={<TalentikaJuniorLanding />} />
@@ -145,6 +170,9 @@ const App = () => {
             <Route path="/tentang-kami" element={<TentangKami />} />
             <Route path="/mitra" element={<TalentikaMitra />} />
             <Route path="/school-dashboard" element={user ? <SchoolDashboard /> : <Navigate to="/auth" />} />
+            <Route path="/focus" element={user ? <FocusAction /> : <Navigate to="/auth" />} />
+            <Route path="/progress" element={user ? <Progress /> : <Navigate to="/auth" />} />
+            <Route path="/join/:schoolCode" element={<JoinSchool />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           </Suspense>
