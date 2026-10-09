@@ -127,9 +127,11 @@ export function docsFor(o: { requirements?: string[] | null; type: OppType }): s
   return req.length ? req.slice(0, 6) : DEFAULT_DOCS[o.type];
 }
 
-export interface MatchCtx { axes?: Partial<Axes> | null; tujuan?: string | null; careerField?: string | null; careerName?: string | null; }
+export const JENJANG_LABEL: Record<string, string> = { smp: "SMP", sma_smk: "SMA/SMK", kuliah: "kuliah", lulusan: "lulusan" };
 
-export function oppMatch(o: { title: string; description?: string | null; location?: string | null; type: OppType; quality_score?: number | null; opportunity_field?: string | null }, ctx: MatchCtx) {
+export interface MatchCtx { axes?: Partial<Axes> | null; tujuan?: string | null; careerField?: string | null; careerName?: string | null; jenjang?: string | null; }
+
+export function oppMatch(o: { title: string; description?: string | null; location?: string | null; type: OppType; quality_score?: number | null; opportunity_field?: string | null; jenjang_target?: string[] | null; mode?: string | null; cost?: string | null }, ctx: MatchCtx) {
   const why: string[] = [];
   let m = 55;
   const hay = `${o.title} ${o.description ?? ""} ${o.opportunity_field ?? ""}`.toLowerCase();
@@ -143,11 +145,17 @@ export function oppMatch(o: { title: string; description?: string | null; locati
     };
     if (fit[top]?.includes(o.type)) { m += 8; why.push(`${AXES.find(a => a.key === top)!.name} ${ctx.axes![top]}`); }
   }
+  // jenjang_target terisi (AI Kurator/admin): cocok = naik, tidak cocok = turun jauh
+  if (ctx.jenjang && o.jenjang_target?.length) {
+    if (o.jenjang_target.includes(ctx.jenjang)) { m += 10; why.unshift(`Untuk jenjang ${JENJANG_LABEL[ctx.jenjang] ?? ctx.jenjang}`); }
+    else m -= 25;
+  }
+  if (o.cost === "gratis" || o.cost === "pendanaan_penuh") { m += 3; if (why.length < 3) why.push(o.cost === "gratis" ? "Gratis" : "Didanai penuh"); }
   const loc = (o.location || "").toLowerCase();
-  if (!loc || /online|indonesia|jakarta|daring|nasional/.test(loc)) { m += 4; if (why.length < 3) why.push(loc.includes("online") || loc.includes("daring") ? "Bisa diikuti online" : "Di Indonesia"); }
+  if (o.mode === "online") { m += 4; if (why.length < 3) why.push("Bisa diikuti online"); } else if (!loc || /online|indonesia|jakarta|daring|nasional/.test(loc)) { m += 4; if (why.length < 3) why.push(loc.includes("online") || loc.includes("daring") ? "Bisa diikuti online" : "Di Indonesia"); }
   if ((o.quality_score ?? 0) >= 70) m += 4;
   if (!why.length) why.push("Terbuka untuk pelajar");
-  return { match: Math.max(50, Math.min(97, m)), why: why.slice(0, 3) };
+  return { match: Math.max(30, Math.min(97, m)), why: why.slice(0, 3) };
 }
 
 /* ── Journey (HOME-03) ─────────────────────────────────────────────── */

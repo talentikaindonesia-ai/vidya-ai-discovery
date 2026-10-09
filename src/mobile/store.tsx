@@ -193,6 +193,8 @@ export interface OppRow {
   id: string; title: string; organizer: string | null; description: string | null; url: string | null; deadline: string | null; location: string | null;
   opportunity_type: string | null; opportunity_field: string | null; requirements: string[] | null; prize_info: string | null; poster_url: string | null;
   registration_start_date: string | null; registration_end_date: string | null; quality_score: number | null; source_website: string | null; created_at: string; tags: string[] | null;
+  // diisi AI Kurator / admin (boleh kosong pada data lama)
+  eligibility?: string | null; jenjang_target?: string[] | null; benefits?: string[] | null; cost?: string | null; mode?: string | null;
 }
 
 export function useOpportunities() {
@@ -201,7 +203,7 @@ export function useOpportunities() {
     queryFn: async () => {
       const now = new Date().toISOString();
       const { data } = await db.from("scraped_content")
-        .select("id,title,organizer,description,url,deadline,location,opportunity_type,opportunity_field,requirements,prize_info,poster_url,registration_start_date,registration_end_date,quality_score,source_website,created_at,tags")
+        .select("id,title,organizer,description,url,deadline,location,opportunity_type,opportunity_field,requirements,prize_info,poster_url,registration_start_date,registration_end_date,quality_score,source_website,created_at,tags,eligibility,jenjang_target,benefits,cost,mode")
         .eq("is_active", true).or(`deadline.is.null,deadline.gt.${now}`).order("deadline", { ascending: true, nullsFirst: false }).limit(200);
       return (data ?? []) as OppRow[];
     },

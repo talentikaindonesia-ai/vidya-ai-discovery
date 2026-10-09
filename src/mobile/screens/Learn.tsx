@@ -40,11 +40,17 @@ function usePathItems(pathId: string | null) {
 /* 28 LEARN (LRN-01, LRN-05) */
 function LearnHome() {
   const nav = useNavigate();
-  const { t, user, toast } = useApp();
+  const { t, user, toast, profile } = useApp();
   const [params, setParams] = useSearchParams();
   const { data: my } = useQuery({ queryKey: ["m-my-path", user?.id], enabled: !!user, queryFn: async () => (await db.rpc("my_learning_path")).data });
   const { data: paths } = useQuery({ queryKey: ["m-paths"], staleTime: 10 * 60_000, queryFn: async () => ((await db.rpc("list_learning_paths")).data ?? []) as any[] });
-  const pathId: string | null = params.get("path") ?? my?.path?.id ?? paths?.[0]?.id ?? null;
+  // jalur yang disusun untuk target karier siswa (target_persona 'career:<id>', mis. dari AI Kurator)
+  const careerTarget: string | null = (profile as any)?.career_target ?? null;
+  const { data: careerPath } = useQuery({
+    queryKey: ["m-career-path", careerTarget], enabled: !!careerTarget, staleTime: 10 * 60_000,
+    queryFn: async () => ((await db.from("learning_paths").select("id").eq("is_active", true).eq("target_persona", `career:${careerTarget}`).order("created_at", { ascending: false }).limit(1)).data ?? [])[0]?.id as string | undefined,
+  });
+  const pathId: string | null = params.get("path") ?? my?.path?.id ?? careerPath ?? paths?.[0]?.id ?? null;
   const path = paths?.find(p => p.id === pathId) ?? (my?.path?.id === pathId ? my.path : null);
   const { data: items } = usePathItems(pathId);
   const { data: cont } = useQuery({

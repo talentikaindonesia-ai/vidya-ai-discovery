@@ -26,7 +26,7 @@ export interface Challenge {
   start_date: string | null; end_date: string | null; is_active: boolean | null;
 }
 
-export type NavSection = "overview" | "content" | "paths" | "categories" | "challenges" | "articles" | "opportunities" | "premium_programs" | "bootcamps" | "events" | "users" | "payments" | "schools" | "school_inquiries" | "mentors" | "health" | "careers" | "playbooks" | "review" | "mobile_app";
+export type NavSection = "overview" | "content" | "paths" | "categories" | "challenges" | "articles" | "opportunities" | "premium_programs" | "bootcamps" | "events" | "users" | "payments" | "schools" | "school_inquiries" | "mentors" | "health" | "careers" | "playbooks" | "review" | "mobile_app" | "ai_kurator";
 
 // ─── Design constants ─────────────────────────────────────────────────────────
 export const DIFF_CFG: Record<string, { label: string; bg: string; color: string }> = {

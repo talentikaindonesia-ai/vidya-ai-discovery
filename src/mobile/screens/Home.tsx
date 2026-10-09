@@ -84,7 +84,7 @@ function HomeScreen() {
   // Rekomendasi (HOME-04)
   const topOpp = useMemo(() => {
     if (!opps?.length) return null;
-    const ctx = { axes: dna?.axes, tujuan: profile?.tujuan, careerField: target?.field, careerName: target?.name };
+    const ctx = { axes: dna?.axes, tujuan: profile?.tujuan, careerField: target?.field, careerName: target?.name, jenjang: (profile as any)?.jenjang };
     return opps.map(o => ({ o, m: oppMatch({ ...o, type: oppTypeOf(o.opportunity_type, o.title) }, ctx).match })).sort((a, b) => b.m - a.m)[0];
   }, [opps, dna, profile, target]);
   const recs = [

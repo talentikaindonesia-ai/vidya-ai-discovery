@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { db, errMsg, OppRow, openExternal, Tracked, useApp, useCareers, useDna, useOpportunities, useTracker } from "../store";
 import { Body, Btn, Card, CardTitle, Check, ChipBtn, Empty, FilterChip, Header, HScroll, Kicker, Loading, Pill, Ring, Row, Screen, Sheet, TabTitle } from "../ui";
 import { C, F, SH, daysUntil, deadlineColor } from "../theme";
-import { docsFor, fmtDate, OppType, oppMatch, oppTypeOf, TYPEC, TYPE_ID } from "../logic";
+import { docsFor, fmtDate, JENJANG_LABEL, OppType, oppMatch, oppTypeOf, TYPEC, TYPE_ID } from "../logic";
 
 export default function Opportunities({ screen }: { screen: "list" | "detail" | "tracker" | "calendar" }) {
   switch (screen) {
@@ -33,7 +33,7 @@ function useEnriched() {
     const tmap = new Map((tracker ?? []).map(x => [x.opportunity_id, x]));
     return (opps ?? []).map(o => {
       const type = oppTypeOf(o.opportunity_type, o.title);
-      const m = oppMatch({ ...o, type }, { axes: dna?.axes, tujuan: profile?.tujuan, careerField: target?.field, careerName: target?.name });
+      const m = oppMatch({ ...o, type }, { axes: dna?.axes, tujuan: profile?.tujuan, careerField: target?.field, careerName: target?.name, jenjang: (profile as any)?.jenjang });
       const tr = tmap.get(o.id) ?? null;
       const docs = docsFor({ requirements: o.requirements, type });
       const missing = docs.filter(d => !tr?.checklist?.[d]);
@@ -79,9 +79,9 @@ function List() {
   const dl = { r: active.filter(d => d <= 3).length, o: active.filter(d => d > 3 && d <= 10).length, g: active.filter(d => d > 10).length };
   const shown = list.filter(o => (!type || o.type === type)
     && (!f.soon || (o.days !== null && o.days <= 30))
-    && (!f.online || /online|daring|virtual/i.test(`${o.location} ${o.title}`))
-    && (!f.free || /gratis|free|tanpa biaya|fully funded|pendanaan penuh/i.test(`${o.description} ${o.prize_info}`))
-    && (!f.sma || /sma|smk|siswa|pelajar|high school/i.test(`${o.description} ${o.title}`)));
+    && (!f.online || o.mode === "online" || o.mode === "hybrid" || (!o.mode && /online|daring|virtual/i.test(`${o.location} ${o.title}`)))
+    && (!f.free || o.cost === "gratis" || o.cost === "pendanaan_penuh" || (!o.cost && /gratis|free|tanpa biaya|fully funded|pendanaan penuh/i.test(`${o.description} ${o.prize_info}`)))
+    && (!f.sma || (o.jenjang_target?.length ? o.jenjang_target.includes("sma_smk") : /sma|smk|siswa|pelajar|high school/i.test(`${o.description} ${o.title}`))));
   const fresh = list.filter(o => o.match >= 70).length;
   const types: [OppType | null, string][] = [[null, t("Semua", "All")], ["Scholarship", "Scholarships"], ["Competition", "Competitions"], ["Internship", "Internships"], ["Global", "Global"], ["Research", "Research"], ["Bootcamp", "Bootcamps"]];
   return (
@@ -238,7 +238,17 @@ function Detail() {
         <Card>
           <CardTitle>Overview</CardTitle>
           <p style={{ margin: "8px 0 0", fontSize: 13.5, lineHeight: 1.6, color: C.text3, whiteSpace: "pre-line" }}>{o.description || t("Detail lengkap ada di situs resmi penyelenggara.", "Full details are on the organizer's official site.")}</p>
-          {o.prize_info && (<><Kicker style={{ marginTop: 12 }}>Benefits</Kicker><div style={{ marginTop: 7, fontSize: 13, color: C.text3, lineHeight: 1.5 }}>· {o.prize_info}</div></>)}
+          {(o.mode || o.cost || o.jenjang_target?.length) ? (
+            <div style={{ marginTop: 10, display: "flex", flexWrap: "wrap", gap: 6 }}>
+              {[o.mode && ({ online: "Online", offline: "Offline", hybrid: "Hybrid" } as Record<string, string>)[o.mode],
+                o.cost && ({ gratis: t("Gratis", "Free"), berbayar: t("Berbayar", "Paid"), pendanaan_penuh: t("Didanai penuh", "Fully funded"), pendanaan_sebagian: t("Didanai sebagian", "Partially funded") } as Record<string, string>)[o.cost],
+                ...(o.jenjang_target ?? []).map(j => JENJANG_LABEL[j] ?? j)].filter(Boolean).map(x => (
+                <span key={x as string} style={{ fontSize: 11.5, fontWeight: 700, padding: "4px 10px", borderRadius: 99, background: C.tintBlue, color: C.blue }}>{x}</span>
+              ))}
+            </div>
+          ) : null}
+          {o.eligibility && (<><Kicker style={{ marginTop: 12 }}>{t("Siapa yang bisa daftar", "Who can apply")}</Kicker><div style={{ marginTop: 7, fontSize: 13, color: C.text3, lineHeight: 1.5 }}>{o.eligibility}</div></>)}
+          {(o.benefits?.length || o.prize_info) && (<><Kicker style={{ marginTop: 12 }}>Benefits</Kicker><div style={{ marginTop: 7, fontSize: 13, color: C.text3, lineHeight: 1.5 }}>{(o.benefits?.length ? o.benefits : [o.prize_info]).map((b, i) => <div key={i}>· {b}</div>)}</div></>)}
         </Card>
         {(o.registration_start_date || o.registration_end_date || o.deadline) && (
           <Card>

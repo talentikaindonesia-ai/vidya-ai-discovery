@@ -6,7 +6,7 @@ import {
   LayoutDashboard, BookOpen, Tag, Trophy, FileText,
   Briefcase, Users, CreditCard, ChevronRight,
   Loader2, ArrowLeft, LogOut, School, GraduationCap, Activity, CalendarDays,
-  Compass, BookMarked, ShieldCheck, Smartphone,
+  Compass, BookMarked, ShieldCheck, Smartphone, Sparkles,
 } from "lucide-react";
 import { Category, NavSection } from "@/components/admin/adminShared";
 import ErrorBoundary from "@/components/ErrorBoundary";
@@ -33,6 +33,7 @@ const CareersCMS        = lazy(() => import("@/components/admin/sections/Careers
 const PlaybooksCMS      = lazy(() => import("@/components/admin/sections/PlaybooksCMS"));
 const ReviewQueueCMS    = lazy(() => import("@/components/admin/sections/ReviewQueueCMS"));
 const MobileAppCMS      = lazy(() => import("@/components/admin/sections/MobileAppCMS"));
+const AiKuratorCMS      = lazy(() => import("@/components/admin/sections/AiKuratorCMS"));
 
 // ─── Design constants ─────────────────────────────────────────────────────────
 const SIDEBAR_W      = 240;
@@ -42,6 +43,7 @@ const SIDEBAR_ACTIVE = "#2563EB";
 
 const NAV_ITEMS: { id: NavSection; label: string; icon: React.ElementType }[] = [
   { id: "overview",      label: "Overview",         icon: LayoutDashboard },
+  { id: "ai_kurator",    label: "AI Kurator",        icon: Sparkles },
   { id: "content",       label: "Learning Content",  icon: BookOpen },
   { id: "paths",         label: "Jalur Belajar",     icon: GraduationCap },
   { id: "bootcamps",     label: "Bootcamp",          icon: BookOpen },
@@ -70,6 +72,7 @@ const PAGE_TITLES: Record<NavSection, string> = {
   users: "Pengguna", schools: "Sekolah", mentors: "Mentor", payments: "Pembayaran",
   health: "Kesehatan Sistem", events: "Event",
   careers: "Karier & Kampus", playbooks: "Playbook", review: "Verifikasi & Moderasi", mobile_app: "Aplikasi Mobile",
+  ai_kurator: "AI Kurator",
 };
 
 const SectionFallback = () => (
@@ -201,6 +204,7 @@ const Admin = () => {
               {section === "events"        && "Buat, terbitkan, dan kelola event — tampil di halaman Komunitas siswa"}
               {section === "payments"      && "Revenue, transaksi Mayar, paket berlangganan & voucher"}
               {section === "health"        && "Deteksi dini kegagalan senyap — email, spam, notifikasi, pembayaran, integritas data"}
+              {section === "ai_kurator"    && "Agent AI menyiapkan draf peluang & jalur belajar — terbit ke web dan aplikasi setelah Anda setujui"}
               {section === "careers"       && "Katalog karier (Career Fit, Compare, Simulator) dan kampus untuk aplikasi mobile"}
               {section === "playbooks"     && "Playbook Store — harga, sampul, dan PDF privat yang dibuka pembeli"}
               {section === "review"        && "Verifikasi prestasi siswa dan tinjau laporan konten komunitas"}
@@ -229,6 +233,7 @@ const Admin = () => {
             {section === "careers"       && <CareersCMS />}
             {section === "playbooks"     && <PlaybooksCMS />}
             {section === "review"        && <ReviewQueueCMS />}
+            {section === "ai_kurator"    && <AiKuratorCMS />}
             {section === "mobile_app"    && <MobileAppCMS />}
           </Suspense>
           </ErrorBoundary>
