@@ -52,7 +52,7 @@ export default function AiKuratorCMS() {
 
   const load = async (silent = false) => {
     if (!silent) setLoading(true);
-    let q = db.from("ai_drafts").select("*").order("created_at", { ascending: false }).limit(100);
+    let q = db.from("ai_drafts").select("id,kind,origin,status,input,payload,target_id,published_id,source_url,error,created_at,updated_at").order("created_at", { ascending: false }).limit(100);
     if (filter === "aktif") q = q.in("status", ["running", "pending"]);
     else if (filter !== "semua") q = q.eq("status", filter);
     const { data, error } = await q;
@@ -97,7 +97,7 @@ export default function AiKuratorCMS() {
             : !drafts.length ? <div style={{ padding: 40, textAlign: "center", color: "#94A3B8", fontSize: 14 }}>Belum ada draf di sini.</div>
             : drafts.map(d => {
               const [sl, sbg, sfg] = STATUS[d.status] ?? [d.status, "#F1F5F9", "#475569"];
-              const judul = d.payload?.title ?? d.payload?.name ?? d.input?.title ?? d.input?.topic ?? d.input?.url ?? d.source_url ?? "(tanpa judul)";
+              const judul = d.payload?.title ?? d.payload?.name ?? d.input?.title ?? d.input?.topic ?? d.input?.url ?? (d.input?.sumber_nama && `Memantau ${d.input.sumber_nama}`) ?? d.source_url ?? "(tanpa judul)";
               return (
                 <div key={d.id} onClick={() => (d.status === "pending" || d.payload) && setOpen(d)}
                   style={{ display: "flex", gap: 12, alignItems: "center", padding: "13px 16px", borderBottom: "1px solid #F1F5F9", cursor: d.status === "pending" || d.payload ? "pointer" : "default" }}>
@@ -107,7 +107,7 @@ export default function AiKuratorCMS() {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontWeight: 700, fontSize: 14, color: "#0F172A", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{String(judul).slice(0, 140)}</div>
                     <div style={{ fontSize: 12, color: "#64748B", marginTop: 2 }}>
-                      {KIND[d.kind]} · {ORIGIN[d.origin]}{d.input?.sumber ? ` (${d.input.sumber})` : ""} · {fmtDate(d.created_at)}
+                      {KIND[d.kind]} · {ORIGIN[d.origin]}{d.input?.sumber_nama ? ` (${d.input.sumber_nama})` : ""} · {fmtDate(d.created_at)}
                       {d.payload?.confidence && ` · keyakinan ${d.payload.confidence}`}
                       {d.error && <span style={{ color: d.status === "failed" ? "#B91C1C" : "#64748B" }}> · {d.error}</span>}
                     </div>
@@ -255,7 +255,7 @@ function Tinjau({ draft, onClose, onDone }: { draft: any; onClose: () => void; o
           <Sparkles size={18} style={{ color: "#1D4ED8" }} />
           <div style={{ flex: 1 }}>
             <div style={{ fontWeight: 800, fontSize: 16 }}>{KIND[draft.kind]}</div>
-            <div style={{ fontSize: 12, color: "#64748B" }}>{ORIGIN[draft.origin]}{draft.input?.sumber ? ` · ${draft.input.sumber}` : ""} · {fmtDate(draft.created_at)}</div>
+            <div style={{ fontSize: 12, color: "#64748B" }}>{ORIGIN[draft.origin]}{draft.input?.sumber_nama ? ` · ${draft.input.sumber_nama}` : ""} · {fmtDate(draft.created_at)}</div>
           </div>
           {draft.source_url && <a href={draft.source_url} target="_blank" rel="noreferrer" style={{ ...btn("#F1F5F9", "#334155"), textDecoration: "none" }}><ExternalLink size={14} /> Sumber</a>}
           <button onClick={onClose} style={{ border: "none", background: "none", cursor: "pointer", color: "#64748B" }}><X size={20} /></button>

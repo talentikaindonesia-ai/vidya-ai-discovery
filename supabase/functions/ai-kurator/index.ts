@@ -15,6 +15,10 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
  *
  * Aturan agent: fakta hanya dari halaman sumber, kosongkan bila tidak ada,
  * tolak agregator, sertakan kutipan bukti per kolom penting.
+ *
+ * Batas waktu: plan Free menghentikan fungsi setelah 150 dtk. Tiap tugas berjalan
+ * bertahap: bila ~85 dtk terpakai, percakapan agent disimpan di ai_drafts.state
+ * lalu fungsi memanggil dirinya sendiri (action lanjut, hanya service key).
  */
 
 const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
@@ -129,18 +133,36 @@ async function cariMateri(query: string) {
   return (data ?? []).filter((c: any) => !/example\.com/.test(c.content_url ?? ""));
 }
 
-/** Loop agent: server tools (web_fetch/web_search) + tool lokal; berhenti saat tool penyimpan dipanggil. */
-async function jalankanAgent(opts: { system: string; prompt: string; saveTool: any; extraTools?: any[]; webSearch?: boolean; maxSearch?: number }) {
-  const client = new Anthropic({ apiKey: Deno.env.get("ANTHROPIC_API_KEY")! });
+const SELF_URL = `${Deno.env.get("SUPABASE_URL")}/functions/v1/ai-kurator`;
+const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const ANGGARAN_MS = 85_000;   // mulai tahap baru setelah ini
+const BATAS_MS = 140_000;     // fungsi dihentikan platform di 150 dtk
+const MAKS_TAHAP = 8;
+
+class Jeda extends Error { constructor(public messages: any[]) { super("jeda"); } }
+
+/** Loop agent: server tools (web_fetch/web_search) + tool lokal; berhenti saat tool penyimpan dipanggil.
+ *  Melempar Jeda(messages) bila anggaran waktu tahap ini habis. */
+async function jalankanAgent(opts: { system: string; prompt: string; saveTool: any; extraTools?: any[]; webSearch?: boolean; maxSearch?: number }, mulai: number, lanjutan?: any[]) {
   const tools: any[] = [{ type: "web_fetch_20260209", name: "web_fetch", max_uses: 6 }, opts.saveTool, ...(opts.extraTools ?? [])];
   if (opts.webSearch) tools.push({ type: "web_search_20260209", name: "web_search", max_uses: opts.maxSearch ?? 6 });
-  const messages: any[] = [{ role: "user", content: opts.prompt }];
+  const messages: any[] = lanjutan ?? [{ role: "user", content: opts.prompt }];
   const model = await modelId();
   for (let i = 0; i < 14; i++) {
-    const res: any = await client.beta.messages.create({
-      model, max_tokens: 16000, system: opts.system, tools, messages, output_config: { effort: "medium" },
-      betas: ["server-side-fallback-2026-07-01"], fallbacks: "default",
-    } as any);
+    const terpakai = Date.now() - mulai;
+    if (terpakai > ANGGARAN_MS) throw new Jeda(messages);
+    const client = new Anthropic({ apiKey: Deno.env.get("ANTHROPIC_API_KEY")!, timeout: BATAS_MS - terpakai, maxRetries: 0 });
+    let res: any;
+    try {
+      res = await client.beta.messages.create({
+        model, max_tokens: 16000, system: opts.system, tools, messages, output_config: { effort: "medium" },
+        betas: ["server-side-fallback-2026-07-01"], fallbacks: "default",
+      } as any);
+    } catch (e) {
+      // giliran terlalu lama untuk sisa waktu → ulangi giliran ini di tahap berikutnya
+      if (e instanceof Anthropic.APIConnectionTimeoutError) throw new Jeda(messages);
+      throw e;
+    }
     if (res.stop_reason === "refusal") throw new Error("Model menolak permintaan ini");
     messages.push({ role: "assistant", content: res.content });
     if (res.stop_reason === "pause_turn") continue;
@@ -171,42 +193,60 @@ async function judulTerdaftar(org?: string | null) {
   return (data ?? []).map((r: any) => r.title);
 }
 
-/* ── tugas ─────────────────────────────────────────────────────────── */
-async function tugasPeluang(draftId: string, input: { url?: string; text?: string }) {
-  const prompt = input.url
-    ? `Buka halaman ini dengan web_fetch lalu ekstrak peluangnya:\n${input.url}\n${input.text ? `\nTeks tambahan dari admin:\n${input.text.slice(0, 12000)}` : ""}`
-    : `Admin menempelkan teks pengumuman berikut (sumber tidak bisa dibuka server). Ekstrak peluangnya. Bila tidak ada URL resmi di teks, cari halaman resmi penyelenggara dengan web_search lalu verifikasi dengan web_fetch.\n\n${(input.text ?? "").slice(0, 15000)}`;
-  const out = await jalankanAgent({ system: ATURAN, prompt, saveTool: TOOL_OPP, webSearch: !input.url });
-  if (out.status !== "ok" || !out.peluang) {
-    await admin.from("ai_drafts").update({ status: "empty", payload: out, error: out.status === "tidak_terjangkau" ? "Halaman tidak bisa dibuka dari server — tempel teks pengumumannya." : "Bukan pengumuman peluang." }).eq("id", draftId);
-    return;
-  }
-  await admin.from("ai_drafts").update({ status: "pending", payload: out.peluang, source_url: out.peluang.url }).eq("id", draftId);
+const tgl = () => new Date().toISOString().slice(0, 10);
+async function catatSumber(s: any, baris: string) {
+  // catatan kurasi manual dipertahankan; hanya baris [AI …] yang diganti
+  const { data } = await admin.from("sumber_resmi").select("catatan").eq("id", s.id).maybeSingle();
+  const manual = String(data?.catatan ?? "").replace(/\n?\[AI [^\]]*\][^\n]*/g, "").trim();
+  await admin.from("sumber_resmi").update({ catatan: (manual ? manual + "\n" : "") + `[AI ${tgl()}] ${baris}` }).eq("id", s.id);
 }
 
-async function tugasLengkapi(draftId: string, row: any) {
-  const prompt = `Peluang berikut sudah ada di database Talentika, tetapi metadata-nya belum lengkap. Buka URL resminya dan ekstrak data lengkap.
-Judul: ${row.title}
-Penyelenggara: ${row.organizer ?? "-"}
-URL: ${row.url}
-Deskripsi saat ini: ${(row.description ?? "").slice(0, 800)}`;
-  const out = await jalankanAgent({ system: ATURAN, prompt, saveTool: TOOL_OPP });
-  if (out.status !== "ok" || !out.peluang) {
-    await admin.from("ai_drafts").update({ status: "empty", payload: out, error: out.status === "tidak_terjangkau" ? "URL tidak bisa dibuka dari server." : "Halaman tidak berisi peluang ini lagi — pertimbangkan menonaktifkan." }).eq("id", draftId);
-    await admin.from("scraped_content").update({ ai_checked_at: new Date().toISOString() }).eq("id", row.id);
-    return;
-  }
-  await admin.from("ai_drafts").update({ status: "pending", payload: out.peluang, source_url: row.url }).eq("id", draftId);
-  await admin.from("scraped_content").update({ ai_checked_at: new Date().toISOString() }).eq("id", row.id);
-}
-
-async function tugasJalur(draftId: string, input: { topic: string; career_id?: string; jenjang?: string; steps?: number }) {
-  let karier = "";
-  if (input.career_id) {
-    const { data: c } = await admin.from("careers").select("id,name,skills,tools,roadmap").eq("id", input.career_id).maybeSingle();
-    if (c) karier = `Target karier: ${c.name} (id ${c.id}). Skill yang dibutuhkan: ${(c.skills ?? []).join(", ")}. Tools: ${(c.tools ?? []).join(", ")}.`;
-  }
-  const prompt = `Susun jalur belajar Talentika.
+/* ── tugas: tiap tugas = cara menyusun prompt + cara menyimpan hasil ── */
+type Draf = { id: string; input: any; target_id?: string | null };
+const TUGAS: Record<string, { opts: (d: Draf) => Promise<any>; selesai: (d: Draf, out: any) => Promise<void> }> = {
+  peluang: {
+    opts: async ({ input }) => ({
+      system: ATURAN, saveTool: TOOL_OPP, webSearch: !input.url,
+      prompt: input.url
+        ? `Buka halaman ini dengan web_fetch lalu ekstrak peluangnya:\n${input.url}\n${input.text ? `\nTeks tambahan dari admin:\n${input.text.slice(0, 12000)}` : ""}`
+        : `Admin menempelkan teks pengumuman berikut (sumber tidak bisa dibuka server). Ekstrak peluangnya. Bila tidak ada URL resmi di teks, cari halaman resmi penyelenggara dengan web_search lalu verifikasi dengan web_fetch.\n\n${(input.text ?? "").slice(0, 15000)}`,
+    }),
+    selesai: async (d, out) => {
+      if (out.status !== "ok" || !out.peluang) {
+        await admin.from("ai_drafts").update({ status: "empty", payload: out, state: null, error: out.status === "tidak_terjangkau" ? "Halaman tidak bisa dibuka dari server — tempel teks pengumumannya." : "Bukan pengumuman peluang." }).eq("id", d.id);
+        return;
+      }
+      await admin.from("ai_drafts").update({ status: "pending", payload: out.peluang, state: null, source_url: out.peluang.url }).eq("id", d.id);
+    },
+  },
+  lengkapi: {
+    opts: async ({ input: r }) => ({
+      system: ATURAN, saveTool: TOOL_OPP,
+      prompt: `Peluang berikut sudah ada di database Talentika, tetapi metadata-nya belum lengkap. Buka URL resminya dan ekstrak data lengkap.
+Judul: ${r.title}
+Penyelenggara: ${r.organizer ?? "-"}
+URL: ${r.url}
+Deskripsi saat ini: ${(r.description ?? "").slice(0, 800)}`,
+    }),
+    selesai: async (d, out) => {
+      const ok = out.status === "ok" && out.peluang;
+      await admin.from("ai_drafts").update(ok
+        ? { status: "pending", payload: out.peluang, state: null }
+        : { status: "empty", payload: out, state: null, error: out.status === "tidak_terjangkau" ? "URL tidak bisa dibuka dari server." : "Halaman tidak berisi peluang ini lagi — pertimbangkan menonaktifkan." }).eq("id", d.id);
+      await admin.from("scraped_content").update({ ai_checked_at: new Date().toISOString() }).eq("id", d.target_id);
+    },
+  },
+  jalur: {
+    opts: async ({ input }) => {
+      let karier = "";
+      if (input.career_id) {
+        const { data: c } = await admin.from("careers").select("id,name,skills,tools").eq("id", input.career_id).maybeSingle();
+        if (c) karier = `Target karier: ${c.name} (id ${c.id}). Skill yang dibutuhkan: ${(c.skills ?? []).join(", ")}. Tools: ${(c.tools ?? []).join(", ")}.`;
+      }
+      return {
+        system: ATURAN + "\n- Untuk materi belajar: jangan mengarang URL; hanya URL yang lolos cek_url.",
+        saveTool: TOOL_PATH, extraTools: [TOOL_CARI, TOOL_CEK], webSearch: true, maxSearch: 10,
+        prompt: `Susun jalur belajar Talentika.
 Topik/tujuan: ${input.topic}
 ${karier}
 Jenjang siswa: ${input.jenjang ?? "sma_smk"}
@@ -217,42 +257,66 @@ Cara kerja:
 2. Bila belum ada, cari materi GRATIS berbahasa Indonesia (utamakan) atau Inggris dengan web_search dari sumber tepercaya (YouTube kanal edukasi, Dicoding, Khan Academy, Kominfo/Kemendikbud, dokumentasi resmi).
 3. Setiap content_url baru WAJIB diverifikasi dengan cek_url; jangan pakai URL yang gagal dicek.
 4. Urutkan dari dasar ke lanjut; tulis 3–5 tujuan belajar dan 2–3 soal kuis yang benar secara faktual untuk materi baru.
-5. Isi career_id hanya bila diberikan. Akhiri dengan simpan_draf_jalur.`;
-  const out = await jalankanAgent({ system: ATURAN + "\n- Untuk materi belajar: jangan mengarang URL; hanya URL yang lolos cek_url.", prompt, saveTool: TOOL_PATH, extraTools: [TOOL_CARI, TOOL_CEK], webSearch: true, maxSearch: 10 });
-  if (input.career_id) out.career_id = input.career_id;
-  await admin.from("ai_drafts").update({ status: "pending", payload: out }).eq("id", draftId);
-}
-
-async function tugasPantau(limit: number) {
-  const batas = new Date(Date.now() - 6 * 86400_000).toISOString();
-  const { data: sumber } = await admin.from("sumber_resmi").select("*").eq("aktif", true)
-    .or(`terakhir_dicek.is.null,terakhir_dicek.lt.${batas}`).order("terakhir_dicek", { ascending: true, nullsFirst: true }).limit(limit);
-  // paralel: edge function punya batas waktu, satu sumber = satu agent
-  await Promise.all((sumber ?? []).map(async (s: any) => {
-    // catatan kurasi manual dipertahankan; hanya baris [AI …] terakhir yang diganti
-    const catat = (baris: string) => {
-      const manual = String(s.catatan ?? "").replace(/\n?\[AI [^\]]*\][^\n]*/g, "").trim();
-      return admin.from("sumber_resmi").update({ catatan: (manual ? manual + "\n" : "") + `[AI ${new Date().toISOString().slice(0, 10)}] ${baris}` }).eq("id", s.id);
-    };
-    await admin.from("sumber_resmi").update({ terakhir_dicek: new Date().toISOString() }).eq("id", s.id);
-    try {
+5. Isi career_id hanya bila diberikan. Akhiri dengan simpan_draf_jalur.`,
+      };
+    },
+    selesai: async (d, out) => {
+      if (d.input.career_id) out.career_id = d.input.career_id;
+      await admin.from("ai_drafts").update({ status: "pending", payload: out, state: null }).eq("id", d.id);
+    },
+  },
+  pantau: {
+    opts: async ({ input: { sumber: s } }) => {
       const sudah = await judulTerdaftar(s.penyelenggara);
-      const prompt = `Cek situs resmi ini untuk pengumuman peluang yang SEDANG atau AKAN dibuka bagi pelajar/mahasiswa Indonesia:
+      return {
+        system: ATURAN, saveTool: TOOL_MONITOR,
+        prompt: `Cek situs resmi ini untuk pengumuman peluang yang SEDANG atau AKAN dibuka bagi pelajar/mahasiswa Indonesia:
 Sumber: ${s.nama} — ${s.penyelenggara ?? ""}
 URL: ${s.url}
 Kategori: ${s.kategori ?? "-"} · Jenjang: ${s.jenjang ?? "-"} · Biasanya dibuka: ${s.periode_buka ?? "-"}
 Boleh membuka maksimal 4 halaman di domain yang sama untuk detail.
 Peluang yang SUDAH ada di Talentika (jangan diulang):
-${sudah.slice(0, 40).map(t => "- " + t).join("\n") || "- (belum ada)"}`;
-      const out = await jalankanAgent({ system: ATURAN, prompt, saveTool: TOOL_MONITOR });
-      await catat(`${out.status}: ${String(out.catatan ?? "").slice(0, 300)}`);
-      for (const p of (out.peluang ?? []).slice(0, 3)) {
-        await admin.from("ai_drafts").insert({ kind: "opportunity", origin: "monitor", status: "pending", input: { sumber_id: s.id, sumber: s.nama }, payload: p, source_url: p.url });
+${sudah.slice(0, 40).map((t: string) => "- " + t).join("\n") || "- (belum ada)"}`,
+      };
+    },
+    selesai: async (d, out) => {
+      const s = d.input.sumber;
+      await catatSumber(s, `${out.status}: ${String(out.catatan ?? "").slice(0, 300)}`);
+      const temuan = (out.peluang ?? []).slice(0, 3);
+      if (!temuan.length) {
+        await admin.from("ai_drafts").update({ status: "empty", payload: out, state: null, error: `Tidak ada peluang baru — ${String(out.catatan ?? "").slice(0, 200)}` }).eq("id", d.id);
+        return;
       }
+      // temuan pertama mengisi draf ini, sisanya draf baru
+      await admin.from("ai_drafts").update({ status: "pending", payload: temuan[0], state: null, source_url: temuan[0].url }).eq("id", d.id);
+      for (const p of temuan.slice(1))
+        await admin.from("ai_drafts").insert({ kind: "opportunity", origin: "monitor", status: "pending", input: { sumber: s, sumber_nama: s.nama }, payload: p, source_url: p.url });
+    },
+  },
+};
+
+/** Jalankan (atau lanjutkan) satu tahap tugas sebuah draf. */
+async function kerjakan(draftId: string, mulai: number) {
+  const { data: d } = await admin.from("ai_drafts").select("id,input,target_id,state,status").eq("id", draftId).maybeSingle();
+  if (!d || d.status !== "running") return;
+  const t = TUGAS[d.input?.tugas];
+  try {
+    if (!t) throw new Error("tugas tidak dikenal");
+    const tahap = (d.state?.tahap ?? 0) + 1;
+    if (tahap > MAKS_TAHAP) throw new Error("Waktu habis — agent butuh terlalu lama. Coba lagi atau persempit permintaan.");
+    try {
+      const out = await jalankanAgent(await t.opts(d), mulai, d.state?.messages);
+      await t.selesai(d, out);
     } catch (e) {
-      await catat(`gagal: ${String(e).slice(0, 200)}`);
+      if (!(e instanceof Jeda)) throw e;
+      await admin.from("ai_drafts").update({ state: { tahap, messages: e.messages } }).eq("id", d.id);
+      await fetch(SELF_URL, { method: "POST", headers: { Authorization: `Bearer ${SERVICE_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ action: "lanjut", draft_id: d.id }) });
     }
-  }));
+  } catch (e) {
+    const msg = String((e as any)?.message ?? e).slice(0, 500);
+    await admin.from("ai_drafts").update({ status: "failed", state: null, error: msg }).eq("id", draftId);
+    if (d.input?.tugas === "pantau") await catatSumber(d.input.sumber, `gagal: ${msg.slice(0, 200)}`);
+  }
 }
 
 function latar(p: Promise<unknown>) {
@@ -261,60 +325,79 @@ function latar(p: Promise<unknown>) {
   if (rt?.waitUntil) rt.waitUntil(p); else p.catch(() => {});
 }
 
-async function gagal(id: string, e: unknown) {
-  await admin.from("ai_drafts").update({ status: "failed", error: String((e as any)?.message ?? e).slice(0, 500) }).eq("id", id);
+async function buatDraf(row: Record<string, unknown>, mulai: number) {
+  const { data: d, error } = await admin.from("ai_drafts").insert({ status: "running", ...row }).select("id").single();
+  if (error) throw error;
+  latar(kerjakan(d.id, mulai));
+  return d.id as string;
 }
 
 Deno.serve(async (req) => {
+  const mulai = Date.now();
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
   if (!Deno.env.get("ANTHROPIC_API_KEY")) return json({ error: "ANTHROPIC_API_KEY belum dipasang di Supabase" }, 503);
   let body: any = {};
   try { body = await req.json(); } catch { /* */ }
+  const jwt = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "");
 
-  // monitor: dipanggil cron tanpa login — aman karena tiap sumber maks 1×/6 hari dan hanya membuat draf
-  if (body.action === "monitor") {
-    latar(tugasPantau(Math.min(Number(body.limit) || 3, 5)));
+  // lanjut: hanya dari fungsi ini sendiri (service key)
+  if (body.action === "lanjut") {
+    if (jwt !== SERVICE_KEY) return json({ error: "forbidden" }, 403);
+    latar(kerjakan(String(body.draft_id), mulai));
     return json({ ok: true });
   }
 
-  const jwt = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "");
+  // monitor: dipanggil cron tanpa login — aman karena tiap sumber maks 1×/6 hari dan hanya membuat draf
+  if (body.action === "monitor") {
+    const batas = new Date(Date.now() - 6 * 86400_000).toISOString();
+    const { data: sumber } = await admin.from("sumber_resmi").select("id,nama,penyelenggara,url,kategori,jenjang,periode_buka").eq("aktif", true)
+      .or(`terakhir_dicek.is.null,terakhir_dicek.lt.${batas}`).order("terakhir_dicek", { ascending: true, nullsFirst: true }).limit(Math.min(Number(body.limit) || 3, 5));
+    for (const s of sumber ?? []) {
+      await admin.from("sumber_resmi").update({ terakhir_dicek: new Date().toISOString() }).eq("id", s.id);
+      await buatDraf({ kind: "opportunity", origin: "monitor", input: { tugas: "pantau", sumber: s, sumber_nama: s.nama }, source_url: s.url }, mulai);
+    }
+    return json({ ok: true, count: sumber?.length ?? 0 });
+  }
+
   const { data: auth } = await admin.auth.getUser(jwt);
   const uid = auth?.user?.id;
   if (!uid) return json({ error: "unauthorized" }, 401);
   const { data: isAdmin } = await admin.from("user_roles").select("id").eq("user_id", uid).eq("role", "admin").maybeSingle();
   if (!isAdmin) return json({ error: "khusus admin" }, 403);
 
-  if (body.action === "opportunity") {
-    const url = typeof body.url === "string" && /^https?:\/\//.test(body.url.trim()) ? body.url.trim() : undefined;
-    const text = typeof body.text === "string" ? body.text.trim() : undefined;
-    if (!url && !(text && text.length > 80)) return json({ error: "Isi URL resmi atau tempel teks pengumuman (min. 80 karakter)" }, 400);
-    const { data: d } = await admin.from("ai_drafts").insert({ kind: "opportunity", origin: "manual", status: "running", input: { url, text: text?.slice(0, 15000) }, source_url: url, created_by: uid }).select("id").single();
-    latar(tugasPeluang(d!.id, { url, text }).catch(e => gagal(d!.id, e)));
-    return json({ ok: true, draft_id: d!.id });
-  }
-
-  if (body.action === "enrich") {
-    const limit = Math.min(Number(body.limit) || 3, 5);
-    const batas = new Date(Date.now() - 14 * 86400_000).toISOString();
-    const { data: semua } = await admin.from("scraped_content").select("id,title,organizer,url,description,eligibility,requirements,ai_checked_at")
-      .eq("is_active", true).not("url", "is", null).order("created_at", { ascending: false }).limit(300);
-    const rows = (semua ?? []).filter((r: any) => (!r.eligibility || !(r.requirements ?? []).length) && (!r.ai_checked_at || r.ai_checked_at < batas)).slice(0, limit);
-    const ids: string[] = [];
-    for (const r of rows) {
-      const { data: d } = await admin.from("ai_drafts").insert({ kind: "opportunity_update", origin: "enrich", status: "running", target_id: r.id, input: { title: r.title }, source_url: r.url, created_by: uid }).select("id").single();
-      ids.push(d!.id);
-      latar(tugasLengkapi(d!.id, r).catch(e => gagal(d!.id, e)));
+  try {
+    if (body.action === "opportunity") {
+      const url = typeof body.url === "string" && /^https?:\/\//.test(body.url.trim()) ? body.url.trim() : undefined;
+      const text = typeof body.text === "string" ? body.text.trim() : undefined;
+      if (!url && !(text && text.length > 80)) return json({ error: "Isi URL resmi atau tempel teks pengumuman (min. 80 karakter)" }, 400);
+      const id = await buatDraf({ kind: "opportunity", origin: "manual", input: { tugas: "peluang", url, text: text?.slice(0, 15000) }, source_url: url, created_by: uid }, mulai);
+      return json({ ok: true, draft_id: id });
     }
-    return json({ ok: true, draft_ids: ids, count: ids.length });
-  }
 
-  if (body.action === "learning_path") {
-    const topic = String(body.topic ?? "").trim();
-    if (topic.length < 4) return json({ error: "Tulis topik atau tujuan jalur belajar" }, 400);
-    const input = { topic: topic.slice(0, 300), career_id: body.career_id || undefined, jenjang: body.jenjang || "sma_smk", steps: Number(body.steps) || 6 };
-    const { data: d } = await admin.from("ai_drafts").insert({ kind: "learning_path", origin: "manual", status: "running", input, created_by: uid }).select("id").single();
-    latar(tugasJalur(d!.id, input).catch(e => gagal(d!.id, e)));
-    return json({ ok: true, draft_id: d!.id });
+    if (body.action === "enrich") {
+      const limit = Math.min(Number(body.limit) || 3, 5);
+      const batas = new Date(Date.now() - 14 * 86400_000).toISOString();
+      // jangan ambil yang sedang dikerjakan / menunggu tinjauan
+      const { data: aktif } = await admin.from("ai_drafts").select("target_id").eq("kind", "opportunity_update").in("status", ["running", "pending"]);
+      const sibuk = new Set((aktif ?? []).map((a: any) => a.target_id));
+      const { data: semua } = await admin.from("scraped_content").select("id,title,organizer,url,description,eligibility,requirements,ai_checked_at")
+        .eq("is_active", true).not("url", "is", null).order("created_at", { ascending: false }).limit(300);
+      const rows = (semua ?? []).filter((r: any) => !sibuk.has(r.id) && (!r.eligibility || !(r.requirements ?? []).length) && (!r.ai_checked_at || r.ai_checked_at < batas)).slice(0, limit);
+      const ids: string[] = [];
+      for (const r of rows)
+        ids.push(await buatDraf({ kind: "opportunity_update", origin: "enrich", target_id: r.id, input: { tugas: "lengkapi", title: r.title, organizer: r.organizer, url: r.url, description: (r.description ?? "").slice(0, 800) }, source_url: r.url, created_by: uid }, mulai));
+      return json({ ok: true, draft_ids: ids, count: ids.length });
+    }
+
+    if (body.action === "learning_path") {
+      const topic = String(body.topic ?? "").trim();
+      if (topic.length < 4) return json({ error: "Tulis topik atau tujuan jalur belajar" }, 400);
+      const input = { tugas: "jalur", topic: topic.slice(0, 300), career_id: body.career_id || undefined, jenjang: body.jenjang || "sma_smk", steps: Number(body.steps) || 6 };
+      const id = await buatDraf({ kind: "learning_path", origin: "manual", input, created_by: uid }, mulai);
+      return json({ ok: true, draft_id: id });
+    }
+  } catch (e) {
+    return json({ error: String((e as any)?.message ?? e) }, 500);
   }
 
   return json({ error: "action tidak dikenal" }, 400);
