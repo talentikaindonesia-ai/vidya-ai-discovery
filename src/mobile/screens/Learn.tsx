@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { askAi, canPurchase, db, errMsg, openExternal, signedUrl, uploadEvidence, useApp } from "../store";
 import { AiLabel, Body, Btn, Card, CardTitle, DarkCard, Empty, Header, HeroCard, HScroll, Input, Kicker, Label, Loading, Pill, Row, Screen, Sheet, TabTitle, TextArea } from "../ui";
 import { C, F, SH, rpShort } from "../theme";
+import { cekPembayaran } from "@/lib/pembayaran";
 import stemCover from "../assets/stem-cover-portrait.webp";
 
 export default function Learn({ screen }: { screen: "learn" | "course" | "projects" | "project" | "playbooks" }) {
@@ -630,7 +631,19 @@ function Playbooks() {
   const [buy, setBuy] = useState<any>(null);
   const [phone, setPhone] = useState(profile?.phone ?? "");
   const [busy, setBusy] = useState(false);
-  useEffect(() => { if (params.get("payment") === "success") toast(t("Pembayaran diterima — playbook aktif setelah konfirmasi", "Payment received — playbook unlocks after confirmation")); }, []); // eslint-disable-line
+  useEffect(() => {
+    if (params.get("payment") !== "success") return;
+    toast(t("Pembayaran diterima — playbook aktif setelah konfirmasi", "Payment received — playbook unlocks after confirmation"));
+    // Cek ulang ke Mayar lewat server beberapa kali, lalu muat ulang daftar playbook
+    const ref = params.get("ref");
+    let n = 0;
+    const iv = setInterval(async () => {
+      await cekPembayaran(ref);
+      qc.invalidateQueries({ queryKey: ["m-playbooks"] });
+      if (++n >= 8) clearInterval(iv);
+    }, 6000);
+    return () => clearInterval(iv);
+  }, []); // eslint-disable-line
   const { data, isLoading } = useQuery({
     queryKey: ["m-playbooks", user?.id], enabled: !!user,
     queryFn: async () => {

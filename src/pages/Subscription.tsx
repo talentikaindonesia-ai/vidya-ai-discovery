@@ -8,6 +8,7 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { BottomNavigationBar } from "@/components/dashboard/BottomNavigationBar";
 import { ArrowLeft, Diamond, CreditCard, ShieldCheck, RotateCcw, Headphones } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { cekPembayaran } from "@/lib/pembayaran";
 import { invalidateSubscriptionCache } from "@/hooks/useSubscription";
 
 /** sessionStorage key: feature path that sent the user here (upgrade loop) */
@@ -71,6 +72,8 @@ const Subscription = () => {
       let tries = 0;
       const iv = setInterval(async () => {
         tries++;
+        // Minta server cek ulang ke Mayar (cadangan bila webhook tidak sampai)
+        if (tries % 2 === 1) await cekPembayaran(txId);
         const { data } = await supabase
           .from("payment_transactions")
           .select("status")
@@ -89,13 +92,13 @@ const Subscription = () => {
           } else {
             window.location.reload();
           }
-        } else if (data?.status === "failed" || tries >= 10) {
+        } else if (data?.status === "failed" || tries >= 24) {
           clearInterval(iv);
           if (data?.status === "failed") {
             toast({ title: "Pembayaran Gagal", description: "Silakan hubungi support@talentika.id", variant: "destructive" });
           }
         }
-      }, 5_000); // check every 5 s (max 50 s)
+      }, 5_000); // cek tiap 5 dtk (maks 2 menit)
     }
   }, [paymentResult]); // eslint-disable-line react-hooks/exhaustive-deps
 

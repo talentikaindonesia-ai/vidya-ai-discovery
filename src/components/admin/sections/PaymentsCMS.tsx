@@ -6,6 +6,7 @@ import {
   TrendingUp, DollarSign, Users, CreditCard, RefreshCw, Copy, BarChart2,
 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
+import { cekPembayaran } from "@/lib/pembayaran";
 import { inputStyle, selectStyle, textareaStyle, Pill, Toggle, StatCard, Modal, Confirm, Field, fmtIDR, fmtDate } from "../adminShared";
 
 interface PaymentTx {
@@ -99,22 +100,13 @@ export default function PaymentsCMS() {
     setSyncing(true);
     const pending = txs.filter(t => t.status === "pending");
     let updated = 0;
+    // Server menanyakan status tiap transaksi ke API Mayar dan mengaktifkan yang lunas
     for (const tx of pending) {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        const res = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL ?? "https://doogbcrodipaeahgbjuj.supabase.co"}/functions/v1/check-mayar-payment`,
-          {
-            method: "POST",
-            headers: { Authorization: `Bearer ${session?.access_token}`, "Content-Type": "application/json" },
-            body: JSON.stringify({ invoiceNumber: tx.invoice_number }),
-          }
-        );
-        const result = await res.json();
-        if (result.newStatus && result.newStatus !== result.previousStatus) updated++;
-      } catch { /* continue */ }
-      await new Promise(r => setTimeout(r, 200)); // avoid rate limiting
+      await cekPembayaran(tx.id);
+      await new Promise(r => setTimeout(r, 200)); // hindari rate limit
     }
+    const { data: setelah } = await supabase.from("payment_transactions").select("id,status").in("id", pending.map(t => t.id));
+    updated = (setelah ?? []).filter((r: any) => r.status !== "pending").length;
     toast.success(`Sync selesai — ${updated} transaksi diperbarui`, { duration: 4000 });
     setSyncing(false);
     loadAll();

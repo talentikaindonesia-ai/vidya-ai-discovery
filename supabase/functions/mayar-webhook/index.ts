@@ -28,6 +28,15 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
  *  • masa aktif diperpanjang dari sisa masa aktif, bukan dipotong;
  *  • setiap error penulisan dibaca; bila aktivasi gagal, balas 500 agar
  *    Mayar mengirim ulang.
+ *
+ * 2026-10-10:
+ *  • jalur cek ulang {transaction_id} dengan JWT pemilik transaksi / admin —
+ *    cadangan bila notifikasi Mayar tidak sampai (dipanggil halaman setelah
+ *    bayar & tombol Sync admin lewat src/lib/pembayaran.ts);
+ *  • klaim atomik (compare-and-swap notes) agar notifikasi dan cek ulang yang
+ *    bersamaan tidak memperpanjang masa aktif dua kali;
+ *  • transaksi hanya bisa dibuat/diubah server (policy INSERT klien & RPC
+ *    update_transaction_status dicabut) — dulu harga bisa dipalsukan.
  */
 
 const corsHeaders = {
@@ -51,48 +60,67 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    // Token = lapisan tambahan. Pengaman utamanya adalah verifikasi ke API
-    // Mayar di bawah, jadi webhook tetap aman walau token belum dipasang.
-    const expectedToken = Deno.env.get("MAYAR_WEBHOOK_TOKEN");
-    const callbackToken = req.headers.get("x-callback-token");
-    if (expectedToken && callbackToken !== expectedToken) {
-      console.warn("Token webhook Mayar tidak cocok");
-      return balas("Unauthorized", 401);
-    }
-    if (!expectedToken) {
-      console.warn("MAYAR_WEBHOOK_TOKEN belum dipasang — isi notifikasi tidak dipercaya, status diverifikasi ke API Mayar.");
-    }
-
     let payload: any;
     try { payload = JSON.parse(await req.text()); }
     catch { return balas("Bad Request", 400); }
-
-    const data = payload?.data ?? payload;
-    const mayarPaymentId: string | undefined = data?.id;
-    const referenceNo: string | undefined = data?.referenceNo;
-    if (!mayarPaymentId && !referenceNo) return balas("OK"); // ping uji dari Mayar
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
 
-    // ── Temukan transaksi ────────────────────────────────────────────────
     let tx: any = null;
-    if (mayarPaymentId) {
-      const { data: byId } = await supabase
-        .from("payment_transactions").select("*")
-        .eq("external_transaction_id", mayarPaymentId).maybeSingle();
-      tx = byId;
-    }
-    if (!tx && referenceNo) {
-      const { data: byRef } = await supabase
-        .from("payment_transactions").select("*")
-        .eq("invoice_number", referenceNo).maybeSingle();
-      tx = byRef;
+
+    if (typeof payload?.transaction_id === "string") {
+      // ── Cek ulang oleh pemilik transaksi / admin (2026-10-10) ──────────
+      // Jalur cadangan bila notifikasi Mayar tidak sampai (URL webhook salah,
+      // gangguan jaringan). Aman: hanya transaksi milik pemanggil, dan status
+      // tetap ditanyakan ke API Mayar di bawah — isi permintaan tidak dipercaya.
+      const jwt = (req.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");
+      const { data: au } = await supabase.auth.getUser(jwt);
+      if (!au?.user) return balas("Unauthorized", 401);
+      const { data: t } = await supabase.from("payment_transactions").select("*").eq("id", payload.transaction_id).maybeSingle();
+      if (!t) return balas("OK");
+      if (t.user_id !== au.user.id) {
+        const { data: adm } = await supabase.from("user_roles").select("id").eq("user_id", au.user.id).eq("role", "admin").maybeSingle();
+        if (!adm) return balas("Forbidden", 403);
+      }
+      tx = t;
+    } else {
+      // ── Notifikasi dari Mayar ──────────────────────────────────────────
+      // Token = lapisan tambahan. Pengaman utamanya adalah verifikasi ke API
+      // Mayar di bawah, jadi webhook tetap aman walau token belum dipasang.
+      const expectedToken = Deno.env.get("MAYAR_WEBHOOK_TOKEN");
+      const callbackToken = req.headers.get("x-callback-token");
+      if (expectedToken && callbackToken !== expectedToken) {
+        console.warn("Token webhook Mayar tidak cocok");
+        return balas("Unauthorized", 401);
+      }
+      if (!expectedToken) {
+        console.warn("MAYAR_WEBHOOK_TOKEN belum dipasang — isi notifikasi tidak dipercaya, status diverifikasi ke API Mayar.");
+      }
+
+      const data = payload?.data ?? payload;
+      const mayarPaymentId: string | undefined = data?.id;
+      const referenceNo: string | undefined = data?.referenceNo;
+      if (!mayarPaymentId && !referenceNo) return balas("OK"); // ping uji dari Mayar
+
+      // ── Temukan transaksi ──────────────────────────────────────────────
+      if (mayarPaymentId) {
+        const { data: byId } = await supabase
+          .from("payment_transactions").select("*")
+          .eq("external_transaction_id", mayarPaymentId).maybeSingle();
+        tx = byId;
+      }
+      if (!tx && referenceNo) {
+        const { data: byRef } = await supabase
+          .from("payment_transactions").select("*")
+          .eq("invoice_number", referenceNo).maybeSingle();
+        tx = byRef;
+      }
     }
     if (!tx || !tx.external_transaction_id) {
-      console.log("Transaksi tidak ditemukan untuk", mayarPaymentId ?? referenceNo);
+      console.log("Transaksi tidak ditemukan untuk", payload?.transaction_id ?? payload?.data?.id ?? payload?.id ?? payload?.data?.referenceNo);
       return balas("OK");
     }
 
@@ -157,6 +185,21 @@ serve(async (req) => {
       return await tahan(`nominal kurang: dibayar ${dibayar}, harga ${harga}`);
     }
 
+    // ── Klaim atomik (compare-and-swap pada notes) ───────────────────────
+    // Notifikasi Mayar dan cek ulang pengguna bisa tiba bersamaan; hanya
+    // proses yang berhasil mengganti notes asli yang boleh mengaktifkan,
+    // sehingga masa aktif tidak diperpanjang dua kali.
+    const { data: klaim } = await supabase.from("payment_transactions")
+      .update({ notes: JSON.stringify({ ...notes, diaktifkan_pada: new Date().toISOString(), dibayar_menurut_mayar: dibayar }) })
+      .eq("id", tx.id).eq("notes", tx.notes).select("id");
+    if (!klaim?.length) return balas("OK — sedang/sudah diproses");
+    // Aktivasi gagal → kembalikan notes agar notifikasi ulang Mayar bisa memproses lagi
+    const gagalAktivasi = async (pesan: string) => {
+      console.error(pesan);
+      await supabase.from("payment_transactions").update({ notes: tx.notes }).eq("id", tx.id);
+      return balas("Gagal aktivasi", 500);
+    };
+
     // ── Program bootcamp: cukup catat pendaftaran ────────────────────────
     if (notes.kind === "bootcamp") {
       if (!notes.bootcampId) return await tahan("transaksi bootcamp tanpa bootcampId");
@@ -167,13 +210,7 @@ serve(async (req) => {
         amount_paid: dibayar,
         source: "purchase",
       }, { onConflict: "user_id,bootcamp_id", ignoreDuplicates: true });
-      if (enErr) {
-        console.error("Gagal mencatat pendaftaran bootcamp:", enErr.message);
-        return balas("Gagal aktivasi", 500);
-      }
-      await supabase.from("payment_transactions").update({
-        notes: JSON.stringify({ ...notes, diaktifkan_pada: new Date().toISOString(), dibayar_menurut_mayar: dibayar }),
-      }).eq("id", tx.id);
+      if (enErr) return await gagalAktivasi("Gagal mencatat pendaftaran bootcamp: " + enErr.message);
       const { error: stErr } = await tandaiLunas();
       if (stErr) console.error("Akses aktif, tapi status transaksi gagal ditandai:", stErr.message);
       console.log(`Bootcamp aktif: user ${tx.user_id}, bootcamp ${notes.bootcampId}`);
@@ -188,13 +225,7 @@ serve(async (req) => {
         playbook_id: notes.playbookId,
         transaction_id: tx.id,
       }, { onConflict: "user_id,playbook_id", ignoreDuplicates: true });
-      if (pbErr) {
-        console.error("Gagal mencatat pembelian playbook:", pbErr.message);
-        return balas("Gagal aktivasi", 500);
-      }
-      await supabase.from("payment_transactions").update({
-        notes: JSON.stringify({ ...notes, diaktifkan_pada: new Date().toISOString(), dibayar_menurut_mayar: dibayar }),
-      }).eq("id", tx.id);
+      if (pbErr) return await gagalAktivasi("Gagal mencatat pembelian playbook: " + pbErr.message);
       const { error: stErr } = await tandaiLunas();
       if (stErr) console.error("Akses aktif, tapi status transaksi gagal ditandai:", stErr.message);
       console.log(`Playbook aktif: user ${tx.user_id}, playbook ${notes.playbookId}`);
@@ -203,10 +234,7 @@ serve(async (req) => {
 
     const { data: plan } = await supabase
       .from("subscription_packages").select("*").eq("id", notes.planId).maybeSingle();
-    if (!plan) {
-      console.error("Paket tidak ditemukan:", notes.planId);
-      return balas("Paket tidak ditemukan", 500);
-    }
+    if (!plan) return await gagalAktivasi("Paket tidak ditemukan: " + notes.planId);
 
     // ── Masa aktif: perpanjang dari sisa masa aktif ──────────────────────
     const siklus = notes.billingCycle === "yearly" ? "yearly" : "monthly";
@@ -237,10 +265,7 @@ serve(async (req) => {
     const { error: subErr } = ada
       ? await supabase.from("user_subscriptions").update(baris).eq("id", ada.id)
       : await supabase.from("user_subscriptions").insert(baris);
-    if (subErr) {
-      console.error("Gagal menulis user_subscriptions:", subErr.message);
-      return balas("Gagal aktivasi", 500);
-    }
+    if (subErr) return await gagalAktivasi("Gagal menulis user_subscriptions: " + subErr.message);
 
     // ── Profil — inilah yang dibaca is_premium() ─────────────────────────
     const { error: profErr } = await supabase.from("profiles").update({
@@ -248,16 +273,7 @@ serve(async (req) => {
       subscription_type: tipeProfil(plan.type),
       subscription_end_date: berakhir.toISOString(),
     }).eq("user_id", tx.user_id);
-    if (profErr) {
-      console.error("Gagal mengaktifkan profil:", profErr.message);
-      return balas("Gagal aktivasi", 500);
-    }
-
-    // Penanda idempoten SEBELUM status ditandai: bila penandaan status gagal
-    // dan Mayar mengirim ulang, masa aktif tidak diperpanjang dua kali.
-    await supabase.from("payment_transactions").update({
-      notes: JSON.stringify({ ...notes, diaktifkan_pada: new Date().toISOString(), dibayar_menurut_mayar: dibayar }),
-    }).eq("id", tx.id);
+    if (profErr) return await gagalAktivasi("Gagal mengaktifkan profil: " + profErr.message);
 
     const { error: stErr } = await tandaiLunas();
     if (stErr) console.error("Akses aktif, tapi status transaksi gagal ditandai:", stErr.message);

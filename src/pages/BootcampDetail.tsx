@@ -15,6 +15,7 @@ import { useNavigate, useParams, useSearchParams, Link } from "react-router-dom"
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import SEO from "@/components/SEO";
+import { cekPembayaran } from "@/lib/pembayaran";
 import {
   ArrowLeft, BookOpen, CheckCircle2, ChevronDown, FileText, Globe, Lock,
   Loader2, MessageCircle, PlayCircle, RefreshCw, Radio, ClipboardCheck, Star, Users, X,
@@ -129,15 +130,17 @@ export default function BootcampDetail() {
     if (searchParams.get("payment") !== "success" || !data || data.is_enrolled) return;
     setConfirming(true);
     let percobaan = 0;
+    const ref = searchParams.get("ref");
     const t = setInterval(async () => {
       percobaan++;
+      if (percobaan % 2 === 1) await cekPembayaran(ref);
       const d = await muat();
       if (d?.is_enrolled) {
         clearInterval(t);
         setConfirming(false);
         setSearchParams({}, { replace: true });
         toast.success("Pembayaran terkonfirmasi — selamat belajar! 🎉");
-      } else if (percobaan >= 15) {
+      } else if (percobaan >= 30) {
         clearInterval(t);
         setConfirming(false);
         toast.info("Konfirmasi pembayaran butuh waktu lebih lama. Muat ulang halaman ini beberapa menit lagi, atau hubungi CS.", { duration: 9000 });

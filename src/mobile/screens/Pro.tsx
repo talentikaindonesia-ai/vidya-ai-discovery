@@ -7,6 +7,7 @@ import { invalidateSubscriptionCache } from "@/hooks/useSubscription";
 import { canPurchase, db, openExternal, useApp } from "../store";
 import { Btn, Confetti, Header, Input, Label, Loading, Radio } from "../ui";
 import { C, F, SH, rp, rpShort } from "../theme";
+import { cekPembayaran } from "@/lib/pembayaran";
 import { fmtDate } from "../logic";
 
 export default function Pro({ screen }: { screen: "pro" | "checkout" | "paid" }) {
@@ -197,14 +198,18 @@ function Paid() {
   const { t, lang, track } = useApp();
   const [state, setState] = useState<"wait" | "ok" | "timeout">("wait");
   const [exp, setExp] = useState<string | null>(null);
+  const [params] = useSearchParams();
   useEffect(() => {
     let n = 0, stop = false;
+    const ref = params.get("ref");
     const tick = async () => {
+      // Cek ulang ke Mayar lewat server (cadangan bila webhook tidak sampai)
+      if (ref && n % 2 === 0) await cekPembayaran(ref);
       invalidateSubscriptionCache();
       const { data } = await db.rpc("my_access");
       if (stop) return;
       if (data?.is_premium) { setExp(data.expires_at); setState("ok"); qc.invalidateQueries({ queryKey: ["m-access"] }); track("purchase_completed", { plan: null, platform: (window as any).Capacitor?.getPlatform?.() ?? "web" }); return; }
-      if (++n > 20) { setState("timeout"); return; }
+      if (++n > 40) { setState("timeout"); return; }
       setTimeout(tick, 3000);
     };
     tick();
