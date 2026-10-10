@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Briefcase, Calendar, MapPin, Trophy, Users, GraduationCap, Building2, ArrowRight, Lock, Globe, Star, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useSubscription } from "@/hooks/useSubscription";
 import { toast } from "sonner";
 
 interface OpportunitiesPreviewProps {
@@ -57,7 +58,10 @@ const OpportunitiesPreview = ({ profile }: OpportunitiesPreviewProps) => {
   const [opportunities, setOpportunities] = useState<any[]>([]);
   const [totalCount, setTotalCount] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
-  const isFreeUser = profile?.subscription_type === 'free' || !profile?.subscription_type;
+  // Status Pro dari my_access (sama dengan server). Dulu membaca subscription_type — semua profil
+  // bertipe 'individual', jadi pengguna gratis dianggap premium dan siswa sekolah/trial dianggap gratis.
+  const sub = useSubscription();
+  const isFreeUser = !sub.loading && !sub.isPremium;
   const [premiumPrograms, setPremiumPrograms] = useState<PremiumProgram[]>([]);
   const [joinedPrograms, setJoinedPrograms] = useState<Set<string>>(new Set());
   const [joiningId, setJoiningId] = useState<string | null>(null);

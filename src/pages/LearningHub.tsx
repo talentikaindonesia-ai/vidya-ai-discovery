@@ -719,8 +719,9 @@ const LearningHub = () => {
                 </p>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10 }}>
                   <span style={{ fontSize: 13, color: "#6B7280" }}>{profile?.full_name || "Pengguna"}</span>
-                  <span style={{ ...pillBase, background: profile?.subscription_type === "premium" ? "#EFF6FF" : "#F3F4F6", color: profile?.subscription_type === "premium" ? "#1D4ED8" : "#6B7280", border: "1px solid", borderColor: profile?.subscription_type === "premium" ? "#BFDBFE" : "#E5E7EB" }}>
-                    {profile?.subscription_type === "premium" ? "⭐ Premium" : "Individual"}
+                  {/* status dari my_access (sama dengan server): berbayar, trial, sekolah, atau admin */}
+                  <span style={{ ...pillBase, background: sub.isPremium ? "#EFF6FF" : "#F3F4F6", color: sub.isPremium ? "#1D4ED8" : "#6B7280", border: "1px solid", borderColor: sub.isPremium ? "#BFDBFE" : "#E5E7EB" }}>
+                    {sub.isPremium ? (sub.isSchool ? "⭐ Premium · Sekolah" : sub.source === "trial" ? "⭐ Premium · Trial" : "⭐ Premium") : "Gratis"}
                   </span>
                 </div>
               </div>
