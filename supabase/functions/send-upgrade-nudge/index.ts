@@ -20,7 +20,7 @@ const APP_URL        = "https://talentika.id";
 const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 
 // ── HTML template ──────────────────────────────────────────────────────────────
-function buildHtml(name: string, primaryType?: string) {
+function buildHtml(name: string, primaryType: string | undefined, hargaBulanan: number) {
   const firstName = name?.split(" ")[0] || "Kamu";
   const typeLabel = primaryType
     ? `sebagai tipe <strong style="color:#2563EB">${primaryType}</strong>`
@@ -108,8 +108,8 @@ function buildHtml(name: string, primaryType?: string) {
     </ul>
 
     <div class="price-box">
-      <div class="new">Rp 39.000</div>
-      <div class="per">per bulan · batalkan kapan saja</div>
+      <div class="new">Rp ${hargaBulanan.toLocaleString("id-ID")}</div>
+      <div class="per">per bulan (paket termurah) · batalkan kapan saja</div>
       <div class="badge">🎁 Harga pelajar — terjangkau untuk semua</div>
     </div>
 
@@ -195,13 +195,21 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Harga HANYA dari tabel paket (dulu tertulis "Rp 39.000" padahal Plus kini 99rb)
+    const { data: paket } = await supabase.from("subscription_packages")
+      .select("price_monthly").eq("is_active", true).gt("price_monthly", 0).neq("type", "school")
+      .order("price_monthly", { ascending: true }).limit(1).maybeSingle();
+    const hargaBulanan = Number(paket?.price_monthly ?? 0);
+    if (!hargaBulanan) throw new Error("Harga paket tidak ditemukan — email tidak dikirim");
+
     let sent = 0;
     const errors: string[] = [];
 
     for (const profile of profiles) {
       if (!profile.email) continue;
-      // Skip if already paid
-      if (profile.subscription_status === "active" && profile.subscription_type !== "free") continue;
+      // Lewati yang sudah Pro dari sumber mana pun (bayar, trial, sekolah, admin) — sama dengan is_premium di server
+      const { data: sudahPro } = await supabase.rpc("is_premium", { uid: profile.user_id });
+      if (sudahPro) continue;
 
       // Fetch latest assessment type for personalization
       const { data: assessment } = await supabase
@@ -212,7 +220,7 @@ Deno.serve(async (req) => {
         .limit(1)
         .maybeSingle();
 
-      const html = buildHtml(profile.full_name ?? "", assessment?.personality_type ?? undefined);
+      const html = buildHtml(profile.full_name ?? "", assessment?.personality_type ?? undefined, hargaBulanan);
 
       const res = await fetch("https://api.resend.com/emails", {
         method: "POST",
