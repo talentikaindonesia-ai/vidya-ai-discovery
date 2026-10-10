@@ -21,8 +21,9 @@ export interface Quiz {
   question_type: string;
   question: string;
   options: any;
-  correct_answer: string;
-  explanation: string;
+  // kunci jawaban tidak dikirim ke browser; diisi dari hasil jawab_kuis setelah menjawab
+  correct_answer?: string;
+  explanation?: string;
   clue_location: string;
   media_url: string;
   points_reward: number;
@@ -59,7 +60,7 @@ export const useQuizSystem = () => {
   const [leaderboard, setLeaderboard] = useState<QuizLeaderboard[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
-  const { awardXP, updateStreak } = useGameification();
+  const { updateStreak } = useGameification();
 
   useEffect(() => {
     loadCategories();
@@ -84,12 +85,7 @@ export const useQuizSystem = () => {
 
   const loadQuizzesByCategory = async (categoryId: string): Promise<Quiz[]> => {
     try {
-      const { data, error } = await supabase
-        .from('quizzes')
-        .select('*')
-        .eq('category_id', categoryId)
-        .eq('is_active', true)
-        .order('created_at');
+      const { data, error } = await (supabase as any).rpc('daftar_kuis', { p_category: categoryId });
 
       if (error) throw error;
       return data || [];
@@ -101,15 +97,7 @@ export const useQuizSystem = () => {
 
   const getRandomQuiz = async (categoryId?: string, difficulty?: string): Promise<Quiz | null> => {
     try {
-      let query = supabase
-        .from('quizzes')
-        .select('*')
-        .eq('is_active', true);
-
-      if (categoryId) query = query.eq('category_id', categoryId);
-      if (difficulty) query = query.eq('difficulty', difficulty);
-
-      const { data, error } = await query;
+      const { data, error } = await (supabase as any).rpc('daftar_kuis', { p_category: categoryId ?? null, p_difficulty: difficulty ?? null });
       if (error) throw error;
 
       if (data && data.length > 0) {
@@ -136,35 +124,22 @@ export const useQuizSystem = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
-      const isCorrect = answer.toLowerCase().trim() === currentQuiz.correct_answer.toLowerCase().trim();
-      const pointsEarned = isCorrect ? currentQuiz.points_reward : 0;
-
-      // Save quiz attempt
-      const { error: attemptError } = await supabase
-        .from('quiz_attempts')
-        .insert([{
-          user_id: user.id,
-          quiz_id: currentQuiz.id,
-          user_answer: answer,
-          is_correct: isCorrect,
-          points_earned: pointsEarned,
-          time_taken_seconds: timeTaken
-        }]);
-
+      // Dinilai server: kunci jawaban tidak pernah dikirim ke browser, XP hanya untuk jawaban benar pertama
+      const { data: res, error: attemptError } = await (supabase as any).rpc('jawab_kuis', {
+        p_quiz: currentQuiz.id, p_answer: answer, p_time: Math.round(timeTaken),
+      });
       if (attemptError) throw attemptError;
-
-      // Award XP through gamification system
-      if (isCorrect) {
-        await awardXP(pointsEarned, `Correct answer: ${currentQuiz.title}`);
-        await updateStreak('learning');
-      }
+      const isCorrect: boolean = res.is_correct;
+      const pointsEarned: number = res.points_earned ?? 0;
+      setCurrentQuiz({ ...currentQuiz, correct_answer: res.correct_answer, explanation: res.explanation });
+      if (isCorrect) await updateStreak('learning');
 
       // Show result
       toast({
         title: isCorrect ? "🎉 Correct!" : "❌ Incorrect",
-        description: isCorrect 
-          ? `You earned ${pointsEarned} points!` 
-          : `The correct answer was: ${currentQuiz.correct_answer}`,
+        description: isCorrect
+          ? (pointsEarned > 0 ? `You earned ${pointsEarned} points!` : "Sudah pernah dijawab benar — tanpa poin tambahan.")
+          : `The correct answer was: ${res.correct_answer}`,
         duration: 5000,
       });
 
@@ -172,7 +147,7 @@ export const useQuizSystem = () => {
       await loadUserQuizHistory();
       await loadLeaderboard();
 
-      return { isCorrect, pointsEarned, explanation: currentQuiz.explanation };
+      return { isCorrect, pointsEarned, explanation: res.explanation, correct_answer: res.correct_answer };
     } catch (error) {
       console.error('Error submitting quiz answer:', error);
       toast({

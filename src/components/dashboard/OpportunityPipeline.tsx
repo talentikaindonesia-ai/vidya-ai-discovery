@@ -6,6 +6,15 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+
+/** Judul dari feed bisa berisi entitas HTML (&amp;) — decode sebagai TEKS, jangan render sebagai HTML. */
+const teksBersih = (s?: string | null) => {
+  if (!s) return "";
+  const t = document.createElement("textarea");
+  t.innerHTML = s;
+  return t.value;
+};
+const amanUrl = (u?: string | null) => (u && /^https?:\/\//i.test(u) ? u : undefined);
 import { Briefcase, Clock, ExternalLink } from "lucide-react";
 
 interface SavedOpp {
@@ -98,9 +107,9 @@ export const OpportunityPipeline = () => {
           return (
             <div key={it.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 12px", borderRadius: 12, border: `1px solid ${urgent ? "#FECACA" : "var(--tk-gray-100, #F1F5F9)"}`, background: urgent ? "#FEF2F2" : "transparent" }}>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <a href={it.opportunity_url} target="_blank" rel="noreferrer"
+                <a href={amanUrl(it.opportunity_url)} target="_blank" rel="noopener noreferrer"
                   style={{ fontSize: 13.5, fontWeight: 600, color: "var(--tk-ink)", textDecoration: "none", display: "flex", alignItems: "center", gap: 5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                  <span dangerouslySetInnerHTML={{ __html: it.opportunity_title }} />
+                  <span>{teksBersih(it.opportunity_title)}</span>
                   <ExternalLink size={11} style={{ flexShrink: 0, color: "var(--tk-gray-400)" }} />
                 </a>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 3 }}>

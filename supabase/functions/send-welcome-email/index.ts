@@ -1,12 +1,14 @@
 /**
  * send-welcome-email
- * Called by a Supabase Database Webhook on INSERT to auth.users
- * (or manually via POST from client after sign-up).
+ * Dipanggil klien setelah daftar (JWT pengguna) atau oleh server (service key / x-cron-secret).
  *
- * Env vars required:
- *   RESEND_API_KEY  — your Resend API key
- *   SUPABASE_URL    — injected automatically by Supabase
- *   SUPABASE_SERVICE_ROLE_KEY — injected automatically
+ * Keamanan (audit 2026-10-10): dulu menerima alamat email apa pun tanpa login →
+ * bisa dipakai sebagai relay email atas nama Talentika. Kini:
+ *  • pengguna hanya bisa mengirim ke email akunnya sendiri, sekali saja;
+ *  • panggilan server wajib service key atau rahasia cron;
+ *  • nama/email di-escape sebelum masuk HTML.
+ *
+ * Env: RESEND_API_KEY, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
  */
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -14,22 +16,24 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
 const FROM_EMAIL = "Talentika <halo@talentika.id>";
 const APP_URL = "https://talentika.id";
+const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+const admin = createClient(Deno.env.get("SUPABASE_URL") ?? "", SERVICE_KEY);
+const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
+const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { status, headers: { ...CORS, "Content-Type": "application/json" } });
+const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
 
-interface WebhookPayload {
-  type: "INSERT" | "UPDATE" | "DELETE";
-  table: string;
-  record: {
-    id: string;
-    email: string;
-    raw_user_meta_data?: { full_name?: string };
-    created_at: string;
-  };
-  schema: string;
+async function izinServer(req: Request) {
+  const bearer = (req.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");
+  if (SERVICE_KEY && bearer === SERVICE_KEY) return true;
+  const s = req.headers.get("x-cron-secret");
+  if (!s) return false;
+  const { data } = await admin.rpc("cek_cron_secret", { p: s });
+  return data === true;
 }
 
-// ── HTML template ──────────────────────────────────────────────────────────────
-function buildWelcomeHtml(name: string, email: string) {
-  const firstName = name.split(" ")[0] || "Talentika";
+function buildWelcomeHtml(rawName: string, rawEmail: string) {
+  const firstName = esc(rawName.split(" ")[0] || "Talentika");
+  const email = esc(rawEmail);
   return `<!DOCTYPE html>
 <html lang="id">
 <head>
@@ -67,163 +71,78 @@ function buildWelcomeHtml(name: string, email: string) {
     <h1>Selamat Datang, ${firstName}!</h1>
     <p>Talentika — Discover your full potential</p>
   </div>
-
   <div class="body">
     <h2>Perjalanan Anda Dimulai Sekarang 🚀</h2>
-    <p>
-      Halo ${firstName}, akun Talentika Anda sudah aktif! Kami sangat senang
-      memiliki Anda bergabung bersama ribuan pengguna yang sedang menemukan
-      potensi terbaik mereka.
-    </p>
-
+    <p>Halo ${firstName}, akun Talentika Anda sudah aktif! Kami sangat senang memiliki Anda bergabung bersama ribuan pengguna yang sedang menemukan potensi terbaik mereka.</p>
     <div class="features">
-      <div class="feat">
-        <div class="feat-icon">🧠</div>
-        <div class="feat-title">Assessment RIASEC</div>
-        <div class="feat-desc">Temukan tipe kepribadian & karier terbaik Anda</div>
-      </div>
-      <div class="feat">
-        <div class="feat-icon">📚</div>
-        <div class="feat-title">Learning Hub</div>
-        <div class="feat-desc">Kursus & modul belajar yang dikurasi khusus</div>
-      </div>
-      <div class="feat">
-        <div class="feat-icon">🤝</div>
-        <div class="feat-title">Komunitas</div>
-        <div class="feat-desc">Terhubung dengan talenta muda Indonesia</div>
-      </div>
+      <div class="feat"><div class="feat-icon">🧠</div><div class="feat-title">Assessment RIASEC</div><div class="feat-desc">Temukan tipe kepribadian & karier terbaik Anda</div></div>
+      <div class="feat"><div class="feat-icon">📚</div><div class="feat-title">Learning Hub</div><div class="feat-desc">Kursus & modul belajar yang dikurasi khusus</div></div>
+      <div class="feat"><div class="feat-icon">🤝</div><div class="feat-title">Komunitas</div><div class="feat-desc">Terhubung dengan talenta muda Indonesia</div></div>
     </div>
-
     <p style="font-weight:600;color:#0F172A;margin-bottom:12px">Mulai dalam 3 langkah mudah:</p>
     <ul class="steps">
-      <li>
-        <div class="step-num">1</div>
-        <div class="step-text">
-          <strong>Selesaikan Tes Assessment</strong>
-          <span>Ikuti tes minat & bakat RIASEC — hanya 10 menit</span>
-        </div>
-      </li>
-      <li>
-        <div class="step-num">2</div>
-        <div class="step-text">
-          <strong>Lihat Rekomendasi Karier</strong>
-          <span>Dapatkan jalur karier yang sesuai kepribadian Anda</span>
-        </div>
-      </li>
-      <li>
-        <div class="step-num">3</div>
-        <div class="step-text">
-          <strong>Mulai Belajar</strong>
-          <span>Akses kursus yang dipersonalisasi dari Learning Hub</span>
-        </div>
-      </li>
+      <li><div class="step-num">1</div><div class="step-text"><strong>Selesaikan Tes Assessment</strong><span>Ikuti tes minat & bakat RIASEC — hanya 10 menit</span></div></li>
+      <li><div class="step-num">2</div><div class="step-text"><strong>Lihat Rekomendasi Karier</strong><span>Dapatkan jalur karier yang sesuai kepribadian Anda</span></div></li>
+      <li><div class="step-num">3</div><div class="step-text"><strong>Mulai Belajar</strong><span>Akses kursus yang dipersonalisasi dari Learning Hub</span></div></li>
     </ul>
-
     <a class="cta" href="${APP_URL}/dashboard">Buka Dashboard Saya →</a>
-
-    <p style="font-size:13px;color:#94A3B8;margin:0">
-      Email ini dikirim ke <strong>${email}</strong>. Jika Anda tidak mendaftar di Talentika,
-      abaikan email ini.
-    </p>
+    <p style="font-size:13px;color:#94A3B8;margin:0">Email ini dikirim ke <strong>${email}</strong>. Jika Anda tidak mendaftar di Talentika, abaikan email ini.</p>
   </div>
-
   <div class="footer">
     <p>© 2025 <a href="${APP_URL}">Talentika Indonesia</a> · <a href="${APP_URL}/privacy">Kebijakan Privasi</a></p>
-    <p>Jl. Inovasi Digital, Indonesia · <a href="${APP_URL}/unsubscribe">Berhenti berlangganan</a></p>
   </div>
 </div>
 </body>
 </html>`;
 }
 
-// ── Main handler ───────────────────────────────────────────────────────────────
 Deno.serve(async (req: Request) => {
-  // Allow CORS for manual test calls
-  if (req.method === "OPTIONS") {
-    return new Response("ok", {
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-      },
-    });
-  }
+  if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
 
   try {
-    // 1 — Parse payload (webhook or manual POST)
-    let email = "";
-    let name = "";
+    const body = await req.json().catch(() => null);
     let userId = "";
 
-    const body = await req.json().catch(() => null);
-
-    if (body?.type === "INSERT" && body?.table === "users") {
-      // Database webhook from auth.users
-      const record = (body as WebhookPayload).record;
-      email = record.email;
-      name = record.raw_user_meta_data?.full_name ?? "";
-      userId = record.id;
-    } else if (body?.email) {
-      // Manual POST: { email, name, user_id }
-      email = body.email;
-      name = body.name ?? "";
-      userId = body.user_id ?? "";
+    if (await izinServer(req)) {
+      // server / webhook: boleh menyebut user, tetapi alamat tetap diambil dari auth
+      userId = body?.record?.id ?? body?.user_id ?? "";
     } else {
-      return new Response(JSON.stringify({ error: "Missing email in payload" }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      });
+      // pengguna: hanya untuk dirinya sendiri
+      const jwt = (req.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");
+      const { data: au } = await admin.auth.getUser(jwt);
+      if (!au?.user) return json({ error: "unauthorized" }, 401);
+      userId = au.user.id;
     }
+    if (!userId) return json({ error: "user tidak diketahui" }, 400);
 
-    // 2 — Look up full name from profiles if not in payload
-    if (!name && userId) {
-      const supabase = createClient(
-        Deno.env.get("SUPABASE_URL") ?? "",
-        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-      );
-      const { data } = await supabase
-        .from("profiles")
-        .select("full_name")
-        .eq("user_id", userId)
-        .maybeSingle();
-      name = data?.full_name ?? "";
-    }
+    const { data: target } = await admin.auth.admin.getUserById(userId);
+    const u = target?.user;
+    if (!u?.email) return json({ error: "user tidak ditemukan" }, 404);
+    if (u.user_metadata?.welcome_email_sent) return json({ success: true, skipped: "sudah dikirim" });
 
-    // 3 — Send via Resend
-    const html = buildWelcomeHtml(name || email.split("@")[0], email);
+    const { data: prof } = await admin.from("profiles").select("full_name").eq("user_id", userId).maybeSingle();
+    const name = prof?.full_name || u.user_metadata?.full_name || u.email.split("@")[0];
 
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${RESEND_API_KEY}`,
-        "Content-Type": "application/json",
-      },
+      headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         from: FROM_EMAIL,
-        to: [email],
+        to: [u.email],
         subject: "Selamat datang di Talentika! 🎯 Mulai temukan potensi Anda",
-        html,
+        html: buildWelcomeHtml(name, u.email),
       }),
     });
 
     if (!res.ok) {
-      const err = await res.text();
-      console.error("Resend error:", err);
-      return new Response(JSON.stringify({ error: "Failed to send email", detail: err }), {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      });
+      console.error("Resend error:", await res.text());
+      return json({ error: "Gagal mengirim email" }, 500);
     }
-
+    await admin.auth.admin.updateUserById(userId, { user_metadata: { ...u.user_metadata, welcome_email_sent: true } });
     const data = await res.json();
-    return new Response(JSON.stringify({ success: true, id: data.id }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
+    return json({ success: true, id: data.id });
   } catch (err: any) {
     console.error("Unexpected error:", err);
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    return json({ error: "Terjadi kesalahan" }, 500);
   }
 });

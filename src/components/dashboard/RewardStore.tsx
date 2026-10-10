@@ -87,30 +87,10 @@ export const RewardStore = () => {
         return;
       }
 
-      // Generate redemption code
-      const redemptionCode = `TLK-${Date.now()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-
-      // Record the purchase
-      const { error: purchaseError } = await supabase
-        .from('user_rewards')
-        .insert([{
-          user_id: user.id,
-          reward_item_id: item.id,
-          xp_spent: item.xp_cost,
-          redemption_code: redemptionCode
-        }]);
-
+      // Potong XP + catat hadiah secara atomik di server (stok & saldo XP dicek di sana)
+      const { data: hasil, error: purchaseError } = await (supabase as any).rpc('tukar_hadiah', { p_item: item.id });
       if (purchaseError) throw purchaseError;
-
-      // Deduct XP from user
-      const { error: xpError } = await supabase
-        .from('user_xp')
-        .update({
-          current_xp: userXP.current_xp - item.xp_cost
-        })
-        .eq('user_id', user.id);
-
-      if (xpError) throw xpError;
+      const redemptionCode: string = hasil.redemption_code;
 
       toast({
         title: "🎉 Purchase Successful!",

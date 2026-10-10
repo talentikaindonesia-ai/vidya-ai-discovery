@@ -38,19 +38,7 @@ const recordReferral = async (code: string, newUserId: string) => {
   await supabase.from("referral_usage").insert({
     referral_code_id: refRow.id, referred_user_id: newUserId, commission_earned: 0,
   });
-  await supabase.from("referral_codes")
-    .update({ total_referrals: (refRow.total_referrals || 0) + 1 })
-    .eq("id", refRow.id);
-  const { data: xpRow } = await supabase.from("user_xp")
-    .select("current_xp, total_xp_earned, current_level")
-    .eq("user_id", refRow.user_id).maybeSingle();
-  if (xpRow) {
-    const nx = xpRow.current_xp + 100;
-    await supabase.from("user_xp").update({
-      current_xp: nx, total_xp_earned: xpRow.total_xp_earned + 100,
-      current_level: Math.floor(nx / 1000) + 1,
-    }).eq("user_id", refRow.user_id);
-  }
+  // total_referrals & +100 XP untuk pengajak diberikan server (trigger proses_referral)
 };
 
 const generateSchoolCode = (name: string) => {
@@ -688,11 +676,7 @@ function IndividualAuth({
         sessionStorage.removeItem("referral_code");
       }
 
-      if (data?.user?.id) {
-        supabase.functions.invoke("send-welcome-email", {
-          body: { email: data.user.email, name: fullName, user_id: data.user.id },
-        }).catch(() => {});
-      }
+      // Email sambutan dikirim saat login pertama (butuh sesi; server memastikan hanya sekali)
 
       sessionStorage.setItem("new_user_email", email);
       toast.success("Akun berhasil dibuat! Silakan login.");
@@ -709,6 +693,8 @@ function IndividualAuth({
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
       if (data.user) {
+        // Email sambutan: hanya ke alamat akun sendiri, sekali saja (dijaga server)
+        supabase.functions.invoke("send-welcome-email", { body: {} }).catch(() => {});
         toast.success("Login berhasil!");
         const isNew = sessionStorage.getItem("new_user_email") === data.user.email;
         if (isNew) sessionStorage.removeItem("new_user_email");

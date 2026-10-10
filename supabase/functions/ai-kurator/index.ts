@@ -347,8 +347,11 @@ Deno.serve(async (req) => {
     return json({ ok: true });
   }
 
-  // monitor: dipanggil cron tanpa login — aman karena tiap sumber maks 1×/6 hari dan hanya membuat draf
+  // monitor: hanya pg_cron (header x-cron-secret dari Vault) — tiap sumber maks 1×/6 hari dan hanya membuat draf
   if (body.action === "monitor") {
+    const rahasia = req.headers.get("x-cron-secret");
+    const { data: sah } = rahasia ? await admin.rpc("cek_cron_secret", { p: rahasia }) : { data: false };
+    if (jwt !== SERVICE_KEY && sah !== true) return json({ error: "unauthorized" }, 401);
     const batas = new Date(Date.now() - 6 * 86400_000).toISOString();
     const { data: sumber } = await admin.from("sumber_resmi").select("id,nama,penyelenggara,url,kategori,jenjang,periode_buka").eq("aktif", true)
       .or(`terakhir_dicek.is.null,terakhir_dicek.lt.${batas}`).order("terakhir_dicek", { ascending: true, nullsFirst: true }).limit(Math.min(Number(body.limit) || 3, 5));

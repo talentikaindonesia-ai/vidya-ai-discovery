@@ -125,7 +125,24 @@ async function getOrCreateExpiryVoucher(userId: string): Promise<string | null> 
   return error ? null : code;
 }
 
+// ── Hanya server: pg_cron (header x-cron-secret, diverifikasi ke Vault) atau service key.
+//    Audit keamanan 2026-10-10: dulu fungsi ini bisa dipicu siapa pun tanpa login.
+async function izinServer(req: Request): Promise<boolean> {
+  const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+  const bearer = (req.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");
+  if (key && bearer === key) return true;
+  const s = req.headers.get("x-cron-secret");
+  if (!s) return false;
+  const r = await fetch(`${Deno.env.get("SUPABASE_URL")}/rest/v1/rpc/cek_cron_secret`, {
+    method: "POST",
+    headers: { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ p: s }),
+  });
+  return r.ok && (await r.json()) === true;
+}
+
 Deno.serve(async (req) => {
+  if (req.method !== "OPTIONS" && !(await izinServer(req))) return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers: { "Content-Type": "application/json" } });
   if (req.method === "OPTIONS")
     return new Response("ok", { headers: { "Access-Control-Allow-Origin": "*" } });
 

@@ -272,6 +272,8 @@ export async function handleAuthCallback(url: string) {
 
 /** Buka tautan eksternal: in-app browser di native (OPP-07), tab baru di web. */
 export async function openExternal(url: string) {
+  // tolak javascript:, data:, file:, intent: dll. — URL berasal dari data (mentor, peluang, bukti)
+  if (!/^(https?:|mailto:|tel:)/i.test((url ?? "").trim())) return;
   if ((window as any).Capacitor?.isNativePlatform?.()) {
     const { Browser } = await import("@capacitor/browser");
     await Browser.open({ url, presentationStyle: "popover", toolbarColor: "#1D4ED8" });

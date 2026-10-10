@@ -34,8 +34,11 @@ const CAT_LABEL: Record<string, string> = {
   konferensi: "📅 Konferensi", volunteer: "🤝 Volunteer", program: "📋 Program",
 };
 
+const esc = (s: unknown) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" } as Record<string, string>)[c]);
+const amanUrl = (u?: string | null) => (u && /^https:\/\//i.test(u) ? esc(u) : "");
+
 function buildHtml(name: string, riasecType: string, opportunities: any[]) {
-  const firstName = (name ?? "").split(" ")[0] || "Kamu";
+  const firstName = esc((name ?? "").split(" ")[0] || "Kamu");
   const typeLabel = riasecType.charAt(0).toUpperCase() + riasecType.slice(1);
 
   const oppRows = opportunities.map(o => `
@@ -43,11 +46,11 @@ function buildHtml(name: string, riasecType: string, opportunities: any[]) {
       <div style="font-size:11px;font-weight:700;color:#2563EB;margin-bottom:4px;text-transform:uppercase;letter-spacing:.05em;">
         ${CAT_LABEL[o.category] ?? o.category}
       </div>
-      <div style="font-size:15px;font-weight:700;color:#0F172A;margin-bottom:6px;line-height:1.4;">${o.title}</div>
-      ${o.organizer ? `<div style="font-size:12px;color:#64748B;margin-bottom:6px;">📌 ${o.organizer}</div>` : ""}
-      ${o.location  ? `<div style="font-size:12px;color:#64748B;margin-bottom:8px;">📍 ${o.location}</div>`  : ""}
+      <div style="font-size:15px;font-weight:700;color:#0F172A;margin-bottom:6px;line-height:1.4;">${esc(o.title)}</div>
+      ${o.organizer ? `<div style="font-size:12px;color:#64748B;margin-bottom:6px;">📌 ${esc(o.organizer)}</div>` : ""}
+      ${o.location  ? `<div style="font-size:12px;color:#64748B;margin-bottom:8px;">📍 ${esc(o.location)}</div>`  : ""}
       ${o.deadline  ? `<div style="font-size:11px;color:#EF4444;font-weight:600;margin-bottom:8px;">⏰ Deadline: ${new Date(o.deadline).toLocaleDateString("id-ID",{day:"numeric",month:"long",year:"numeric"})}</div>` : ""}
-      ${o.url       ? `<a href="${o.url}" style="display:inline-block;padding:7px 16px;border-radius:8px;background:#2563EB;color:white;text-decoration:none;font-size:12px;font-weight:700;">Lihat Detail →</a>` : ""}
+      ${amanUrl(o.url) ? `<a href="${amanUrl(o.url)}" style="display:inline-block;padding:7px 16px;border-radius:8px;background:#2563EB;color:white;text-decoration:none;font-size:12px;font-weight:700;">Lihat Detail →</a>` : ""}
     </div>
   `).join("");
 
@@ -94,7 +97,24 @@ function buildHtml(name: string, riasecType: string, opportunities: any[]) {
 </body></html>`;
 }
 
+// ── Hanya server: pg_cron (header x-cron-secret, diverifikasi ke Vault) atau service key.
+//    Audit keamanan 2026-10-10: dulu fungsi ini bisa dipicu siapa pun tanpa login.
+async function izinServer(req: Request): Promise<boolean> {
+  const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+  const bearer = (req.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");
+  if (key && bearer === key) return true;
+  const s = req.headers.get("x-cron-secret");
+  if (!s) return false;
+  const r = await fetch(`${Deno.env.get("SUPABASE_URL")}/rest/v1/rpc/cek_cron_secret`, {
+    method: "POST",
+    headers: { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ p: s }),
+  });
+  return r.ok && (await r.json()) === true;
+}
+
 Deno.serve(async (req) => {
+  if (req.method !== "OPTIONS" && !(await izinServer(req))) return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers: { "Content-Type": "application/json" } });
   if (req.method === "OPTIONS")
     return new Response("ok", { headers: { "Access-Control-Allow-Origin": "*" } });
 

@@ -102,7 +102,7 @@ export const QuizCard: React.FC<QuizCardProps> = ({ quiz, onSubmit, loading }) =
             </div>
             {!result.isCorrect && (
               <div className="text-muted-foreground">
-                Correct answer: <span className="font-semibold text-foreground">{quiz.correct_answer}</span>
+                Correct answer: <span className="font-semibold text-foreground">{result.correct_answer ?? quiz.correct_answer}</span>
               </div>
             )}
           </div>

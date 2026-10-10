@@ -374,6 +374,33 @@ const Articles = () => {
 
   const goToArticle = (slug: string) => navigate(`/articles/${slug}`);
 
+  // Hook harus di level atas komponen (sebelum early return `if (loading)`; dulu di dalam if → crash "Rendered more hooks" di setiap halaman artikel)
+  const artikelId: string | undefined = selectedArticle?.id;
+  // Award XP once per article — fire when user has scrolled past 80% of content
+  useEffect(() => {
+    if (!artikelId) return;
+    let awarded = false;
+    const onScroll = async () => {
+      if (awarded) return;
+      const scrolled = window.scrollY + window.innerHeight;
+      const total    = document.documentElement.scrollHeight;
+      if (scrolled / total < 0.8) return;
+      awarded = true;
+      window.removeEventListener("scroll", onScroll);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase.rpc("mark_article_read", {
+        p_user_id:   user.id,
+        p_article_id: artikelId,
+      });
+      if (data?.awarded !== false) {
+        toast(`+50 XP — Artikel selesai dibaca 📖`, { duration: 3000 });
+      }
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [artikelId]);
+
   if (loading) {
     return (
       <div style={{ minHeight: "100vh", background: "#F8FAFC" }}>
@@ -446,8 +473,11 @@ const Articles = () => {
   }
 
   // ── Article detail view ────────────────────────────────────────────────
+
   if (selectedArticle) {
-    const processContentWithMedia = (content: string) => {
+    const processContentWithMedia = (raw: string) => {
+      // Escape dulu: isi artikel diperlakukan sebagai teks/markdown, bukan HTML mentah (cegah XSS)
+      const content = (raw ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
       return content.split("\n\n").map(section => {
         if (section.startsWith("# ")) return `<h1 class="text-3xl md:text-4xl font-bold text-foreground mb-6 mt-12 first:mt-0 pb-4 border-b-2 border-border/50">${section.replace(/^# /, "")}</h1>`;
         if (section.startsWith("## ")) return `<h2 class="text-2xl md:text-3xl font-bold text-foreground mb-5 mt-10">${section.replace(/^## /, "")}</h2>`;
@@ -467,10 +497,10 @@ const Articles = () => {
           }).join("");
           return `<ol class="space-y-2 my-6">${items}</ol>`;
         }
-        if (section.startsWith("> ")) return `<blockquote class="border-l-4 border-border bg-muted/30 pl-6 pr-6 py-5 my-8 rounded-r-lg"><p class="text-lg md:text-xl italic text-foreground font-medium leading-relaxed">${section.replace(/^> /, "")}</p></blockquote>`;
+        if (section.startsWith("&gt; ")) return `<blockquote class="border-l-4 border-border bg-muted/30 pl-6 pr-6 py-5 my-8 rounded-r-lg"><p class="text-lg md:text-xl italic text-foreground font-medium leading-relaxed">${section.replace(/^&gt; /, "")}</p></blockquote>`;
         if (section.match(/!\[(.*?)\]\((.*?)\)/)) {
           const match = section.match(/!\[(.*?)\]\((.*?)\)/);
-          if (match) return `<figure class="my-10"><img src="${match[2]}" alt="${match[1]}" class="w-full rounded-xl shadow-xl border border-border/30" loading="lazy" />${match[1] ? `<figcaption class="text-center text-sm text-muted-foreground mt-4 italic">${match[1]}</figcaption>` : ""}</figure>`;
+          if (match && /^(https:\/\/|\/)/.test(match[2])) return `<figure class="my-10"><img src="${match[2]}" alt="${match[1]}" class="w-full rounded-xl shadow-xl border border-border/30" loading="lazy" />${match[1] ? `<figcaption class="text-center text-sm text-muted-foreground mt-4 italic">${match[1]}</figcaption>` : ""}</figure>`;
         }
         if (section.includes("[video:")) {
           const match = section.match(/\[video:(https:\/\/(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]+))\]/);
@@ -494,29 +524,6 @@ const Articles = () => {
       }
     };
 
-    // Award XP once per article — fire when user has scrolled past 80% of content
-    useEffect(() => {
-      let awarded = false;
-      const onScroll = async () => {
-        if (awarded) return;
-        const scrolled = window.scrollY + window.innerHeight;
-        const total    = document.documentElement.scrollHeight;
-        if (scrolled / total < 0.8) return;
-        awarded = true;
-        window.removeEventListener("scroll", onScroll);
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-        const { data } = await supabase.rpc("mark_article_read", {
-          p_user_id:   user.id,
-          p_article_id: selectedArticle.id,
-        });
-        if (data?.awarded !== false) {
-          toast(`+50 XP — Artikel selesai dibaca 📖`, { duration: 3000 });
-        }
-      };
-      window.addEventListener("scroll", onScroll, { passive: true });
-      return () => window.removeEventListener("scroll", onScroll);
-    }, [selectedArticle.id]);
 
     return (
       <div className="min-h-screen bg-background">
