@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { C, F, SH } from "./theme";
-import { dnaTitle } from "./logic";
+import { dnaTitle, riasecTitle } from "./logic";
 import { GLOBAL_CSS, Icon, Loading, LOGO } from "./ui";
 
 const BAR = [C.blue, C.purple, C.orange, C.green, C.sky, C.red];
@@ -12,7 +12,8 @@ const Title = ({ children }: { children: React.ReactNode }) => <div style={{ fon
 
 /** Isi profil publik — dipakai pratinjau di aplikasi dan halaman publik /u/:username (PRJ-04). */
 export function PublicProfileBody({ p }: { p: any }) {
-  const title = p.axes ? dnaTitle(p.axes, 4) : null;
+  // tipe = hasil tes RIASEC (sama dengan web); sumbu hanya cadangan
+  const title = riasecTitle(p.riasec) ?? (p.axes ? dnaTitle(p.axes, 4) : null);
   return (
     <>
       <div style={{ background: "linear-gradient(120deg,#0066FF,#00A3E0)", borderRadius: 24, padding: 18, color: "#fff", position: "relative", overflow: "hidden" }}>

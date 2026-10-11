@@ -4,15 +4,22 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { canPurchase, db, errMsg, useApp, useDna, useSkills } from "../store";
 import { BackBtn, Btn, Card, Confetti, Header, Icon, Loading, LOGO, Screen, Sheet, Tabs } from "../ui";
 import { C, SH } from "../theme";
-import { archetypes, AXES, AxisKey, MODULES, rankAxes } from "../logic";
+import { archetypes, AXES, AxisKey, MODULES, rankAxes, riasecArch, riasecKeyakinan, riasecLabel } from "../logic";
+import { barisHasilRiasec, cariTipeSeri, POIN_PEMUTUS, riasecQuestions, riasecQuestionsSmp, skorDariJawaban, susunSoalPemutus, type SkorRiasec, type TipeRiasec } from "@/lib/riasec";
 import { editionOf } from "../MobileApp";
 import assessHero from "../assets/v3/assess-hero.webp";
 import readyHero from "../assets/v3/ready-hero.webp";
 
 export default function Dna({ screen }: { screen: "center" | "question" | "result" }) {
   if (screen === "center") return <Center />;
-  if (screen === "question") return <Question />;
+  if (screen === "question") return <QuestionRoute />;
   return <Result />;
+}
+
+/** Modul personality = tes RIASEC web; modul lain = item Talent DNA. */
+function QuestionRoute() {
+  const { module = "" } = useParams();
+  return module === "personality" ? <RiasecTest /> : <Question />;
 }
 
 const SAFE_T = "calc(env(safe-area-inset-top, 0px) + 16px)";
@@ -39,7 +46,7 @@ const DOMAINS: [string, string, string, string][] = [
 function Center() {
   const nav = useNavigate();
   const { t, isPro, profile, lang, openPaywall } = useApp();
-  const { dna, done, isLoading } = useDna();
+  const { dna, done, isLoading, riasec } = useDna();
   const total = MODULES.length;
   const pro = editionOf(profile?.jenjang) === "pro";
   const states = MODULES.map(m => {
@@ -111,7 +118,7 @@ function Center() {
             </button>
           ))}
         </div>
-        {dna?.legacy_riasec && <div style={{ fontSize: 11.5, color: C.faint, textAlign: "center", marginTop: 10 }}>{t("Modul Personality terisi dari tes RIASEC-mu sebelumnya.", "Personality is filled from your earlier RIASEC test.")}</div>}
+        {riasec && <div style={{ fontSize: 11.5, color: C.faint, textAlign: "center", marginTop: 10, lineHeight: 1.5 }}>{t(`Hasil tes RIASEC-mu: ${riasecLabel(riasec.tipe_utama, lang)}${riasec.holland_code ? ` (${riasec.holland_code})` : ""} — sama dengan di web.`, `Your RIASEC result: ${riasecLabel(riasec.tipe_utama, lang)}${riasec.holland_code ? ` (${riasec.holland_code})` : ""} — same as on the web.`)}</div>}
         {done > 0 && nextMod && <Btn kind="blueOutline" h={50} onClick={() => nav("/app/dna/result")} style={{ marginTop: 12 }}>{t("Lihat Profil Talentaku", "See My Talent Profile")}</Btn>}
         <button onClick={() => nav("/app/home", { replace: true })} style={{ width: "100%", marginTop: 6, height: 44, border: "none", background: "none", color: C.muted, fontSize: 13, fontWeight: 500, cursor: "pointer" }}>{t("Nanti saja, ke Beranda", "Later, go Home")}</button>
       </div>
@@ -258,6 +265,248 @@ function Question() {
   );
 }
 
+/* ── TES RIASEC — identik dengan /assessment di web ──────────────────────
+   Soal, bobot, varian SMP, soal pemutus seri, dan baris assessment_results
+   diambil dari src/lib/riasec.ts yang juga dipakai web, jadi siswa mendapat
+   tipe & kode Holland yang sama di mana pun ia mengerjakan tesnya. */
+const RIASEC_DRAFT = "tk-riasec-draft";
+const LETTERS = "ABCDEF";
+const RCOL = ["#0066FF", "#7C3AED", "#D97706", "#0D9488", "#E11D48", "#16A34A"];
+const OPSI_TUJUAN = [
+  { v: "kuliah", icon: "cap", id: "Lanjut kuliah", en: "Go to university", sub: "Cari beasiswa & jalur masuk", subEn: "Scholarships & admission paths" },
+  { v: "kerja", icon: "brief", id: "Cari kerja", en: "Find a job", sub: "Magang, lowongan, pengalaman", subEn: "Internships, jobs, experience" },
+  { v: "wirausaha", icon: "rocket", id: "Bangun usaha", en: "Build a business", sub: "Kompetisi, pendanaan, inkubasi", subEn: "Competitions, funding, incubation" },
+  { v: "belum_yakin", icon: "compass", id: "Masih menjajaki", en: "Still exploring", sub: "Belum tahu, ingin lihat semua", subEn: "Not sure yet, show me everything" },
+];
+const OPSI_JENJANG = [{ v: "smp", l: "SMP" }, { v: "sma_smk", l: "SMA / SMK" }, { v: "kuliah", l: "Kuliah" }, { v: "lulusan", l: "Sudah lulus" }];
+
+function RiasecTest() {
+  const nav = useNavigate();
+  const qc = useQueryClient();
+  const { t, lang, user, profile, toast, afterAction, track, refreshProfile } = useApp();
+  const { riasec } = useDna();
+  // Redaksi SMP beda, bobotnya identik (lihat riasecQuestionsSmp)
+  const questions = profile?.jenjang === "smp" ? riasecQuestionsSmp : riasecQuestions;
+  const started = useRef(Date.now());
+  const [answers, setAnswers] = useState<Record<number, number>>(() => {
+    try { const d = JSON.parse(localStorage.getItem(RIASEC_DRAFT) || "null"); return d?.uid === user?.id && d?.answers ? d.answers : {}; } catch { return {}; }
+  });
+  const [step, setStep] = useState(() => Math.min(Object.keys(answers).length, questions.length - 1));
+  const [picked, setPicked] = useState<number | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [phase, setPhase] = useState<"quiz" | "pemutus" | "saving" | "gagal" | "tujuan">("quiz");
+  const [retakeOk, setRetakeOk] = useState(false);
+  // soal pemutus
+  const [seri, setSeri] = useState<string[]>([]);
+  const [langkah, setLangkah] = useState(0);
+  const [skorDasar, setSkorDasar] = useState<SkorRiasec>({});
+  const [skorPemutus, setSkorPemutus] = useState<SkorRiasec>({});
+  const [akhir, setAkhir] = useState<{ jawaban: Record<number, number>; s: SkorRiasec; pemutus: boolean } | null>(null);
+  // tujuan & jenjang (langkah yang sama dengan web setelah hasil tersimpan)
+  const [tujuan, setTujuan] = useState<string | null>(profile?.tujuan ?? null);
+  const [jenjangBaru, setJenjangBaru] = useState<string | null>(null);
+  const jenjangAktif = jenjangBaru ?? (profile?.jenjang === "smk" ? "sma_smk" : profile?.jenjang ?? null);
+
+  const simpanDraft = (a: Record<number, number>) => { try { localStorage.setItem(RIASEC_DRAFT, JSON.stringify({ uid: user?.id, answers: a })); } catch { /* penyimpanan penuh */ } };
+
+  // jawaban dioper eksplisit: state `answers` di closure setTimeout bisa belum memuat jawaban terakhir
+  const simpan = async (jawaban: Record<number, number>, s: SkorRiasec, pemutus: boolean) => {
+    setAkhir({ jawaban, s, pemutus });
+    setPhase("saving");
+    const { error } = await db.from("assessment_results").insert(barisHasilRiasec(user!.id, jawaban, s, pemutus) as any);
+    if (error) { toast(errMsg(error), "error"); setPhase("gagal"); return; }
+    await db.rpc("claim_assessment_xp", { p_user_id: user!.id }); // idempoten: XP hanya untuk tes pertama
+    try { localStorage.removeItem(RIASEC_DRAFT); } catch { /* abaikan */ }
+    track("dna_module_completed", { module_id: "personality", duration_s: Math.round((Date.now() - started.current) / 1000), is_pro: false, tie_break: pemutus });
+    qc.invalidateQueries({ queryKey: ["m-dna"] });
+    setPhase("tujuan");
+  };
+
+  const pilih = (i: number) => {
+    if (busy) return;
+    setPicked(i); setBusy(true);
+    const baru = { ...answers, [step]: i };
+    setAnswers(baru); simpanDraft(baru);
+    setTimeout(() => {
+      setPicked(null); setBusy(false);
+      if (step < questions.length - 1) { setStep(step + 1); return; }
+      const s = skorDariJawaban(questions, baru);
+      const tipeSeri = cariTipeSeri(s);
+      if (tipeSeri) { setSkorDasar(s); setSeri(tipeSeri); setLangkah(0); setSkorPemutus({}); setPhase("pemutus"); return; }
+      simpan(baru, s, false);
+    }, 380);
+  };
+
+  const soalPemutus = useMemo(() => susunSoalPemutus(seri), [seri]);
+  const jawabPemutus = (tipe: string) => {
+    if (busy) return;
+    setBusy(true);
+    const baru = { ...skorPemutus, [tipe]: (skorPemutus[tipe] || 0) + POIN_PEMUTUS };
+    setSkorPemutus(baru);
+    setTimeout(() => {
+      setBusy(false);
+      if (langkah < soalPemutus.length - 1) { setLangkah(langkah + 1); return; }
+      const gabungan = { ...skorDasar };
+      Object.entries(baru).forEach(([k, v]) => { gabungan[k] = (gabungan[k] || 0) + v; });
+      simpan(answers, gabungan, true);
+    }, 320);
+  };
+
+  const selesai = async () => {
+    setBusy(true);
+    if (tujuan) {
+      // jenjang hanya ditulis kalau dipilih di sini — tidak menimpa isian Onboarding
+      const payload: Record<string, unknown> = { tujuan, tujuan_diisi_pada: new Date().toISOString() };
+      if (jenjangBaru) payload.jenjang = jenjangBaru;
+      const { error } = await db.from("profiles").update(payload as any).eq("user_id", user!.id);
+      if (error) toast(errMsg(error), "error"); else await refreshProfile();
+    }
+    await qc.invalidateQueries({ queryKey: ["m-dna"] });
+    await afterAction("Talent Clarity");
+    nav("/app/dna/result", { replace: true, state: { celebrate: true } });
+  };
+
+  const back = () => {
+    if (phase === "quiz") { if (step === 0) nav("/app/dna"); else setStep(step - 1); return; }
+    if (phase === "pemutus") { if (langkah === 0) { setPhase("quiz"); setStep(questions.length - 1); } else setLangkah(langkah - 1); }
+  };
+  const nama = (k: string) => riasecLabel(k as TipeRiasec, lang);
+  const top = (
+    <div style={{ padding: `${SAFE_T} 22px 0`, display: "flex", alignItems: "center", gap: 12 }}>
+      {(phase === "quiz" || phase === "pemutus") && <BackBtn dark onClick={back} />}
+      <div style={{ flex: 1, fontSize: 17, fontWeight: 700 }}>{t("Tes Minat RIASEC", "RIASEC Interest Test")}</div>
+      {phase === "quiz" && (
+        <button onClick={() => { toast(t("Kemajuan tersimpan. Lanjutkan kapan saja.", "Progress saved. Continue anytime.")); nav("/app/home", { replace: true }); }}
+          style={{ height: 34, border: "none", borderRadius: 99, background: C.soft, color: C.text2, fontSize: 12.5, fontWeight: 600, padding: "0 13px", display: "flex", alignItems: "center", gap: 6, cursor: "pointer" }}>
+          <Icon name="pause" size={14} />{t("Jeda", "Pause")}
+        </button>
+      )}
+    </div>
+  );
+  const bar = (i: number, n: number, label: string, warm = false) => (
+    <div style={{ margin: "18px 22px 0", display: "flex", alignItems: "center", gap: 12 }}>
+      <div style={{ flex: 1, height: 7, borderRadius: 99, background: "#EAF0F8" }}><div style={{ width: `${Math.round(((i + 1) / n) * 100)}%`, height: "100%", borderRadius: 99, background: warm ? "linear-gradient(90deg,#FBBF24,#F59E0B)" : C.blue, transition: "width .3s" }} /></div>
+      <span style={{ fontSize: 12.5, fontWeight: 600, color: C.text2, whiteSpace: "nowrap" }}>{label} {i + 1}/{n}</span>
+    </div>
+  );
+  const shell = (body: React.ReactNode) => <div style={{ position: "absolute", inset: 0, background: "#fff", display: "flex", flexDirection: "column" }}>{top}{body}</div>;
+
+  if (phase === "saving") return shell(<div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10 }}><Loading /><div style={{ fontSize: 13, color: C.muted }}>{t("Menyusun hasilmu…", "Building your result…")}</div></div>);
+
+  if (phase === "gagal") return shell(
+    <div style={{ padding: "26px 22px" }}>
+      <Card>
+        <div style={{ fontSize: 15, fontWeight: 700 }}>{t("Hasil belum tersimpan", "Result not saved yet")}</div>
+        <p style={{ fontSize: 13, color: C.muted, lineHeight: 1.55 }}>{t("Jawabanmu aman di perangkat ini. Periksa koneksi, lalu coba simpan lagi.", "Your answers are safe on this device. Check your connection and try again.")}</p>
+        <Btn onClick={() => akhir && simpan(akhir.jawaban, akhir.s, akhir.pemutus)}><Icon name="refresh" size={16} />{t("Coba simpan lagi", "Try saving again")}</Btn>
+      </Card>
+    </div>
+  );
+
+  if (phase === "tujuan") return shell(
+    <>
+      <div style={{ flex: 1, overflowY: "auto", padding: "18px 22px 10px", animation: "tkIn .25s ease both" }}>
+        <div style={{ textAlign: "center" }}>
+          <span style={{ width: 54, height: 54, borderRadius: 18, background: C.tintBlue, color: C.blue, display: "inline-flex", alignItems: "center", justifyContent: "center" }}><Icon name="compass" size={26} /></span>
+          <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: "-.4px", marginTop: 12 }}>{t("Satu hal lagi sebelum hasilmu", "One more thing before your result")}</div>
+          <p style={{ margin: "8px auto 0", fontSize: 13.5, color: C.text3, lineHeight: 1.6, maxWidth: 360 }}>{t("Tipe kepribadian saja tidak cukup. Arah yang kamu tuju menentukan peluang mana yang benar-benar berguna untukmu.", "A personality type alone isn't enough. Where you're heading decides which opportunities are actually useful to you.")}</p>
+        </div>
+        <div style={{ fontSize: 11.5, fontWeight: 700, color: C.muted, letterSpacing: ".5px", textTransform: "uppercase", margin: "22px 0 10px" }}>{t("Setelah ini, kamu ingin…", "After this, you want to…")}</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+          {OPSI_TUJUAN.map(o => {
+            const on = tujuan === o.v;
+            return (
+              <button key={o.v} onClick={() => setTujuan(o.v)} aria-pressed={on} style={{ minHeight: 60, border: `1.5px solid ${on ? C.blue : "#E6EDF7"}`, background: on ? "#F3F8FF" : "#fff", borderRadius: 16, display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", cursor: "pointer", textAlign: "left" }}>
+                <span style={{ width: 38, height: 38, borderRadius: 12, background: on ? C.blue : C.tintBlue, color: on ? "#fff" : C.blue, display: "flex", alignItems: "center", justifyContent: "center", flex: "none" }}><Icon name={o.icon} size={18} /></span>
+                <span style={{ flex: 1, minWidth: 0 }}>
+                  <span style={{ display: "block", fontSize: 14, fontWeight: 600, color: C.text }}>{lang === "en" ? o.en : o.id}</span>
+                  <span style={{ display: "block", fontSize: 12, color: C.muted, marginTop: 1 }}>{lang === "en" ? o.subEn : o.sub}</span>
+                </span>
+              </button>
+            );
+          })}
+        </div>
+        <div style={{ fontSize: 11.5, fontWeight: 700, color: C.muted, letterSpacing: ".5px", textTransform: "uppercase", margin: "20px 0 10px" }}>{t("Sekarang kamu di jenjang", "Your current level")}</div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+          {OPSI_JENJANG.map(o => {
+            const on = jenjangAktif === o.v;
+            return <button key={o.v} onClick={() => setJenjangBaru(o.v)} aria-pressed={on} style={{ height: 38, border: `1.5px solid ${on ? C.blue : "#E6EDF7"}`, background: on ? C.blue : "#fff", color: on ? "#fff" : C.text2, borderRadius: 99, padding: "0 16px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>{o.l}</button>;
+          })}
+        </div>
+      </div>
+      <div style={{ padding: `12px 22px ${SAFE_B}`, borderTop: "1px solid #F1F5FB" }}>
+        <button onClick={selesai} disabled={!tujuan || busy} style={{ width: "100%", height: 54, border: "none", borderRadius: 16, background: tujuan && !busy ? C.blue : C.disabled, color: "#fff", fontSize: 15, fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", gap: 10, cursor: tujuan && !busy ? "pointer" : "not-allowed" }}>
+          {busy ? t("Menyimpan…", "Saving…") : t("Lihat Hasilku", "See My Result")} <Icon name="right" size={18} />
+        </button>
+      </div>
+    </>
+  );
+
+  if (phase === "pemutus") {
+    const s = soalPemutus[langkah];
+    if (!s) return <Loading />;
+    return shell(
+      <>
+        {bar(langkah, soalPemutus.length, t("Pemutus", "Tie-break"), true)}
+        <div key={langkah} style={{ flex: 1, overflowY: "auto", padding: "18px 22px 10px", animation: "tkIn .25s ease both" }}>
+          <div style={{ background: "#FFFBEB", border: "1px solid #FDE68A", borderRadius: 16, padding: "12px 14px", fontSize: 13, color: "#92400E", lineHeight: 1.6 }}>
+            <b>{t("Hasilmu masih terlalu dekat untuk disimpulkan.", "Your result is still too close to call.")}</b>{" "}
+            {t(`Minatmu di ${seri.map(nama).join(" dan ")} nyaris sama kuat. ${soalPemutus.length} pertanyaan lagi supaya kami tidak asal memilih satu untukmu.`,
+               `Your interest in ${seri.map(nama).join(" and ")} is almost equally strong. ${soalPemutus.length} more questions so we don't just pick one for you.`)}
+          </div>
+          <div style={{ fontSize: 21, fontWeight: 700, letterSpacing: "-.3px", marginTop: 18 }}>{t("Mana yang lebih kamu pilih?", "Which would you rather do?")}</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 14 }}>
+            {[{ teks: s.a, tipe: s.tipeA }, { teks: s.b, tipe: s.tipeB }].map(o => (
+              <button key={o.tipe} onClick={() => jawabPemutus(o.tipe)} disabled={busy}
+                style={{ minHeight: 64, border: "1.5px solid #E6EDF7", background: "#fff", borderRadius: 16, padding: "14px 16px", fontSize: 14.5, fontWeight: 500, lineHeight: 1.5, color: C.text, textAlign: "left", cursor: busy ? "wait" : "pointer" }}>
+                {o.teks}
+              </button>
+            ))}
+          </div>
+          <p style={{ fontSize: 12, color: C.faint, textAlign: "center", marginTop: 16, lineHeight: 1.5 }}>{t("Tidak ada pilihan netral di sini — justru jawaban netral yang membuat hasilmu seri sejak awal.", "There's no neutral option here — neutral answers are what made your result a tie in the first place.")}</p>
+        </div>
+      </>
+    );
+  }
+
+  const q = questions[step];
+  const cur = picked ?? answers[step];
+  return shell(
+    <>
+      {bar(step, questions.length, t("Soal", "Question"))}
+      <div key={step} style={{ flex: 1, overflowY: "auto", padding: "20px 22px 10px", animation: "tkIn .25s ease both" }}>
+        <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: ".5px", color: C.purple, background: C.tintPurple, padding: "5px 11px", borderRadius: 99, textTransform: "uppercase" }}>{q.category}</span>
+        <div style={{ fontSize: 21, fontWeight: 700, lineHeight: 1.3, letterSpacing: "-.3px", marginTop: 14 }}>{q.question}</div>
+        {lang === "en" && <div style={{ fontSize: 12, color: C.muted, marginTop: 6 }}>Questions are in Indonesian — the same test as on talentika.id.</div>}
+        <div style={{ display: "flex", flexDirection: "column", gap: 9, marginTop: 16 }}>
+          {q.options.map((o, i) => {
+            const on = cur === i;
+            return (
+              <button key={i} onClick={() => pilih(i)} disabled={busy} aria-pressed={on}
+                style={{ minHeight: 54, border: `1.5px solid ${on ? C.blue : "#E6EDF7"}`, background: on ? "#F3F8FF" : "#fff", borderRadius: 16, display: "flex", alignItems: "center", gap: 12, padding: "9px 14px", cursor: busy ? "wait" : "pointer", textAlign: "left" }}>
+                <span style={{ width: 30, height: 30, borderRadius: 10, background: RCOL[i], color: "#fff", fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flex: "none" }}>{LETTERS[i]}</span>
+                <span style={{ flex: 1, fontSize: 13.5, fontWeight: 500, lineHeight: 1.4, color: C.text }}>{o.text}</span>
+                <span style={{ width: 22, height: 22, borderRadius: "50%", border: `1.5px solid ${on ? C.blue : "#E6EDF7"}`, background: on ? C.blue : "#E6EDF7", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", flex: "none" }}>{on && <Icon name="check" size={13} />}</span>
+              </button>
+            );
+          })}
+        </div>
+        <div style={{ fontSize: 11.5, color: C.faint, textAlign: "center", marginTop: 16, lineHeight: 1.5 }}>{t("Pilih yang paling menggambarkan dirimu. Tes ini sama dengan di web — hasilnya tersinkron.", "Pick what describes you best. Same test as on the web — your result syncs.")}</div>
+      </div>
+      <Sheet open={!!riasec && !retakeOk && Object.keys(answers).length === 0} onClose={() => nav("/app/dna/result", { replace: true })} title={t("Ulangi tes RIASEC?", "Retake the RIASEC test?")}>
+        <p style={{ margin: 0, fontSize: 13.5, color: C.text3, lineHeight: 1.6 }}>
+          {t(`Hasilmu sekarang ${riasecLabel(riasec?.tipe_utama ?? "realistic", lang)}${riasec?.holland_code ? ` (${riasec.holland_code})` : ""}. Hasil tes ulang akan menggantikannya di app dan web. XP hanya diberikan untuk tes pertama.`,
+             `Your current result is ${riasecLabel(riasec?.tipe_utama ?? "realistic", lang)}${riasec?.holland_code ? ` (${riasec.holland_code})` : ""}. A retake replaces it in the app and on the web. XP is only awarded for the first test.`)}
+        </p>
+        <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 10 }}>
+          <Btn onClick={() => setRetakeOk(true)}>{t("Mulai tes ulang", "Start retake")}</Btn>
+          <Btn kind="outline" onClick={() => nav("/app/dna/result", { replace: true })}>{t("Batal", "Cancel")}</Btn>
+        </div>
+      </Sheet>
+    </>
+  );
+}
+
 /* ── PROFILE READY → MY TALENT PROFILE ──────────────────────────────── */
 function Result() {
   const nav = useNavigate();
@@ -269,18 +518,26 @@ function Result() {
   return <TalentProfile />;
 }
 
+/* Tipe siswa = tipe utama tes RIASEC (sama dengan web) bila sudah ada;
+   arketipe dari sumbu hanya dipakai untuk yang belum pernah tes RIASEC. */
 function useTalent() {
   const { t, lang } = useApp();
-  const { dna, done, title } = useDna();
+  const { dna, done, title, riasec } = useDna();
   const axes = dna?.axes;
-  const arch = useMemo(() => archetypes(axes), [axes]);
+  const arch = useMemo(() => (riasec ? riasecArch(riasec, lang) : archetypes(axes)), [riasec, axes, lang]);
   const top = rankAxes(axes).slice(0, 3);
   const name = (k: AxisKey) => { const a = AXES.find(x => x.key === k)!; return lang === "en" ? a.name : a.nameId; };
   const type = arch[0];
-  const insight = top.length >= 2
-    ? t(`Kombinasi terkuatmu adalah ${top.map(k => name(k).toLowerCase()).join(" + ")}. Jelajahi karier yang memadukan semuanya.`, `Your strongest combination is ${top.map(k => name(k).toLowerCase()).join(" + ")}. Explore careers that blend them.`)
-    : t("Selesaikan lebih banyak modul untuk insight yang lebih tajam.", "Finish more modules for a sharper insight.");
-  return { dna, done, title, axes, arch, top, name, type, insight };
+  const insight = riasec
+    ? riasecKeyakinan(riasec, lang)!
+    : top.length >= 2
+      ? t(`Kombinasi terkuatmu adalah ${top.map(k => name(k).toLowerCase()).join(" + ")}. Jelajahi karier yang memadukan semuanya.`, `Your strongest combination is ${top.map(k => name(k).toLowerCase()).join(" + ")}. Explore careers that blend them.`)
+      : t("Selesaikan lebih banyak modul untuk insight yang lebih tajam.", "Finish more modules for a sharper insight.");
+  // "Kode Holland ISA · Investigatif, Sosial, Artistik" atau, tanpa RIASEC, 3 sumbu teratas
+  const sub = riasec
+    ? [riasec.holland_code && `${t("Kode Holland", "Holland code")} ${riasec.holland_code}`, arch.map(a => a.name).join(", ")].filter(Boolean).join(" · ")
+    : top.map(name).join(" · ");
+  return { dna, done, title, axes, arch, top, name, type, insight, riasec, sub };
 }
 
 function TypeBadge({ size = 54 }: { size?: number }) {
@@ -289,7 +546,7 @@ function TypeBadge({ size = 54 }: { size?: number }) {
 
 function Ready({ onNext }: { onNext: () => void }) {
   const { t, lang } = useApp();
-  const { type, top, name } = useTalent();
+  const { type, top, name, arch, riasec, insight } = useTalent();
   return (
     <div className="tk-screen" style={{ position: "absolute", inset: 0, overflowY: "auto", background: "linear-gradient(180deg,#fff 0%,#F3F8FF 100%)", display: "flex", flexDirection: "column", alignItems: "center", padding: `calc(env(safe-area-inset-top, 0px) + 22px) 22px ${SAFE_B}`, textAlign: "center" }}>
       <div style={{ position: "absolute", inset: "0 0 auto 0", height: 300, overflow: "hidden", pointerEvents: "none" }}><Confetti /></div>
@@ -300,12 +557,19 @@ function Ready({ onNext }: { onNext: () => void }) {
       <div style={{ width: "100%", background: "#fff", borderRadius: 22, padding: 18, boxShadow: "0 14px 34px rgba(15,23,42,.10)", textAlign: "left", marginTop: -16, position: "relative" }}>
         <div style={{ display: "flex", gap: 13, alignItems: "center" }}>
           <TypeBadge />
-          <div><div style={{ fontSize: 12, color: C.muted }}>{t("Tipe Talentamu", "Your Talent Type")}</div><div style={{ fontSize: 22, fontWeight: 800, color: "#6D28D9", letterSpacing: "-.4px", lineHeight: 1.2 }}>{type?.name ?? "Explorer"}</div></div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 12, color: C.muted }}>{riasec ? t("Tipe Minatmu (RIASEC)", "Your Interest Type (RIASEC)") : t("Tipe Talentamu", "Your Talent Type")}</div>
+            <div style={{ fontSize: 22, fontWeight: 800, color: "#6D28D9", letterSpacing: "-.4px", lineHeight: 1.2 }}>{type?.name ?? "Explorer"}</div>
+          </div>
+          {riasec?.holland_code && <span style={{ fontSize: 13, fontWeight: 800, letterSpacing: 1.5, color: C.blue, background: C.tintBlue, padding: "6px 11px", borderRadius: 10, flex: "none" }}>{riasec.holland_code}</span>}
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 12 }}>
-          {top.map(k => <span key={k} style={{ fontSize: 12.5, fontWeight: 500, background: AXIS_UI[k].bg, color: AXIS_UI[k].c, padding: "6px 14px", borderRadius: 99 }}>{name(k)}</span>)}
+          {riasec
+            ? arch.map(a => <span key={a.name} style={{ fontSize: 12.5, fontWeight: 500, background: AXIS_UI[a.axis].bg, color: AXIS_UI[a.axis].c, padding: "6px 14px", borderRadius: 99 }}>{a.name}</span>)
+            : top.map(k => <span key={k} style={{ fontSize: 12.5, fontWeight: 500, background: AXIS_UI[k].bg, color: AXIS_UI[k].c, padding: "6px 14px", borderRadius: 99 }}>{name(k)}</span>)}
         </div>
         {type && <p style={{ margin: "12px 0 0", fontSize: 13, lineHeight: 1.55, color: C.text3 }}>{lang === "en" ? type.descEn : type.desc}</p>}
+        {riasec && <p style={{ margin: "8px 0 0", fontSize: 12.5, lineHeight: 1.55, color: C.blueDark, fontWeight: 500 }}>{insight}</p>}
       </div>
       <div style={{ flex: 1, minHeight: 16 }} />
       <div style={{ fontSize: 11.5, color: C.muted, margin: "14px 0 12px", display: "flex", gap: 6, alignItems: "center" }}><span style={{ color: C.blue, display: "flex" }}><Icon name="sparkle" size={14} /></span>{t("Titik awal, bukan label tetap. Terus berkembang saat kamu belajar dan berkarya.", "A starting point, not a fixed label. It grows as you learn and build.")}</div>
@@ -319,7 +583,7 @@ function Ready({ onNext }: { onNext: () => void }) {
 function TalentProfile() {
   const nav = useNavigate();
   const { t, lang, isPro, profile, toast, openPaywall } = useApp();
-  const { dna, done, title, axes, arch, type, top, name, insight } = useTalent();
+  const { dna, done, title, axes, arch, type, name, insight, riasec, sub } = useTalent();
   const { data: skills } = useSkills();
   const [tab, setTab] = useState<"overview" | "arch" | "modules">("overview");
   const pro = editionOf(profile?.jenjang) === "pro";
@@ -364,8 +628,8 @@ function TalentProfile() {
     const rows = AXES.map(a => `<tr><td>${lang === "en" ? a.name : a.nameId}</td><td style="text-align:right;font-weight:700">${to5(axes[a.key])} / 5.0</td></tr>`).join("");
     w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Laporan Talent DNA</title><style>body{font-family:Poppins,Arial,sans-serif;color:#0F172A;padding:40px;max-width:720px;margin:auto}h1{color:#0066FF}table{width:100%;border-collapse:collapse}td{padding:8px;border-bottom:1px solid #E2EAF5}.n{color:#64748B;font-size:12px}</style></head><body>
       <h1>Talentika · Laporan Talent DNA</h1><p><b>${profile?.full_name ?? ""}</b> · ${profile?.school_name ?? ""} ${profile?.kelas ? "· Kelas " + profile.kelas : ""}</p>
-      <h2>${type?.name ?? ""} — ${title}</h2><p>Diperbarui dari ${done} modul assessment + ${dna?.projects ?? 0} project.</p><table>${rows}</table>
-      <h3>Arketipe</h3><ul>${arch.map(a => `<li><b>${a.name}</b> — ${lang === "en" ? a.descEn : a.desc}</li>`).join("")}</ul>
+      <h2>${type?.name ?? ""}${riasec?.holland_code ? ` — Kode Holland ${riasec.holland_code}` : title ? ` — ${title}` : ""}</h2>${riasec ? `<p>${insight}</p>` : ""}<p>Diperbarui dari ${done} modul assessment + ${dna?.projects ?? 0} project.</p><table>${rows}</table>
+      <h3>${riasec ? "Tipe RIASEC" : "Arketipe"}</h3><ul>${arch.map(a => `<li><b>${a.name}</b> — ${lang === "en" ? a.descEn : a.desc}</li>`).join("")}</ul>
       <p class="n">Skor adalah indikator eksplorasi minat & kekuatan berdasarkan jawaban self-report, bukan vonis atau prediksi pasti. Dicetak ${new Date().toLocaleDateString("id-ID")}.</p>
       <script>window.onload=()=>window.print()</script></body></html>`);
     w.document.close();
@@ -379,12 +643,12 @@ function TalentProfile() {
     <Screen>
       <Header title={t("Profil Talentaku", "My Talent Profile")} right={<button aria-label={t("Bagikan", "Share")} onClick={shareCard} style={{ width: 42, height: 42, borderRadius: "50%", border: "none", background: C.blue, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}><Icon name="share" size={18} /></button>} />
       <div style={{ padding: "16px 20px 0" }}>
-        <Tabs value={tab} onChange={v => setTab(v as typeof tab)} items={[{ value: "overview", label: t("Ringkasan", "Overview") }, { value: "arch", label: t("Arketipe", "Archetypes") }, { value: "modules", label: t("Modul", "Modules") }]} />
+        <Tabs value={tab} onChange={v => setTab(v as typeof tab)} items={[{ value: "overview", label: t("Ringkasan", "Overview") }, { value: "arch", label: riasec ? "RIASEC" : t("Arketipe", "Archetypes") }, { value: "modules", label: t("Modul", "Modules") }]} />
         <div style={{ background: "#fff", borderRadius: 20, padding: 16, marginTop: 14, boxShadow: SH.card, display: "flex", gap: 13, alignItems: "flex-start" }}>
           <TypeBadge size={50} />
           <div>
             <div style={{ fontSize: 17, fontWeight: 700 }}>{type?.name ?? "Explorer"}</div>
-            <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{top.map(name).join(" · ")}</div>
+            <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{sub}</div>
             {type && <div style={{ fontSize: 12.5, lineHeight: 1.5, color: C.text3, marginTop: 6 }}>{lang === "en" ? type.descEn : type.desc}</div>}
           </div>
         </div>
@@ -423,8 +687,7 @@ function TalentProfile() {
         {tab === "arch" && (
           <div style={{ background: "#fff", borderRadius: 18, padding: "6px 14px", marginTop: 14, boxShadow: SH.card }}>
             {arch.map((a, i) => {
-              const k = top[i];
-              const ui = k ? AXIS_UI[k] : AXIS_UI.technology;
+              const ui = AXIS_UI[a.axis] ?? AXIS_UI.technology;
               return (
                 <div key={a.name} style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "12px 0", borderBottom: i < arch.length - 1 ? "1px solid #F1F5FB" : "none" }}>
                   <span style={{ width: 34, height: 34, borderRadius: 11, background: ui.bg, color: ui.c, display: "flex", alignItems: "center", justifyContent: "center", flex: "none" }}><Icon name={ui.icon} size={17} /></span>
@@ -444,6 +707,7 @@ function TalentProfile() {
                   <span style={{ width: 26, height: 26, borderRadius: "50%", background: st?.done ? C.green : "#fff", border: `2px solid ${st?.done ? C.green : C.disabled}`, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", flex: "none" }}>{st?.done && <Icon name="check" size={13} />}</span>
                   <span style={{ flex: 1, fontSize: 13.5, fontWeight: 500, color: st?.done ? C.muted : C.text }}>{m.name}</span>
                   {!st?.done && <button onClick={() => nav(`/app/dna/${m.key}`)} style={{ border: "none", background: "none", color: C.blue, fontSize: 12, fontWeight: 600, cursor: "pointer", padding: 0 }}>{t("Mulai", "Start")}</button>}
+                  {st?.done && m.key === "personality" && <button onClick={() => nav("/app/dna/personality")} style={{ border: "none", background: "none", color: C.blue, fontSize: 12, fontWeight: 600, cursor: "pointer", padding: 0 }}>{t("Ulangi tes", "Retake")}</button>}
                 </div>
               );
             })}

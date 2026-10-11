@@ -1,4 +1,5 @@
 import { C } from "./theme";
+import { kalimatKeyakinanRiasec, LABEL_RIASEC, LABEL_RIASEC_EN, RIASEC_INFO, type Keyakinan, type TipeRiasec } from "@/lib/riasec";
 
 /* Logika domain murni (tanpa IO): Talent DNA, kecocokan karier, kecocokan peluang. */
 
@@ -13,11 +14,12 @@ export const AXES: { key: AxisKey; name: string; nameId: string; short: string; 
   { key: "communication", name: "Communication", nameId: "Komunikasi", short: "Comm.", color: C.gold },
 ];
 
+/** Modul "personality" = tes minat RIASEC web (src/lib/riasec.ts), jadi dikerjakan paling awal. */
 export const MODULES: { key: string; n: string; name: string; nameId: string; q: string; qEn: string }[] = [
-  { key: "interest", n: "01", name: "Interest Discovery", nameId: "Interest Discovery", q: "Apa yang kamu sukai?", qEn: "What do you enjoy?" },
-  { key: "strength", n: "02", name: "Strength Discovery", nameId: "Strength Discovery", q: "Apa yang secara alami kamu kuasai?", qEn: "What are you naturally good at?" },
-  { key: "aptitude", n: "03", name: "Aptitude", nameId: "Aptitude", q: "Logika, numerik, verbal, spasial & problem solving", qEn: "Logical, numerical, verbal, spatial & problem solving" },
-  { key: "personality", n: "04", name: "Personality", nameId: "Personality", q: "RIASEC, Big Five & preferensi perilaku", qEn: "RIASEC, Big Five & behavioral preferences" },
+  { key: "personality", n: "01", name: "Personality · RIASEC", nameId: "Personality · RIASEC", q: "Tes minat RIASEC — sama dengan tes di web", qEn: "RIASEC interest test — same as the web test" },
+  { key: "interest", n: "02", name: "Interest Discovery", nameId: "Interest Discovery", q: "Apa yang kamu sukai?", qEn: "What do you enjoy?" },
+  { key: "strength", n: "03", name: "Strength Discovery", nameId: "Strength Discovery", q: "Apa yang secara alami kamu kuasai?", qEn: "What are you naturally good at?" },
+  { key: "aptitude", n: "04", name: "Aptitude", nameId: "Aptitude", q: "Logika, numerik, verbal, spasial & problem solving", qEn: "Logical, numerical, verbal, spatial & problem solving" },
   { key: "learning_style", n: "05", name: "Learning Style", nameId: "Learning Style", q: "Format belajar, tempo & preferensi latihan", qEn: "Learning format, pace & practice preferences" },
   { key: "career_interest", n: "06", name: "Career Interest", nameId: "Career Interest", q: "Industri & profesi", qEn: "Industries & professions" },
   { key: "future_skills", n: "07", name: "Future Skills", nameId: "Future Skills", q: "Kemampuan yang dibutuhkan masa depan", qEn: "Skills the future needs" },
@@ -50,8 +52,54 @@ export function dnaTitle(axes: Partial<Axes> | null | undefined, modulesDone: nu
 }
 
 export function archetypes(axes: Partial<Axes> | null | undefined) {
-  return rankAxes(axes).slice(0, 3).map(k => ARCHETYPE[k]);
+  return rankAxes(axes).slice(0, 3).map(k => ({ ...ARCHETYPE[k], axis: k }));
 }
+
+/* ── Identitas RIASEC (tes web = acuan) ───────────────────────────────── */
+
+/** Baris `riasec` dari my_talent_dna / ringkasan orang tua & mentor (view identitas_siswa). */
+export interface Riasec {
+  tipe_utama: TipeRiasec; tipe_kedua: TipeRiasec | null; tipe_ketiga: TipeRiasec | null;
+  holland_code: string | null; keyakinan: Keyakinan | null; margin?: number | null;
+  score_breakdown?: Record<string, number> | null; career_recommendations?: string[] | null;
+  diperbarui_pada?: string | null; jumlah_tes?: number | null;
+}
+
+/** Sumbu Talent DNA milik tiap tipe (cerminan dna_axes_for di database). */
+export const RIASEC_AXIS: Record<TipeRiasec, AxisKey> = {
+  realistic: "technology", investigative: "analytical", artistic: "creative",
+  social: "communication", enterprising: "leadership", conventional: "analytical",
+};
+
+const RIASEC_DESC_EN: Record<TipeRiasec, string> = {
+  realistic: "You lean toward hands-on work that puts your skills into practice — building, fixing and making things work.",
+  investigative: "You prefer work that relies on analysis, understanding how things work, and creative, abstract thinking.",
+  artistic: "You enjoy working with others to create something that can be called a work of art.",
+  social: "You prefer work that helps other people. You're easygoing and friendly.",
+  enterprising: "You enjoy meeting and talking with lots of people, and you're good with words and persuading others.",
+  conventional: "You're dependable, loyal and a true team player. You like structured, systematic work.",
+};
+
+export const riasecLabel = (k: TipeRiasec, lang: "id" | "en" = "id") => (lang === "en" ? LABEL_RIASEC_EN : LABEL_RIASEC)[k] ?? k;
+
+/** "Investigatif · ISA" — nama tipe sama dengan web + kode Holland. */
+export function riasecTitle(r: Riasec | null | undefined, lang: "id" | "en" = "id"): string | null {
+  if (!r?.tipe_utama) return null;
+  return r.holland_code ? `${riasecLabel(r.tipe_utama, lang)} · ${r.holland_code}` : riasecLabel(r.tipe_utama, lang);
+}
+
+/** Tiga huruf kode Holland, dari yang paling kuat. */
+export function riasecArch(r: Riasec | null | undefined, lang: "id" | "en" = "id") {
+  if (!r?.tipe_utama) return [];
+  return ([r.tipe_utama, r.tipe_kedua, r.tipe_ketiga].filter(Boolean) as TipeRiasec[]).map(k => ({
+    key: k, name: riasecLabel(k, lang), desc: RIASEC_INFO[k].description, descEn: RIASEC_DESC_EN[k],
+    axis: RIASEC_AXIS[k], traits: RIASEC_INFO[k].characteristics,
+  }));
+}
+
+/** Kalimat keyakinan yang sama dengan web (kalimatKeyakinan). */
+export const riasecKeyakinan = (r: Riasec | null | undefined, lang: "id" | "en" = "id") =>
+  r?.tipe_utama ? kalimatKeyakinanRiasec(r.tipe_utama, r.tipe_kedua, r.keyakinan, lang) : null;
 
 /** Career Fit % = bobot karier × sumbu siswa (0–100), dikalibrasi ke 30–98. */
 export function careerFit(axes: Partial<Axes> | null | undefined, careerAxes: Record<string, number> | null | undefined): number | null {

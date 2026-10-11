@@ -2,7 +2,7 @@ import React, { createContext, ReactNode, useCallback, useContext, useEffect, us
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
-import { Axes, careerFit, dnaTitle, MODULES } from "./logic";
+import { Axes, careerFit, dnaTitle, MODULES, Riasec, riasecTitle } from "./logic";
 
 /** Klien tanpa tipe untuk tabel/RPC baru yang belum ada di types.ts hasil generate. */
 export const db = supabase as any;
@@ -156,17 +156,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
 export interface DnaState {
   modules: { key: string; total: number; answered: number; done: boolean; free: boolean }[];
   axes: Axes | null; legacy_riasec: boolean; projects: number; updated_at: string | null;
+  /** Hasil tes RIASEC terbaru (sama dengan web). Tipe siswa SELALU dari sini bila ada. */
+  riasec: Riasec | null;
 }
 
 export function useDna() {
-  const { user } = useApp();
+  const { user, lang } = useApp();
   const q = useQuery({
     queryKey: ["m-dna", user?.id], enabled: !!user,
     queryFn: async () => (await db.rpc("my_talent_dna")).data as DnaState | null,
   });
   const d = q.data;
   const done = d?.modules.filter(m => m.done).length ?? 0;
-  return { ...q, dna: d, done, title: dnaTitle(d?.axes, done), isNew: !!d && done === 0 && !d.axes };
+  const riasec = d?.riasec ?? null;
+  return { ...q, dna: d, done, riasec, title: riasecTitle(riasec, lang) ?? dnaTitle(d?.axes, done), isNew: !!d && done === 0 && !d.axes };
 }
 
 export function useReadiness() {

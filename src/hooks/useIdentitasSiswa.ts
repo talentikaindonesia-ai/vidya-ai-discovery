@@ -14,11 +14,10 @@ import { supabase } from "@/integrations/supabase/client";
  * kanonik per siswa.
  */
 
-export type TipeRiasec =
-  | "realistic" | "investigative" | "artistic"
-  | "social" | "enterprising" | "conventional";
+import { LABEL_RIASEC, kalimatKeyakinanRiasec, type TipeRiasec, type Keyakinan } from "@/lib/riasec";
 
-export type Keyakinan = "kuat" | "sedang" | "seimbang";
+export type { TipeRiasec, Keyakinan };
+export { LABEL_RIASEC };
 
 export interface IdentitasSiswa {
   tipeUtama: TipeRiasec;
@@ -71,15 +70,6 @@ export const JENIS_UNTUK_TUJUAN: Record<Tujuan, string[]> = {
   belum_yakin: [],
 };
 
-export const LABEL_RIASEC: Record<TipeRiasec, string> = {
-  realistic: "Realistis",
-  investigative: "Investigatif",
-  artistic: "Artistik",
-  social: "Sosial",
-  enterprising: "Enterprising",
-  conventional: "Konvensional",
-};
-
 /**
  * Tiga huruf tidak berbobot sama. Huruf utama menentukan arah, huruf kedua
  * dan ketiga memperluas — bukan menggantikan. Dipakai untuk memberi skor
@@ -100,15 +90,7 @@ export function tipeRelevan(id: IdentitasSiswa | null): TipeRiasec[] {
  */
 export function kalimatKeyakinan(id: IdentitasSiswa | null): string | null {
   if (!id) return null;
-  const utama = LABEL_RIASEC[id.tipeUtama];
-  const kedua = id.tipeKedua ? LABEL_RIASEC[id.tipeKedua] : null;
-  if (id.keyakinan === "seimbang" && kedua) {
-    return `Minatmu hampir seimbang antara ${utama} dan ${kedua} — wajar, dan artinya kamu punya dua arah yang sama-sama layak dicoba.`;
-  }
-  if (id.keyakinan === "sedang" && kedua) {
-    return `${utama} sedikit lebih menonjol, tapi ${kedua} juga kuat padamu.`;
-  }
-  return `${utama} menonjol cukup jelas dibanding tipe lainnya.`;
+  return kalimatKeyakinanRiasec(id.tipeUtama, id.tipeKedua, id.keyakinan);
 }
 
 function petakan(row: any): IdentitasSiswa | null {

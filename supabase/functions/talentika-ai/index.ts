@@ -28,6 +28,12 @@ const cors = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Label sama dengan web (src/lib/riasec.ts → LABEL_RIASEC)
+const RIASEC_ID: Record<string, string> = {
+  realistic: "Realistis", investigative: "Investigatif", artistic: "Artistik",
+  social: "Sosial", enterprising: "Enterprising", conventional: "Konvensional",
+};
+
 const AXIS_ID: Record<string, string> = {
   analytical: "Analitis", creative: "Kreatif", leadership: "Kepemimpinan",
   technology: "Teknologi", communication: "Komunikasi",
@@ -56,13 +62,14 @@ Deno.serve(async (req) => {
   const lang: "id" | "en" = body.lang === "en" ? "en" : "id";
 
   // ── Konteks siswa (hanya milik pengguna ini) ───────────────────────────
-  const [{ data: prof }, { data: dna }, { data: goals }, { data: tracked }, { data: cfg }, { data: prem }] = await Promise.all([
+  const [{ data: prof }, { data: dna }, { data: goals }, { data: tracked }, { data: cfg }, { data: prem }, { data: ident }] = await Promise.all([
     admin.from("profiles").select("full_name, usia, jenjang, kelas, school_name, career_target, tujuan, bio").eq("user_id", user.id).maybeSingle(),
     admin.rpc("dna_axes_for", { p_uid: user.id }),
     admin.from("user_goals").select("horizon, title").eq("user_id", user.id).limit(10),
     admin.from("saved_opportunities").select("opportunity_title, status, deadline").eq("user_id", user.id).not("status", "in", "(completed,rejected)").limit(10),
     admin.from("app_config").select("key, value").in("key", ["ai_model", "ai_free_daily_limit"]),
     admin.rpc("is_premium", { uid: user.id }),
+    admin.from("identitas_siswa").select("tipe_utama, tipe_kedua, tipe_ketiga, holland_code, keyakinan").eq("user_id", user.id).maybeSingle(),
   ]);
   const conf = Object.fromEntries((cfg ?? []).map((r: any) => [r.key, r.value]));
   const model: string = typeof conf.ai_model === "string" ? conf.ai_model : "claude-opus-5-5";
@@ -96,6 +103,10 @@ Deno.serve(async (req) => {
   const profil = [
     `Nama: ${prof?.full_name ?? "-"}`,
     `Usia: ${usia ?? "tidak diketahui"}; jenjang: ${prof?.jenjang ?? "-"}; kelas: ${prof?.kelas ?? "-"}; sekolah: ${prof?.school_name ?? "-"}`,
+    // Tipe siswa = hasil tes RIASEC (sama di web & app); sumbu Talent DNA turunan darinya
+    `Tipe minat RIASEC: ${ident?.tipe_utama
+      ? `${RIASEC_ID[ident.tipe_utama] ?? ident.tipe_utama}${ident.holland_code ? ` (kode Holland ${ident.holland_code})` : ""}; urutan: ${[ident.tipe_utama, ident.tipe_kedua, ident.tipe_ketiga].filter(Boolean).map((k: string) => RIASEC_ID[k] ?? k).join(" > ")}; keyakinan: ${ident.keyakinan ?? "kuat"}`
+      : "belum tes"}`,
     `Talent DNA (0–100): ${axesTxt}`,
     `Target karier: ${prof?.career_target ?? "belum dipilih"}; arah: ${prof?.tujuan ?? "-"}`,
     `Goals: ${(goals ?? []).map((g: any) => `[${g.horizon}] ${g.title}`).join("; ") || "-"}`,

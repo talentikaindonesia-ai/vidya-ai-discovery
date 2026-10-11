@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { db, errMsg, useApp, useCareers, webUrl } from "../store";
 import { Avatar, Btn, Card, ChipBtn, Empty, Icon, Input, Label, Loading, Note, Ring, Screen, Sheet, TextArea, TIKA } from "../ui";
 import { C, SH, avatarColors, daysUntil, deadlineColor } from "../theme";
-import { AXES, dnaTitle, fmtDate, rankAxes } from "../logic";
+import { AXES, dnaTitle, fmtDate, rankAxes, riasecTitle } from "../logic";
 import authSchool from "../assets/auth-school.webp";
 import { keluar } from "../push";
 
@@ -86,7 +86,7 @@ function ParentDash() {
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 16, fontWeight: 700 }}>{s.name}</div>
               <div style={{ fontSize: 12, color: C.muted }}>{[s.kelas && `${t("Kelas", "Grade")} ${s.kelas}`, s.school_name].filter(Boolean).join(" · ") || (career ? career.name : "")}</div>
-              {sh.dna && s.axes && <div style={{ fontSize: 11.5, fontWeight: 600, color: C.purple, marginTop: 3 }}>{dnaTitle(s.axes, 4)}</div>}
+              {sh.dna && (s.riasec || s.axes) && <div style={{ fontSize: 11.5, fontWeight: 600, color: C.purple, marginTop: 3 }}>{riasecTitle(s.riasec, lang) ?? dnaTitle(s.axes, 4)}</div>}
             </div>
             <Ring value={s.readiness ?? 0} size={62} stroke={7}><span style={{ fontSize: 14, fontWeight: 700, lineHeight: 1 }}>{s.readiness ?? "–"}</span><span style={{ fontSize: 8, color: C.faint }}>READY</span></Ring>
           </div>
@@ -202,7 +202,7 @@ function MentorDash() {
                 <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontSize: 14, fontWeight: 700 }}>{r.student_name ?? t("Siswa", "Student")}</div><div style={{ fontSize: 12, color: C.muted, marginTop: 1 }}>{r.topic}{r.student_kelas ? ` · ${t("kelas", "grade")} ${r.student_kelas}` : ""}</div></div>
               </div>
               <div style={{ marginTop: 10, fontSize: 12, color: C.text2, lineHeight: 1.6, background: C.bg, borderRadius: 12, padding: "8px 11px" }}>
-                {r.student_axes && <><b>Talent DNA:</b> {dnaTitle(r.student_axes, 4)}<br /></>}
+                {r.student_riasec ? <><b>{t("Tipe minat", "Interest type")}:</b> {riasecTitle(r.student_riasec, lang)}<br /></> : r.student_axes && <><b>Talent DNA:</b> {dnaTitle(r.student_axes, 4)}<br /></>}
                 <b>{t("Jadwal", "Schedule")}:</b> {fmt(r.session_date)} WIB
               </div>
               <div style={{ marginTop: 12, display: "flex", gap: 8 }}>

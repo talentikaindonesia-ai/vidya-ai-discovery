@@ -6,7 +6,7 @@ import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { canPurchase, db, errMsg, gabungSekolah, isNative, openExternal, useApp, useDna, useTracker, webUrl } from "../store";
 import { Btn, Empty, Header, Icon, ImgBox, Input, Label, Loading, LOGO, Screen, Segmented, Sheet, Tabs, TextArea, TIKA, Toggle } from "../ui";
 import { C, SH, daysUntil, rpShort } from "../theme";
-import { AXES, AxisKey, fmtDate, oppTypeOf, rankAxes, timeAgo } from "../logic";
+import { AXES, AxisKey, fmtDate, oppTypeOf, rankAxes, riasecArch, riasecLabel, timeAgo } from "../logic";
 import { courseImg, IMG } from "../media";
 import { initPush, keluar } from "../push";
 
@@ -810,14 +810,19 @@ function MentorApply() {
 function TalentCard() {
   const nav = useNavigate();
   const { t, lang, profile, toast } = useApp();
-  const { dna, title, isLoading } = useDna();
+  const { dna, title, isLoading, riasec } = useDna();
   if (isLoading) return <Loading />;
   const top = rankAxes(dna?.axes).slice(0, 3) as AxisKey[];
+  // Tipe = hasil tes RIASEC (sama dengan web) bila ada
+  const headline = riasec ? riasecLabel(riasec.tipe_utama, lang) : title;
+  const intro = riasec ? t("Tipe minatku", "My interest type") : t("Aku adalah", "I am");
   const name = (profile?.full_name || "").split(" ")[0] || "Talentika";
   const link = profile?.username ? webUrl(`/u/${profile.username}`) : webUrl("/app");
   const linkShort = link.replace(/^https?:\/\//, "");
   const axName = (k: AxisKey) => { const a = AXES.find(x => x.key === k)!; return lang === "en" ? a.name : a.nameId; };
-  const chips = top.map(k => `${axName(k)} ${((dna?.axes?.[k] ?? 0) / 20).toFixed(1)}`);
+  const chips = riasec
+    ? [riasec.holland_code && `${t("Kode Holland", "Holland code")} ${riasec.holland_code}`, ...riasecArch(riasec, lang).slice(1).map(a => a.name)].filter(Boolean) as string[]
+    : top.map(k => `${axName(k)} ${((dna?.axes?.[k] ?? 0) / 20).toFixed(1)}`);
   const draw = async (): Promise<Blob> => {
     const cv = document.createElement("canvas"); cv.width = 1080; cv.height = 1920;
     const g = cv.getContext("2d")!;
@@ -825,9 +830,9 @@ function TalentCard() {
     g.fillStyle = grd; g.fillRect(0, 0, 1080, 1920);
     g.fillStyle = "rgba(255,209,70,.85)"; g.beginPath(); g.arc(980, 120, 320, 0, Math.PI * 2); g.fill();
     g.fillStyle = "#fff"; g.font = "700 56px Poppins, sans-serif"; g.fillText("Talentika", 90, 200);
-    g.font = "500 48px Poppins, sans-serif"; g.globalAlpha = .9; g.fillText(lang === "en" ? "I am" : "Aku adalah", 90, 560); g.globalAlpha = 1;
+    g.font = "500 48px Poppins, sans-serif"; g.globalAlpha = .9; g.fillText(intro, 90, 560); g.globalAlpha = 1;
     g.font = "800 108px Poppins, sans-serif";
-    const words = (title ?? "").split(" "); let line = "", y = 690;
+    const words = (headline ?? "").split(" "); let line = "", y = 690;
     words.forEach(w => { const tryL = line ? `${line} ${w}` : w; if (g.measureText(tryL).width > 900 && line) { g.fillText(line, 90, y); y += 120; line = w; } else line = tryL; });
     if (line) g.fillText(line + "!", 90, y);
     g.font = "600 40px Poppins, sans-serif"; y += 140;
@@ -841,7 +846,9 @@ function TalentCard() {
     if ((navigator as any).canShare?.({ files: [file] })) { try { await navigator.share({ files: [file], title: "Talentika" } as any); } catch { /* batal */ } return; }
     await save();
   };
-  const text = t(`Aku adalah ${title}! Temukan bakatmu di Talentika:`, `I'm ${title}! Discover your talents on Talentika:`);
+  const text = riasec
+    ? t(`Tipe minatku ${headline}${riasec.holland_code ? ` (kode Holland ${riasec.holland_code})` : ""}! Temukan bakatmu di Talentika:`, `My interest type is ${headline}${riasec.holland_code ? ` (Holland code ${riasec.holland_code})` : ""}! Discover yours on Talentika:`)
+    : t(`Aku adalah ${title}! Temukan bakatmu di Talentika:`, `I'm ${title}! Discover your talents on Talentika:`);
   const actions: [string, string, () => void][] = [
     ["image", "IG Story", story],
     ["msg", "WhatsApp", () => openExternal(`https://wa.me/?text=${encodeURIComponent(`${text} ${link}`)}`)],
@@ -856,8 +863,8 @@ function TalentCard() {
         <div style={{ position: "relative", margin: "0 auto", maxWidth: 300, aspectRatio: "9/16", borderRadius: 26, overflow: "hidden", background: "linear-gradient(160deg,#0066FF 0%,#00A3E0 60%,#00C6EF 100%)", color: "#fff", padding: "22px 20px", boxShadow: "0 20px 40px rgba(0,102,255,.3)" }}>
           <div style={{ position: "absolute", right: -40, top: -40, width: 150, height: 150, borderRadius: "50%", background: "rgba(255,209,70,.85)" }} />
           <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 8 }}><img src={LOGO} alt="" style={{ width: 28, height: 28, borderRadius: 8 }} /><span style={{ fontSize: 14, fontWeight: 700 }}>Talentika</span></div>
-          <div style={{ position: "relative", fontSize: 13, opacity: .9, marginTop: "28%" }}>{t("Aku adalah", "I am")}</div>
-          <div style={{ position: "relative", fontSize: 28, fontWeight: 800, lineHeight: 1.1, letterSpacing: "-.5px", marginTop: 4 }}>{title}!</div>
+          <div style={{ position: "relative", fontSize: 13, opacity: .9, marginTop: "28%" }}>{intro}</div>
+          <div style={{ position: "relative", fontSize: 28, fontWeight: 800, lineHeight: 1.1, letterSpacing: "-.5px", marginTop: 4 }}>{headline}!</div>
           <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 7, marginTop: 16 }}>
             {chips.map(c => <span key={c} style={{ fontSize: 11.5, fontWeight: 600, background: "rgba(255,255,255,.2)", borderRadius: 99, padding: "5px 11px" }}>{c}</span>)}
           </div>
