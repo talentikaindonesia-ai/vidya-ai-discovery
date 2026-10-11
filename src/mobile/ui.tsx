@@ -453,5 +453,7 @@ export const GLOBAL_CSS = `
 .tk-side ::-webkit-scrollbar-thumb{background:#CFE3FF;border-radius:99px}
 .tk-side button{cursor:pointer}
 .tk-nav-item:hover{background:#F1F6FD}
+.tk-dark img,.tk-dark video,.tk-dark iframe,.tk-dark canvas,.tk-dark [role=img]{filter:invert(1) hue-rotate(180deg)}
+.tk-reduce *{animation:none!important;transition:none!important}
 @media (min-width:1100px){.tk-side .tk-grid2{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}.tk-side .tk-grid2>:only-child{grid-column:1 / -1}}
 `;

@@ -31,6 +31,12 @@ interface Ctx {
   refreshProfile: () => Promise<void>;
   updatePrefs: (p: Record<string, any>) => Promise<void>;
   track: (event: string, props?: Record<string, any>) => void;
+  /** Status akses dari my_access() (sumber: paid / trial / school / admin). */
+  access: { is_premium: boolean; source: string | null; expires_at: string | null } | null;
+  /** Paywall Plus yang sedang terbuka (ai, mentor, dna, offline, …) atau null. */
+  paywall: string | null;
+  openPaywall: (kind: string) => void;
+  closePaywall: () => void;
 }
 
 const AppCtx = createContext<Ctx>(null as any);
@@ -53,6 +59,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const [toastMsg, setToastMsg] = useState<{ msg: string; kind: string } | null>(null);
+  const [paywall, setPaywall] = useState<string | null>(null);
+  const openPaywall = useCallback((k: string) => setPaywall(k), []);
+  const closePaywall = useCallback(() => setPaywall(null), []);
   const timer = useRef<number>();
 
   useEffect(() => {
@@ -124,7 +133,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     gam: prefs.gamification !== false,
     textSize: prefs.textSize ?? "Normal",
     toast, afterAction, refreshProfile, updatePrefs, track,
-  }), [user, authReady, profile, lang, t, access, prefs.gamification, prefs.textSize, toast, afterAction, refreshProfile, updatePrefs, track]);
+    access: access ?? null, paywall, openPaywall, closePaywall,
+  }), [user, authReady, profile, lang, t, access, prefs.gamification, prefs.textSize, toast, afterAction, refreshProfile, updatePrefs, track, paywall, openPaywall, closePaywall]);
 
   return (
     <AppCtx.Provider value={value}>
@@ -299,4 +309,20 @@ export async function openExternal(url: string) {
 
 export function errMsg(e: any, fallback = "Terjadi kesalahan. Coba lagi.") {
   return (e?.message || e?.error_description || fallback).toString().replace(/^.*?ERROR:\s*/, "");
+}
+
+/** Alamat web Talentika untuk tautan yang dibagikan (di native origin-nya bukan talentika.id). */
+export const webUrl = (path = "") => `${isNative() ? "https://talentika.id" : window.location.origin}${path}`;
+
+/** Gabung sekolah lewat kode (logika sama dengan /join-school di web). */
+export async function gabungSekolah(uid: string, raw: string): Promise<{ ok: boolean; msg?: string; name?: string; verified?: boolean }> {
+  const code = raw.trim().toUpperCase();
+  if (code.length < 4) return { ok: false, msg: "Kode sekolah terlalu pendek." };
+  const { data } = await db.rpc("info_sekolah", { p_code: code });
+  const s = Array.isArray(data) && data.length ? data[0] : null;
+  if (!s) return { ok: false, msg: "Kode sekolah tidak ditemukan atau tidak aktif." };
+  const { error } = await db.from("school_members").upsert({ school_code: code, student_user_id: uid }, { onConflict: "school_code,student_user_id", ignoreDuplicates: true });
+  if (error) return { ok: false, msg: errMsg(error) };
+  await db.from("profiles").update({ school_code: code, school_name: s.school_name }).eq("user_id", uid);
+  return { ok: true, name: s.school_name, verified: s.terverifikasi !== false };
 }

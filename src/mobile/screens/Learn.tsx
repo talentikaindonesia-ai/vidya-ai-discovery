@@ -63,6 +63,22 @@ function LearnHome() {
     queryKey: ["m-continue", user?.id], enabled: !!user,
     queryFn: async () => (await db.from("learning_progress").select("content_id,progress_percentage,status,learning_content(title,thumbnail_url)").eq("user_id", user!.id).neq("status", "completed").order("last_accessed_at", { ascending: false }).limit(1)).data?.[0] ?? null,
   });
+  const { data: stats } = useQuery({
+    queryKey: ["m-learn-stats", user?.id], enabled: !!user, staleTime: 60_000,
+    queryFn: async () => {
+      const [lp, cert] = await Promise.all([
+        db.from("learning_progress").select("status,progress_percentage,time_spent_minutes").eq("user_id", user!.id),
+        db.from("certificates").select("id", { count: "exact", head: true }).eq("user_id", user!.id).eq("is_active", true),
+      ]);
+      const rows = (lp.data ?? []) as any[];
+      return {
+        active: rows.filter(r => r.status !== "completed").length,
+        hours: rows.reduce((a, r) => a + (r.time_spent_minutes ?? 0), 0) / 60,
+        avg: rows.length ? Math.round(rows.reduce((a, r) => a + (r.progress_percentage ?? 0), 0) / rows.length) : 0,
+        certs: cert.count ?? 0,
+      };
+    },
+  });
   const { data: courses } = useQuery({
     queryKey: ["m-learn-recs", user?.id], enabled: !!user, staleTime: 5 * 60_000,
     queryFn: async () => ((await db.rpc("my_learning_recommendations", { p_limit: 12 })).data ?? []) as any[],
@@ -99,7 +115,7 @@ function LearnHome() {
 
   return (
     <Screen tab>
-      <TabTitle title={t("Belajar", "Learn")} sub={t("Bangun skill untuk masa depan", "Build skills for the future")}
+      <TabTitle title={t("Kursus Saya", "My Courses")} sub={t("Bangun skill untuk masa depan", "Build skills for the future")}
         right={<IconBtn icon={searching ? "x" : "search"} label={t("Cari", "Search")} onClick={() => { setSearching(s => !s); setQ(""); }} />} />
       <div style={{ padding: "0 20px" }}>
         {searching && (
@@ -131,6 +147,16 @@ function LearnHome() {
                 {doneCount > 0 ? t("Lanjutkan", "Continue") : t("Mulai Belajar", "Start Learning")} <Icon name="right" size={15} />
               </button>
             </div>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8, marginTop: 14 }}>
+            {[[String(stats?.active ?? 0), t("Kursus aktif", "Active courses"), C.blue], [`${(stats?.hours ?? 0).toLocaleString(lang === "en" ? "en-US" : "id-ID", { maximumFractionDigits: 1 })}${t("j", "h")}`, t("Jam belajar", "Study hours"), C.purple], [`${stats?.avg ?? 0}%`, t("Rata-rata", "Average"), C.green], [String(stats?.certs ?? 0), t("Sertifikat", "Certificates"), C.amber]].map(([v, l, c]) => (
+              <div key={l} style={{ background: "#fff", borderRadius: 14, padding: "10px 6px", textAlign: "center", boxShadow: SH.card }}><div style={{ fontSize: 17, fontWeight: 800, color: c }}>{v}</div><div style={{ fontSize: 10, color: C.muted, lineHeight: 1.25 }}>{l}</div></div>
+            ))}
+          </div>
+          <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+            <button onClick={() => nav("/app/challenges")} style={{ flex: 1, height: 44, border: "none", borderRadius: 13, background: C.tintYellow, color: "#7A5200", fontSize: 12.5, fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", gap: 7, cursor: "pointer" }}><Icon name="trophy" size={16} />{t("Tantangan", "Challenges")}</button>
+            <button onClick={() => nav("/app/articles")} style={{ flex: 1, height: 44, border: "none", borderRadius: 13, background: C.tintBlue, color: C.blue, fontSize: 12.5, fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", gap: 7, cursor: "pointer" }}><Icon name="book" size={16} />{t("Artikel", "Articles")}</button>
           </div>
 
           {cont && (
@@ -243,10 +269,10 @@ function LearnHome() {
 
 function ClaimCert({ pathId }: { pathId: string }) {
   const nav = useNavigate();
-  const { t, isPro, toast, afterAction } = useApp();
+  const { t, isPro, toast, afterAction, openPaywall } = useApp();
   const [code, setCode] = useState<string | null>(null);
   const claim = async () => {
-    if (!isPro) { nav("/app/pro"); return; }
+    if (!isPro) { openPaywall("cert"); return; }
     const { data, error } = await db.rpc("claim_path_certificate", { p_path_id: pathId });
     if (error) { toast(errMsg(error), "error"); return; }
     setCode(data.verification_code);
@@ -272,7 +298,7 @@ function Course() {
   const { id = "" } = useParams();
   const nav = useNavigate();
   const qc = useQueryClient();
-  const { t, user, profile, gam, toast, afterAction, track } = useApp();
+  const { t, user, profile, gam, toast, afterAction, track, isPro, openPaywall } = useApp();
   const [stage, setStage] = useState<(typeof STAGES)[number]>("learn");
   const [picks, setPicks] = useState<Record<string, string>>({});
   const [quizRes, setQuizRes] = useState<any>(null);
@@ -323,7 +349,7 @@ function Course() {
     }
     const { error } = await db.from("learning_progress").insert({ user_id: user!.id, content_id: id, status, progress_percentage: pctv, last_accessed_at: new Date().toISOString() });
     if (error) {
-      if (/row-level|policy/i.test(error.message)) { toast(t("Akun gratis bisa aktif di 3 materi. Selesaikan yang lain atau upgrade Plus.", "Free accounts can have 3 active courses. Finish one or upgrade to Plus."), "error"); nav("/app/pro"); return false; }
+      if (/row-level|policy/i.test(error.message)) { toast(t("Akun gratis bisa aktif di 3 materi. Selesaikan yang lain atau upgrade Plus.", "Free accounts can have 3 active courses. Finish one or upgrade to Plus."), "error"); openPaywall("course"); return false; }
       toast(errMsg(error), "error"); return false;
     }
     return true;
@@ -382,6 +408,7 @@ function Course() {
     await afterAction(t(`Sertifikat ${c.title}`, `Certificate ${c.title}`));
   };
   const toggleOffline = () => {
+    if (!offline && !isPro) { openPaywall("offline"); return; }
     const all = readOffline();
     if (offline) { delete all[id]; toast(t("Unduhan offline dihapus", "Offline download removed")); }
     else { all[id] = { c, quiz: data!.quiz, stages: Array.from(done), savedAt: Date.now() }; toast(t(`${c.title} tersimpan untuk offline`, `${c.title} saved for offline`)); }
@@ -396,7 +423,7 @@ function Course() {
       <div style={{ position: "relative", height: 210 }}>
         <ImgBox src={courseImg(c.thumbnail_url, c.title)} h="100%" r={0} />
         <button aria-label={t("Kembali", "Back")} onClick={() => nav(-1)} style={{ ...circle, left: 18, width: 42, color: C.text }}><Icon name="left" size={20} /></button>
-        <button onClick={toggleOffline} aria-pressed={offline} style={{ ...circle, right: 18, padding: "0 13px", color: offline ? C.green : C.blue, fontSize: 12, fontWeight: 600 }}><Icon name={offline ? "check" : "download"} size={16} />Offline</button>
+        {offline && <button onClick={toggleOffline} aria-pressed={offline} aria-label={t("Hapus unduhan offline", "Remove offline download")} style={{ ...circle, right: 18, padding: "0 13px", color: C.green, fontSize: 12, fontWeight: 600 }}><Icon name="check" size={16} />Offline</button>}
       </div>
       <div style={{ position: "relative", marginTop: -24, background: C.bg, borderRadius: "24px 24px 0 0", padding: "20px 20px 10px" }}>
         <span style={{ fontSize: 10, fontWeight: 700, color: C.blue, background: C.tintBlue, padding: "3px 9px", borderRadius: 6, textTransform: "uppercase" }}>{c.content_type || t("Materi", "Course")}</span>
@@ -427,6 +454,13 @@ function Course() {
               <span style={{ display: "block", fontSize: 11, opacity: .85 }}>{c.duration_minutes ? `${c.duration_minutes} ${t("menit", "min")}` : t("Materi", "Lesson")}</span>
               <span style={{ display: "block", fontSize: 14, fontWeight: 600 }}>{c.content_url ? t("Buka materi", "Open lesson") : t("Materi teks di bawah", "Text lesson below")}</span>
             </span>
+          </button>
+        )}
+
+        {!offline && (
+          <button onClick={toggleOffline} style={{ width: "100%", marginTop: 12, height: 46, border: `1.5px solid ${C.line}`, background: "#fff", borderRadius: 14, fontSize: 13, fontWeight: 600, color: C.text, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, cursor: "pointer" }}>
+            <span style={{ color: C.blue, display: "flex" }}><Icon name="download" size={16} /></span>{t("Unduh untuk offline", "Download for offline")}
+            {!isPro && <span style={{ fontSize: 10, fontWeight: 700, color: "#7A5200", background: C.yellow, padding: "2px 7px", borderRadius: 99 }}>PLUS</span>}
           </button>
         )}
 

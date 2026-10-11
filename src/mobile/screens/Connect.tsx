@@ -89,7 +89,7 @@ function MentorProfile() {
   const { id = "" } = useParams();
   const nav = useNavigate();
   const qc = useQueryClient();
-  const { t, lang, user, isPro, profile, toast, track } = useApp();
+  const { t, lang, user, isPro, profile, toast, track, openPaywall } = useApp();
   const [slot, setSlot] = useState<string | null>(null);
   const [topic, setTopic] = useState("");
   const [busy, setBusy] = useState(false);
@@ -127,7 +127,7 @@ function MentorProfile() {
 
   const book = async () => {
     if (!slot) return;
-    if (!isPro) { track("paywall_viewed", { entry_point: "mentor_booking" }); nav("/app/pro"); return; }
+    if (!isPro) { openPaywall("mentor"); return; }
     setBusy(true);
     const { error } = await db.rpc("pesan_slot_mentor", { p_slot: slot, p_topic: topic.trim() || (profile?.career_target ? `Karier ${profile.career_target}` : "Konsultasi karier") });
     setBusy(false);
@@ -301,7 +301,7 @@ const INTERESTS = ["AI", "Robotics", "Sustainability", "Entrepreneurship", "Rese
 function Community() {
   const nav = useNavigate();
   const qc = useQueryClient();
-  const { t, lang, user, profile, gam, toast, isPro } = useApp();
+  const { t, lang, user, profile, gam, toast, isPro, openPaywall } = useApp();
   const [tab, setTab] = useState("projects");
   const [interest, setInterest] = useState<string | null>(null);
   const [compose, setCompose] = useState(false);
@@ -333,7 +333,7 @@ function Community() {
   };
   const post = async () => {
     const { error } = await db.rpc("buat_post_komunitas", { p_content: text.trim(), p_category: tab, p_interest: interest });
-    if (error) { toast(/premium|row-level|policy/i.test(error.message) ? t("Membuat postingan tersedia untuk Talentika Plus", "Posting is available on Talentika Plus") : errMsg(error), "error"); if (!isPro) nav("/app/pro"); return; }
+    if (error) { toast(/premium|row-level|policy/i.test(error.message) ? t("Membuat postingan tersedia untuk Talentika Plus", "Posting is available on Talentika Plus") : errMsg(error), "error"); if (!isPro) openPaywall("community"); return; }
     setText(""); setCompose(false); refresh(); toast(t("Postingan terkirim — dicek otomatis sebelum tampil", "Post sent — auto-checked before it shows"));
   };
   const openReplies = async (p: any) => { const { data } = await db.rpc("get_post_replies", { p_post_id: p.id }); setReplies({ post: p, list: data ?? [] }); };

@@ -14,7 +14,7 @@ const FN_URL = `${(supabase as any).supabaseUrl ?? "https://doogbcrodipaeahgbjuj
 export default function Copilot() {
   const nav = useNavigate();
   const [params] = useSearchParams();
-  const { t, lang, user, profile, toast, track, isPro } = useApp();
+  const { t, lang, user, profile, toast, track, isPro, openPaywall } = useApp();
   const { done, title: dnaName } = useDna();
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
@@ -47,7 +47,7 @@ export default function Copilot() {
       if (!res.ok || !res.body) {
         const b = await res.json().catch(() => ({}));
         setMsgs(m => m.slice(0, -1).concat({ role: "assistant", content: b.message ?? t("Tika AI belum tersedia. Coba lagi nanti.", "Talentika AI isn't available yet. Try again later.") }));
-        if (b.error === "limit" && !isPro) setTimeout(() => nav("/app/pro"), 1600);
+        if (b.error === "limit" && !isPro) openPaywall("ai");
         setTyping(false); return;
       }
       const reader = res.body.getReader(); const dec = new TextDecoder(); let buf = ""; let acc = "";

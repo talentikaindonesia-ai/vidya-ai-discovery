@@ -16,6 +16,7 @@ const Copilot = lazy(() => import("./screens/Copilot"));
 const Me = lazy(() => import("./screens/Profile"));
 const Pro = lazy(() => import("./screens/Pro"));
 const Roles = lazy(() => import("./screens/Roles"));
+const More = lazy(() => import("./screens/More"));
 
 const TABS = [
   { id: "home", path: "/app/home", label: "Home", labelId: "Beranda", icon: "home" },
@@ -183,8 +184,20 @@ function Shell() {
           <Route path="public" element={A(<Me screen="public" />)} />
           <Route path="goals" element={A(<Me screen="goals" />)} />
           <Route path="privacy" element={A(<Me screen="privacy" />)} />
-          <Route path="settings" element={A(<Me screen="settings" />)} />
-          <Route path="achievements" element={A(<Me screen="achievements" />)} />
+          <Route path="settings" element={A(<More screen="settings" />)} />
+          <Route path="achievements" element={A(<More screen="achievements" />)} />
+          <Route path="store" element={A(<More screen="store" />)} />
+          <Route path="referral" element={A(<More screen="referral" />)} />
+          <Route path="data" element={A(<More screen="data" />)} />
+          <Route path="challenges" element={A(<More screen="challenges" />)} />
+          <Route path="timeline" element={A(<More screen="timeline" />)} />
+          <Route path="articles" element={A(<More screen="articles" />)} />
+          <Route path="articles/:slug" element={A(<More screen="article" />)} />
+          <Route path="programs" element={A(<More screen="programs" />)} />
+          <Route path="programs/:id" element={A(<More screen="program" />)} />
+          <Route path="mentor-apply" element={A(<More screen="mentorApply" />)} />
+          <Route path="talent-card" element={A(<More screen="talentCard" />)} />
+          <Route path="plus" element={A(<Pro screen="pro" />)} />
           {/* Pro (J5) */}
           <Route path="pro" element={A(<Pro screen="pro" />)} />
           <Route path="checkout" element={A(<Pro screen="checkout" />)} />
@@ -197,6 +210,57 @@ function Shell() {
         </Routes>
       </Suspense>
       <BottomNav />
+      <OfflineBanner />
+      <PaywallSheet />
+    </div>
+  );
+}
+
+/** Banner saat perangkat offline (pola "UI states" v3). */
+function OfflineBanner() {
+  const { t } = useApp();
+  const [off, setOff] = useState(() => typeof navigator !== "undefined" && navigator.onLine === false);
+  useEffect(() => {
+    const on = () => setOff(false), down = () => setOff(true);
+    window.addEventListener("online", on); window.addEventListener("offline", down);
+    return () => { window.removeEventListener("online", on); window.removeEventListener("offline", down); };
+  }, []);
+  if (!off) return null;
+  return (
+    <div role="status" style={{ position: "absolute", left: 12, right: 12, top: "calc(env(safe-area-inset-top, 0px) + 8px)", zIndex: 70, background: C.navy, color: "#fff", borderRadius: 14, padding: "10px 14px", display: "flex", gap: 10, alignItems: "center", fontSize: 12.5, boxShadow: "0 10px 24px rgba(15,23,42,.25)" }}>
+      <span style={{ width: 8, height: 8, borderRadius: "50%", background: C.yellow, flex: "none" }} />
+      {t("Kamu sedang offline · menampilkan materi tersimpan; perubahan disinkron nanti.", "You're offline · showing saved lessons; changes sync later.")}
+    </div>
+  );
+}
+
+/** Paywall Plus yang bisa dibuka dari layar mana pun lewat openPaywall(kind). */
+function PaywallSheet() {
+  const nav = useNavigate();
+  const { t, paywall, closePaywall, track } = useApp();
+  useEffect(() => { if (paywall) track("paywall_viewed", { entry_point: paywall }); }, [paywall]); // eslint-disable-line
+  if (!paywall) return null;
+  const copy: Record<string, [string, string, string, string]> = {
+    ai: ["Kuota chat Tika AI hari ini sudah habis", "You've used today's Tika AI chats", "Plus memberi hingga 200 pesan per hari dan bantuan pendaftaran lengkap.", "Plus gives up to 200 messages a day and full application help."],
+    mentor: ["Sesi mentor adalah fitur Plus", "Mentor sessions are a Plus feature", "Pesan sesi 1-on-1 dengan mentor terverifikasi.", "Book 1-on-1 sessions with verified mentors."],
+    dna: ["Buka 5 modul lanjutan", "Unlock 5 advanced modules", "Aptitude, Learning Style, Career Interest, Future Skills, dan Values.", "Aptitude, Learning Style, Career Interest, Future Skills and Values."],
+    offline: ["Unduh materi untuk offline", "Download lessons offline", "Plus bisa belajar tanpa internet dan menghemat kuota.", "Plus lets you learn without internet and saves data."],
+    course: ["Akun gratis bisa aktif di 3 materi", "Free accounts can have 3 active courses", "Selesaikan salah satu dulu, atau buka materi tanpa batas dengan Plus.", "Finish one first, or unlock unlimited courses with Plus."],
+    community: ["Membuat postingan adalah fitur Plus", "Posting is a Plus feature", "Bagikan proyek, prestasi, dan pertanyaanmu ke komunitas.", "Share your projects, achievements and questions with the community."],
+    cert: ["Sertifikat jalur adalah fitur Plus", "Track certificates are a Plus feature", "Dapatkan sertifikat terverifikasi ber-kode QR untuk CV dan beasiswa.", "Get QR-verifiable certificates for your CV and scholarships."],
+  };
+  const c = copy[paywall] ?? ["Fitur Talentika Plus", "A Talentika Plus feature", "Buka semua fitur dengan Talentika Plus.", "Unlock everything with Talentika Plus."];
+  return (
+    <div onClick={closePaywall} style={{ position: "absolute", inset: 0, zIndex: 85, background: "rgba(15,23,42,.5)", display: "flex", alignItems: "flex-end", justifyContent: "center", animation: "tkFade .2s ease both" }}>
+      <div onClick={e => e.stopPropagation()} className="tk-sheet" role="dialog" aria-modal="true" style={{ width: "100%", maxWidth: 560, background: "#fff", borderRadius: "26px 26px 0 0", padding: "14px 22px calc(env(safe-area-inset-bottom, 0px) + 24px)", textAlign: "center", animation: "tkFadeUp .25s ease both" }}>
+        <div style={{ width: 40, height: 4, borderRadius: 2, background: C.disabled, margin: "0 auto 16px" }} />
+        <div style={{ width: 58, height: 58, margin: "0 auto", borderRadius: "50%", background: C.yellow, color: C.text, display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name="star" size={27} filled /></div>
+        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".7px", color: C.blue, marginTop: 12 }}>TALENTIKA PLUS</div>
+        <div style={{ fontSize: 19, fontWeight: 800, lineHeight: 1.25, marginTop: 6 }}>{t(c[0], c[1])}</div>
+        <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.55, marginTop: 6 }}>{t(c[2], c[3])}</div>
+        <button onClick={() => { closePaywall(); nav("/app/pro"); }} style={{ width: "100%", height: 52, marginTop: 18, border: "none", borderRadius: 16, background: C.blue, color: "#fff", fontSize: 15, fontWeight: 600, cursor: "pointer", boxShadow: "0 10px 22px rgba(0,102,255,.28)" }}>{t("Lihat Talentika Plus", "See Talentika Plus")}</button>
+        <button onClick={closePaywall} style={{ width: "100%", height: 44, marginTop: 6, border: "none", background: "none", color: C.muted, fontSize: 13.5, fontWeight: 600, cursor: "pointer" }}>{t("Nanti saja", "Not now")}</button>
+      </div>
     </div>
   );
 }
@@ -226,7 +290,9 @@ function tabOf(path: string): string | null {
   if (/^\/app\/(course|playbooks)/.test(path)) return "learn";
   if (/^\/app\/(projects\/|challenge)/.test(path)) return "projects";
   if (/^\/app\/(opportunities|calendar)/.test(path)) return "explore";
-  if (/^\/app\/(portfolio|public|privacy|settings|achievements|pro|checkout|paid)/.test(path)) return "profile";
+  if (/^\/app\/(portfolio|public|privacy|settings|achievements|pro|plus|checkout|paid|store|referral|data|timeline|talent-card|mentor-apply)/.test(path)) return "profile";
+  if (/^\/app\/(challenges|articles)/.test(path)) return "learn";
+  if (/^\/app\/programs/.test(path)) return "home";
   if (/^\/app\/(readiness|recap|discover|careers|compare|simulator|universities|dna)/.test(path)) return "home";
   return null;
 }
@@ -281,6 +347,26 @@ function SideNav() {
   );
 }
 
+/** Tema (terang/gelap/ikuti sistem) & aksesibilitas dari app_prefs.
+ *  Mode gelap = inversi warna "pintar" (gambar dibalik lagi lewat .tk-dark di GLOBAL_CSS). */
+function useLook() {
+  const { profile } = useApp();
+  const prefs = profile?.app_prefs || {};
+  const [sysDark, setSysDark] = useState(() => typeof window !== "undefined" && !!window.matchMedia?.("(prefers-color-scheme: dark)").matches);
+  useEffect(() => {
+    const mq = window.matchMedia?.("(prefers-color-scheme: dark)");
+    if (!mq) return;
+    const h = (e: MediaQueryListEvent) => setSysDark(e.matches);
+    mq.addEventListener?.("change", h);
+    return () => mq.removeEventListener?.("change", h);
+  }, []);
+  const dark = prefs.theme === "dark" || (prefs.theme === "system" && sysDark);
+  const contrast = !!prefs.a11y?.contrast;
+  const filter = [dark && "invert(1) hue-rotate(180deg)", contrast && "contrast(1.12)"].filter(Boolean).join(" ") || undefined;
+  const cls = [dark && "tk-dark", prefs.a11y?.motion && "tk-reduce"].filter(Boolean).join(" ") || undefined;
+  return { filter, cls };
+}
+
 function Frame() {
   const vw = useViewportWidth();
   const { profile } = useApp();
@@ -290,8 +376,10 @@ function Frame() {
   const dnaQuestion = /^\/app\/dna\/(?!result$)[^/]+$/.test(path);
   const side = wide && !NO_SIDE.includes(path) && !dnaQuestion && !["parent", "school_admin"].includes(profile?.role ?? "");
   const ctx = useMemo(() => ({ side, vw }), [side, vw]);
+  const look = useLook();
   return (
     <LayoutCtx.Provider value={ctx}>
+      <div className={look.cls} style={{ minHeight: "100dvh", background: "#EAF4FF", filter: look.filter }}>
       {side ? (
         <div className="tk-side" style={{ display: "flex", height: "100dvh", maxWidth: 1440, margin: "0 auto", background: C.bg, boxShadow: "0 0 0 1px rgba(15,23,42,.05), 0 30px 70px rgba(15,23,42,.08)" }}>
           <SideNav />
@@ -304,6 +392,7 @@ function Frame() {
           </div>
         </div>
       )}
+      </div>
     </LayoutCtx.Provider>
   );
 }

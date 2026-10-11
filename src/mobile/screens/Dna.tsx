@@ -38,7 +38,7 @@ const DOMAINS: [string, string, string, string][] = [
 /* ── ASSESSMENT INTRO + modul ───────────────────────────────────────── */
 function Center() {
   const nav = useNavigate();
-  const { t, isPro, profile, lang } = useApp();
+  const { t, isPro, profile, lang, openPaywall } = useApp();
   const { dna, done, isLoading } = useDna();
   const total = MODULES.length;
   const pro = editionOf(profile?.jenjang) === "pro";
@@ -96,7 +96,7 @@ function Center() {
         {isLoading && <Loading />}
         <div style={{ background: "#fff", borderRadius: 18, padding: "4px 14px", marginTop: 10, boxShadow: SH.card }}>
           {states.map(({ m, isDone, prog, locked, pct }, i) => (
-            <button key={m.key} disabled={isDone} onClick={() => nav(`/app/dna/${m.key}`)}
+            <button key={m.key} disabled={isDone} onClick={() => (locked ? openPaywall("dna") : nav(`/app/dna/${m.key}`))}
               style={{ width: "100%", border: "none", background: "none", display: "flex", gap: 12, alignItems: "center", padding: "11px 0", borderBottom: i < states.length - 1 ? "1px solid #F1F5FB" : "none", cursor: isDone ? "default" : "pointer", textAlign: "left" }}>
               <span style={{ width: 34, height: 34, borderRadius: 11, background: isDone ? C.tintGreen : prog ? C.tintOrange : locked ? C.tintYellow : C.tintBlue, color: isDone ? C.green : prog ? C.orange : locked ? C.gold : C.blue,
                 fontSize: 12, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flex: "none" }}>{isDone ? <Icon name="check" size={16} /> : locked ? <Icon name="lock" size={15} /> : m.n}</span>
@@ -318,7 +318,7 @@ function Ready({ onNext }: { onNext: () => void }) {
 
 function TalentProfile() {
   const nav = useNavigate();
-  const { t, lang, isPro, profile, toast } = useApp();
+  const { t, lang, isPro, profile, toast, openPaywall } = useApp();
   const { dna, done, title, axes, arch, type, top, name, insight } = useTalent();
   const { data: skills } = useSkills();
   const [tab, setTab] = useState<"overview" | "arch" | "modules">("overview");
@@ -401,6 +401,16 @@ function TalentProfile() {
               </div>
             ))}
           </div>
+          {(dna?.modules ?? []).some(m => !m.done) && (
+            <button onClick={() => { const locked = (dna?.modules ?? []).some(m => !m.done && !m.free); if (locked && !isPro) openPaywall("dna"); else nav("/app/dna"); }} style={{ width: "100%", textAlign: "left", marginTop: 14, border: "1.5px dashed #C9DCF8", background: "#fff", borderRadius: 18, padding: "13px 14px", display: "flex", gap: 12, alignItems: "center", cursor: "pointer" }}>
+              <span style={{ width: 38, height: 38, borderRadius: 12, background: C.tintYellow, color: C.amber, display: "flex", alignItems: "center", justifyContent: "center", flex: "none" }}><Icon name={isPro ? "sparkle" : "lock"} size={18} /></span>
+              <span style={{ flex: 1, minWidth: 0 }}>
+                <span style={{ display: "block", fontSize: 13.5, fontWeight: 600, color: C.text }}>{t(`${(dna?.modules ?? []).filter(m => !m.done).length} modul lagi untuk ditemukan`, `${(dna?.modules ?? []).filter(m => !m.done).length} more modules to discover`)}</span>
+                <span style={{ display: "block", fontSize: 11.5, color: C.muted }}>{t("Aptitude, Learning Style, Future Skills…", "Aptitude, Learning Style, Future Skills…")}{!isPro && " · Plus"}</span>
+              </span>
+              {!isPro && <span style={{ fontSize: 10, fontWeight: 700, color: "#7A5200", background: C.yellow, padding: "3px 8px", borderRadius: 99 }}>PLUS</span>}
+            </button>
+          )}
           <div style={{ background: C.tintBlue, borderRadius: 18, padding: "14px 16px", marginTop: 12, fontSize: 13, lineHeight: 1.55, color: "#1E3A8A", fontStyle: "italic" }}>“{insight}”</div>
           {!!skills?.length && <>
             <div style={{ fontSize: 16, fontWeight: 700, marginTop: 20 }}>{t("Skill yang sedang berkembang", "Skills in progress")}</div>

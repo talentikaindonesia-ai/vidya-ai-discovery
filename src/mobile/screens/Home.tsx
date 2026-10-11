@@ -6,7 +6,7 @@ import { Avatar, BrandBar, Empty, Header, Icon, IconBtn, ImgBox, Loading, LOGO, 
 import { C, SH, daysUntil } from "../theme";
 import { deepLink, fmtDate, notifCat, oppMatch, oppTypeOf, READINESS_META, timeAgo, TYPE_ID } from "../logic";
 import { editionOf } from "../MobileApp";
-import { careerImg, courseImg, oppImg } from "../media";
+import { careerImg, courseImg, IMG, oppImg } from "../media";
 import heroBoy from "../assets/v3/hero-boy.webp";
 
 export default function Home({ screen }: { screen: "home" | "notif" | "readiness" | "recap" }) {
@@ -81,6 +81,16 @@ function HomeScreen() {
   const { data: skills } = useSkills();
   const { careers } = useCareers();
   const { data: opps } = useOpportunities();
+  const { data: programs } = useQuery({
+    queryKey: ["m-home-programs"], staleTime: 10 * 60_000,
+    queryFn: async () => {
+      const [prem, boot] = await Promise.all([db.from("premium_programs").select("id,name,tagline,banner_url").eq("is_active", true).order("sort_order"), db.rpc("list_bootcamps")]);
+      return [
+        ...((prem.data ?? []) as any[]).map(p => ({ key: `p-${p.id}`, title: p.name as string, sub: p.tagline as string | null, img: p.banner_url as string | null })),
+        ...((boot.data ?? []) as any[]).map(b => ({ key: `b-${b.slug}`, title: b.title as string, sub: b.category_label as string | null, img: b.cover_url as string | null })),
+      ];
+    },
+  });
   const first = (profile?.full_name || "").split(" ")[0] || t("kamu", "there");
   const target = careers.find(c => c.id === profile?.career_target) ?? null;
   const pro = editionOf(profile?.jenjang) === "pro";
@@ -212,6 +222,15 @@ function HomeScreen() {
           </button>
         )}
 
+        {/* Ajakan Talentika Plus */}
+        {!isPro && canPurchase() && (
+          <button onClick={() => nav("/app/pro")} style={{ width: "100%", textAlign: "left", marginTop: 12, border: "none", background: "linear-gradient(120deg,#0066FF,#00A3E0)", borderRadius: 20, padding: "14px 16px", display: "flex", gap: 12, alignItems: "center", cursor: "pointer", color: "#fff" }}>
+            <span style={{ width: 46, height: 46, borderRadius: 14, background: C.yellow, color: C.text, display: "flex", alignItems: "center", justifyContent: "center", flex: "none" }}><Icon name="star" size={22} filled /></span>
+            <span style={{ flex: 1 }}><span style={{ display: "block", fontSize: 14, fontWeight: 700 }}>{t("Coba Talentika Plus", "Try Talentika Plus")}</span><span style={{ display: "block", fontSize: 11.5, opacity: .9, marginTop: 2 }}>{t("Semua modul, mentor & sertifikat · diskon pelajar", "All modules, mentors & certificates · student discount")}</span></span>
+            <Icon name="chev" size={18} />
+          </button>
+        )}
+
         {/* Lanjutkan belajar */}
         <SectionHead action={t("Lihat Semua", "See All")} onAction={() => nav("/app/learn")} style={{ marginTop: 20 }}>{t("Lanjutkan Belajar", "Continue Learning")}</SectionHead>
         {inprog ? (
@@ -290,9 +309,25 @@ function HomeScreen() {
           </div>
         </>}
 
+        {/* Program Talentika */}
+        {!!programs?.length && <>
+          <SectionHead action={t("Lihat Semua", "See All")} onAction={() => nav("/app/programs")} style={{ marginTop: 20 }}>{t("Program Talentika", "Talentika Programs")}</SectionHead>
+          <div style={{ display: "flex", gap: 10, overflowX: "auto", margin: "10px -20px 0", padding: "0 20px 4px" }}>
+            {programs.map(p => (
+              <button key={p.key} onClick={() => nav(`/app/programs/${p.key}`)} style={{ flex: "none", width: 180, textAlign: "left", border: "none", background: "#fff", borderRadius: 18, padding: 0, overflow: "hidden", cursor: "pointer", boxShadow: SH.card }}>
+                <ImgBox src={p.img && /^https?:\/\//.test(p.img) ? p.img : [IMG.cHiker, IMG.kAi, IMG.cTurbines][p.title.length % 3]} h={90} r={0} />
+                <span style={{ display: "block", padding: "10px 12px 12px" }}>
+                  <span style={{ display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", fontSize: 13.5, fontWeight: 700, color: C.text, lineHeight: 1.3 } as any}>{p.title}</span>
+                  {p.sub && <span style={{ display: "block", fontSize: 11, color: C.muted, marginTop: 3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.sub}</span>}
+                </span>
+              </button>
+            ))}
+          </div>
+        </>}
+
         {/* Peluang */}
         {upcoming.length > 0 && <>
-          <SectionHead action="Tracker" onAction={() => nav("/app/tracker")} style={{ marginTop: 20 }}>{t("Peluang Mendatang", "Upcoming Opportunities")}</SectionHead>
+          <SectionHead action="Tracker" onAction={() => nav("/app/tracker")} style={{ marginTop: 20 }}>{t("Peluang Terdekat", "Upcoming Opportunities")}</SectionHead>
           <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 10 }}>
             {upcoming.map(u => {
               const [c, bg] = typeColor[u.type] ?? [C.blue, C.tintBlue];
@@ -314,13 +349,6 @@ function HomeScreen() {
           </div>
         </>}
 
-        {!isPro && canPurchase() && (
-          <button onClick={() => nav("/app/pro")} style={{ width: "100%", textAlign: "left", marginTop: 16, background: "#fff", border: `1.5px dashed ${C.lightBlue}`, borderRadius: 18, padding: "14px 16px", cursor: "pointer", display: "flex", gap: 12, alignItems: "center" }}>
-            <span style={{ width: 40, height: 40, borderRadius: 12, background: C.tintYellow, color: C.amber, display: "flex", alignItems: "center", justifyContent: "center", flex: "none" }}><Icon name="star" size={20} filled /></span>
-            <span style={{ flex: 1 }}><span style={{ display: "block", fontSize: 14, fontWeight: 700, color: C.text }}>Talentika Plus</span><span style={{ display: "block", fontSize: 11.5, color: C.muted, marginTop: 2 }}>{t("Full Talent DNA, mentoring, Application Assistant", "Full Talent DNA, mentoring, Application Assistant")}</span></span>
-            <span style={{ color: C.blue, display: "flex" }}><Icon name="chev" size={18} /></span>
-          </button>
-        )}
       </div>
     </Screen>
   );

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { db, errMsg, useApp, useCareers } from "../store";
+import { db, errMsg, useApp, useCareers, webUrl } from "../store";
 import { Avatar, Btn, Card, ChipBtn, Empty, Icon, Input, Label, Loading, Note, Ring, Screen, Sheet, TextArea, TIKA } from "../ui";
 import { C, SH, avatarColors, daysUntil, deadlineColor } from "../theme";
 import { AXES, dnaTitle, fmtDate, rankAxes } from "../logic";
@@ -251,6 +251,29 @@ function SchoolDash() {
   const { t, lang: lng, profile, toast } = useApp();
   const code = profile?.school_code ?? "";
   const [sent, setSent] = useState<number | null>(null);
+  const [busyExport, setBusyExport] = useState(false);
+  const shareCode = async () => {
+    const text = t(`Gabung ke ${profile?.school_name ?? "sekolah kita"} di Talentika dengan kode ${code}`, `Join ${profile?.school_name ?? "our school"} on Talentika with code ${code}`);
+    const url = webUrl(`/join/${encodeURIComponent(code)}`);
+    if (navigator.share) { try { await navigator.share({ text, url }); return; } catch { return; } }
+    await navigator.clipboard?.writeText(`${text} ${url}`); toast(t("Kode & link disalin", "Code & link copied"));
+  };
+  // Rapor per siswa → CSV (nilai di-escape; aman dibuka di Excel/Sheets)
+  const exportReport = async () => {
+    setBusyExport(true);
+    const { data: rows, error: e } = await db.rpc("school_students", { p_code: code });
+    setBusyExport(false);
+    if (e) { toast(errMsg(e), "error"); return; }
+    const esc = (v: any) => { let x = String(v ?? ""); if (/^[=+\-@]/.test(x)) x = "'" + x; return /[",\n]/.test(x) ? `"${x.replace(/"/g, '""')}"` : x; };
+    const head = ["Nama", "Kelas", "Kursus", "Jam belajar", "Sertifikat", "XP", "Level", "Tipe RIASEC", "Progres %", "Terakhir aktif"];
+    const body = ((rows ?? []) as any[]).map(r => [r.name, r.class_label, r.courses, Number(r.hours ?? 0).toFixed(1), r.certs, r.xp, r.level, r.riasec_type, r.progress, r.last_active ? new Date(r.last_active).toISOString().slice(0, 10) : ""].map(esc).join(","));
+    const blob = new Blob(["\ufeff" + [head.join(","), ...body].join("\n")], { type: "text/csv;charset=utf-8" });
+    const name = `rapor-talentika-${code}-${new Date().toISOString().slice(0, 10)}.csv`;
+    const file = new File([blob], name, { type: "text/csv" });
+    if ((navigator as any).canShare?.({ files: [file] })) { try { await navigator.share({ files: [file], title: name } as any); return; } catch { return; } }
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; a.click();
+    toast(t(`Rapor ${((rows ?? []) as any[]).length} siswa diunduh`, `Report for ${((rows ?? []) as any[]).length} students downloaded`));
+  };
   const { data, isLoading, error } = useQuery({ queryKey: ["m-school", code], enabled: !!code, queryFn: async () => { const r = await db.rpc("school_mobile_insights", { p_code: code }); if (r.error) throw r.error; return r.data; } });
   const { data: riasec } = useQuery({ queryKey: ["m-school-riasec", code], enabled: !!code, queryFn: async () => ((await db.rpc("school_riasec_distribution", { p_code: code })).data ?? []) as any[] });
   const remind = async () => {
@@ -281,6 +304,19 @@ function SchoolDash() {
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginTop: 14 }}><span>{t("Talent Discovery selesai", "Talent Discovery completed")}</span><span style={{ fontWeight: 700 }}>{data.dna_done} / {data.students}</span></div>
             <div style={{ height: 8, borderRadius: 99, background: "rgba(255,255,255,.25)", marginTop: 6 }}><div style={{ width: `${dnaPct}%`, height: "100%", borderRadius: 99, background: C.yellow }} /></div>
             <div style={{ fontSize: 11.5, opacity: .85, marginTop: 8 }}>{data.applications} {t("aplikasi peluang dari siswa", "opportunity applications by students")}</div>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            <div style={{ ...card, padding: 14 }}>
+              <div style={{ fontSize: 11.5, color: C.muted }}>{t("Kode sekolah", "School code")}</div>
+              <div style={{ fontSize: 15, fontWeight: 800, letterSpacing: 1, marginTop: 3, wordBreak: "break-all" }}>{code}</div>
+              <button onClick={shareCode} style={{ marginTop: 10, width: "100%", height: 36, border: "none", borderRadius: 11, background: C.tintBlue, color: C.blue, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>{t("Salin & bagikan", "Copy & share")}</button>
+            </div>
+            <div style={{ ...card, padding: 14 }}>
+              <div style={{ fontSize: 11.5, color: C.muted }}>{t("Rapor bakat", "Talent report")}</div>
+              <div style={{ fontSize: 13.5, fontWeight: 700, marginTop: 3 }}>{t("Per siswa & kelas", "Per student & class")}</div>
+              <button onClick={exportReport} disabled={busyExport} style={{ marginTop: 10, width: "100%", height: 36, border: "none", borderRadius: 11, background: C.tintGreen, color: C.green, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>{busyExport ? "…" : t("Ekspor CSV", "Export CSV")}</button>
+            </div>
           </div>
 
           <div style={{ ...card, padding: 14 }}>

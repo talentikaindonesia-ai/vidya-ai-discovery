@@ -2,25 +2,22 @@ import React, { useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { askAi, db, errMsg, useApp, useCareers, useDna, useReadiness, useSkills } from "../store";
 import { AiLabel, Avatar, BackBtn, Btn, Card, Empty, Header, Icon, IconBtn, ImgBox, Input, Label, Loading, MenuList, Note, Screen, Segmented, Sheet, TabTitle, TextArea, Toggle, TIKA } from "../ui";
 import { C, SH } from "../theme";
 import { AXES, AxisKey, fmtDate } from "../logic";
 import { PublicProfileBody } from "../PublicTalentProfile";
-import { initPush, keluar } from "../push";
-import { canPurchase, isNative } from "../store";
+import { keluar } from "../push";
+import { canPurchase } from "../store";
 import { editionOf } from "../MobileApp";
 import { courseImg, IMG } from "../media";
 
-export default function Profile({ screen }: { screen: "profile" | "portfolio" | "public" | "goals" | "privacy" | "settings" | "achievements" }) {
+export default function Profile({ screen }: { screen: "profile" | "portfolio" | "public" | "goals" | "privacy" }) {
   switch (screen) {
     case "portfolio": return <Portfolio />;
     case "public": return <PublicPreview />;
     case "goals": return <Growth />;
     case "privacy": return <FamilySchool />;
-    case "settings": return <Settings />;
-    case "achievements": return <Achievements />;
     default: return <ProfileHome />;
   }
 }
@@ -209,7 +206,7 @@ function ProfileHome() {
           {stat("folder", C.amber, t("Proyek", "Projects"), (data?.proj ?? []).filter(p => p.status === "completed").length, t("Selesai", "Completed"), "/app/projects")}
         </div>
 
-        {sectionTitle(t("Prestasiku", "My Achievements"), linkBtn(t("+ Catat", "+ Log"), () => nav("/app/achievements")))}
+        {sectionTitle(t("Prestasiku", "My Achievements"), linkBtn(t("+ Catat", "+ Log"), () => nav("/app/achievements?catat=1")))}
         {gam && (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "12px 8px", marginTop: 10 }}>
             {badges.map(([ic, n, c, bg, on]) => (
@@ -255,24 +252,37 @@ function ProfileHome() {
           </button>
         </>}
 
-        <div style={{ marginTop: 14 }}>
-          <MenuList items={[
-            { icon: "chart", label: t("Pertumbuhanku & Rencana 90 Hari", "My Growth & 90-Day Plan"), onClick: () => nav("/app/goals") },
-            { icon: "file", label: t("Portofolioku", "My Portfolio"), onClick: () => nav("/app/portfolio") },
-            { icon: "brief", label: t("Lamaranku", "My Applications"), onClick: () => nav("/app/tracker") },
-            { icon: "users", label: "Mentor", onClick: () => nav("/app/mentors") },
-            { icon: "msg", label: t("Komunitas", "Community"), onClick: () => nav("/app/community") },
-            { icon: "star", label: isPro ? t("Talentika Plus · Aktif", "Talentika Plus · Active") : canPurchase() ? t("Upgrade ke Talentika Plus", "Upgrade to Talentika Plus") : "Talentika Plus", onClick: () => nav("/app/pro") },
-            { icon: "globe", label: t("Profil Talenta Publik", "Public Talent Profile"), onClick: () => profile?.username ? nav("/app/public") : setUSheet(true) },
-            { icon: "cal", label: t("Kalender Deadline", "Deadline Calendar"), onClick: () => nav("/app/calendar") },
-            { icon: "book", label: "Talentika Playbooks", onClick: () => nav("/app/playbooks") },
-            { icon: "cap", label: t("Jelajah Kampus", "University Explorer"), onClick: () => nav("/app/universities") },
-            ...(data?.mentor ? [{ icon: "compass", label: t("Mode Mentor", "Mentor mode"), onClick: () => nav("/app/mentor-dashboard") }] : []),
-            { icon: "shield", label: t("Keluarga & Sekolah", "Family & School"), onClick: () => nav("/app/privacy") },
-            { icon: "gear", label: t("Pengaturan", "Settings"), onClick: () => nav("/app/settings") },
-            { icon: "logout", label: t("Keluar", "Sign out"), danger: true, onClick: async () => { await keluar(); nav("/app", { replace: true }); } },
-          ]} />
-        </div>
+        <div style={{ fontSize: 12, fontWeight: 600, letterSpacing: ".5px", color: C.faint, margin: "20px 4px 8px" }}>{t("PERJALANANKU", "MY JOURNEY")}</div>
+        <MenuList items={[
+          { icon: "chart", label: t("Pertumbuhanku & Rencana 90 Hari", "My Growth & 90-Day Plan"), onClick: () => nav("/app/goals") },
+          { icon: "medal", label: t("Pencapaian", "Achievements"), onClick: () => nav("/app/achievements") },
+          { icon: "trophy", label: t("Tantangan", "Challenges"), onClick: () => nav("/app/challenges") },
+          { icon: "clock", label: "Timeline", onClick: () => nav("/app/timeline") },
+          { icon: "file", label: t("Portofolioku", "My Portfolio"), onClick: () => nav("/app/portfolio") },
+          { icon: "brief", label: t("Lamaranku", "My Applications"), onClick: () => nav("/app/tracker") },
+        ]} />
+        <div style={{ fontSize: 12, fontWeight: 600, letterSpacing: ".5px", color: C.faint, margin: "20px 4px 8px" }}>{t("JELAJAHI", "EXPLORE")}</div>
+        <MenuList items={[
+          { icon: "globe", label: t("Program Talentika", "Talentika Programs"), onClick: () => nav("/app/programs") },
+          { icon: "book", label: t("Artikel", "Articles"), onClick: () => nav("/app/articles") },
+          { icon: "wallet", label: t("Store · Playbook & Program", "Store · Playbooks & Programs"), onClick: () => nav("/app/store") },
+          { icon: "users", label: "Mentor", onClick: () => nav("/app/mentors") },
+          { icon: "msg", label: t("Komunitas", "Community"), onClick: () => nav("/app/community") },
+          { icon: "cap", label: t("Jelajah Kampus", "University Explorer"), onClick: () => nav("/app/universities") },
+          { icon: "cal", label: t("Kalender Deadline", "Deadline Calendar"), onClick: () => nav("/app/calendar") },
+        ]} />
+        <div style={{ fontSize: 12, fontWeight: 600, letterSpacing: ".5px", color: C.faint, margin: "20px 4px 8px" }}>{t("AKUN", "ACCOUNT")}</div>
+        <MenuList items={[
+          { icon: "star", label: isPro ? t("Talentika Plus · Aktif", "Talentika Plus · Active") : canPurchase() ? t("Upgrade ke Talentika Plus", "Upgrade to Talentika Plus") : "Talentika Plus", onClick: () => nav("/app/pro") },
+          { icon: "share", label: t("Ajak Teman", "Invite Friends"), onClick: () => nav("/app/referral") },
+          { icon: "image", label: t("Bagikan Talent Card", "Share Talent Card"), onClick: () => nav("/app/talent-card") },
+          { icon: "globe", label: t("Profil Talenta Publik", "Public Talent Profile"), onClick: () => profile?.username ? nav("/app/public") : setUSheet(true) },
+          data?.mentor ? { icon: "compass", label: t("Mode Mentor", "Mentor mode"), onClick: () => nav("/app/mentor-dashboard") } : { icon: "users", label: t("Jadi Mentor / Mitra", "Become a Mentor / Partner"), onClick: () => nav("/app/mentor-apply") },
+          { icon: "school", label: t("Keluarga & Sekolah", "Family & School"), onClick: () => nav("/app/privacy") },
+          { icon: "shield", label: t("Privasi & Data", "Privacy & Data"), onClick: () => nav("/app/data") },
+          { icon: "gear", label: t("Pengaturan", "Settings"), onClick: () => nav("/app/settings") },
+          { icon: "logout", label: t("Keluar", "Sign out"), danger: true, onClick: async () => { await keluar(); nav("/app", { replace: true }); } },
+        ]} />
       </div>
       <UsernameSheet open={uSheet} onClose={() => setUSheet(false)} />
       <Sheet open={skillSheet} onClose={() => setSkillSheet(false)} title={t("Tambah skill", "Add a skill")}>
@@ -742,139 +752,6 @@ function FamilySchool() {
         </>)}
         <div style={{ marginTop: 14 }}><Note icon="sparkle"><b>{t("Transparansi AI:", "AI transparency:")}</b> {t("semua konten buatan AI diberi label dan selalu bisa kamu ubah sebelum dibagikan.", "all AI content is labeled and always editable before sharing.")}</Note></div>
         {profile?.username && <button onClick={() => nav("/app/public")} style={{ display: "block", margin: "12px auto 0", border: "none", background: "none", color: C.blue, fontSize: 12.5, fontWeight: 600, cursor: "pointer" }}>{t("Lihat profil publikku", "View my public profile")} →</button>}
-      </div>
-    </Screen>
-  );
-}
-
-/* ── SETTINGS ───────────────────────────────────────────────────────── */
-function Settings() {
-  const nav = useNavigate();
-  const { t, lang, user, profile, textSize, gam, updatePrefs, refreshProfile, toast } = useApp();
-  const push = usePushNotifications(user?.id);
-  const [nativePush, setNativePush] = useState<string>("prompt");
-  React.useEffect(() => { if (isNative() && user) initPush(user.id, false).then(setNativePush); }, [user]);
-  const prefs = profile?.app_prefs || {};
-  const notif = prefs.notif || {};
-  const [offline, setOffline] = useState(() => { try { return JSON.parse(localStorage.getItem("tk-offline-courses") || "{}"); } catch { return {}; } });
-  const [delSheet, setDelSheet] = useState(false); const [confirmTxt, setConfirmTxt] = useState(""); const [busy, setBusy] = useState(false);
-  const setLang = async (l: "id" | "en") => { localStorage.setItem("tk-lang", l); await (db.from("profiles").update({ language_preference: l }).eq("user_id", user!.id)); await refreshProfile(); };
-  const removeOffline = (id: string) => { const o = { ...offline }; delete o[id]; localStorage.setItem("tk-offline-courses", JSON.stringify(o)); setOffline(o); };
-  const cats: [string, string, string][] = [["opportunities", "Peluang", "Opportunities"], ["learning", "Belajar", "Learning"], ["mentorship", "Mentor", "Mentorship"], ["achievement", "Prestasi", "Achievement"], ["ai", "Insight AI", "AI Insight"], ["community", "Komunitas", "Community"]];
-  const exportData = async () => {
-    setBusy(true);
-    const uid = user!.id;
-    const tables = ["profiles", "talent_dna_answers", "talent_dna_modules_done", "user_skills", "saved_opportunities", "user_goals", "plan_tasks", "projects", "project_evidence", "user_achievements", "learning_progress", "learning_reflections", "portfolio_items", "certificates", "mentor_bookings", "ai_messages", "sharing_settings", "career_readiness_snapshots"];
-    const out: Record<string, any> = { exported_at: new Date().toISOString() };
-    for (const tb of tables) { const { data } = await db.from(tb).select("*").eq("user_id", uid); out[tb] = data ?? []; }
-    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(out, null, 2)], { type: "application/json" })); a.download = `talentika-data-${new Date().toISOString().slice(0, 10)}.json`; a.click();
-    setBusy(false); toast(t("Data diekspor", "Data exported"));
-  };
-  const deleteAccount = async () => {
-    setBusy(true);
-    const { data, error } = await supabase.functions.invoke("hapus-akun", { body: { confirm: "HAPUS" } });
-    setBusy(false);
-    if (error) { toast(t("Gagal memproses. Hubungi support.", "Couldn't process. Contact support."), "error"); return; }
-    toast(data?.pending ? data.message : t("Akunmu sudah dihapus.", "Your account has been deleted."));
-    await keluar(); nav("/app", { replace: true });
-  };
-  const row: React.CSSProperties = { display: "flex", alignItems: "center", gap: 12, padding: "12px 0", borderBottom: `1px solid ${C.track}`, cursor: "pointer" };
-  return (
-    <Screen>
-      <Header title={t("Pengaturan", "Settings")} />
-      <div style={{ padding: "16px 20px 0", display: "flex", flexDirection: "column", gap: 12 }}>
-        <Card>
-          <div style={{ fontSize: 14.5, fontWeight: 700 }}>{t("Bahasa", "Language")}</div>
-          <div style={{ marginTop: 10 }}><Segmented value={lang} onChange={setLang} options={[{ value: "id", label: "Bahasa Indonesia" }, { value: "en", label: "English" }]} /></div>
-        </Card>
-        <Card>
-          <div style={{ fontSize: 14.5, fontWeight: 700 }}>{t("Ukuran teks", "Text size")}</div>
-          <div style={{ marginTop: 10 }}><Segmented value={textSize} onChange={v => updatePrefs({ textSize: v })} options={[{ value: "Kecil", label: t("Kecil", "Small") }, { value: "Normal", label: "Normal" }, { value: "Besar", label: t("Besar", "Large") }]} /></div>
-          <div style={{ marginTop: 8, fontSize: 11.5, color: C.faint }}>{t("Juga mengikuti ukuran font sistem HP-mu.", "Also follows your phone's system font size.")}</div>
-        </Card>
-        <Card pad="12px 18px">
-          <div style={{ fontSize: 14.5, fontWeight: 700, paddingBottom: 2 }}>{t("Pengalaman", "Experience")}</div>
-          <div onClick={() => updatePrefs({ gamification: !gam })} style={row}><div style={{ flex: 1, fontSize: 13.5 }}>{t("Gamifikasi (XP, level, badge)", "Gamification (XP, levels, badges)")}</div><Toggle on={gam} /></div>
-          <div onClick={() => updatePrefs({ dataSaver: !prefs.dataSaver })} style={{ ...row, borderBottom: "none" }}><div style={{ flex: 1 }}><div style={{ fontSize: 13.5 }}>{t("Hemat data", "Data saver")}</div><div style={{ fontSize: 11.5, color: C.faint }}>{t("Kualitas video lebih rendah di data seluler", "Lower video quality on cellular")}</div></div><Toggle on={!!prefs.dataSaver} /></div>
-        </Card>
-        <Card pad="12px 18px">
-          <div style={{ fontSize: 14.5, fontWeight: 700, paddingBottom: 2 }}>{t("Unduhan offline", "Offline downloads")}</div>
-          {Object.entries(offline).map(([id, o]: any) => (
-            <div key={id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0" }}><span style={{ color: C.blue, display: "flex" }}><Icon name="book" size={17} /></span><div style={{ flex: 1 }}><div style={{ fontSize: 13.5, fontWeight: 500 }}>{o.c?.title}</div><div style={{ fontSize: 11.5, color: C.faint }}>{t("Disimpan", "Saved")} {fmtDate(new Date(o.savedAt).toISOString(), lang)}</div></div><Toggle on onClick={() => removeOffline(id)} /></div>
-          ))}
-          {!Object.keys(offline).length && <div style={{ padding: "8px 0", fontSize: 12.5, color: C.muted }}>{t("Ketuk “Offline” di halaman materi untuk menyimpannya.", "Tap “Offline” on a course to save it.")}</div>}
-        </Card>
-        <Card pad="12px 18px">
-          <div style={{ fontSize: 14.5, fontWeight: 700, paddingBottom: 2 }}>{t("Notifikasi", "Notifications")}</div>
-          {isNative() ? (nativePush !== "granted" && <Btn kind="soft" h={42} onClick={async () => { const r = await initPush(user!.id, true); setNativePush(r); if (r === "denied") toast(t("Izin notifikasi ditolak — aktifkan dari Pengaturan HP", "Notification permission denied — enable it in phone Settings"), "error"); }} style={{ margin: "6px 0" }}>{t("Aktifkan notifikasi push", "Enable push notifications")}</Btn>)
-            : (push.permission !== "unsupported" && push.permission !== "granted" && <Btn kind="soft" h={42} onClick={push.subscribe} style={{ margin: "6px 0" }}>{t("Aktifkan notifikasi push", "Enable push notifications")}</Btn>)}
-          {cats.map(([k, id, en], i) => (
-            <div key={k} onClick={() => updatePrefs({ notif: { ...notif, [k]: notif[k] === false } })} style={{ ...row, borderBottom: i < cats.length - 1 ? row.borderBottom : "none" }}>
-              <span style={{ flex: 1, fontSize: 13.5 }}>{t(id, en)}</span><Toggle on={notif[k] !== false} />
-            </div>
-          ))}
-          {(profile?.usia ?? 99) < 18 && <div style={{ paddingTop: 8, fontSize: 11.5, color: C.faint, display: "flex", alignItems: "center", gap: 6 }}><Icon name="clock" size={13} />{t("Jam tenang 21.00–06.00 aktif untuk pengguna di bawah 18 tahun.", "Quiet hours 21:00–06:00 are on for users under 18.")}</div>}
-        </Card>
-        <MenuList items={[
-          { icon: "shield", label: t("Keluarga & Sekolah", "Family & School"), onClick: () => nav("/app/privacy") },
-          { icon: "bell", label: t("Pusat notifikasi", "Notification center"), onClick: () => nav("/app/notifications") },
-          { icon: "download", label: busy ? "…" : t("Ekspor dataku (JSON)", "Export my data (JSON)"), onClick: exportData },
-          { icon: "info", label: t("Bantuan & tentang Talentika", "Help & about"), onClick: () => { window.location.href = "/tentang-kami"; } },
-          { icon: "trash", label: t("Hapus akun", "Delete account"), danger: true, onClick: () => setDelSheet(true) },
-        ]} />
-        <div style={{ textAlign: "center", fontSize: 11, color: C.faint }}>Talentika Mobile · v1.0</div>
-      </div>
-      <Sheet open={delSheet} onClose={() => setDelSheet(false)} title={t("Hapus akun permanen", "Delete account permanently")}>
-        <p style={{ margin: 0, fontSize: 13.5, color: C.text2, lineHeight: 1.6 }}>{t("Semua data pribadimu (profil, Talent DNA, proyek, chat AI) akan dihapus paling lambat 30 hari. Ekspor datamu dulu bila perlu. Ketik HAPUS untuk konfirmasi.", "All your personal data (profile, Talent DNA, projects, AI chats) will be deleted within 30 days. Export first if needed. Type HAPUS to confirm.")}</p>
-        <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 10 }}>
-          <Input value={confirmTxt} onChange={e => setConfirmTxt(e.target.value)} placeholder="HAPUS" />
-          <Btn disabled={confirmTxt !== "HAPUS" || busy} onClick={deleteAccount} style={{ background: C.red, boxShadow: "none" }}>{t("Hapus akunku", "Delete my account")}</Btn>
-        </div>
-      </Sheet>
-    </Screen>
-  );
-}
-
-/* ── ACHIEVEMENTS ───────────────────────────────────────────────────── */
-function Achievements() {
-  const qc = useQueryClient();
-  const [params] = useSearchParams();
-  const { t, user, toast, afterAction } = useApp();
-  const [title, setTitle] = useState(""); const [event, setEvent] = useState(params.get("from") ?? "");
-  const [year, setYear] = useState(String(new Date().getFullYear())); const [medal, setMedal] = useState("🏅");
-  const [skills, setSkills] = useState(""); const [url, setUrl] = useState("");
-  const { data, isLoading } = useQuery({ queryKey: ["m-ach", user?.id], enabled: !!user, queryFn: async () => ((await db.from("user_achievements").select("*").eq("user_id", user!.id).order("year", { ascending: false })).data ?? []) as any[] });
-  const add = async () => {
-    const { error } = await db.from("user_achievements").insert({ user_id: user!.id, title: title.trim(), event: event.trim(), year: +year, medal, skills: skills.split(",").map(s => s.trim()).filter(Boolean).slice(0, 6), evidence_url: /^https?:\/\//.test(url) ? url : null });
-    if (error) { toast(errMsg(error), "error"); return; }
-    setTitle(""); setEvent(""); setSkills(""); setUrl(""); qc.invalidateQueries({ queryKey: ["m-ach"] }); qc.invalidateQueries({ queryKey: ["m-profile-extra"] });
-    await afterAction(t("Prestasi dicatat", "Achievement logged"));
-  };
-  return (
-    <Screen>
-      <Header title={t("Prestasi", "Achievements")} sub={t("Dilaporkan sendiri vs terverifikasi penyelenggara", "Self-reported vs organizer-verified")} />
-      <div style={{ padding: "16px 20px 0", display: "flex", flexDirection: "column", gap: 12 }}>
-        <Card>
-          <div style={{ fontSize: 14.5, fontWeight: 700 }}>{t("Catat prestasi", "Log an achievement")}</div>
-          <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 9 }}>
-            <div style={{ display: "flex", gap: 6 }}>{["🥇", "🥈", "🥉", "🏅", "🏆", "🎖️"].map(m => <button key={m} onClick={() => setMedal(m)} aria-pressed={medal === m} style={{ flex: 1, height: 42, border: `1.5px solid ${medal === m ? C.blue : C.line}`, borderRadius: 12, background: medal === m ? C.tintBlue : "#fff", fontSize: 19, cursor: "pointer" }}>{m}</button>)}</div>
-            <Input placeholder={t("Gelar · Gold Winner / Finalis", "Title · Gold Winner / Finalist")} value={title} onChange={e => setTitle(e.target.value)} />
-            <Input placeholder={t("Kegiatan · Olimpiade Robotik Nasional", "Event · National Robotics Olympiad")} value={event} onChange={e => setEvent(e.target.value)} />
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 9 }}><Input inputMode="numeric" value={year} onChange={e => setYear(e.target.value.replace(/\D/g, "").slice(0, 4))} /><Input placeholder="Skills · Robotics, Teamwork" value={skills} onChange={e => setSkills(e.target.value)} /></div>
-            <Input icon="link" placeholder={t("Link bukti (opsional)", "Evidence link (optional)")} value={url} onChange={e => setUrl(e.target.value)} />
-            <Btn disabled={title.trim().length < 2 || event.trim().length < 2 || +year < 2000} onClick={add}>{t("Simpan", "Save")}</Btn>
-          </div>
-        </Card>
-        {isLoading && <Loading />}
-        {data?.map(a => (
-          <div key={a.id} style={{ display: "flex", gap: 12, background: "#fff", borderRadius: 16, padding: 13, boxShadow: SH.card, alignItems: "center" }}>
-            <span style={{ width: 42, height: 42, borderRadius: 13, background: C.tintYellow, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 21, flex: "none" }}>{a.medal}</span>
-            <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontSize: 14, fontWeight: 700 }}>{a.title}</div><div style={{ fontSize: 12, color: C.muted }}>{a.event} · {a.year}</div>
-              <span style={{ display: "inline-block", marginTop: 5, fontSize: 10.5, fontWeight: 600, color: a.verified ? C.green : C.faint, background: a.verified ? C.tintGreen : C.soft, padding: "2px 9px", borderRadius: 99 }}>{a.verified ? t("Terverifikasi", "Verified") : t("Dilaporkan sendiri", "Self-reported")}</span></div>
-            <button onClick={async () => { await db.from("user_achievements").delete().eq("id", a.id); qc.invalidateQueries({ queryKey: ["m-ach"] }); }} aria-label={t("Hapus", "Delete")} style={{ border: "none", background: "none", color: C.disabled, cursor: "pointer", display: "flex" }}><Icon name="x" size={15} /></button>
-          </div>
-        ))}
-        {!isLoading && !data?.length && <Empty icon="medal" title={t("Belum ada prestasi", "No achievements yet")} body={t("Prestasi terverifikasi berbobot lebih besar di Career Readiness.", "Verified achievements weigh more in Career Readiness.")} />}
       </div>
     </Screen>
   );
