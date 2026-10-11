@@ -229,3 +229,13 @@ export const JENJANG_OPTS = [
   { value: "kuliah", label: "University", labelId: "Kuliah" },
   { value: "lulusan", label: "Graduate / Early Career", labelId: "Lulus / Awal karier" },
 ];
+
+/** Pilihan minat di Get-to-know (disimpan sebagai label Indonesia di app_prefs.interests). */
+export const INTEREST_TILES: [string, string, string, string, string][] = [
+  ["Memecahkan masalah", "Solving problems", "puzzle", "#EAF4FF", "#0066FF"],
+  ["Membuat hal baru", "Creating something new", "bulb", "#FDECEF", "#E11D48"],
+  ["Bekerja dengan orang", "Working with people", "users", "#F1EAFE", "#7C3AED"],
+  ["Menganalisis data", "Analyzing data", "chart", "#FFF6DB", "#B7791F"],
+  ["Menjelajah alam", "Exploring nature", "leaf", "#E7F8EE", "#16A34A"],
+  ["Teknologi & gawai", "Technology & gadgets", "cpu", "#E0F7FD", "#0891B2"],
+];

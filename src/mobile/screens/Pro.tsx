@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { usePaketLangganan } from "@/hooks/usePaketLangganan";
 import { invalidateSubscriptionCache } from "@/hooks/useSubscription";
 import { canPurchase, db, openExternal, useApp } from "../store";
-import { Btn, Confetti, Header, Input, Label, Loading, Radio } from "../ui";
+import { Btn, Confetti, Header, Icon, Input, Label, Loading, Radio } from "../ui";
 import { C, F, SH, rp, rpShort } from "../theme";
 import { cekPembayaran } from "@/lib/pembayaran";
 import { fmtDate } from "../logic";
@@ -31,12 +31,12 @@ function usePlans() {
   return { plans, loading };
 }
 
-const FEATURES: [string, string, string, string, string][] = [
-  ["🧬", C.tintBlue, "Full Talent DNA", "8 modul assessment lengkap + laporan PDF untuk orang tua & aplikasi", "All 8 assessment modules + PDF report for parents & applications"],
-  ["🤝", C.tintGreen, "Booking mentor", "Pilih mentor terverifikasi, sesi 1-on-1 30 menit", "Book verified mentors, 30-minute 1-on-1 sessions"],
-  ["✦", C.tintYellow, "AI Copilot & Application Assistant", "CV, motivation letter, esai beasiswa, latihan interview — tanpa batas harian", "CV, motivation letter, scholarship essays, interview practice — no daily cap"],
-  ["📚", C.tintOrange, "Semua learning track + sertifikat", "Materi tanpa batas & sertifikat terverifikasi", "Unlimited courses & verified certificates"],
-  ["🌐", C.tintPurple, "Community & Public Talent Profile", "Posting di komunitas & profil publik untuk aplikasi", "Post in the community & a public profile for applications"],
+const FEATURES: [string, string, string, string, string, string][] = [
+  ["sparkle", C.tintPurple, "Full Talent DNA", "8 modul assessment lengkap + laporan PDF untuk orang tua & aplikasi", "All 8 assessment modules + PDF report for parents & applications", C.purple],
+  ["users", C.tintGreen, "Booking mentor", "Pilih mentor terverifikasi, sesi 1-on-1 30 menit", "Book verified mentors, 30-minute 1-on-1 sessions", C.green],
+  ["msg", C.tintBlue, "Tika AI & Application Assistant", "CV, motivation letter, esai beasiswa, latihan interview — tanpa batas harian", "CV, motivation letter, scholarship essays, interview practice — no daily cap", C.blue],
+  ["book", C.tintYellow, "Semua jalur belajar + sertifikat", "Materi tanpa batas & sertifikat terverifikasi", "Unlimited courses & verified certificates", C.amber],
+  ["globe", C.tintSky, "Komunitas & Profil Talenta Publik", "Posting di komunitas & profil publik untuk aplikasi", "Post in the community & a public profile for applications", C.sky],
 ];
 
 /* Versi native: informasi fitur Pro tanpa harga, tombol beli, atau tautan ke pembayaran luar
@@ -50,18 +50,18 @@ function NativeProInfo() {
     <div style={{ position: "absolute", inset: 0, overflow: "auto", background: C.bg, paddingBottom: 40 }}>
       <div style={{ background: C.navy, padding: "calc(env(safe-area-inset-top, 0px) + 20px) 22px 26px", borderRadius: "0 0 28px 28px", color: "#fff", position: "relative", overflow: "hidden" }}>
         <div style={{ position: "absolute", top: -60, right: -60, width: 200, height: 200, borderRadius: "50%", background: "rgba(255,255,255,.06)" }} />
-        <button onClick={() => nav(-1)} aria-label={t("Tutup", "Close")} style={{ width: 38, height: 38, border: "none", borderRadius: 12, background: "rgba(255,255,255,.12)", cursor: "pointer", fontSize: 15, color: "#fff", fontFamily: "inherit", position: "relative" }}>✕</button>
-        <div style={{ marginTop: 16, display: "inline-flex", alignItems: "center", gap: 7, background: "rgba(255,193,7,.18)", padding: "6px 12px", borderRadius: 99, position: "relative" }}><span>👑</span><span style={{ fontSize: 11.5, fontWeight: 700, fontFamily: F.display, color: C.yellow, letterSpacing: ".5px" }}>TALENTIKA PRO</span></div>
-        <h1 style={{ margin: "12px 0 0", fontSize: 25, fontWeight: 700, fontFamily: F.display, letterSpacing: "-.4px", lineHeight: 1.25, position: "relative" }}>{isPro ? t("Talentika Pro aktif", "Talentika Pro is active") : t("Fitur Talentika Pro", "Talentika Pro features")}</h1>
+        <button onClick={() => nav(-1)} aria-label={t("Tutup", "Close")} style={{ width: 42, height: 42, border: "none", borderRadius: "50%", background: "rgba(255,255,255,.12)", cursor: "pointer", color: "#fff", position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name="x" size={18} /></button>
+        <div style={{ marginTop: 16, display: "inline-flex", alignItems: "center", gap: 7, background: "rgba(255,209,70,.18)", padding: "6px 12px", borderRadius: 99, position: "relative" }}><span style={{ color: C.yellow, display: "flex" }}><Icon name="star" size={14} filled /></span><span style={{ fontSize: 11.5, fontWeight: 700, color: C.yellow, letterSpacing: ".5px" }}>TALENTIKA PLUS · PRO</span></div>
+        <h1 style={{ margin: "12px 0 0", fontSize: 25, fontWeight: 700, fontFamily: F.display, letterSpacing: "-.4px", lineHeight: 1.25, position: "relative" }}>{isPro ? t("Langgananmu aktif", "Your plan is active") : t("Fitur Talentika Plus & Pro", "Talentika Plus & Pro features")}</h1>
         <p style={{ margin: "8px 0 0", fontSize: 13.5, lineHeight: 1.55, color: "rgba(255,255,255,.8)", maxWidth: 290, position: "relative" }}>
-          {isPro ? t("Semua fitur di bawah sudah terbuka untukmu.", "All features below are unlocked for you.") : t("Fitur ini tersedia untuk akun Talentika Pro, termasuk akun dari sekolah mitra.", "These features are available to Talentika Pro accounts, including partner-school accounts.")}
+          {isPro ? t("Semua fitur di bawah sudah terbuka untukmu.", "All features below are unlocked for you.") : t("Fitur ini tersedia untuk akun Plus/Pro, termasuk akun dari sekolah mitra.", "These features are available to Plus/Pro accounts, including partner-school accounts.")}
         </p>
       </div>
       <div style={{ padding: "18px 20px 0", display: "flex", flexDirection: "column", gap: 9 }}>
-        {FEATURES.map(([ic, bg, ti, d, de]) => (
-          <div key={ti} style={{ display: "flex", gap: 12, background: "#fff", borderRadius: 15, padding: "13px 14px", boxShadow: SH.cardSm }}>
-            <span style={{ width: 30, height: 30, borderRadius: 10, background: bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, flex: "none", color: C.gold }}>{ic}</span>
-            <div style={{ flex: 1 }}><div style={{ fontSize: 13.5, fontWeight: 700 }}>{ti} {isPro && <span style={{ color: C.green }}>✓</span>}</div><div style={{ marginTop: 2, fontSize: 12, color: C.muted, lineHeight: 1.4 }}>{lang === "en" ? de : d}</div></div>
+        {FEATURES.map(([ic, bg, ti, d, de, fc]) => (
+          <div key={ti} style={{ display: "flex", gap: 12, background: "#fff", borderRadius: 16, padding: "12px 14px", boxShadow: SH.card, alignItems: "center" }}>
+            <span style={{ width: 38, height: 38, borderRadius: 12, background: bg, display: "flex", alignItems: "center", justifyContent: "center", flex: "none", color: fc }}><Icon name={ic} size={18} /></span>
+            <div style={{ flex: 1 }}><div style={{ fontSize: 13.5, fontWeight: 700 }}>{ti} {isPro && <span style={{ color: C.green, display: "inline-flex", verticalAlign: "middle" }}><Icon name="check" size={14} /></span>}</div><div style={{ marginTop: 2, fontSize: 12, color: C.muted, lineHeight: 1.4 }}>{lang === "en" ? de : d}</div></div>
           </div>
         ))}
         <Btn kind="outline" h={48} onClick={async () => { invalidateSubscriptionCache(); await qc.invalidateQueries({ queryKey: ["m-access"] }); toast(t("Status akun diperbarui", "Account status refreshed")); }} style={{ marginTop: 8 }}>{t("Muat ulang status akun", "Refresh account status")}</Btn>
@@ -83,23 +83,23 @@ function ProScreen() {
     <div style={{ position: "absolute", inset: 0, overflow: "auto", background: C.bg, paddingBottom: 40 }}>
       <div style={{ background: C.navy, padding: "calc(env(safe-area-inset-top, 0px) + 20px) 22px 26px", borderRadius: "0 0 28px 28px", color: "#fff", position: "relative", overflow: "hidden" }}>
         <div style={{ position: "absolute", top: -60, right: -60, width: 200, height: 200, borderRadius: "50%", background: "rgba(255,255,255,.06)" }} />
-        <button onClick={() => nav(-1)} aria-label={t("Tutup", "Close")} style={{ width: 38, height: 38, border: "none", borderRadius: 12, background: "rgba(255,255,255,.12)", cursor: "pointer", fontSize: 15, color: "#fff", fontFamily: "inherit", position: "relative" }}>✕</button>
-        <div style={{ marginTop: 16, display: "inline-flex", alignItems: "center", gap: 7, background: "rgba(255,193,7,.18)", padding: "6px 12px", borderRadius: 99, position: "relative" }}><span>👑</span><span style={{ fontSize: 11.5, fontWeight: 700, fontFamily: F.display, color: C.yellow, letterSpacing: ".5px" }}>TALENTIKA PRO</span></div>
+        <button onClick={() => nav(-1)} aria-label={t("Tutup", "Close")} style={{ width: 42, height: 42, border: "none", borderRadius: "50%", background: "rgba(255,255,255,.12)", cursor: "pointer", color: "#fff", position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name="x" size={18} /></button>
+        <div style={{ marginTop: 16, display: "inline-flex", alignItems: "center", gap: 7, background: "rgba(255,209,70,.18)", padding: "6px 12px", borderRadius: 99, position: "relative" }}><span style={{ color: C.yellow, display: "flex" }}><Icon name="star" size={14} filled /></span><span style={{ fontSize: 11.5, fontWeight: 700, color: C.yellow, letterSpacing: ".5px" }}>TALENTIKA PLUS · PRO</span></div>
         <h1 style={{ margin: "12px 0 0", fontSize: 25, fontWeight: 700, fontFamily: F.display, letterSpacing: "-.4px", lineHeight: 1.25, position: "relative" }}>{t("Buka potensi penuhmu", "Unlock your full potential")}</h1>
         <p style={{ margin: "8px 0 0", fontSize: 13.5, lineHeight: 1.55, color: "rgba(255,255,255,.8)", maxWidth: 290, position: "relative" }}>{t("Full Talent DNA, mentoring, dan AI Application Assistant dalam satu langganan.", "Full Talent DNA, mentoring and the AI Application Assistant in one subscription.")}</p>
       </div>
       <div style={{ padding: "18px 20px 0", display: "flex", flexDirection: "column", gap: 9 }}>
-        {isPro && <div style={{ background: C.tintGreen, borderRadius: 15, padding: "13px 14px", fontSize: 13.5, fontWeight: 700, color: C.greenDark }}>✓ {t("Kamu sudah Talentika Pro", "You're already on Talentika Pro")}</div>}
-        {FEATURES.map(([ic, bg, ti, d, de]) => (
-          <div key={ti} style={{ display: "flex", gap: 12, background: "#fff", borderRadius: 15, padding: "13px 14px", boxShadow: SH.cardSm }}>
-            <span style={{ width: 30, height: 30, borderRadius: 10, background: bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, flex: "none", color: C.gold }}>{ic}</span>
+        {isPro && <div style={{ background: C.tintGreen, borderRadius: 15, padding: "13px 14px", fontSize: 13.5, fontWeight: 700, color: C.greenDark }}>{t("Langgananmu sudah aktif", "Your plan is already active")}</div>}
+        {FEATURES.map(([ic, bg, ti, d, de, fc]) => (
+          <div key={ti} style={{ display: "flex", gap: 12, background: "#fff", borderRadius: 16, padding: "12px 14px", boxShadow: SH.card, alignItems: "center" }}>
+            <span style={{ width: 38, height: 38, borderRadius: 12, background: bg, display: "flex", alignItems: "center", justifyContent: "center", flex: "none", color: fc }}><Icon name={ic} size={18} /></span>
             <div style={{ flex: 1 }}><div style={{ fontSize: 13.5, fontWeight: 700 }}>{ti}</div><div style={{ marginTop: 2, fontSize: 12, color: C.muted, lineHeight: 1.4 }}>{lang === "en" ? de : d}</div></div>
           </div>
         ))}
         <div style={{ marginTop: 10, fontSize: 15, fontWeight: 800 }}>{t("Pilih paket", "Choose a plan")}</div>
         {loading && <Loading />}
         {plans.map(p => { const on = chosen?.key === p.key; return (
-          <button key={p.key} onClick={() => setSel(p.key)} style={{ textAlign: "left", border: `2px solid ${on ? C.blue : C.track}`, borderRadius: 18, background: on ? C.tintBlue : "#fff", padding: 15, cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", gap: 13 }}>
+          <button key={p.key} onClick={() => setSel(p.key)} style={{ textAlign: "left", border: `1.5px solid ${on ? C.blue : C.line}`, borderRadius: 18, background: on ? C.tintBlue : "#fff", padding: 15, cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", gap: 13 }}>
             <Radio on={on} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 7 }}><span style={{ fontSize: 15, fontWeight: 700, fontFamily: F.display, color: C.text }}>{lang === "en" ? p.nameEn : p.name}</span>{p.popular && <span style={{ fontSize: 10, fontWeight: 700, fontFamily: F.display, color: "#7A5200", background: C.yellow, padding: "3px 8px", borderRadius: 99 }}>{t("Terpopuler", "Popular")}</span>}</div>
@@ -108,7 +108,7 @@ function ProScreen() {
             <div style={{ textAlign: "right", flex: "none" }}><div style={{ fontSize: 15, fontWeight: 700, fontFamily: F.display, color: C.blue }}>{rpShort(p.price)}</div><div style={{ fontSize: 11, color: C.faint, fontWeight: 600 }}>{lang === "en" ? p.perEn : p.per}</div></div>
           </button>); })}
         <Btn kind="orange" h={54} disabled={!chosen} onClick={() => { track("paywall_viewed", { entry_point: "pro_continue", plan: chosen?.key }); nav(`/app/checkout?plan=${chosen!.id}&cycle=${chosen!.cycle}`); }} style={{ marginTop: 8, fontSize: 16 }}>{t("Lanjut ke Pembayaran", "Continue to payment")}</Btn>
-        <p style={{ margin: "6px 0 0", textAlign: "center", fontSize: 11.5, color: C.faint }}>{t("Bisa dibatalkan kapan saja · Siswa di sekolah mitra mendapat Pro lewat sekolah", "Cancel anytime · Students at partner schools get Pro through their school")}</p>
+        <p style={{ margin: "6px 0 0", textAlign: "center", fontSize: 11.5, color: C.faint }}>{t("Bisa dibatalkan kapan saja · Siswa di sekolah mitra mendapat akses lewat sekolah", "Cancel anytime · Students at partner schools get access through their school")}</p>
         <button onClick={async () => { invalidateSubscriptionCache(); await (supabase as any).rpc("my_access"); window.location.reload(); }} style={{ border: "none", background: "none", color: C.blue, fontSize: 12.5, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>{t("Pulihkan pembelian", "Restore purchases")}</button>
       </div>
     </div>
@@ -160,7 +160,7 @@ function Checkout() {
       <Header title={t("Pembayaran", "Payment")} />
       <div style={{ padding: "16px 20px 0", display: "flex", flexDirection: "column", gap: 14 }}>
         <div style={{ background: "#fff", borderRadius: 20, padding: 17, boxShadow: SH.card }}>
-          <div style={{ fontSize: 14.5, fontWeight: 800 }}>👑 Talentika {lang === "en" ? plan.nameEn : plan.name}</div>
+          <div style={{ fontSize: 14.5, fontWeight: 700, display: "flex", alignItems: "center", gap: 7 }}><span style={{ color: C.amber, display: "flex" }}><Icon name="star" size={16} filled /></span>Talentika {lang === "en" ? plan.nameEn : plan.name}</div>
           <div style={{ marginTop: 3, fontSize: 12, color: C.muted }}>{lang === "en" ? plan.subEn : plan.sub} · {t("sampai", "until")} ±{fmtDate(until.toISOString(), lang)}</div>
           <div style={{ marginTop: 13, paddingTop: 13, borderTop: `1px solid ${C.track}`, display: "flex", flexDirection: "column", gap: 8, fontSize: 13 }}>
             <div style={{ display: "flex", justifyContent: "space-between", color: C.muted }}><span>Subtotal</span><span style={{ fontWeight: 700, color: C.text }}>{rp(plan.price)}</span></div>
@@ -171,7 +171,7 @@ function Checkout() {
         <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
           <div style={{ fontSize: 14.5, fontWeight: 800 }}>{t("Metode pembayaran", "Payment method")}</div>
           {METHODS.map(m => { const on = method === m.id; return (
-            <button key={m.id} onClick={() => setMethod(m.id)} style={{ textAlign: "left", display: "flex", alignItems: "center", gap: 13, border: `2px solid ${on ? C.blue : C.track}`, borderRadius: 15, background: on ? C.tintBlue : "#fff", padding: "13px 14px", cursor: "pointer", fontFamily: "inherit" }}>
+            <button key={m.id} onClick={() => setMethod(m.id)} style={{ textAlign: "left", display: "flex", alignItems: "center", gap: 13, border: `1.5px solid ${on ? C.blue : C.line}`, borderRadius: 16, background: on ? C.tintBlue : "#fff", padding: "13px 14px", cursor: "pointer", fontFamily: "inherit" }}>
               <span style={{ width: 38, height: 30, borderRadius: 8, background: m.lbg, color: m.lfg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, fontFamily: F.display, flex: "none" }}>{m.logo}</span>
               <div style={{ flex: 1 }}><div style={{ fontSize: 13.5, fontWeight: 700, color: C.text }}>{m.name}</div><div style={{ fontSize: 11.5, color: C.faint, marginTop: 1 }}>{lang === "en" ? m.subEn : m.sub}</div></div>
               <Radio on={on} />
@@ -183,9 +183,9 @@ function Checkout() {
           <Label>{t("Kode voucher (opsional)", "Voucher code (optional)")}</Label>
           <Input value={voucher} onChange={e => setVoucher(e.target.value)} placeholder="KIP2026" autoCapitalize="characters" />
         </div>
-        {consent === false && <div style={{ background: C.tintYellow, borderRadius: 14, padding: "12px 14px", fontSize: 12.5, color: C.text3, lineHeight: 1.5 }}>🛡️ {t("Karena usiamu di bawah 18 tahun, pembayaran butuh persetujuan orang tua. Undang orang tuamu di Privacy & Sharing.", "Because you're under 18, payment needs parental consent. Invite your parent in Privacy & Sharing.")}</div>}
+        {consent === false && <div style={{ background: C.tintYellow, borderRadius: 14, padding: "12px 14px", fontSize: 12.5, color: C.text3, lineHeight: 1.5, display: "flex", gap: 9 }}><span style={{ color: C.amber, display: "flex", flex: "none" }}><Icon name="shield" size={16} /></span>{t("Karena usiamu di bawah 18 tahun, pembayaran butuh persetujuan orang tua. Undang orang tuamu di Keluarga & Sekolah.", "Because you're under 18, payment needs parental consent. Invite your parent in Family & School.")}</div>}
         <Btn kind="orange" h={54} disabled={busy || !consent || phone.replace(/\D/g, "").length < 9} onClick={pay} style={{ fontSize: 16 }}>{busy ? "…" : `${t("Bayar", "Pay")} ${rp(plan.price)}`}</Btn>
-        <p style={{ margin: 0, textAlign: "center", fontSize: 11.5, color: C.faint }}>🔒 {t("Pembayaran aman via Mayar", "Secure payment via Mayar")}</p>
+        <p style={{ margin: 0, textAlign: "center", fontSize: 11.5, color: C.faint, display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}><Icon name="lock" size={12} />{t("Pembayaran aman via Mayar", "Secure payment via Mayar")}</p>
       </div>
     </div>
   );
@@ -219,8 +219,8 @@ function Paid() {
     <div style={{ position: "absolute", inset: 0, background: C.bg, display: "flex", flexDirection: "column", padding: "calc(env(safe-area-inset-top, 0px) + 20px) 24px calc(env(safe-area-inset-bottom, 0px) + 36px)", textAlign: "center", overflow: "hidden" }}>
       {state === "ok" && <Confetti />}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center" }}>
-        <div style={{ width: 100, height: 100, borderRadius: "50%", background: C.navy, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 46, animation: "tkPop .5s ease both" }}>{state === "ok" ? "👑" : "⏳"}</div>
-        <h1 style={{ margin: "22px 0 0", fontSize: 25, fontWeight: 700, fontFamily: F.display, letterSpacing: "-.4px" }}>{state === "ok" ? t("Kamu sekarang Pro! 🎉", "You're Pro now! 🎉") : t("Mengonfirmasi pembayaran…", "Confirming payment…")}</h1>
+        <div style={{ width: 100, height: 100, borderRadius: "50%", background: C.navy, display: "flex", alignItems: "center", justifyContent: "center", color: state === "ok" ? C.yellow : "#fff", animation: "tkPop .5s ease both" }}><Icon name={state === "ok" ? "star" : "clock"} size={44} filled={state === "ok"} /></div>
+        <h1 style={{ margin: "22px 0 0", fontSize: 25, fontWeight: 700, fontFamily: F.display, letterSpacing: "-.4px" }}>{state === "ok" ? t("Langgananmu aktif!", "Your plan is active!") : t("Mengonfirmasi pembayaran…", "Confirming payment…")}</h1>
         <p style={{ margin: "10px auto 0", fontSize: 14, color: C.muted, lineHeight: 1.6, maxWidth: 280 }}>
           {state === "ok" ? t(`Aktif sampai ${fmtDate(exp, lang)}. Mulai dari modul Talent DNA lengkap atau booking mentor pertamamu.`, `Active until ${fmtDate(exp, lang)}. Start with the full Talent DNA or book your first mentor.`)
             : state === "wait" ? t("Biasanya kurang dari satu menit setelah pembayaran berhasil.", "Usually under a minute after a successful payment.")

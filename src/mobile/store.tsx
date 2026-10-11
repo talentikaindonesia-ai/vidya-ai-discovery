@@ -34,6 +34,18 @@ interface Ctx {
 }
 
 const AppCtx = createContext<Ctx>(null as any);
+
+/* Pratinjau desain (HANYA dev server): `localStorage.setItem("tk-dev-mock","1")` →
+ * pengguna & profil contoh tanpa login, agar layar ber-auth bisa dicek visual.
+ * Data publik (karier, peluang, materi) tetap dari database; data pribadi kosong
+ * karena RLS. Di build produksi import.meta.env.DEV = false sehingga blok ini hilang. */
+const DEV_MOCK = import.meta.env.DEV && typeof window !== "undefined" && window.localStorage?.getItem("tk-dev-mock") === "1";
+const MOCK_USER = { id: "00000000-0000-4000-8000-0000000000d1", email: "pratinjau@talentika.test" } as unknown as User;
+const MOCK_PROFILE: Profile = {
+  user_id: MOCK_USER.id, full_name: "Siswa Pratinjau", email: "pratinjau@talentika.test", avatar_url: null, role: "student", jenjang: "sma_smk", usia: 16, kelas: "XI",
+  school_name: "SMA Contoh", school_code: null, lokasi: "Jakarta", language_preference: "id", onboarding_done: true, career_target: null, username: null, bio: null,
+  tujuan: "kuliah", app_prefs: { interests: ["Membuat hal baru", "Teknologi & gawai"], learn_style: 2 }, notif_prefs: null, phone: null,
+};
 export const useApp = () => useContext(AppCtx);
 
 export function AppProvider({ children }: { children: ReactNode }) {
@@ -44,6 +56,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const timer = useRef<number>();
 
   useEffect(() => {
+    if (DEV_MOCK) { setUser(MOCK_USER); setAuthReady(true); return; }
     supabase.auth.getSession().then(({ data }) => { setUser(data.session?.user ?? null); setAuthReady(true); });
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => { setUser(s?.user ?? null); qc.invalidateQueries(); });
     return () => sub.subscription.unsubscribe();
@@ -53,6 +66,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     queryKey: ["m-profile", user?.id],
     enabled: !!user,
     queryFn: async () => {
+      if (DEV_MOCK) return MOCK_PROFILE;
       const { data } = await db.from("profiles").select("*").eq("user_id", user!.id).maybeSingle();
       return data as Profile | null;
     },
@@ -116,10 +130,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     <AppCtx.Provider value={value}>
       {children}
       {toastMsg && (
-        <div role="status" style={{ position: "absolute", top: "calc(env(safe-area-inset-top, 0px) + 14px)", left: 20, right: 20, zIndex: 90, background: toastMsg.kind === "error" ? "#7F1D1D" : "#0B1D3A", color: "#fff",
-          borderRadius: 16, padding: "13px 16px", fontSize: 13, fontWeight: 700, boxShadow: "0 12px 30px rgba(11,29,58,.35)", display: "flex", alignItems: "center", gap: 10, animation: "tkFadeUp .3s ease both" }}>
-          <span style={{ color: toastMsg.kind === "error" ? "#FCA5A5" : "#5CE0A1", fontSize: 16 }}>{toastMsg.kind === "gain" ? "↗" : toastMsg.kind === "error" ? "!" : "✓"}</span>
-          <span style={{ flex: 1 }}>{toastMsg.msg}</span>
+        <div role="status" style={{ position: "absolute", left: "50%", bottom: "calc(env(safe-area-inset-bottom, 0px) + 112px)", transform: "translateX(-50%)", zIndex: 90, maxWidth: "calc(100% - 40px)",
+          background: toastMsg.kind === "error" ? "#7F1D1D" : "#0F172A", color: "#fff", borderRadius: 14, padding: "11px 18px", fontSize: 13, fontWeight: 500,
+          boxShadow: "0 10px 24px rgba(15,23,42,.3)", display: "flex", alignItems: "center", gap: 9, animation: "tkToast .25s ease both" }}>
+          {toastMsg.kind !== "info" && <span style={{ color: toastMsg.kind === "error" ? "#FCA5A5" : "#5CE0A1", fontWeight: 700 }}>{toastMsg.kind === "gain" ? "↗" : "!"}</span>}
+          <span>{toastMsg.msg}</span>
         </div>
       )}
     </AppCtx.Provider>
@@ -276,7 +291,7 @@ export async function openExternal(url: string) {
   if (!/^(https?:|mailto:|tel:)/i.test((url ?? "").trim())) return;
   if ((window as any).Capacitor?.isNativePlatform?.()) {
     const { Browser } = await import("@capacitor/browser");
-    await Browser.open({ url, presentationStyle: "popover", toolbarColor: "#1D4ED8" });
+    await Browser.open({ url, presentationStyle: "popover", toolbarColor: "#0066FF" });
     return;
   }
   window.open(url, "_blank", "noopener,noreferrer");

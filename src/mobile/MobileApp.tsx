@@ -2,9 +2,8 @@ import React, { lazy, ReactNode, Suspense, useEffect } from "react";
 import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { AppProvider, handleAuthCallback, NATIVE_SCHEME, useApp } from "./store";
 import { initPush } from "./push";
-import { GLOBAL_CSS, Loading } from "./ui";
+import { GLOBAL_CSS, Icon, Loading, TIKA } from "./ui";
 import { C, F } from "./theme";
-import tika from "./assets/tika-mascot.webp";
 
 const Onb = lazy(() => import("./screens/Onboarding"));
 const Dna = lazy(() => import("./screens/Dna"));
@@ -19,39 +18,48 @@ const Pro = lazy(() => import("./screens/Pro"));
 const Roles = lazy(() => import("./screens/Roles"));
 
 const TABS = [
-  { id: "home", path: "/app/home", label: "Home", labelId: "Beranda", d: "M3 10.5L12 3l9 7.5V21h-6v-6h-6v6H3z" },
-  { id: "discover", path: "/app/discover", label: "Discover", labelId: "Jelajah", d: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM15.5 8.5l-2 5-5 2 2-5 5-2z" },
-  { id: "learn", path: "/app/learn", label: "Learn", labelId: "Belajar", d: "M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5A2.5 2.5 0 0 0 6.5 22H20V2H6.5A2.5 2.5 0 0 0 4 4.5v15z" },
-  { id: "opps", path: "/app/opportunities", label: "Opportunities", labelId: "Peluang", d: "M3 8h18v12H3zM8 8V5a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v3M3 13h18" },
-  { id: "profile", path: "/app/profile", label: "Profile", labelId: "Profil", d: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21c0-4 4-6 8-6s8 2 8 6" },
+  { id: "home", path: "/app/home", label: "Home", labelId: "Beranda", icon: "home" },
+  { id: "learn", path: "/app/learn", label: "Learn", labelId: "Belajar", icon: "book" },
+  { id: "projects", path: "/app/projects", label: "Projects", labelId: "Proyek", icon: "folder" },
+  { id: "explore", path: "/app/explore", label: "Explore", labelId: "Jelajah", icon: "compass" },
+  { id: "profile", path: "/app/profile", label: "Profile", labelId: "Profil", icon: "user" },
 ];
+/** Rute yang menampilkan navigasi bawah (v3: tab utama + My Growth). */
 const TAB_ROOTS: Record<string, string> = {
-  "/app/home": "home", "/app/discover": "discover", "/app/learn": "learn", "/app/opportunities": "opps", "/app/profile": "profile",
+  "/app/home": "home", "/app/learn": "learn", "/app/projects": "projects", "/app/explore": "explore", "/app/opportunities": "explore",
+  "/app/profile": "profile", "/app/goals": "profile",
 };
+
+/** Edisi v3 dari jenjang: Explorer (SMP–SMA) atau Pro (kuliah & awal karier). Junior disembunyikan. */
+export function editionOf(jenjang?: string | null): "explorer" | "pro" {
+  return jenjang === "kuliah" || jenjang === "lulusan" ? "pro" : "explorer";
+}
 
 function BottomNav() {
   const { pathname } = useLocation();
   const nav = useNavigate();
-  const { t } = useApp();
+  const { t, profile } = useApp();
   const active = TAB_ROOTS[pathname.replace(/\/$/, "")];
   if (!active) return null;
+  const pro = editionOf(profile?.jenjang) === "pro";
   return (
     <>
-      <button onClick={() => nav("/app/copilot")} aria-label="AI Copilot"
-        style={{ position: "absolute", right: 18, bottom: "calc(env(safe-area-inset-bottom, 0px) + 100px)", zIndex: 30, height: 50, padding: "0 17px 0 14px", border: "none", borderRadius: 99,
-          background: C.navy, color: "#fff", fontSize: 13, fontWeight: 700, fontFamily: F.display, cursor: "pointer", boxShadow: "0 10px 26px rgba(11,29,58,.35)", display: "flex", alignItems: "center", gap: 7 }}>
-        <img src={tika} alt="" style={{ width: 34, height: 34, borderRadius: "50%", objectFit: "cover", background: C.tintBlue, marginLeft: -6 }} />AI Copilot
+      <button onClick={() => nav("/app/copilot")} aria-label={t("Tanya Tika AI", "Ask Tika AI")}
+        style={{ position: "absolute", right: 16, bottom: "calc(env(safe-area-inset-bottom, 0px) + 100px)", zIndex: 35, width: 60, height: 60, borderRadius: "50%", border: "3px solid #fff",
+          background: C.tintBlue, padding: 0, overflow: "hidden", cursor: "pointer", boxShadow: "0 10px 24px rgba(0,102,255,.35)" }}>
+        <img src={TIKA} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
       </button>
-      <nav style={{ position: "absolute", left: 12, right: 12, bottom: "calc(env(safe-area-inset-bottom, 0px) + 14px)", zIndex: 30, height: 72, background: "rgba(255,255,255,.94)",
-        backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", borderRadius: 24, boxShadow: "0 10px 30px rgba(11,29,58,.14)", display: "flex", alignItems: "center", padding: "0 4px" }}>
+      <nav style={{ position: "absolute", left: 0, right: 0, bottom: 0, zIndex: 30, background: "#fff", borderTop: "1px solid #EEF2F8", display: "flex",
+        padding: "8px 6px calc(env(safe-area-inset-bottom, 0px) + 14px)" }}>
         {TABS.map(tb => {
           const on = tb.id === active;
-          const col = on ? C.blue : C.faint;
+          const label = tb.id === "explore" && pro ? t("Karier", "Careers") : t(tb.labelId, tb.label);
+          const icon = tb.id === "explore" && pro ? "brief" : tb.icon;
           return (
             <button key={tb.id} onClick={() => nav(tb.path, { replace: true })} aria-current={on ? "page" : undefined}
-              style={{ flex: 1, minWidth: 0, height: "100%", border: "none", background: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, fontFamily: "inherit" }}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={col} strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d={tb.d} /></svg>
-              <span style={{ fontSize: 9.5, fontWeight: on ? 800 : 600, color: col }}>{t(tb.labelId, tb.label)}</span>
+              style={{ flex: 1, minWidth: 0, border: "none", background: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "4px 0", color: on ? C.blue : C.faint }}>
+              <Icon name={icon} size={23} />
+              <span style={{ fontSize: 11, fontWeight: on ? 600 : 500 }}>{label}</span>
             </button>
           );
         })}
@@ -75,7 +83,7 @@ function RequireAuth({ children }: { children: ReactNode }) {
   if (!authReady) return <Loading />;
   if (!user) return <Navigate to="/app" replace />;
   if (!profile) return <Loading />;
-  const onboardingPaths = ["/app/role", "/app/profile-setup", "/app/consent", "/app/start"];
+  const onboardingPaths = ["/app/role", "/app/profile-setup", "/app/get-to-know", "/app/consent", "/app/start"];
   if (!profile.onboarding_done && profile.role === "student" && !onboardingPaths.includes(pathname) && !pathname.startsWith("/app/mentor"))
     return <Navigate to="/app/role" replace />;
   return <>{children}</>;
@@ -128,6 +136,7 @@ function Shell() {
           <Route path="start" element={A(<Onb screen="start" />)} />
           <Route path="role" element={A(<Onb screen="role" />)} />
           <Route path="profile-setup" element={A(<Onb screen="education" />)} />
+          <Route path="get-to-know" element={A(<Onb screen="gtk" />)} />
           <Route path="consent" element={A(<Onb screen="consent" />)} />
           {/* Talent DNA (J2) */}
           <Route path="dna" element={A(<Dna screen="center" />)} />
@@ -137,10 +146,12 @@ function Shell() {
           <Route path="home" element={A(<Home screen="home" />)} />
           <Route path="notifications" element={A(<Home screen="notif" />)} />
           <Route path="readiness" element={A(<Home screen="readiness" />)} />
+          <Route path="recap" element={A(<Home screen="recap" />)} />
           <Route path="copilot" element={A(<Copilot />)} />
           {/* Discover */}
           <Route path="discover" element={A(<Discover screen="discover" />)} />
           <Route path="careers/:id" element={A(<Discover screen="detail" />)} />
+          <Route path="careers/:id/path" element={A(<Discover screen="path" />)} />
           <Route path="compare" element={A(<Discover screen="compare" />)} />
           <Route path="simulator" element={A(<Discover screen="sim" />)} />
           <Route path="universities" element={A(<Discover screen="unis" />)} />
@@ -151,6 +162,7 @@ function Shell() {
           <Route path="projects/:id" element={A(<Learn screen="project" />)} />
           <Route path="playbooks" element={A(<Learn screen="playbooks" />)} />
           {/* Opportunities */}
+          <Route path="explore" element={A(<Opps screen="list" />)} />
           <Route path="opportunities" element={A(<Opps screen="list" />)} />
           <Route path="opportunities/:id" element={A(<Opps screen="detail" />)} />
           <Route path="tracker" element={A(<Opps screen="tracker" />)} />
@@ -193,9 +205,9 @@ function Shell() {
  */
 export default function MobileApp() {
   return (
-    <div className="tk-app" style={{ minHeight: "100dvh", background: "#EEF1F6", display: "flex", justifyContent: "center" }}>
+    <div className="tk-app" style={{ minHeight: "100dvh", background: "#EAF4FF", display: "flex", justifyContent: "center" }}>
       <style>{GLOBAL_CSS}</style>
-      <div style={{ width: "100%", maxWidth: 440, height: "100dvh", position: "relative", overflow: "hidden", background: C.bg, boxShadow: "0 0 0 1px rgba(11,29,58,.04), 0 20px 60px rgba(11,29,58,.12)" }}>
+      <div style={{ width: "100%", maxWidth: 440, height: "100dvh", position: "relative", overflow: "hidden", background: C.bg, boxShadow: "0 0 0 1px rgba(15,23,42,.05), 0 30px 70px rgba(15,23,42,.14)" }}>
         <AppProvider>
           <Shell />
         </AppProvider>

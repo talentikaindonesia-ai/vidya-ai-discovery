@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { db, useApp, useDna } from "../store";
-import { BackBtn } from "../ui";
-import { C, F } from "../theme";
-import tika from "../assets/tika-mascot.webp";
+import { db, useApp, useCareers, useDna } from "../store";
+import { BackBtn, Icon, TIKA } from "../ui";
+import { C } from "../theme";
+import { editionOf } from "../MobileApp";
 
 interface Msg { id?: string; role: "user" | "assistant"; content: string; card?: { title: string; rows: [string, string][] } | null; pending?: boolean }
 
@@ -15,7 +15,7 @@ export default function Copilot() {
   const nav = useNavigate();
   const [params] = useSearchParams();
   const { t, lang, user, profile, toast, track, isPro } = useApp();
-  const { dna, done } = useDna();
+  const { done, title: dnaName } = useDna();
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
@@ -46,7 +46,7 @@ export default function Copilot() {
       const res = await fetch(FN_URL, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${s.session?.access_token}`, apikey: (supabase as any).supabaseKey ?? "" }, body: JSON.stringify({ mode: "chat", input: q, lang }) });
       if (!res.ok || !res.body) {
         const b = await res.json().catch(() => ({}));
-        setMsgs(m => m.slice(0, -1).concat({ role: "assistant", content: b.message ?? t("Talentika AI belum tersedia. Coba lagi nanti.", "Talentika AI isn't available yet. Try again later.") }));
+        setMsgs(m => m.slice(0, -1).concat({ role: "assistant", content: b.message ?? t("Tika AI belum tersedia. Coba lagi nanti.", "Talentika AI isn't available yet. Try again later.") }));
         if (b.error === "limit" && !isPro) setTimeout(() => nav("/app/pro"), 1600);
         setTyping(false); return;
       }
@@ -78,7 +78,7 @@ export default function Copilot() {
     const { error } = await db.from("plan_tasks").insert(rows);
     if (error) { toast(error.message, "error"); return; }
     setMsgs(m => m.map((x, k) => k === i ? { ...x, card: { ...card, title: card.title + " ✓" } } : x));
-    toast(t("Ditambahkan ke 90-Day Plan", "Added to your 90-Day Plan"));
+    toast(t("Ditambahkan ke Rencana Bertumbuh", "Added to your Growth Plan"));
   };
   const clearHistory = async () => {
     if (!confirm(t("Hapus seluruh riwayat chat AI?", "Delete all AI chat history?"))) return;
@@ -86,64 +86,72 @@ export default function Copilot() {
     setMsgs([]);
   };
 
-  const ctx = [dna?.axes ? "🧬 Talent DNA" : null, profile?.career_target ? `🎯 ${profile.career_target.toUpperCase()}` : null, `📘 ${done}/8 ${t("modul", "modules")}`].filter(Boolean) as string[];
+  const { careers } = useCareers();
+  const goal = careers.find(c => c.id === profile?.career_target);
+  const ed = editionOf(profile?.jenjang) === "pro" ? "Talentika Kampus" : "Talentika Explorer";
+  const ctx: [string, string, string][] = [
+    dnaName ? [dnaName, C.purple, C.tintPurple] : [t(`Talent DNA ${done}/8 modul`, `Talent DNA ${done}/8 modules`), C.purple, C.tintPurple],
+    ...(goal ? [[t(`Tujuan: ${goal.name}`, `Goal: ${goal.name_en || goal.name}`), C.blue, C.tintBlue] as [string, string, string]] : []),
+    [ed, C.amber, C.tintYellow],
+  ];
+  const canSend = !!input.trim() && !typing;
   return (
     <div style={{ position: "absolute", inset: 0, background: C.bg, display: "flex", flexDirection: "column" }}>
-      <div style={{ padding: "calc(env(safe-area-inset-top, 0px) + 20px) 20px 14px", background: "#fff", boxShadow: "0 2px 12px rgba(11,29,58,.06)", flex: "none" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <BackBtn small dark />
-          <img src={tika} alt="Tika" style={{ width: 42, height: 42, borderRadius: "50%", objectFit: "cover", flex: "none", background: C.tintBlue }} />
-          <div style={{ flex: 1 }}><div style={{ fontSize: 15, fontWeight: 800 }}>Talentika AI</div><div style={{ fontSize: 11.5, color: C.green, fontWeight: 700 }}>● Career Copilot</div></div>
-          {msgs.length > 0 && <button onClick={clearHistory} style={{ border: "none", background: "none", color: C.faint, fontSize: 11.5, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>{t("Hapus riwayat", "Clear")}</button>}
+      <div style={{ padding: "calc(env(safe-area-inset-top, 0px) + 14px) 20px 12px", display: "flex", alignItems: "center", gap: 12, background: "#fff", borderBottom: "1px solid #EEF2F8", flex: "none" }}>
+        <BackBtn dark />
+        <img src={TIKA} alt="Tika" style={{ width: 44, height: 44, borderRadius: "50%", objectFit: "cover", flex: "none", background: C.tintBlue }} />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 16, fontWeight: 700 }}>Tika · AI Mentor</div>
+          <div style={{ fontSize: 11, color: C.green, display: "flex", alignItems: "center", gap: 5 }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: C.green, flex: "none" }} />{t("Mengenal profil, tujuan & skill-mu", "Knows your profile, goals & skills")}</div>
         </div>
-        <div style={{ marginTop: 11, display: "flex", gap: 6, overflow: "auto" }}>
-          {ctx.map(c => <span key={c} style={{ flex: "none", fontSize: 10.5, fontWeight: 700, color: C.muted, background: C.bg, padding: "5px 9px", borderRadius: 99 }}>{c}</span>)}
-        </div>
+        {msgs.length > 0 && <button onClick={clearHistory} aria-label={t("Hapus riwayat", "Clear history")} style={{ width: 38, height: 38, border: "none", borderRadius: "50%", background: C.soft, color: C.muted, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flex: "none" }}><Icon name="trash" size={16} /></button>}
       </div>
-      <div ref={scroller} style={{ flex: 1, overflow: "auto", padding: "16px 20px", display: "flex", flexDirection: "column", gap: 12 }}>
-        <div style={{ display: "flex" }}>
-          <div style={{ maxWidth: "80%", padding: "12px 15px", borderRadius: "18px 18px 18px 6px", background: "#fff", color: C.text2, fontSize: 13.5, lineHeight: 1.55, boxShadow: "0 2px 10px rgba(11,29,58,.06)" }}>
-            {t(`Halo ${first || ""}! Aku Talentika AI ✦ Aku tahu Talent DNA, target, dan goals-mu. Mau mulai dari mana?`, `Hi ${first || ""}! I'm Talentika AI ✦ I know your Talent DNA, target and goals. Where shall we start?`)}
-          </div>
+      <div ref={scroller} style={{ flex: 1, overflow: "auto", padding: "14px 18px", display: "flex", flexDirection: "column", gap: 12 }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+          {ctx.map(([l, c, bg]) => <span key={l} style={{ fontSize: 10.5, fontWeight: 500, color: c, background: bg, padding: "4px 10px", borderRadius: 99 }}>{l}</span>)}
         </div>
-        {msgs.map((m, i) => (
-          <div key={i} style={{ display: "flex", justifyContent: m.role === "assistant" ? "flex-start" : "flex-end", flexDirection: "column", alignItems: m.role === "assistant" ? "flex-start" : "flex-end", gap: 8 }}>
+        <div style={{ alignSelf: "flex-start", maxWidth: "86%", background: "#fff", borderRadius: "6px 18px 18px 18px", padding: "12px 14px", fontSize: 13, lineHeight: 1.55, color: C.text, boxShadow: "0 2px 10px rgba(15,23,42,.05)" }}>
+          {t(`Halo ${first || ""}! Aku Tika, mentor AI-mu. Aku tahu Profil Talenta, tujuan, dan skill-mu. Mau mengerjakan apa hari ini?`, `Hi ${first || ""}! I'm Tika, your AI mentor. I know your Talent Profile, goals and skills. What do you want to work on today?`)}
+        </div>
+        {msgs.map((m, i) => m.role === "user" ? (
+          <div key={i} style={{ alignSelf: "flex-end", maxWidth: "80%", background: C.blue, color: "#fff", borderRadius: "18px 6px 18px 18px", padding: "11px 14px", fontSize: 13, lineHeight: 1.5, whiteSpace: "pre-wrap" }}>{m.content}</div>
+        ) : (
+          <div key={i} style={{ alignSelf: "flex-start", maxWidth: "88%", display: "flex", flexDirection: "column", gap: 8 }}>
             {(m.content || m.pending) && (
-              <div style={{ maxWidth: "80%", padding: "12px 15px", borderRadius: m.role === "assistant" ? "18px 18px 18px 6px" : "18px 18px 6px 18px", background: m.role === "assistant" ? "#fff" : C.blue,
-                color: m.role === "assistant" ? C.text2 : "#fff", fontSize: 13.5, lineHeight: 1.55, boxShadow: "0 2px 10px rgba(11,29,58,.06)", whiteSpace: "pre-wrap" }}>
+              <div style={{ background: "#fff", borderRadius: "6px 18px 18px 18px", padding: "12px 14px", fontSize: 13, lineHeight: 1.55, color: C.text, boxShadow: "0 2px 10px rgba(15,23,42,.05)", whiteSpace: "pre-wrap" }}>
                 {m.content || <span style={{ color: C.faint, letterSpacing: 2 }}>●●●</span>}
-                {m.role === "assistant" && !m.pending && m.content && <div style={{ marginTop: 6, fontSize: 10, fontWeight: 700, color: C.faint }}>✦ AI-generated</div>}
               </div>
             )}
             {m.card && (
-              <div style={{ width: "86%", background: "#fff", borderRadius: "18px 18px 18px 6px", padding: 15, boxShadow: "0 2px 10px rgba(11,29,58,.06)" }}>
-                <div style={{ fontSize: 14, fontWeight: 800 }}>{m.card.title}</div>
-                <div style={{ marginTop: 9, display: "flex", flexDirection: "column", gap: 7 }}>
+              <div style={{ background: C.navy, borderRadius: 18, padding: "13px 14px", color: "#fff" }}>
+                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".6px", color: C.yellow, textTransform: "uppercase" }}>{m.card.title}</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 8 }}>
                   {m.card.rows.map((r, k) => (
-                    <div key={k} style={{ display: "flex", gap: 10, fontSize: 12.5, lineHeight: 1.45 }}>
-                      <span style={{ width: 70, fontWeight: 700, fontFamily: F.display, color: C.blue, flex: "none" }}>{r[0]}</span>
+                    <div key={k} style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 12.5, color: "rgba(255,255,255,.9)" }}>
+                      <span style={{ width: 6, height: 6, borderRadius: "50%", background: C.cyan, flex: "none" }} />
+                      <b style={{ fontWeight: 600, flex: "none" }}>{r[0]}:</b>
                       {editing === i ? <input value={r[1]} onChange={e => setMsgs(ms => ms.map((x, j) => j === i ? { ...x, card: { ...x.card!, rows: x.card!.rows.map((rr, kk) => kk === k ? [rr[0], e.target.value] as [string, string] : rr) } } : x))}
-                        style={{ flex: 1, border: `1px solid ${C.lightBlue}`, borderRadius: 6, padding: "2px 6px", fontFamily: "inherit", fontSize: 12.5 }} /> : <span style={{ color: C.text2 }}>{r[1]}</span>}
+                        style={{ flex: 1, minWidth: 0, border: "1px solid rgba(255,255,255,.3)", borderRadius: 6, padding: "2px 6px", fontFamily: "inherit", fontSize: 12.5, background: "rgba(255,255,255,.08)", color: "#fff" }} /> : <span>{r[1]}</span>}
                     </div>
                   ))}
                 </div>
-                <div style={{ marginTop: 11, display: "flex", alignItems: "center", gap: 8 }}>
-                  {!m.card.title.endsWith("✓") && <button onClick={() => addToGoals(m.card!, i)} style={{ border: "none", background: C.tintBlue, color: C.blueDark, fontFamily: "inherit", fontSize: 12, fontWeight: 700, padding: "7px 12px", borderRadius: 99, cursor: "pointer" }}>+ {t("Tambah ke Goals", "Add to Goals")}</button>}
-                  <span style={{ flex: 1 }} />
-                  <span style={{ fontSize: 10.5, fontWeight: 700, color: C.faint }}>✦ AI-generated · <u style={{ cursor: "pointer" }} onClick={() => setEditing(editing === i ? null : i)}>{editing === i ? t("Selesai", "Done") : "Edit"}</u></span>
+                <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 10 }}>
+                  {!m.card.title.endsWith("✓") && <button onClick={() => addToGoals(m.card!, i)} style={{ height: 34, border: "none", borderRadius: 10, background: C.blue, color: "#fff", fontSize: 12, fontWeight: 600, padding: "0 12px", cursor: "pointer" }}>{t("Tambah ke Rencana Bertumbuh", "Add to my Growth Plan")}</button>}
+                  <button onClick={() => setEditing(editing === i ? null : i)} style={{ marginLeft: "auto", border: "none", background: "none", color: "rgba(255,255,255,.7)", fontSize: 11.5, fontWeight: 600, cursor: "pointer", padding: 0 }}>{editing === i ? t("Selesai", "Done") : t("Ubah", "Edit")}</button>
                 </div>
               </div>
             )}
+            {!m.pending && m.content && <div style={{ fontSize: 10.5, color: C.faint }}>{t("Dibuat AI · cek detail penting dengan mentor atau guru", "AI-generated · check important details with a mentor or teacher")}</div>}
           </div>
         ))}
       </div>
-      <div style={{ flex: "none", padding: "0 20px 10px", display: "flex", gap: 8, overflow: "auto" }}>
-        {CHIPS(t).map(c => <button key={c} onClick={() => send(c)} disabled={typing} style={{ flex: "none", border: `1.5px solid ${C.line}`, borderRadius: 99, background: "#fff", color: C.blue, fontFamily: "inherit", fontSize: 12.5, fontWeight: 700, padding: "9px 14px", cursor: "pointer" }}>{c}</button>)}
+      <div style={{ flex: "none", padding: "8px 18px 0", display: "flex", gap: 7, overflow: "auto" }}>
+        {CHIPS(t).map(c => <button key={c} onClick={() => send(c)} disabled={typing} style={{ flex: "none", height: 34, border: "1.5px solid #D6E6FF", borderRadius: 99, background: "#fff", color: C.blue, fontSize: 12, fontWeight: 500, padding: "0 13px", cursor: "pointer", whiteSpace: "nowrap" }}>{c}</button>)}
       </div>
-      <form onSubmit={e => { e.preventDefault(); send(input); }} style={{ flex: "none", padding: "0 20px calc(env(safe-area-inset-bottom, 0px) + 28px)", display: "flex", gap: 10 }}>
-        <input value={input} onChange={e => setInput(e.target.value)} placeholder={t("Tanya Talentika AI…", "Ask Talentika AI…")} aria-label={t("Pesan", "Message")} maxLength={2000}
-          style={{ flex: 1, minWidth: 0, height: 48, border: `1.5px solid ${C.line}`, borderRadius: 99, padding: "0 18px", fontFamily: "inherit", fontSize: 14, background: "#fff", color: C.text, outline: "none" }} />
-        <button type="submit" aria-label={t("Kirim", "Send")} disabled={!input.trim() || typing} style={{ width: 48, height: 48, border: "none", borderRadius: "50%", background: input.trim() && !typing ? C.blue : C.disabled, color: "#fff", fontSize: 16, cursor: "pointer", flex: "none" }}>➤</button>
+      <form onSubmit={e => { e.preventDefault(); send(input); }} style={{ flex: "none", padding: "10px 18px calc(env(safe-area-inset-bottom, 0px) + 24px)", display: "flex", gap: 10 }}>
+        <input value={input} onChange={e => setInput(e.target.value)} placeholder={t("Tanya Tika apa saja…", "Ask Tika anything…")} aria-label={t("Pesan", "Message")} maxLength={2000}
+          style={{ flex: 1, minWidth: 0, height: 50, border: `1.5px solid ${C.line}`, borderRadius: 99, padding: "0 18px", fontFamily: "inherit", fontSize: 14, background: "#fff", color: C.text, outline: "none" }} />
+        <button type="submit" aria-label={t("Kirim", "Send")} disabled={!canSend} style={{ width: 50, height: 50, border: "none", borderRadius: "50%", background: canSend ? C.blue : C.disabled, color: "#fff", cursor: canSend ? "pointer" : "default", flex: "none", display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name="send" size={19} /></button>
       </form>
     </div>
   );
