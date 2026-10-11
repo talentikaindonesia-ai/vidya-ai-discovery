@@ -1,8 +1,8 @@
-import React, { lazy, ReactNode, Suspense, useEffect } from "react";
+import React, { createContext, lazy, ReactNode, Suspense, useContext, useEffect, useMemo, useState } from "react";
 import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { AppProvider, handleAuthCallback, NATIVE_SCHEME, useApp } from "./store";
 import { initPush } from "./push";
-import { GLOBAL_CSS, Icon, Loading, TIKA } from "./ui";
+import { Avatar, GLOBAL_CSS, Icon, Loading, LOGO, TIKA } from "./ui";
 import { C, F } from "./theme";
 
 const Onb = lazy(() => import("./screens/Onboarding"));
@@ -39,8 +39,9 @@ function BottomNav() {
   const { pathname } = useLocation();
   const nav = useNavigate();
   const { t, profile } = useApp();
+  const { side } = useContext(LayoutCtx);
   const active = TAB_ROOTS[pathname.replace(/\/$/, "")];
-  if (!active) return null;
+  if (!active || side) return null;
   const pro = editionOf(profile?.jenjang) === "pro";
   return (
     <>
@@ -104,7 +105,9 @@ function Shell() {
     const asked = localStorage.getItem("tk-push-asked") === "1";
     initPush(user.id, !asked).then(r => { if (r !== "unsupported") localStorage.setItem("tk-push-asked", "1"); }).catch(() => {});
   }, [user?.id, profile?.onboarding_done]); // eslint-disable-line
-  const zoom = { Kecil: 0.92, Normal: 1, Besar: 1.1 }[textSize] ?? 1;
+  const { side, vw } = useContext(LayoutCtx);
+  const fit = !side && vw < 375 ? Math.max(0.86, vw / 375) : 1;
+  const zoom = +(fit * ({ Kecil: 0.92, Normal: 1, Besar: 1.1 }[textSize] ?? 1)).toFixed(3);
   const loc = useLocation();
   useEffect(() => { document.title = "Talentika"; }, []);
   // Android: tombol/gestur back sistem mengikuti riwayat aplikasi (PRD §10)
@@ -126,7 +129,8 @@ function Shell() {
   }, []);
   const A = (el: ReactNode) => <RequireAuth>{el}</RequireAuth>;
   return (
-    <div style={{ height: `${(100 / zoom).toFixed(2)}%`, zoom, position: "relative", background: C.bg, fontFamily: F.body, color: C.text, overflow: "hidden" } as any}>
+    // Skala lewat transform (bukan CSS zoom): perilaku `zoom` + tinggi persen berbeda antar versi Chrome/WebView
+    <div style={{ position: "absolute", top: 0, left: 0, width: `${(100 / zoom).toFixed(3)}%`, height: `${(100 / zoom).toFixed(3)}%`, transform: zoom === 1 ? undefined : `scale(${zoom})`, transformOrigin: "0 0", background: C.bg, fontFamily: F.body, color: C.text, overflow: "hidden" }}>
       <Suspense fallback={<Loading />}>
         <Routes location={loc}>
           {/* Onboarding (J1) */}
@@ -197,21 +201,125 @@ function Shell() {
   );
 }
 
+/* ── Tata letak responsif ──────────────────────────────────────────────
+ * HP (<768px): layar penuh, navigasi bawah; di bawah 375px tampilan diskalakan
+ *   proporsional supaya desain 375–390pt tetap utuh di HP kecil.
+ * Tablet & desktop (≥768px): menu samping + kolom konten di tengah (lihat
+ *   .tk-side di GLOBAL_CSS). Onboarding & dashboard peran tetap berbingkai. */
+const WIDE = 768;
+const LayoutCtx = createContext<{ side: boolean; vw: number }>({ side: false, vw: 390 });
+const NO_SIDE = ["/app", "/app/welcome", "/app/signup", "/app/start", "/app/role", "/app/profile-setup", "/app/get-to-know", "/app/consent", "/app/parent", "/app/school", "/app/mentor-dashboard"];
+
+function useViewportWidth() {
+  const [w, setW] = useState(() => (typeof window === "undefined" ? 390 : window.innerWidth));
+  useEffect(() => {
+    const h = () => setW(window.innerWidth);
+    window.addEventListener("resize", h);
+    return () => window.removeEventListener("resize", h);
+  }, []);
+  return w;
+}
+
+/** Tab mana yang menaungi sebuah rute (untuk menyorot menu samping). */
+function tabOf(path: string): string | null {
+  if (TAB_ROOTS[path]) return TAB_ROOTS[path];
+  if (/^\/app\/(course|playbooks)/.test(path)) return "learn";
+  if (/^\/app\/(projects\/|challenge)/.test(path)) return "projects";
+  if (/^\/app\/(opportunities|calendar)/.test(path)) return "explore";
+  if (/^\/app\/(portfolio|public|privacy|settings|achievements|pro|checkout|paid)/.test(path)) return "profile";
+  if (/^\/app\/(readiness|recap|discover|careers|compare|simulator|universities|dna)/.test(path)) return "home";
+  return null;
+}
+
+const SIDE_EXTRA = [
+  { path: "/app/tracker", icon: "brief", labelId: "Lamaranku", label: "My Applications" },
+  { path: "/app/mentors", icon: "users", labelId: "Mentor", label: "Mentors" },
+  { path: "/app/community", icon: "msg", labelId: "Komunitas", label: "Community" },
+  { path: "/app/notifications", icon: "bell", labelId: "Notifikasi", label: "Notifications" },
+];
+
+function SideNav() {
+  const { pathname } = useLocation();
+  const nav = useNavigate();
+  const { t, profile } = useApp();
+  const path = pathname.replace(/\/$/, "");
+  const extra = SIDE_EXTRA.find(x => path === x.path || path.startsWith(x.path + "/"));
+  const active = extra ? null : tabOf(path);
+  const pro = editionOf(profile?.jenjang) === "pro";
+  const item = (key: string, to: string, icon: string, label: string, on: boolean) => (
+    <button key={key} onClick={() => nav(to)} aria-current={on ? "page" : undefined} className={on ? undefined : "tk-nav-item"}
+      style={{ width: "100%", height: 46, border: "none", borderRadius: 14, background: on ? C.tintBlue : "transparent", color: on ? C.blue : C.text2, display: "flex", alignItems: "center", gap: 12, padding: "0 14px", fontSize: 14, fontWeight: on ? 600 : 500, textAlign: "left" }}>
+      <Icon name={icon} size={21} /><span style={{ flex: 1, minWidth: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{label}</span>
+    </button>
+  );
+  return (
+    <aside style={{ width: "clamp(212px, 22vw, 256px)", flex: "none", background: "#fff", borderRight: "1px solid #EEF2F8", display: "flex", flexDirection: "column", padding: "22px 14px 18px", overflowY: "auto" }}>
+      <button onClick={() => nav("/app/home")} style={{ display: "flex", alignItems: "center", gap: 10, border: "none", background: "none", padding: "0 6px", textAlign: "left" }}>
+        <img src={LOGO} alt="" style={{ width: 38, height: 38, borderRadius: 11, boxShadow: "0 3px 10px rgba(15,23,42,.08)", flex: "none" }} />
+        <span style={{ minWidth: 0 }}><span style={{ display: "block", fontSize: 17, fontWeight: 700, lineHeight: 1, color: C.text }}>Talentika</span><span style={{ display: "block", fontSize: 10, color: C.muted, marginTop: 3, whiteSpace: "nowrap" }}>Discover your full potential</span></span>
+      </button>
+      <nav aria-label={t("Menu utama", "Main menu")} style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 4 }}>
+        {TABS.map(tb => {
+          const label = tb.id === "explore" && pro ? t("Karier", "Careers") : t(tb.labelId, tb.label);
+          return item(tb.id, tb.path, tb.id === "explore" && pro ? "brief" : tb.icon, label, tb.id === active);
+        })}
+      </nav>
+      <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: ".6px", color: C.faint, margin: "20px 14px 6px" }}>{t("LAINNYA", "MORE")}</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        {SIDE_EXTRA.map(x => item(x.path, x.path, x.icon, t(x.labelId, x.label), extra?.path === x.path))}
+      </div>
+      <div style={{ flex: 1, minHeight: 16 }} />
+      <button onClick={() => nav("/app/copilot")} style={{ border: "none", background: C.navy, borderRadius: 18, padding: 12, display: "flex", gap: 10, alignItems: "center", textAlign: "left", outline: path === "/app/copilot" ? `2px solid ${C.blue}` : "none" }}>
+        <img src={TIKA} alt="" style={{ width: 40, height: 40, borderRadius: "50%", objectFit: "cover", background: C.tintBlue, flex: "none" }} />
+        <span style={{ minWidth: 0 }}><span style={{ display: "block", fontSize: 13, fontWeight: 700, color: "#fff" }}>{t("Tanya Tika AI", "Ask Tika AI")}</span><span style={{ display: "block", fontSize: 11, color: "rgba(255,255,255,.7)" }}>{t("Mentor AI-mu", "Your AI mentor")}</span></span>
+      </button>
+      <button onClick={() => nav("/app/profile")} style={{ marginTop: 12, border: "none", background: "none", display: "flex", alignItems: "center", gap: 10, padding: "6px", borderRadius: 14, textAlign: "left" }} className="tk-nav-item">
+        <Avatar name={profile?.full_name} src={profile?.avatar_url} size={36} />
+        <span style={{ minWidth: 0 }}><span style={{ display: "block", fontSize: 13, fontWeight: 600, color: C.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{(profile?.full_name || "Talentika").split(" ").slice(0, 2).join(" ")}</span><span style={{ display: "block", fontSize: 11, color: C.muted }}>{pro ? "Talentika Kampus" : "Talentika Explorer"}</span></span>
+      </button>
+    </aside>
+  );
+}
+
+function Frame() {
+  const vw = useViewportWidth();
+  const { profile } = useApp();
+  const { pathname } = useLocation();
+  const path = pathname.replace(/\/$/, "") || "/app";
+  const wide = vw >= WIDE;
+  const dnaQuestion = /^\/app\/dna\/(?!result$)[^/]+$/.test(path);
+  const side = wide && !NO_SIDE.includes(path) && !dnaQuestion && !["parent", "school_admin"].includes(profile?.role ?? "");
+  const ctx = useMemo(() => ({ side, vw }), [side, vw]);
+  return (
+    <LayoutCtx.Provider value={ctx}>
+      {side ? (
+        <div className="tk-side" style={{ display: "flex", height: "100dvh", maxWidth: 1440, margin: "0 auto", background: C.bg, boxShadow: "0 0 0 1px rgba(15,23,42,.05), 0 30px 70px rgba(15,23,42,.08)" }}>
+          <SideNav />
+          <main style={{ flex: 1, minWidth: 0, position: "relative", overflow: "hidden" }}><Shell /></main>
+        </div>
+      ) : (
+        <div style={{ minHeight: "100dvh", display: "flex", justifyContent: "center", alignItems: "center" }}>
+          <div style={{ width: "100%", maxWidth: wide ? 460 : 440, height: wide ? "min(calc(100dvh - 48px), 940px)" : "100dvh", borderRadius: wide ? 28 : 0, position: "relative", overflow: "hidden", background: C.bg, boxShadow: "0 0 0 1px rgba(15,23,42,.05), 0 30px 70px rgba(15,23,42,.14)" }}>
+            <Shell />
+          </div>
+        </div>
+      )}
+    </LayoutCtx.Provider>
+  );
+}
+
 /**
  * Talentika Mobile — "Personal Future OS" (PRD v1.0).
- * Di HP tampil layar penuh; di desktop dibingkai selebar ponsel agar
- * tata letak 390pt prototype tetap terjaga. Dibungkus Capacitor untuk
- * Android & iOS (lihat capacitor.config.ts).
+ * HP: layar penuh. Tablet & desktop: menu samping + konten di tengah.
+ * Dibungkus Capacitor untuk Android & iOS (lihat capacitor.config.ts).
  */
 export default function MobileApp() {
   return (
-    <div className="tk-app" style={{ minHeight: "100dvh", background: "#EAF4FF", display: "flex", justifyContent: "center" }}>
+    <div className="tk-app" style={{ minHeight: "100dvh", background: "#EAF4FF" }}>
       <style>{GLOBAL_CSS}</style>
-      <div style={{ width: "100%", maxWidth: 440, height: "100dvh", position: "relative", overflow: "hidden", background: C.bg, boxShadow: "0 0 0 1px rgba(15,23,42,.05), 0 30px 70px rgba(15,23,42,.14)" }}>
-        <AppProvider>
-          <Shell />
-        </AppProvider>
-      </div>
+      <AppProvider>
+        <Frame />
+      </AppProvider>
     </div>
   );
 }

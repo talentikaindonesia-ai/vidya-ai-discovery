@@ -208,7 +208,7 @@ function LearnHome() {
         </>}
 
         {tab === "paths" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 14 }}>
+          <div className="tk-grid2" style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 14 }}>
             {!paths && <Loading />}
             {pathList.map((p, i) => {
               const [ic, c, bg] = AREA_STYLE[i % AREA_STYLE.length];
@@ -230,7 +230,7 @@ function LearnHome() {
         )}
 
         {tab === "courses" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 14 }}>
+          <div className="tk-grid2" style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 14 }}>
             {!courses && <Loading />}
             {courseList.map(c => <CourseCard key={c.id} c={c} />)}
             {courses && !courseList.length && <Empty icon="book" title={t("Belum ada materi yang cocok", "No matching courses yet")} />}

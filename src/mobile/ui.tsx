@@ -15,7 +15,7 @@ const TOP = "calc(env(safe-area-inset-top, 0px) + 16px)";
 
 export function Screen({ children, tab = false, style, bg = C.bg }: { children: ReactNode; tab?: boolean; style?: CSSProperties; bg?: string }) {
   return (
-    <div style={{ position: "absolute", inset: 0, overflow: "auto", background: bg, paddingBottom: tab ? "calc(env(safe-area-inset-bottom, 0px) + 120px)" : 40, animation: "tkIn .25s ease both", ...style }}>
+    <div className={tab ? "tk-screen tk-tabpad" : "tk-screen"} style={{ position: "absolute", inset: 0, overflow: "auto", background: bg, paddingBottom: tab ? "calc(env(safe-area-inset-bottom, 0px) + 120px)" : 40, animation: "tkIn .25s ease both", ...style }}>
       {children}
     </div>
   );
@@ -76,7 +76,7 @@ export function BrandBar({ right }: { right?: ReactNode }) {
   return (
     <div style={{ padding: `${TOP} 20px 0`, display: "flex", alignItems: "center", gap: 10 }}>
       <img src={logoIcon} alt="" style={{ width: 38, height: 38, borderRadius: 11, boxShadow: "0 3px 10px rgba(15,23,42,.08)" }} />
-      <div style={{ flex: 1 }}><div style={{ fontSize: 17, fontWeight: 700, lineHeight: 1 }}>Talentika</div><div style={{ fontSize: 10, color: C.muted, marginTop: 3 }}>Discover your full potential</div></div>
+      <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontSize: 17, fontWeight: 700, lineHeight: 1 }}>Talentika</div><div style={{ fontSize: 10, color: C.muted, marginTop: 3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>Discover your full potential</div></div>
       {right}
     </div>
   );
@@ -416,8 +416,8 @@ export function Confetti() {
 export function Sheet({ open, onClose, title, children }: { open: boolean; onClose: () => void; title?: ReactNode; children: ReactNode }) {
   if (!open) return null;
   return (
-    <div onClick={onClose} style={{ position: "absolute", inset: 0, zIndex: 80, background: "rgba(15,23,42,.45)", display: "flex", alignItems: "flex-end", animation: "tkFade .2s ease both" }}>
-      <div onClick={e => e.stopPropagation()} style={{ width: "100%", maxHeight: "86%", overflow: "auto", background: "#fff", borderRadius: "26px 26px 0 0", padding: "16px 20px calc(env(safe-area-inset-bottom, 0px) + 24px)", animation: "tkFadeUp .25s ease both" }}>
+    <div onClick={onClose} style={{ position: "absolute", inset: 0, zIndex: 80, background: "rgba(15,23,42,.45)", display: "flex", alignItems: "flex-end", justifyContent: "center", animation: "tkFade .2s ease both" }}>
+      <div onClick={e => e.stopPropagation()} className="tk-sheet" style={{ width: "100%", maxWidth: 560, maxHeight: "86%", overflow: "auto", background: "#fff", borderRadius: "26px 26px 0 0", padding: "16px 20px calc(env(safe-area-inset-bottom, 0px) + 24px)", animation: "tkFadeUp .25s ease both" }}>
         <div style={{ width: 40, height: 4, borderRadius: 2, background: C.disabled, margin: "0 auto 14px" }} />
         {title && <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 12 }}>{title}</div>}
         {children}
@@ -444,4 +444,14 @@ export const GLOBAL_CSS = `
 .tk-app button:active{transform:scale(.98)}
 .tk-app :focus-visible{outline:2.5px solid #0066FF;outline-offset:2px}
 @media (prefers-reduced-motion: reduce){.tk-app *{animation:none!important;transition:none!important}}
+@media (pointer:coarse){.tk-app input,.tk-app textarea,.tk-app select{font-size:16px!important}}
+.tk-side .tk-screen{padding-left:max(0px,calc((100% - 760px) / 2));padding-right:max(0px,calc((100% - 760px) / 2))}
+.tk-side .tk-screen.tk-tabpad{padding-bottom:48px!important}
+.tk-side .tk-sheet{border-radius:26px 26px 0 0}
+.tk-side *{scrollbar-width:thin;scrollbar-color:#CFE3FF transparent}
+.tk-side ::-webkit-scrollbar{display:block;width:8px;height:6px}
+.tk-side ::-webkit-scrollbar-thumb{background:#CFE3FF;border-radius:99px}
+.tk-side button{cursor:pointer}
+.tk-nav-item:hover{background:#F1F6FD}
+@media (min-width:1100px){.tk-side .tk-grid2{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}.tk-side .tk-grid2>:only-child{grid-column:1 / -1}}
 `;

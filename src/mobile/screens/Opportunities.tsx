@@ -152,7 +152,7 @@ function Explore() {
           )}
 
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 20 }}><div style={{ fontSize: 17, fontWeight: 700 }}>{t("Cocok untukmu", "Matched for You")}</div><span style={{ fontSize: 12, color: C.muted }}>{t("urut sesuai kecocokan", "sorted by fit")}</span></div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 10 }}>
+          <div className="tk-grid2" style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 10 }}>
             {isLoading && <Loading />}
             {shown.map(o => {
               const [c] = TC[o.type];
@@ -194,7 +194,7 @@ function Explore() {
             <div style={{ fontSize: 17, fontWeight: 700 }}>{t("Mentor untukmu", "Mentors for You")}</div>
             <button onClick={() => nav("/app/mentors")} style={{ border: "none", background: "none", fontSize: 12.5, fontWeight: 600, color: C.blue, cursor: "pointer" }}>{t("Lihat Semua", "See All")}</button>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 10 }}>{mentors.map(m => <MentorRow key={m.id} m={m} />)}</div>
+          <div className="tk-grid2" style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 10 }}>{mentors.map(m => <MentorRow key={m.id} m={m} />)}</div>
         </>}
         {type === "mentor" && mentors && !mentors.length && <Empty icon="users" title={t("Mentor sedang disiapkan", "Mentors are on the way")} />}
       </div>

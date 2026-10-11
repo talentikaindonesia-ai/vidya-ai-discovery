@@ -47,7 +47,7 @@ function NativeProInfo() {
   const { t, lang, isPro, toast } = useApp();
   if (window.location.pathname.endsWith("/checkout")) return <Navigate to="/app/pro" replace />;
   return (
-    <div style={{ position: "absolute", inset: 0, overflow: "auto", background: C.bg, paddingBottom: 40 }}>
+    <div className="tk-screen" style={{ position: "absolute", inset: 0, overflow: "auto", background: C.bg, paddingBottom: 40 }}>
       <div style={{ background: C.navy, padding: "calc(env(safe-area-inset-top, 0px) + 20px) 22px 26px", borderRadius: "0 0 28px 28px", color: "#fff", position: "relative", overflow: "hidden" }}>
         <div style={{ position: "absolute", top: -60, right: -60, width: 200, height: 200, borderRadius: "50%", background: "rgba(255,255,255,.06)" }} />
         <button onClick={() => nav(-1)} aria-label={t("Tutup", "Close")} style={{ width: 42, height: 42, border: "none", borderRadius: "50%", background: "rgba(255,255,255,.12)", cursor: "pointer", color: "#fff", position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name="x" size={18} /></button>
@@ -80,7 +80,7 @@ function ProScreen() {
   useEffect(() => { track("paywall_viewed", { entry_point: "pro_screen", plan: null, platform: (window as any).Capacitor?.getPlatform?.() ?? "web" }); }, []); // eslint-disable-line
   const chosen = plans.find(p => p.key === sel) ?? plans.find(p => p.popular) ?? plans[0];
   return (
-    <div style={{ position: "absolute", inset: 0, overflow: "auto", background: C.bg, paddingBottom: 40 }}>
+    <div className="tk-screen" style={{ position: "absolute", inset: 0, overflow: "auto", background: C.bg, paddingBottom: 40 }}>
       <div style={{ background: C.navy, padding: "calc(env(safe-area-inset-top, 0px) + 20px) 22px 26px", borderRadius: "0 0 28px 28px", color: "#fff", position: "relative", overflow: "hidden" }}>
         <div style={{ position: "absolute", top: -60, right: -60, width: 200, height: 200, borderRadius: "50%", background: "rgba(255,255,255,.06)" }} />
         <button onClick={() => nav(-1)} aria-label={t("Tutup", "Close")} style={{ width: 42, height: 42, border: "none", borderRadius: "50%", background: "rgba(255,255,255,.12)", cursor: "pointer", color: "#fff", position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name="x" size={18} /></button>
@@ -156,7 +156,7 @@ function Checkout() {
     if ((window as any).Capacitor?.isNativePlatform?.()) await openExternal(data.invoice_url); else window.location.href = data.invoice_url;
   };
   return (
-    <div style={{ position: "absolute", inset: 0, overflow: "auto", background: C.bg, paddingBottom: 40 }}>
+    <div className="tk-screen" style={{ position: "absolute", inset: 0, overflow: "auto", background: C.bg, paddingBottom: 40 }}>
       <Header title={t("Pembayaran", "Payment")} />
       <div style={{ padding: "16px 20px 0", display: "flex", flexDirection: "column", gap: 14 }}>
         <div style={{ background: "#fff", borderRadius: 20, padding: 17, boxShadow: SH.card }}>
@@ -216,7 +216,7 @@ function Paid() {
     return () => { stop = true; };
   }, []); // eslint-disable-line
   return (
-    <div style={{ position: "absolute", inset: 0, background: C.bg, display: "flex", flexDirection: "column", padding: "calc(env(safe-area-inset-top, 0px) + 20px) 24px calc(env(safe-area-inset-bottom, 0px) + 36px)", textAlign: "center", overflow: "hidden" }}>
+    <div className="tk-screen" style={{ position: "absolute", inset: 0, background: C.bg, display: "flex", flexDirection: "column", padding: "calc(env(safe-area-inset-top, 0px) + 20px) 24px calc(env(safe-area-inset-bottom, 0px) + 36px)", textAlign: "center", overflow: "hidden" }}>
       {state === "ok" && <Confetti />}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center" }}>
         <div style={{ width: 100, height: 100, borderRadius: "50%", background: C.navy, display: "flex", alignItems: "center", justifyContent: "center", color: state === "ok" ? C.yellow : "#fff", animation: "tkPop .5s ease both" }}><Icon name={state === "ok" ? "star" : "clock"} size={44} filled={state === "ok"} /></div>

@@ -82,7 +82,7 @@ function CareerMatches() {
           {tab === "emerging" ? t("Karier dengan Permintaan Tinggi", "High-Demand Careers") : tab === "all" ? t("Jelajahi Semua Karier", "Explore All Careers") : t("Karier Paling Cocok Untukmu", "Top Career Matches for You")}
         </div>
         <div style={{ fontSize: 12.5, color: C.muted, marginTop: 3 }}>{t("Berdasarkan minat, kekuatan, dan peluang global.", "Based on your interests, strengths, and global opportunities.")}</div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 14 }}>
+        <div className="tk-grid2" style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 14 }}>
           {isLoading && <Loading />}
           {list.map(c => (
             <button key={c.id} onClick={() => nav(`/app/careers/${c.id}`)} style={{ textAlign: "left", border: "none", background: "#fff", borderRadius: 18, padding: 10, display: "flex", gap: 12, alignItems: "center", cursor: "pointer", boxShadow: SH.card }}>

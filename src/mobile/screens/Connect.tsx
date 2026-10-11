@@ -47,7 +47,7 @@ function Mentors() {
           <ChipBtn key={k} on={filter.k === k} onClick={() => setSheet(k)}><span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>{filter.k === k ? filter.v : LBL[k]}<Icon name="down" size={13} /></span></ChipBtn>
         ))}
       </div>
-      <div style={{ padding: "14px 20px 0", display: "flex", flexDirection: "column", gap: 12 }}>
+      <div className="tk-grid2" style={{ padding: "14px 20px 0", display: "flex", flexDirection: "column", gap: 12 }}>
         {isLoading && <Loading />}
         {!isLoading && !list.length && <Empty icon="users" title={t("Mentor sedang dikurasi", "Mentors are being curated")} body={t("Kami memverifikasi setiap mentor sebelum tampil. Kamu profesional dan ingin berbagi?", "We verify every mentor before they appear. Are you a professional who wants to give back?")} action={<Btn kind="outline" h={44} onClick={() => nav("/app/mentor-dashboard")}>{t("Daftar jadi mentor", "Become a mentor")}</Btn>} />}
         {list.map(m => {

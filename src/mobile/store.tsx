@@ -130,7 +130,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     <AppCtx.Provider value={value}>
       {children}
       {toastMsg && (
-        <div role="status" style={{ position: "absolute", left: "50%", bottom: "calc(env(safe-area-inset-bottom, 0px) + 112px)", transform: "translateX(-50%)", zIndex: 90, maxWidth: "calc(100% - 40px)",
+        <div role="status" style={{ position: "fixed", left: "50%", bottom: "calc(env(safe-area-inset-bottom, 0px) + 112px)", transform: "translateX(-50%)", zIndex: 90, maxWidth: "calc(100% - 40px)",
           background: toastMsg.kind === "error" ? "#7F1D1D" : "#0F172A", color: "#fff", borderRadius: 14, padding: "11px 18px", fontSize: 13, fontWeight: 500,
           boxShadow: "0 10px 24px rgba(15,23,42,.3)", display: "flex", alignItems: "center", gap: 9, animation: "tkToast .25s ease both" }}>
           {toastMsg.kind !== "info" && <span style={{ color: toastMsg.kind === "error" ? "#FCA5A5" : "#5CE0A1", fontWeight: 700 }}>{toastMsg.kind === "gain" ? "↗" : "!"}</span>}

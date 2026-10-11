@@ -53,7 +53,7 @@ function Center() {
   const nextMod = states.find(s => s.prog && !s.locked) ?? states.find(s => !s.isDone && !s.locked);
   const started = states.some(s => s.isDone || s.prog);
   return (
-    <div style={{ position: "absolute", inset: 0, overflowY: "auto", background: "linear-gradient(180deg,#fff 0%,#F3F8FF 100%)", paddingBottom: SAFE_B, animation: "tkIn .25s ease both" }}>
+    <div className="tk-screen" style={{ position: "absolute", inset: 0, overflowY: "auto", background: "linear-gradient(180deg,#fff 0%,#F3F8FF 100%)", paddingBottom: SAFE_B, animation: "tkIn .25s ease both" }}>
       <div style={{ padding: `${SAFE_T} 22px 0`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <BackBtn dark onClick={() => nav("/app/home", { replace: true })} />
         <span style={{ fontSize: 11.5, fontWeight: 600, color: C.purple, background: C.tintPurple, padding: "6px 12px", borderRadius: 99 }}>
@@ -291,7 +291,7 @@ function Ready({ onNext }: { onNext: () => void }) {
   const { t, lang } = useApp();
   const { type, top, name } = useTalent();
   return (
-    <div style={{ position: "absolute", inset: 0, overflowY: "auto", background: "linear-gradient(180deg,#fff 0%,#F3F8FF 100%)", display: "flex", flexDirection: "column", alignItems: "center", padding: `calc(env(safe-area-inset-top, 0px) + 22px) 22px ${SAFE_B}`, textAlign: "center" }}>
+    <div className="tk-screen" style={{ position: "absolute", inset: 0, overflowY: "auto", background: "linear-gradient(180deg,#fff 0%,#F3F8FF 100%)", display: "flex", flexDirection: "column", alignItems: "center", padding: `calc(env(safe-area-inset-top, 0px) + 22px) 22px ${SAFE_B}`, textAlign: "center" }}>
       <div style={{ position: "absolute", inset: "0 0 auto 0", height: 300, overflow: "hidden", pointerEvents: "none" }}><Confetti /></div>
       <img src={LOGO} alt="" style={{ width: 44, height: 44, borderRadius: 12 }} />
       <div style={{ fontSize: 30, fontWeight: 800, lineHeight: 1.12, letterSpacing: "-.7px", marginTop: 14 }}>{t("Profil Talentamu", "Your Talent Profile")}<br /><span style={{ color: C.blue }}>{t("Sudah Siap!", "is Ready!")}</span></div>

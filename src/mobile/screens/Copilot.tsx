@@ -96,7 +96,7 @@ export default function Copilot() {
   ];
   const canSend = !!input.trim() && !typing;
   return (
-    <div style={{ position: "absolute", inset: 0, background: C.bg, display: "flex", flexDirection: "column" }}>
+    <div className="tk-screen" style={{ position: "absolute", inset: 0, background: C.bg, display: "flex", flexDirection: "column" }}>
       <div style={{ padding: "calc(env(safe-area-inset-top, 0px) + 14px) 20px 12px", display: "flex", alignItems: "center", gap: 12, background: "#fff", borderBottom: "1px solid #EEF2F8", flex: "none" }}>
         <BackBtn dark />
         <img src={TIKA} alt="Tika" style={{ width: 44, height: 44, borderRadius: "50%", objectFit: "cover", flex: "none", background: C.tintBlue }} />
