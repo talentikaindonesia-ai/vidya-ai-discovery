@@ -230,22 +230,13 @@ export default function Mentors() {
                     <span style={{ color: "var(--tk-gray-400)" }}>Mentor baru — belum ada penilaian</span>
                   )}
                 </div>
-                <LockedButton
-                  feature="Booking Sesi Mentor"
-                  benefits={[
-                    "Sesi 1-on-1 dengan mentor profesional",
-                    "Bimbingan karier sesuai hasil tes bakatmu",
-                    "Akses semua fitur premium lainnya",
-                  ]}
-                  fromPath="/mentors"
-                  onClick={() => setBooking(m)}
-                >
-                  {(locked, guardedClick) => (
-                    <button onClick={guardedClick} style={{ marginTop: "auto", width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 7, background: locked ? "linear-gradient(135deg,#475569,#334155)" : "var(--tk-blue-600)", color: "#fff", border: "none", borderRadius: 12, padding: "11px 0", fontFamily: "var(--tk-font-display)", fontWeight: 700, fontSize: 13.5, cursor: "pointer" }}>
-                      {locked ? <Lock size={14} /> : <Calendar size={15} />} Ajukan Sesi
-                    </button>
-                  )}
-                </LockedButton>
+                {/* Mentoring tidak termasuk paket Free maupun Plus — program terpisah lewat tim Talentika */}
+                <button
+                  onClick={() => window.open(`https://wa.me/6285148434141?text=${encodeURIComponent(`Halo Talentika, aku ingin ikut program mentoring bersama ${m.name}.`)}`, "_blank", "noopener")}
+                  style={{ marginTop: "auto", width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 7, background: "var(--tk-blue-600)", color: "#fff", border: "none", borderRadius: 12, padding: "11px 0", fontFamily: "var(--tk-font-display)", fontWeight: 700, fontSize: 13.5, cursor: "pointer" }}>
+                  <Calendar size={15} /> Ikut Program Mentoring
+                </button>
+                <div style={{ fontSize: 11, color: "var(--tk-gray-500)", textAlign: "center", marginTop: 6 }}>Program terpisah — tidak termasuk paket Free/Plus</div>
               </div>
             ))}
           </div>

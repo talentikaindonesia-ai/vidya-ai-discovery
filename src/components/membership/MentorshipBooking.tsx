@@ -141,7 +141,7 @@ export const MentorshipBooking = ({ userId, userPlan }: MentorshipBookingProps) 
       if (monthlyConsultations.length >= 1) {
         toast({
           title: "Limit Tercapai",
-          description: "Paket Individual hanya dapat 1 konsultasi per bulan. Upgrade ke Premium untuk konsultasi unlimited.",
+          description: "Mentoring adalah program terpisah dan tidak termasuk paket Free maupun Plus. Hubungi tim Talentika untuk sesi berikutnya.",
           variant: "destructive",
         });
         return;
@@ -234,7 +234,7 @@ export const MentorshipBooking = ({ userId, userPlan }: MentorshipBookingProps) 
         </div>
         <Card className="p-4 bg-muted/50">
           <div className="text-sm">
-            <span className="font-medium">Paket {userPlan === 'individual' ? 'Individual' : 'Premium'}:</span>
+            <span className="font-medium">Paket {userPlan === 'individual' ? 'Free' : 'Plus'}:</span>
             <p className="text-muted-foreground">
               {userPlan === 'individual' ? '1x konsultasi/bulan' : 'Konsultasi unlimited'}
             </p>

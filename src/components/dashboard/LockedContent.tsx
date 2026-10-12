@@ -75,7 +75,7 @@ export const LockedContent = ({ type, title, description, features, className = 
             className="w-full h-12"
             size="lg"
           >
-            Unlock Premium Features
+            Buka fitur Plus
             <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
           <p className="text-xs text-center text-muted-foreground mt-2">

@@ -211,6 +211,22 @@ export interface Tracked {
   applied_at: string | null; checklist: Record<string, boolean>; deadline: string | null; opportunity_type: string | null; created_at: string;
 }
 
+/** Kuota paket Free (kuota_saya di database — web memakai RPC yang sama). */
+export interface Kuota {
+  plus: boolean; materi_aktif: number; materi_batas: number;
+  peluang_dipakai: number; peluang_batas: number; peluang_dibuka: string[];
+  proyek: number; proyek_batas: number;
+}
+export function useKuota() {
+  const { user } = useApp();
+  return useQuery({
+    queryKey: ["m-kuota", user?.id], enabled: !!user, staleTime: 30_000,
+    queryFn: async () => (await db.rpc("kuota_saya")).data as Kuota | null,
+  });
+}
+/** Galat kuota dari database (mis. trigger KUOTA_PROYEK) → tawarkan Plus, bukan pesan galat. */
+export const isKuotaError = (e: any, kode: string) => typeof e?.message === "string" && e.message.includes(kode);
+
 export function useTracker() {
   const { user } = useApp();
   return useQuery({

@@ -133,7 +133,7 @@ const CoursesPreview = ({ profile }: CoursesPreviewProps) => {
                     <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
                       <Lock className="w-6 h-6 text-primary" />
                     </div>
-                    <p className="font-medium text-foreground mb-2">Konten Premium</p>
+                    <p className="font-medium text-foreground mb-2">Konten Plus</p>
                     <p className="text-sm text-muted-foreground mb-3">Upgrade untuk mengakses</p>
                     <Button size="sm" onClick={() => openUpgradeModal()}>
                       Buka Kunci
@@ -149,7 +149,7 @@ const CoursesPreview = ({ profile }: CoursesPreviewProps) => {
           {isFreeUser && (
             <LockedContent
               type="courses"
-              title="Kursus Premium"
+              title="Kursus Plus"
               description="Akses unlimited ke ribuan kursus berkualitas tinggi"
               features={[
                 "Video pembelajaran HD",

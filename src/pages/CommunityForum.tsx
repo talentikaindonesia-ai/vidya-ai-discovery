@@ -45,7 +45,7 @@ function timeAgo(iso: string): string {
 
 const COMMUNITY_BENEFITS = [
   "Buat diskusi, study group & event komunitas",
-  "Akses event eksklusif member Premium",
+  "Akses event eksklusif member Plus",
   "Networking dengan pelajar berprestasi se-Indonesia",
 ];
 
@@ -1240,7 +1240,7 @@ const CommunityForum = () => {
                               <span style={{ background: TK.gray100, color: TK.gray600, fontFamily: TK.display, fontWeight: 600, fontSize: 11, padding: "2px 10px", borderRadius: 999 }}>Online</span>
                             )}
                             {event.is_premium_only && (
-                              <span style={{ background: "var(--tk-yellow-soft)", color: "#A47000", fontFamily: TK.display, fontWeight: 700, fontSize: 11, padding: "2px 10px", borderRadius: 999 }}>Premium</span>
+                              <span style={{ background: "var(--tk-yellow-soft)", color: "#A47000", fontFamily: TK.display, fontWeight: 700, fontSize: 11, padding: "2px 10px", borderRadius: 999 }}>Plus</span>
                             )}
                           </div>
                           <div style={{ display: "flex", gap: 16, fontSize: 13, color: TK.gray500, fontFamily: TK.sans, alignItems: "center", flexWrap: "wrap" }}>
@@ -1256,7 +1256,7 @@ const CommunityForum = () => {
                         </div>
                         {event.is_premium_only ? (
                           <LockedButton
-                            feature="Event Eksklusif Premium"
+                            feature="Event Eksklusif Plus"
                             benefits={COMMUNITY_BENEFITS}
                             fromPath="/community"
                             onClick={() => toast.info("Pendaftaran event segera dibuka 🚧")}

@@ -32,11 +32,11 @@ export const DashboardHeader = ({ user, profile, onSignOut }: DashboardHeaderPro
   const planLabel = sub.loading
     ? ""
     : isTrial
-    ? `⭐ Trial Premium${sub.daysLeft != null ? ` · ${sub.daysLeft}h` : ""}`
+    ? `⭐ Trial Plus${sub.daysLeft != null ? ` · ${sub.daysLeft}h` : ""}`
     : sub.isSchool
-    ? "⭐ Premium Sekolah"
+    ? "⭐ Plus · Sekolah"
     : sub.isPremium
-    ? `⭐ Premium${sub.source === "paid" && sub.daysLeft != null && sub.daysLeft <= 14 ? ` · sisa ${sub.daysLeft}h` : ""}`
+    ? `⭐ Plus${sub.source === "paid" && sub.daysLeft != null && sub.daysLeft <= 14 ? ` · sisa ${sub.daysLeft}h` : ""}`
     : "Free";
   const planColor = sub.isPremium ? "#B45309" : "var(--tk-gray-500)";
 
@@ -187,7 +187,7 @@ export const DashboardHeader = ({ user, profile, onSignOut }: DashboardHeaderPro
               {[
                 { icon: User,     label: "Profil saya",    action: () => { navigate("/profile"); setMenuOpen(false); } },
                 { icon: Settings, label: "Pengaturan",     action: () => { navigate("/settings"); setMenuOpen(false); } },
-                { icon: Diamond,  label: "Upgrade ke Pro", action: () => { openUpgradeModal(); setMenuOpen(false); }, accent: true },
+                { icon: Diamond,  label: "Upgrade ke Plus", action: () => { openUpgradeModal(); setMenuOpen(false); }, accent: true },
               ].map(({ icon: Icon, label, action, accent }) => (
                 <button
                   key={label}

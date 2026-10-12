@@ -10,6 +10,7 @@ import { ArrowLeft, Diamond, CreditCard, ShieldCheck, RotateCcw, Headphones } fr
 import { useToast } from "@/components/ui/use-toast";
 import { cekPembayaran } from "@/lib/pembayaran";
 import { invalidateSubscriptionCache } from "@/hooks/useSubscription";
+import { PerbandinganPaket } from "@/components/payment/PerbandinganPaket";
 
 /** sessionStorage key: feature path that sent the user here (upgrade loop) */
 const UPGRADE_FROM_KEY = "tk_upgrade_from";
@@ -327,6 +328,9 @@ const Subscription = () => {
               />
             </div>
           )}
+
+          {/* ── Free vs Plus: tabel yang sama dengan aplikasi ── */}
+          <PerbandinganPaket />
 
           {/* ── Payment security banner ────────────────────────────────── */}
           <div

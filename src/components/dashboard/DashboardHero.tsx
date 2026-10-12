@@ -151,7 +151,7 @@ export const DashboardHero = ({ user, profile, stats, onNavigate }: DashboardHer
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,.3)"; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,.2)"; }}
             >
-              ✦ Upgrade ke Pro
+              ✦ Upgrade ke Plus
             </button>
           )}
         </div>

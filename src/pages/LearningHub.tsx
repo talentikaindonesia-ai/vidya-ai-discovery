@@ -441,7 +441,7 @@ const LearningHub = () => {
     if (!userId) return;
     // Server-truth premium check (covers paid, trial, school members, admin)
     if (content.is_premium && !sub.loading && sub.isFree) {
-      toast.error("Kursus ini hanya untuk pengguna Premium. Upgrade sekarang!", { action: { label: "Upgrade", onClick: () => navigate("/subscription?from=%2Flearning") } });
+      toast.error("Kursus ini termasuk Talentika Plus. Upgrade sekarang!", { action: { label: "Upgrade", onClick: () => navigate("/subscription?from=%2Flearning") } });
       return;
     }
     setEnrolling(content.id);
@@ -671,7 +671,7 @@ const LearningHub = () => {
               ? "Membuka..."
               : done ? <><CheckCircle size={14} /> Ulangi Kursus</>
               : started ? <><Play size={14} /> Lanjutkan</>
-              : c.is_premium ? <><Lock size={14} /> Mulai — Premium</>
+              : c.is_premium ? <><Lock size={14} /> Mulai — Plus</>
               : <><Play size={14} /> Mulai Kursus</>
             }
           </button>
@@ -721,7 +721,7 @@ const LearningHub = () => {
                   <span style={{ fontSize: 13, color: "#6B7280" }}>{profile?.full_name || "Pengguna"}</span>
                   {/* status dari my_access (sama dengan server): berbayar, trial, sekolah, atau admin */}
                   <span style={{ ...pillBase, background: sub.isPremium ? "#EFF6FF" : "#F3F4F6", color: sub.isPremium ? "#1D4ED8" : "#6B7280", border: "1px solid", borderColor: sub.isPremium ? "#BFDBFE" : "#E5E7EB" }}>
-                    {sub.isPremium ? (sub.isSchool ? "⭐ Premium · Sekolah" : sub.source === "trial" ? "⭐ Premium · Trial" : "⭐ Premium") : "Gratis"}
+                    {sub.isPremium ? (sub.isSchool ? "⭐ Plus · Sekolah" : sub.source === "trial" ? "⭐ Plus · Trial" : "⭐ Plus") : "Free"}
                   </span>
                 </div>
               </div>
@@ -993,7 +993,7 @@ const LearningHub = () => {
                             <div style={{ padding: 14, display: "flex", flexDirection: "column", gap: 6 }}>
                               <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
                                 <span style={{ fontSize: 10.5, fontWeight: 800, background: j.bg, color: j.color, padding: "3px 9px", borderRadius: 99 }}>{j.label}</span>
-                                {e.is_premium_only && <span style={{ fontSize: 10.5, fontWeight: 800, background: "#FEF9C3", color: "#A47000", padding: "3px 9px", borderRadius: 99 }}>⭐ Premium</span>}
+                                {e.is_premium_only && <span style={{ fontSize: 10.5, fontWeight: 800, background: "#FEF9C3", color: "#A47000", padding: "3px 9px", borderRadius: 99 }}>⭐ Plus</span>}
                               </div>
                               <div style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 14, color: "#0B1D3A", lineHeight: 1.35 }}>{e.title}</div>
                               <div style={{ fontSize: 12, color: "#6B7280", display: "flex", flexWrap: "wrap", gap: "2px 10px" }}>

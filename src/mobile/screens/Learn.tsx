@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { askAi, canPurchase, db, errMsg, openExternal, signedUrl, uploadEvidence, useApp, useCareers } from "../store";
+import { askAi, canPurchase, db, errMsg, isKuotaError, openExternal, signedUrl, uploadEvidence, useApp, useCareers, useKuota } from "../store";
 import { AiLabel, Avatar, BackBtn, Btn, Empty, Header, Icon, IconBtn, ImgBox, Input, Label, Loading, Screen, Sheet, TabTitle, Tabs, TextArea, TIKA } from "../ui";
 import { C, SH, rpShort } from "../theme";
 import { cekPembayaran } from "@/lib/pembayaran";
@@ -378,7 +378,7 @@ function Course() {
     setBusy(true);
     const { data: p, error } = await db.from("projects").insert({ user_id: user!.id, title: `Project: ${c.title}`.slice(0, 140), skills: (c.tags || []).slice(0, 5), field: c.content_type, problem: null }).select("id").single();
     setBusy(false);
-    if (error) { toast(errMsg(error), "error"); return; }
+    if (error) { if (isKuotaError(error, "KUOTA_PROYEK")) openPaywall("projects"); else toast(errMsg(error), "error"); return; }
     await markStage("build");
     nav(`/app/projects/${p.id}`);
   };
@@ -590,7 +590,9 @@ function Course() {
 /* ── PROJECTS (tab) ─────────────────────────────────────────────────── */
 function Projects() {
   const nav = useNavigate();
-  const { t, lang, user, profile, toast, track } = useApp();
+  const qc = useQueryClient();
+  const { t, lang, user, profile, toast, track, isPro, openPaywall } = useApp();
+  const { data: kuota } = useKuota();
   const { careers } = useCareers();
   const [tab, setTab] = useState<"mine" | "ideas" | "done">("mine");
   const [open, setOpen] = useState(false);
@@ -611,23 +613,28 @@ function Projects() {
   });
   const create = async (tt = title, ff = field) => {
     const { data: p, error } = await db.from("projects").insert({ user_id: user!.id, title: tt.trim(), field: ff.trim() || null }).select("id").single();
-    if (error) { toast(errMsg(error), "error"); return; }
+    if (error) { if (isKuotaError(error, "KUOTA_PROYEK")) { setOpen(false); openPaywall("projects"); } else toast(errMsg(error), "error"); return; }
+    qc.invalidateQueries({ queryKey: ["m-kuota"] });
     track("evidence_added", { source: "project" });
     nav(`/app/projects/${p.id}`);
   };
   const active = (data ?? []).filter(p => p.status !== "completed");
   const finished = (data ?? []).filter(p => p.status === "completed");
+  // Free: Talent Passport dasar, maks. 3 proyek (dibatasi juga di database)
+  const penuh = !isPro && !!kuota && kuota.proyek >= kuota.proyek_batas;
+  const baru = () => (penuh ? openPaywall("projects") : setOpen(true));
   const target = careers.find(c => c.id === profile?.career_target) ?? careers[0];
   const ideas = [...(target?.projects ?? []).map(x => ({ t: x, d: target!.name, f: target!.field })), ...careers.filter(c => c.id !== target?.id).slice(0, 3).map(c => ({ t: c.projects[0], d: c.name, f: c.field }))].filter(x => x.t).slice(0, 6);
   const milestones = (p: any) => ["problem", "solution", "result", "reflection"].filter(k => p[k]).length;
 
   return (
     <Screen tab>
-      <TabTitle title={t("Proyek", "Projects")} sub={t("Belajar sambil berkarya, bangun portofoliomu", "Learn by doing, build your portfolio")} right={<IconBtn primary icon="plus" label={t("Proyek baru", "New project")} onClick={() => setOpen(true)} />} />
+      <TabTitle title={t("Proyek", "Projects")} sub={t("Belajar sambil berkarya, bangun portofoliomu", "Learn by doing, build your portfolio")} right={<IconBtn primary icon="plus" label={t("Proyek baru", "New project")} onClick={baru} />} />
       <div style={{ padding: "16px 20px 0" }}>
         <Tabs bleed={false} value={tab} onChange={v => setTab(v as typeof tab)} items={[
           { value: "mine", label: t("Proyekku", "My Projects") }, { value: "ideas", label: t("Ide Proyek", "Ideas") }, { value: "done", label: t("Selesai", "Completed") },
         ]} />
+        {!isPro && kuota && <button onClick={() => openPaywall("projects")} style={{ marginTop: 10, border: "none", background: "none", padding: 0, fontSize: 11.5, color: penuh ? C.amber : C.muted, cursor: "pointer", display: "flex", alignItems: "center", gap: 5 }}><Icon name={penuh ? "lock" : "folder"} size={13} />{t(`${kuota.proyek}/${kuota.proyek_batas} proyek · Akun Free — tanpa batas dengan Plus`, `${kuota.proyek}/${kuota.proyek_batas} projects · Free account — unlimited with Plus`)}</button>}
 
         {tab === "mine" && <>
           {isLoading && <Loading />}
@@ -638,7 +645,7 @@ function Projects() {
               <div style={{ fontSize: 12.5, color: C.muted, lineHeight: 1.5, marginTop: 4 }}>{t("Proyek adalah bukti terkuat untuk beasiswa, kompetisi, dan kampus. Mulai dari masalah kecil di sekitarmu.", "Projects are the strongest evidence for scholarships, competitions and universities. Start with a small problem around you.")}</div>
               <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
                 <Btn kind="outline" h={44} onClick={() => setTab("ideas")} style={{ flex: 1, width: "auto", fontSize: 13 }}>{t("Lihat ide", "See ideas")}</Btn>
-                <Btn h={44} onClick={() => setOpen(true)} style={{ flex: 1, width: "auto", fontSize: 13 }}>{t("Mulai proyek", "Start a project")}</Btn>
+                <Btn h={44} onClick={baru} style={{ flex: 1, width: "auto", fontSize: 13 }}>{t("Mulai proyek", "Start a project")}</Btn>
               </div>
             </div>
           )}

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { db, errMsg, useApp, useCareers, webUrl } from "../store";
-import { Avatar, Btn, Card, ChipBtn, Empty, Icon, Input, Label, Loading, Note, Ring, Screen, Sheet, TextArea, TIKA } from "../ui";
+import { Avatar, Btn, Card, ChipBtn, Empty, Icon, Input, Label, Loading, Note, PlusTeaser, Ring, Screen, Sheet, TextArea, TIKA } from "../ui";
 import { C, SH, avatarColors, daysUntil, deadlineColor } from "../theme";
 import { AXES, dnaTitle, fmtDate, rankAxes, riasecTitle } from "../logic";
 import authSchool from "../assets/auth-school.webp";
@@ -33,7 +33,7 @@ const Locked = ({ t }: { t: (a: string, b: string) => string }) => <div style={{
 /* ── PARENT VIEW ────────────────────────────────────────────────────── */
 function ParentDash() {
   const qc = useQueryClient();
-  const { t, lang, profile, user, toast } = useApp();
+  const { t, lang, profile, user, toast, openPaywall } = useApp();
   const { careers } = useCareers();
   const [child, setChild] = useState<string | null>(null);
   const [code, setCode] = useState("");
@@ -54,6 +54,8 @@ function ParentDash() {
   const top = rankAxes(s?.axes)[0];
   const kidFirst = s?.name?.split(" ")[0] ?? t("anak", "your child");
   const opps = (s?.opportunities ?? []) as any[];
+  // Free: ringkasan terbatas; daftar peluang & prestasi = Plus (ringkasan_anak di database)
+  const lengkap = s?.plus !== false;
   const achs = (s?.achievements ?? []) as any[];
   const nextOpp = opps.filter(o => (daysUntil(o.deadline) ?? -1) >= 0).sort((a, b) => +new Date(a.deadline) - +new Date(b.deadline))[0];
   const tip = sh.opps && nextOpp
@@ -92,12 +94,13 @@ function ParentDash() {
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 9, marginTop: 12 }}>
             {[[sh.learn ? s.learning_active ?? 0 : "—", t("Materi aktif", "Active courses"), t("sedang dipelajari", "in progress")], [sh.proj ? s.projects ?? 0 : "—", t("Proyek", "Projects"), t("bukti nyata", "real evidence")],
-              [sh.ach ? achs.length : "—", t("Prestasi", "Achievements"), t("tercatat", "logged")], [sh.opps ? opps.length : "—", t("Peluang", "Opportunities"), t("sedang diikuti", "in progress")]].map(([v, l, sub]) => (
+              [sh.ach && lengkap ? achs.length : "—", t("Prestasi", "Achievements"), t("tercatat", "logged")], [sh.opps && lengkap ? opps.length : "—", t("Peluang", "Opportunities"), t("sedang diikuti", "in progress")]].map(([v, l, sub]) => (
               <div key={l as string} style={{ ...card, borderRadius: 16, padding: 13 }}><div style={{ fontSize: 11, color: C.muted }}>{l}</div><div style={{ fontSize: 20, fontWeight: 700 }}>{v}</div><div style={{ fontSize: 11, color: C.muted }}>{sub}</div></div>
             ))}
           </div>
           <div style={{ fontSize: 11, color: C.faint, marginTop: 8 }}>{t("Career Readiness adalah indikator progres, bukan prediksi.", "Career Readiness is a progress indicator, not a prediction.")}{career ? ` · ${t("Minat", "Interest")}: ${career.name}` : sh.dna && top ? ` · ${AXES.find(a => a.key === top)![lang === "en" ? "name" : "nameId"]}` : ""}</div>
 
+          {lengkap ? <>
           <H>{t("Akan datang", "Coming up")}</H>
           {sh.opps ? (opps.length ? opps.slice(0, 4).map((o, i) => { const d = daysUntil(o.deadline); const dc = deadlineColor(d); return (
             <div key={i} style={{ ...card, borderRadius: 16, padding: "12px 14px", marginTop: 9, display: "flex", gap: 12, alignItems: "center" }}>
@@ -113,6 +116,9 @@ function ParentDash() {
               <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontSize: 13.5, fontWeight: 600 }}>{a.title} · {a.event}</div><div style={{ fontSize: 11.5, color: C.muted }}>{a.year}{a.verified ? ` · ${t("Terverifikasi", "Verified")}` : ""}</div></div>
             </div>)) : <div style={{ ...card, padding: "12px 14px", marginTop: 9, fontSize: 12.5, color: C.muted }}>{t("Belum ada.", "None yet.")}</div>) : <Locked t={t} />}
 
+          </> : <PlusTeaser onClick={() => openPaywall("parent")} style={{ marginTop: 16 }}
+            title={t(`Peluang & prestasi ${kidFirst}`, `${kidFirst}'s opportunities & achievements`)}
+            body={t("Ringkasan perkembangan lebih lengkap tersedia di Plus, dengan izin anak.", "A fuller progress summary is in Plus, with your child's permission.")} />}
           <div style={{ marginTop: 14, background: C.navy, borderRadius: 18, padding: 14, display: "flex", gap: 12, alignItems: "flex-start" }}>
             <img src={TIKA} alt="" style={{ width: 38, height: 38, borderRadius: "50%", objectFit: "cover", background: C.tintBlue, flex: "none" }} />
             <div><div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".6px", color: C.yellow }}>{t(`CARA MENDUKUNG ${kidFirst.toUpperCase()}`, `HOW TO SUPPORT ${kidFirst.toUpperCase()}`)}</div><div style={{ fontSize: 12.5, lineHeight: 1.5, color: "rgba(255,255,255,.9)", marginTop: 3 }}>{tip}</div></div>

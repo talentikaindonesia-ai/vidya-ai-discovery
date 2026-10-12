@@ -88,7 +88,7 @@ export const SubscriptionButton = ({ userId }: { userId: string }) => {
                 <Crown className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <p className="font-semibold text-foreground">Upgrade ke Premium</p>
+                <p className="font-semibold text-foreground">Upgrade ke Plus</p>
                 <p className="text-sm text-muted-foreground">
                   Akses semua fitur dan konten premium
                 </p>
@@ -119,7 +119,7 @@ export const SubscriptionButton = ({ userId }: { userId: string }) => {
             <div>
               <div className="flex items-center gap-2">
                 <p className="font-semibold text-foreground">
-                  {subscription.subscription_packages?.name || 'Premium'}
+                  {subscription.subscription_packages?.name || 'Plus'}
                 </p>
                 <Badge variant="default" className="text-xs">
                   Aktif

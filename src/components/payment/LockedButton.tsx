@@ -120,10 +120,10 @@ export function LockedButton({ feature, benefits, fromPath, onClick, children }:
                 letterSpacing: "-0.02em",
               }}
             >
-              {feature} — Fitur Premium
+              {feature} — Fitur Plus
             </h3>
             <p style={{ fontSize: 13.5, color: "var(--tk-gray-500)", margin: "0 0 16px", lineHeight: 1.55 }}>
-              Upgrade ke Premium untuk membuka fitur ini dan semua fitur lainnya.
+              Upgrade ke Talentika Plus untuk membuka fitur ini dan fitur Plus lainnya.
             </p>
 
             {/* Benefits */}

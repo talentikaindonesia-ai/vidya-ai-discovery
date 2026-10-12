@@ -59,7 +59,7 @@ export function AffiliateWidget({ userId, profile }: Props) {
           </div>
         </div>
         <p style={{ fontSize: 13, color: "rgba(255,255,255,.85)", margin: "10px 0 0", lineHeight: 1.6 }}>
-          Rekomendasikan Talentika ke siswamu. Dapatkan komisi <strong>Rp 5.000</strong> per siswa yang berlangganan Premium melalui linkmu.
+          Rekomendasikan Talentika ke siswamu. Dapatkan komisi <strong>Rp 5.000</strong> per siswa yang berlangganan Plus melalui linkmu.
         </p>
       </div>
 

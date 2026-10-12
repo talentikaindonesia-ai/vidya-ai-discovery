@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { db, errMsg, openExternal, Tracked, useApp, useCareers, useDna, useOpportunities, useTracker } from "../store";
+import { db, errMsg, openExternal, Tracked, useApp, useCareers, useDna, useKuota, useOpportunities, useTracker } from "../store";
 import { BackBtn, Btn, Empty, Header, Icon, IconBtn, ImgBox, Loading, Screen, Sheet, TabTitle, Tabs } from "../ui";
 import { C, SH, daysUntil, deadlineColor } from "../theme";
 import { docsFor, fmtDate, JENJANG_LABEL, OppType, oppMatch, oppTypeOf, TYPE_ID } from "../logic";
@@ -75,9 +75,14 @@ const dlText = (o: { deadline: string | null }, lang: "id" | "en", t: (a: string
 /* ── EXPLORE (tab) ──────────────────────────────────────────────────── */
 function Explore() {
   const nav = useNavigate();
-  const { t, lang, user } = useApp();
+  const { t, lang, user, isPro, openPaywall } = useApp();
   const { title: dnaTitleText, done } = useDna();
-  const { list, isLoading, tracker } = useEnriched();
+  const { list: ranked, isLoading, tracker } = useEnriched();
+  const { data: kuota } = useKuota();
+  // Free: pencarian & filter dasar (urut tenggat); urutan sesuai profil = Plus
+  const list = useMemo(() => (isPro ? ranked : [...ranked].sort((a, b) => (a.days ?? 9999) - (b.days ?? 9999))), [ranked, isPro]);
+  const dibuka = new Set(kuota?.peluang_dibuka ?? []);
+  const habis = !isPro && !!kuota && kuota.peluang_dipakai >= kuota.peluang_batas;
   const save = useSaveToggle();
   const [type, setType] = useState<OppType | "all" | "mentor">("all");
   const [f, setF] = useState<{ soon: boolean; online: boolean; free: boolean; sma: boolean }>({ soon: false, online: false, free: false, sma: false });
@@ -151,17 +156,34 @@ function Explore() {
             </button>
           )}
 
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 20 }}><div style={{ fontSize: 17, fontWeight: 700 }}>{t("Cocok untukmu", "Matched for You")}</div><span style={{ fontSize: 12, color: C.muted }}>{t("urut sesuai kecocokan", "sorted by fit")}</span></div>
+          {!isPro && kuota && (
+            <button onClick={() => openPaywall("opps")} style={{ width: "100%", textAlign: "left", marginTop: 12, border: "none", background: habis ? C.tintYellow : C.soft, borderRadius: 16, padding: "11px 14px", display: "flex", gap: 10, alignItems: "center", cursor: "pointer" }}>
+              <span style={{ color: habis ? C.amber : C.blue, display: "flex" }}><Icon name={habis ? "lock" : "eye"} size={18} /></span>
+              <span style={{ flex: 1, minWidth: 0 }}>
+                <span style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: C.text }}>{t(`${kuota.peluang_dipakai}/${kuota.peluang_batas} peluang dibuka bulan ini`, `${kuota.peluang_dipakai}/${kuota.peluang_batas} opportunities opened this month`)}</span>
+                <span style={{ display: "block", fontSize: 11.5, color: C.muted }}>{habis ? t("Kuota Free habis — buka semua dengan Plus", "Free quota used — open everything with Plus") : t("Akun Free · tanpa batas dengan Plus", "Free account · unlimited with Plus")}</span>
+              </span>
+              <span style={{ fontSize: 10, fontWeight: 700, color: "#7A5200", background: C.yellow, padding: "3px 8px", borderRadius: 99 }}>PLUS</span>
+            </button>
+          )}
+
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 20, gap: 8 }}>
+            <div style={{ fontSize: 17, fontWeight: 700 }}>{isPro ? t("Cocok untukmu", "Matched for You") : t("Peluang terbaru", "Latest opportunities")}</div>
+            {isPro ? <span style={{ fontSize: 12, color: C.muted }}>{t("urut sesuai kecocokan", "sorted by fit")}</span>
+              : <button onClick={() => openPaywall("matching")} style={{ border: "none", background: C.tintPurple, color: C.purple, borderRadius: 99, padding: "5px 10px", fontSize: 11.5, fontWeight: 600, display: "flex", alignItems: "center", gap: 5, cursor: "pointer" }}><Icon name="lock" size={12} />{t("Urut sesuai profilku", "Sort by my profile")}</button>}
+          </div>
           <div className="tk-grid2" style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 10 }}>
             {isLoading && <Loading />}
             {shown.map(o => {
               const [c] = TC[o.type];
+              const terkunci = habis && !dibuka.has(o.id);
               return (
-                <div key={o.id} onClick={() => nav(`/app/opportunities/${o.id}`)} style={{ background: "#fff", borderRadius: 20, overflow: "hidden", cursor: "pointer", boxShadow: SH.card }}>
+                <div key={o.id} onClick={() => (terkunci ? openPaywall("opps") : nav(`/app/opportunities/${o.id}`))} style={{ background: "#fff", borderRadius: 20, overflow: "hidden", cursor: "pointer", boxShadow: SH.card, opacity: terkunci ? 0.75 : 1 }}>
                   <div style={{ position: "relative", height: 120 }}>
                     <ImgBox src={oppImg(o.type, o.poster_url, o.id)} h="100%" r={0} />
                     <span style={{ position: "absolute", left: 12, top: 12, fontSize: 11, fontWeight: 600, color: "#fff", background: c, padding: "4px 11px", borderRadius: 99 }}>{t(TYPE_ID[o.type], o.type)}</span>
-                    <span style={{ position: "absolute", right: 56, top: 12, fontSize: 11, fontWeight: 700, color: C.green, background: "#fff", padding: "4px 10px", borderRadius: 99 }}>{t(`${o.match}% cocok`, `${o.match}% match`)}</span>
+                    {isPro && <span style={{ position: "absolute", right: 56, top: 12, fontSize: 11, fontWeight: 700, color: C.green, background: "#fff", padding: "4px 10px", borderRadius: 99 }}>{t(`${o.match}% cocok`, `${o.match}% match`)}</span>}
+                    {terkunci && <span style={{ position: "absolute", left: 12, bottom: 10, fontSize: 11, fontWeight: 700, color: "#7A5200", background: C.yellow, padding: "4px 10px", borderRadius: 99, display: "flex", alignItems: "center", gap: 5 }}><Icon name="lock" size={12} />Plus</span>}
                     <button onClick={e => { e.stopPropagation(); save(o, o.tracked); }} aria-label={o.tracked ? t("Hapus dari Tracker", "Remove from Tracker") : t("Simpan", "Save")} aria-pressed={!!o.tracked}
                       style={{ position: "absolute", right: 12, top: 8, width: 36, height: 36, borderRadius: "50%", border: "none", background: "#fff", color: C.blue, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}><Icon name="bookmark" size={16} filled={!!o.tracked} /></button>
                   </div>
@@ -173,7 +195,7 @@ function Explore() {
                       <span style={{ display: "flex", alignItems: "center", gap: 5 }}><span style={{ color: C.muted, display: "flex" }}><Icon name="pin" size={14} /></span>{o.location || "—"}</span>
                       <span style={{ display: "flex", alignItems: "center", gap: 5, color: deadlineColor(o.days).c }}><span style={{ display: "flex" }}><Icon name="cal" size={14} /></span>{dlText(o, lang, t)}</span>
                     </div>
-                    {o.why[0] && <div style={{ display: "flex", gap: 6, alignItems: "center", marginTop: 9, fontSize: 11.5, color: C.blue }}><Icon name="sparkle" size={13} /><span style={{ flex: 1, minWidth: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{o.why[0]}</span></div>}
+                    {isPro && o.why[0] && <div style={{ display: "flex", gap: 6, alignItems: "center", marginTop: 9, fontSize: 11.5, color: C.blue }}><Icon name="sparkle" size={13} /><span style={{ flex: 1, minWidth: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{o.why[0]}</span></div>}
                   </div>
                 </div>
               );
@@ -209,11 +231,20 @@ function Detail() {
   const { id = "" } = useParams();
   const nav = useNavigate();
   const qc = useQueryClient();
-  const { t, lang, user, profile, afterAction, track, toast } = useApp();
+  const { t, lang, user, profile, afterAction, track, toast, isPro, openPaywall } = useApp();
   const { list, isLoading } = useEnriched();
   const save = useSaveToggle();
   const [confirmApply, setConfirmApply] = useState(false);
   const o = list.find(x => x.id === id);
+  // Free: maks. 5 peluang berbeda per bulan (buka_peluang — sama dengan web)
+  const { data: akses, isLoading: cekAkses } = useQuery({
+    queryKey: ["m-buka-peluang", id, user?.id, isPro], enabled: !!user && !!id && !isPro, staleTime: Infinity,
+    queryFn: async () => {
+      const { data, error } = await db.rpc("buka_peluang", { p_id: id });
+      qc.invalidateQueries({ queryKey: ["m-kuota"] });
+      return error ? { allowed: true } : (data as { allowed: boolean; used?: number; limit?: number });
+    },
+  });
   const missing0 = o?.missing[0] ?? null;
   const kw = missing0 ? ACTION_WORDS.find(([re]) => re.test(missing0))?.[1] : null;
   const { data: action } = useQuery({
@@ -233,7 +264,24 @@ function Detail() {
   }, [action?.done, o?.tracked?.id, missing0]); // eslint-disable-line
   useEffect(() => { if (o) track("recommendation_viewed", { type: "opp", fit: o.match, position: 0 }); }, [o?.id]); // eslint-disable-line
 
-  if (isLoading) return <Loading />;
+  if (isLoading || (!isPro && cekAkses)) return <Loading />;
+  if (o && !isPro && akses && !akses.allowed) return (
+    <Screen><Header title={t("Peluang", "Opportunity")} />
+      <div style={{ padding: "16px 20px 0" }}>
+        <div style={{ background: "#fff", borderRadius: 20, padding: 18, boxShadow: SH.card }}>
+          <span style={{ fontSize: 11, fontWeight: 600, color: "#fff", background: TC[o.type][0], padding: "4px 11px", borderRadius: 99 }}>{t(TYPE_ID[o.type], o.type)}</span>
+          <div style={{ fontSize: 18, fontWeight: 800, lineHeight: 1.3, marginTop: 10 }}>{o.title}</div>
+          <div style={{ fontSize: 12.5, color: C.muted, marginTop: 4 }}>{[o.organizer, dlText(o, lang, t)].filter(Boolean).join(" · ")}</div>
+          <div style={{ marginTop: 16, background: C.tintYellow, borderRadius: 14, padding: "12px 14px", display: "flex", gap: 10, alignItems: "center" }}>
+            <span style={{ color: C.amber, display: "flex" }}><Icon name="lock" size={18} /></span>
+            <span style={{ fontSize: 12.5, color: "#7A5200", lineHeight: 1.5 }}>{t(`Kamu sudah membuka ${akses.limit ?? 5} peluang bulan ini. Kuota Free terisi lagi awal bulan depan.`, `You've opened ${akses.limit ?? 5} opportunities this month. Your Free quota refills next month.`)}</span>
+          </div>
+          <Btn onClick={() => openPaywall("opps")} style={{ marginTop: 14 }}><Icon name="star" size={16} />{t("Buka semua peluang dengan Plus", "Open every opportunity with Plus")}</Btn>
+          <Btn kind="outline" h={46} onClick={() => nav("/app/tracker")} style={{ marginTop: 8 }}>{t("Lihat peluang yang sudah kusimpan", "See my saved opportunities")}</Btn>
+        </div>
+      </div>
+    </Screen>
+  );
   if (!o) return <Screen><Header title={t("Peluang", "Opportunity")} /><div style={{ padding: 20 }}><Empty icon="clock" title={t("Peluang sudah ditutup atau tidak ditemukan", "Opportunity closed or not found")} action={<Btn kind="outline" h={44} onClick={() => nav("/app/explore")}>{t("Lihat peluang lain", "See other opportunities")}</Btn>} /></div></Screen>;
   const tr = o.tracked;
   const applied = !!tr && ["applied", "selection", "accepted", "completed"].includes(tr.status);
@@ -287,7 +335,7 @@ function Detail() {
       <div style={{ position: "relative", marginTop: -24, background: "#fff", borderRadius: "24px 24px 0 0", padding: "20px 20px 20px" }}>
         <div style={{ display: "flex", gap: 7 }}>
           <span style={{ fontSize: 11, fontWeight: 600, color: tc, background: tb, padding: "4px 11px", borderRadius: 99 }}>{t(TYPE_ID[o.type], o.type)}</span>
-          <span style={{ fontSize: 11, fontWeight: 700, color: C.green, background: C.tintGreen, padding: "4px 11px", borderRadius: 99 }}>{t(`${o.match}% cocok`, `${o.match}% match`)}</span>
+          {isPro && <span style={{ fontSize: 11, fontWeight: 700, color: C.green, background: C.tintGreen, padding: "4px 11px", borderRadius: 99 }}>{t(`${o.match}% cocok`, `${o.match}% match`)}</span>}
         </div>
         <h1 style={{ margin: "10px 0 0", fontSize: 22, fontWeight: 800, lineHeight: 1.2, letterSpacing: "-.4px" }}>{o.title}</h1>
         <div style={{ fontSize: 13, color: C.muted, marginTop: 3 }}>{o.organizer ?? o.source_website}</div>
@@ -309,9 +357,17 @@ function Detail() {
         <div style={{ marginTop: 8, fontSize: 10.5, color: C.faint }}>{t("Waktu dalam WIB. Fakta peluang dari sumber resmi, bukan dari AI.", "Times shown in WIB. Opportunity facts come from official sources, not AI.")}</div>
 
         <H>{t("Kenapa direkomendasikan", "Why it's recommended")}</H>
-        <div style={{ display: "flex", flexDirection: "column", gap: 7, marginTop: 9 }}>
-          {o.why.map(w => <div key={w} style={{ display: "flex", gap: 9, alignItems: "center", fontSize: 12.5, color: C.text2 }}><span style={{ color: C.blue, display: "flex", flex: "none" }}><Icon name="sparkle" size={15} /></span>{w}</div>)}
-        </div>
+        {isPro ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 7, marginTop: 9 }}>
+            {o.why.map(w => <div key={w} style={{ display: "flex", gap: 9, alignItems: "center", fontSize: 12.5, color: C.text2 }}><span style={{ color: C.blue, display: "flex", flex: "none" }}><Icon name="sparkle" size={15} /></span>{w}</div>)}
+          </div>
+        ) : (
+          <button onClick={() => openPaywall("matching")} style={{ width: "100%", textAlign: "left", marginTop: 9, border: "1.5px dashed #C9DCF8", background: "#fff", borderRadius: 14, padding: "11px 13px", display: "flex", gap: 10, alignItems: "center", cursor: "pointer" }}>
+            <span style={{ color: C.purple, display: "flex" }}><Icon name="lock" size={16} /></span>
+            <span style={{ flex: 1, fontSize: 12.5, color: C.text2 }}>{t("Lihat kecocokan & alasannya untuk profilmu", "See the match and reasons for your profile")}</span>
+            <span style={{ fontSize: 10, fontWeight: 700, color: "#7A5200", background: C.yellow, padding: "3px 8px", borderRadius: 99 }}>PLUS</span>
+          </button>
+        )}
 
         {elig.length > 0 && <>
           <H>{t("Cek kelayakan", "Eligibility check")}</H>

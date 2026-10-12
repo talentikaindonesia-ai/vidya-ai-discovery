@@ -276,7 +276,7 @@ export const DashboardSidebar = ({
                 marginTop: 6,
               }}
             >
-              Upgrade ke Pro
+              Upgrade ke Plus
             </div>
             <div style={{ fontSize: 11.5, color: "var(--tk-gray-600)", margin: "4px 0 10px" }}>
               Akses fitur premium &amp; materi eksklusif.

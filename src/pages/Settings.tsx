@@ -953,7 +953,7 @@ const Settings = () => {
             cursor: "pointer",
           }}
         >
-          Upgrade ke Pro
+          Upgrade ke Plus
         </button>
       </div>
 

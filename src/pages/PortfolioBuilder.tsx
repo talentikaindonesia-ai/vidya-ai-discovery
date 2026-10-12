@@ -157,6 +157,12 @@ const PortfolioBuilder = () => {
       setShowAddProject(false);
       toast.success("Project berhasil ditambahkan!");
     } catch (error: any) {
+      if (String(error?.message ?? "").includes("KUOTA_PROYEK")) {
+        toast.error("Akun Free bisa menyimpan maksimal 3 proyek. Upgrade ke Plus untuk Talent Passport lengkap.", {
+          action: { label: "Lihat Plus", onClick: () => window.location.assign("/subscription?from=%2Fportfolio") },
+        });
+        return;
+      }
       toast.error("Gagal menambahkan project: " + error.message);
     }
   };
@@ -192,10 +198,8 @@ const PortfolioBuilder = () => {
             </p>
           </div>
 
-          <UpgradeGate
-            feature="Bangun portfolio profesional & bagikan ke rekruter — fitur Premium"
-            fromPath="/portfolio"
-          >
+          {/* Talent Passport dasar terbuka untuk semua; akun Free maks. 3 proyek (trigger batasi_proyek_free) */}
+          <>
           <>
 
           {/* Profile Section */}
@@ -412,7 +416,7 @@ const PortfolioBuilder = () => {
             </TabsContent>
           </Tabs>
           </>
-          </UpgradeGate>
+          </>
         </div>
       </div>
     </div>

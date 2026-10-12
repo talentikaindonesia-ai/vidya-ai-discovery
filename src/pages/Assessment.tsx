@@ -1281,7 +1281,7 @@ const Assessment = () => {
                   cursor: "pointer",
                 }}
               >
-                🔒 +{personalityData.careers.length - 2} karier lagi — buka dengan Premium
+                🔒 +{personalityData.careers.length - 2} karier lagi — buka dengan Plus
               </button>
             )}
           </div>

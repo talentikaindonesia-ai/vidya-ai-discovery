@@ -6,6 +6,7 @@ import WhatsAppButton from "@/components/WhatsAppButton";
 import { supabase } from "@/integrations/supabase/client";
 import { usePaketLangganan } from "@/hooks/usePaketLangganan";
 import "../landing.css";
+import { PerbandinganPaket } from "@/components/payment/PerbandinganPaket";
 
 /* ─── Star SVG (reused) ─── */
 const StarSVG = ({ size = 14, style }: { size?: number; style?: React.CSSProperties }) => (
@@ -934,8 +935,9 @@ const Harga = ({ navigate }: { navigate: ReturnType<typeof useNavigate> }) => {
         </div>
 
         {/* ── Kartu paket (dari database) ── */}
-        <div className="lp-pricing-grid lp-pricing-grid-3">
-          {loading && [0, 1, 2].map(i => (
+        {/* Dua paket saja: Free & Plus (grid 2 kolom bawaan .lp-pricing-grid) */}
+        <div className="lp-pricing-grid">
+          {loading && [0, 1].map(i => (
             <div key={i} className="lp-pricing-card" style={{ minHeight: 520, opacity: .5 }} />
           ))}
           {paket.map(p => {
@@ -1010,8 +1012,9 @@ const Harga = ({ navigate }: { navigate: ReturnType<typeof useNavigate> }) => {
 
         {/* ── Footer note ── */}
         <div style={{ textAlign: "center", marginTop: 32, fontSize: 13, color: "#94A3B8" }} className="reveal">
-          Semua paket dilengkapi uji coba 7 hari · Batalkan kapan saja · Tidak ada biaya tersembunyi
+          Batalkan kapan saja · Tidak ada biaya tersembunyi
         </div>
+        <div className="reveal"><PerbandinganPaket /></div>
         <div style={{ textAlign: "center", marginTop: 14, fontSize: 13 }} className="reveal">
           <span style={{ color: "#94A3B8" }}>Mewakili sekolah atau institusi? </span>
           <button

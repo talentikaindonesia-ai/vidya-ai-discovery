@@ -23,7 +23,7 @@ export const UpgradePrompt: React.FC<UpgradePromptProps> = ({
     if (type === 'courses') {
       return {
         title: 'Akses Lebih Banyak Kursus',
-        description: `Anda telah mengakses ${currentCount} dari ${limit} kursus gratis. Upgrade ke Premium untuk akses tidak terbatas!`,
+        description: `Anda telah mengakses ${currentCount} dari ${limit} kursus gratis. Upgrade ke Plus untuk seluruh katalog!`,
         features: ['Akses ke semua kursus', 'Sertifikat digital', 'Materi eksklusif', 'Mentor support'],
       };
     } else {
@@ -61,7 +61,7 @@ export const UpgradePrompt: React.FC<UpgradePromptProps> = ({
           size="lg"
         >
           <Crown className="w-4 h-4" />
-          Upgrade ke Premium
+          Upgrade ke Plus
           <ArrowRight className="w-4 h-4" />
         </Button>
       </CardContent>

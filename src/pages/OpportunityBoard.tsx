@@ -417,7 +417,16 @@ const OpportunityBoard = () => {
   const sub = useSubscription();
   const hargaMulai = useHargaMulai();
   const isFreeUser = !sub.loading && sub.isFree;
-  const FREE_OPP_LIMIT = 5;
+  // Kuota Free: 5 peluang berbeda dibuka per bulan — RPC yang sama dengan
+  // aplikasi (buka_peluang / kuota_saya), jadi web & app tidak bisa berbeda.
+  const [kuota, setKuota] = useState<{ dipakai: number; batas: number; dibuka: Set<string> } | null>(null);
+  useEffect(() => {
+    if (!isFreeUser) return;
+    (supabase.rpc as any)("kuota_saya").then(({ data }: any) => {
+      if (data) setKuota({ dipakai: data.peluang_dipakai ?? 0, batas: data.peluang_batas ?? 5, dibuka: new Set<string>(data.peluang_dibuka ?? []) });
+    });
+  }, [isFreeUser]);
+  const kuotaHabis = isFreeUser && !!kuota && kuota.dipakai >= kuota.batas;
   const [reported, setReported] = useState<Set<string>>(new Set());
 
   const reportOpp = async (oppId: string) => {
@@ -507,6 +516,24 @@ const OpportunityBoard = () => {
     (supabase.rpc as any)("log_opportunity_click", { p_id: id }).then(() => {}, () => {});
   };
 
+  /** Buka tautan peluang; akun Free memakai kuota bulanan (yang sudah dibuka bulan ini gratis dibuka lagi). */
+  const bukaPeluang = async (opp: { id: string; link: string }) => {
+    catatKlik(opp.id);
+    if (!isFreeUser || kuota?.dibuka.has(opp.id)) { window.open(opp.link, "_blank"); return; }
+    if (kuotaHabis) { navigate("/subscription?from=%2Fopportunities"); return; }
+    const tab = window.open("", "_blank"); // dibuka sinkron supaya tidak diblokir popup blocker
+    const { data } = await (supabase.rpc as any)("buka_peluang", { p_id: opp.id });
+    if (data && data.allowed === false) {
+      tab?.close();
+      setKuota(k => (k ? { ...k, dipakai: data.used ?? k.batas } : k));
+      toast.info(`Kamu sudah membuka ${data.limit ?? 5} peluang bulan ini. Buka semua dengan Talentika Plus.`);
+      navigate("/subscription?from=%2Fopportunities");
+      return;
+    }
+    setKuota(k => (k ? { ...k, dipakai: data?.used ?? k.dipakai + 1, dibuka: new Set([...k.dibuka, opp.id]) } : k));
+    if (tab) tab.location.href = opp.link; else window.open(opp.link, "_blank");
+  };
+
   // "Rekomendasi Terbaik Minggu Ini": top 3 by full formula across all
   const topPicks = opportunities.slice()
     .sort((a, b) => finalScore(b, personaSignals) - finalScore(a, personaSignals))
@@ -515,9 +542,8 @@ const OpportunityBoard = () => {
   const totalPages = Math.max(1, Math.ceil(filteredOpportunities.length / PAGE_SIZE));
   const pageItems  = filteredOpportunities.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  // Free tier: single page of 5 cards; the rest are teased behind the unlock banner
-  const gatedItems  = isFreeUser ? filteredOpportunities.slice(0, FREE_OPP_LIMIT) : pageItems;
-  const lockedCount = isFreeUser ? Math.max(0, filteredOpportunities.length - FREE_OPP_LIMIT) : 0;
+  // Semua orang melihat katalog yang sama; akun Free dibatasi saat MEMBUKA peluang (kuota bulanan)
+  const gatedItems = pageItems;
 
   const handleTabChange = (id: string) => { setSelectedCategory(id); setPage(1); };
 
@@ -702,7 +728,7 @@ const OpportunityBoard = () => {
             {/* ── Rekomendasi Terbaik Minggu Ini (premium: personalisasi) ───── */}
             {viewMode === "foryou" && hasPersona && !loading && topPicks.length > 0 && (
               <UpgradeGate
-                feature="Rekomendasi personal berdasarkan hasil tes bakatmu — buka dengan Premium"
+                feature="Rekomendasi peluang berdasarkan profilmu — buka dengan Plus"
                 fromPath="/opportunities"
               >
               <div style={{ marginBottom: 22, background: "linear-gradient(135deg,#EFF6FF,#F0F9FF)", border: "1.5px solid #BFDBFE", borderRadius: 18, padding: "16px 18px" }}>
@@ -871,7 +897,7 @@ const OpportunityBoard = () => {
                       return (
                         <div
                           key={opp.id}
-                          onClick={() => { catatKlik(opp.id); window.open(opp.link, '_blank'); }}
+                          onClick={() => bukaPeluang(opp)}
                           className="group"
                           style={{
                             background: "white",
@@ -1205,7 +1231,7 @@ const OpportunityBoard = () => {
                               </div>
                             )}
                             <button
-                              onClick={(e) => { e.stopPropagation(); catatKlik(opp.id); window.open(opp.link, '_blank'); }}
+                              onClick={(e) => { e.stopPropagation(); bukaPeluang(opp); }}
                               style={{
                                 flex: 1,
                                 display: "flex",
@@ -1271,42 +1297,30 @@ const OpportunityBoard = () => {
                   </div>
                 )}
 
-                {/* ── Free tier: unlock banner for the rest of the board ──── */}
-                {lockedCount > 0 && (
+                {/* ── Akun Free: kuota peluang bulan ini ──── */}
+                {isFreeUser && kuota && (
                   <div
                     onClick={() => navigate("/subscription?from=%2Fopportunities")}
                     style={{
-                      marginTop: 20,
-                      borderRadius: 18,
-                      padding: "26px 24px",
-                      textAlign: "center",
-                      cursor: "pointer",
-                      background: "linear-gradient(135deg, #1E3A8A, #6D28D9)",
-                      color: "white",
-                      boxShadow: "0 8px 28px rgba(30,58,138,.35)",
+                      marginTop: 20, borderRadius: 18, padding: "22px 24px", textAlign: "center", cursor: "pointer",
+                      background: "linear-gradient(135deg, #1E3A8A, #6D28D9)", color: "white", boxShadow: "0 8px 28px rgba(30,58,138,.35)",
                     }}
                   >
                     <div style={{ fontFamily: "var(--tk-font-display, 'Poppins', sans-serif)", fontWeight: 800, fontSize: 18, marginBottom: 6 }}>
-                      🔓 {lockedCount} peluang lagi menantimu
+                      {kuotaHabis ? "🔒 Kuota peluang bulan ini sudah terpakai" : `🔓 ${kuota.dipakai}/${kuota.batas} peluang dibuka bulan ini`}
                     </div>
                     <div style={{ fontSize: 13.5, opacity: 0.85, marginBottom: 14 }}>
-                      Beasiswa, kompetisi, magang & event pilihan — plus rekomendasi personal sesuai bakatmu.
+                      Akun Free bisa membuka {kuota.batas} peluang per bulan. Plus membuka katalog penuh dan rekomendasi sesuai profilmu.
                     </div>
-                    <span
-                      style={{
-                        display: "inline-flex", alignItems: "center", gap: 7,
-                        background: "white", color: "#1D4ED8",
-                        borderRadius: 12, padding: "11px 22px",
-                        fontFamily: "var(--tk-font-display, 'Poppins', sans-serif)", fontWeight: 700, fontSize: 14,
-                      }}
-                    >
-                      ✨ {hargaMulai ? `Upgrade — mulai ${hargaMulai}/bln` : "Lihat Paket Berlangganan"}
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 7, background: "white", color: "#1D4ED8", borderRadius: 12, padding: "11px 22px", fontFamily: "var(--tk-font-display, 'Poppins', sans-serif)", fontWeight: 700, fontSize: 14 }}>
+                      ✨ {hargaMulai ? `Upgrade ke Plus — ${hargaMulai}/bln` : "Lihat Talentika Plus"}
                     </span>
                   </div>
                 )}
 
+                {/* ── Pagination ── */}
                 {/* ── Pagination (premium only — free sees the unlock banner) ── */}
-                {!isFreeUser && filteredOpportunities.length > 0 && (
+                {filteredOpportunities.length > 0 && (
                   <div
                     style={{
                       display: "flex",

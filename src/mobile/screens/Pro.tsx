@@ -10,6 +10,7 @@ import { C, SH, rp, rpShort } from "../theme";
 import { cekPembayaran } from "@/lib/pembayaran";
 import { fmtDate } from "../logic";
 import { SchoolCodeSheet } from "./More";
+import { DI_LUAR_PAKET, MATRIKS_PAKET } from "@/lib/paket";
 
 export default function Pro({ screen }: { screen: "pro" | "checkout" | "paid" }) {
   // Di app native tidak ada pembelian (kebijakan App Store / Google Play) — lihat canPurchase()
@@ -33,18 +34,34 @@ function usePlans() {
 }
 
 /** Free vs Plus — angka mengikuti batas sistem sebenarnya. */
-function useCompare() {
-  const { t } = useApp();
-  const { data: aiLimit } = useQuery({ queryKey: ["m-ai-limit"], staleTime: 60 * 60_000, queryFn: async () => Number((await db.from("app_config").select("value").eq("key", "ai_free_daily_limit").maybeSingle()).data?.value ?? 20) });
-  return [
-    [t("Modul Talent Discovery", "Talent Discovery modules"), "3", t("Semua 8", "All 8")],
-    [t("Chat Tika AI", "Tika AI chats"), `${aiLimit ?? 20}/${t("hari", "day")}`, `200/${t("hari", "day")}`],
-    [t("Materi aktif bersamaan", "Active courses at once"), "3", t("Tanpa batas", "Unlimited")],
-    [t("Sesi mentor 1-on-1", "1-on-1 mentor sessions"), "—", t("Termasuk", "Included")],
-    [t("Unduh materi offline", "Offline lessons"), "—", t("Termasuk", "Included")],
-    [t("Sertifikat jalur terverifikasi", "Verified track certificates"), "—", t("Termasuk", "Included")],
-    [t("Posting di komunitas", "Post in the community"), "—", t("Termasuk", "Included")],
-  ] as [string, string, string][];
+/* Matriks Free vs Plus — satu sumber dengan halaman langganan web (src/lib/paket.ts). */
+function CompareTable() {
+  const { lang } = useApp();
+  const en = lang === "en";
+  return (
+    <div style={{ background: "#fff", borderRadius: 18, boxShadow: SH.card, overflow: "hidden", marginTop: 10 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, padding: "10px 14px", background: C.soft, fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: ".4px" }}><span>FREE</span><span style={{ color: C.blue }}>PLUS</span></div>
+      {MATRIKS_PAKET.map((r, i) => (
+        <div key={r.fitur} style={{ padding: "10px 14px", borderTop: i ? "1px solid #F1F5FB" : "none" }}>
+          <div style={{ fontSize: 12.5, fontWeight: 700, color: C.text }}>{en ? r.fiturEn : r.fitur}</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 3, fontSize: 11.5, lineHeight: 1.4 }}>
+            <span style={{ color: C.muted }}>{en ? r.freeEn : r.free}</span>
+            <span style={{ color: C.blue, fontWeight: 600 }}>{en ? r.plusEn : r.plus}</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** Yang tidak termasuk paket mana pun — disebut terang supaya tidak ada janji yang keliru. */
+function DiLuarPaket() {
+  const { t, lang } = useApp();
+  return (
+    <div style={{ background: C.soft, borderRadius: 16, padding: "12px 14px", marginTop: 10, fontSize: 11.5, color: C.text2, lineHeight: 1.55 }}>
+      <b>{t("Tidak termasuk langganan:", "Not included in any plan:")}</b> {DI_LUAR_PAKET.map(([id, en]) => (lang === "en" ? en : id)).join(", ")}{t(" — dijual atau dikenakan terpisah.", " — sold or charged separately.")}
+    </div>
+  );
 }
 
 function Hero({ title, sub, kicker = "TALENTIKA PLUS" }: { title: React.ReactNode; sub: React.ReactNode; kicker?: string }) {
@@ -58,20 +75,6 @@ function Hero({ title, sub, kicker = "TALENTIKA PLUS" }: { title: React.ReactNod
   );
 }
 
-function CompareTable() {
-  const { t } = useApp();
-  const rows = useCompare();
-  return (
-    <div style={{ background: "#fff", borderRadius: 18, boxShadow: SH.card, overflow: "hidden", marginTop: 10 }}>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 64px 76px", gap: 8, padding: "10px 14px", background: C.soft, fontSize: 11, fontWeight: 600, color: C.muted }}><span>{t("Fitur", "Feature")}</span><span style={{ textAlign: "center" }}>Free</span><span style={{ textAlign: "center", color: C.blue }}>Plus</span></div>
-      {rows.map(([f, a, b], i) => (
-        <div key={f} style={{ display: "grid", gridTemplateColumns: "1fr 64px 76px", gap: 8, padding: "10px 14px", borderTop: i ? "1px solid #F1F5FB" : "none", fontSize: 12.5, alignItems: "center" }}>
-          <span>{f}</span><span style={{ textAlign: "center", color: C.muted }}>{a}</span><span style={{ textAlign: "center", fontWeight: 600, color: C.blue }}>{b}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
 
 /* Versi native: informasi fitur tanpa harga, tombol beli, atau tautan ke pembayaran luar
    (App Store Review Guideline 3.1.1/3.1.3 & kebijakan Google Play Payments). */
@@ -85,9 +88,10 @@ function NativeProInfo() {
     <div className="tk-screen" style={{ position: "absolute", inset: 0, overflow: "auto", background: C.bg, paddingBottom: 40 }}>
       <Header title="Talentika Plus" sub={isPro ? t("Aktif di akunmu", "Active on your account") : t("Buka potensi penuhmu", "Unlock your full potential")} />
       <div style={{ padding: "14px 20px 0" }}>
-        <Hero title={isPro ? t("Semua fitur Plus terbuka", "All Plus features unlocked") : <>{t("Melangkah lebih jauh", "Go further with")}<br />{t("bersama Talentika Plus", "Talentika Plus")}</>} sub={isPro ? t("Terima kasih sudah bertumbuh bersama Talentika.", "Thanks for growing with Talentika.") : t("Tersedia untuk akun Plus/Pro, termasuk siswa di sekolah mitra.", "Available on Plus/Pro accounts, including students at partner schools.")} />
+        <Hero title={isPro ? t("Semua fitur Plus terbuka", "All Plus features unlocked") : <>{t("Melangkah lebih jauh", "Go further with")}<br />{t("bersama Talentika Plus", "Talentika Plus")}</>} sub={isPro ? t("Terima kasih sudah bertumbuh bersama Talentika.", "Thanks for growing with Talentika.") : t("Tersedia untuk akun Plus, termasuk siswa di sekolah mitra.", "Available on Plus accounts, including students at partner schools.")} />
         <div style={{ fontSize: 16, fontWeight: 700, marginTop: 18 }}>Free vs Plus</div>
         <CompareTable />
+        <DiLuarPaket />
         {!isPro && <Btn kind="soft" h={46} onClick={() => setSchool(true)} style={{ marginTop: 14 }}><Icon name="school" size={17} />{t("Punya kode sekolah?", "Have a school code?")}</Btn>}
         <Btn kind="outline" h={46} onClick={async () => { invalidateSubscriptionCache(); await qc.invalidateQueries({ queryKey: ["m-access"] }); toast(t("Status akun diperbarui", "Account status refreshed")); }} style={{ marginTop: 10 }}>{t("Muat ulang status akun", "Refresh account status")}</Btn>
         {isPro && <Btn h={48} onClick={() => nav("/app/mentors")} style={{ marginTop: 10 }}>{t("Pesan sesi mentor", "Book a mentor")}</Btn>}
@@ -114,9 +118,10 @@ function PlusScreen() {
     <div className="tk-screen" style={{ position: "absolute", inset: 0, overflow: "auto", background: C.bg, paddingBottom: 0 }}>
       <Header title="Talentika Plus" sub={t("Buka potensi penuhmu", "Unlock your full potential")} />
       <div style={{ padding: "14px 20px 20px" }}>
-        <Hero kicker={cheapest ? t(`MULAI ${rpShort(cheapest)}/BULAN`, `FROM ${rpShort(cheapest)}/MONTH`) : "TALENTIKA PLUS"} title={<>{t("Melangkah lebih jauh", "Go further with")}<br />{t("bersama Talentika Plus", "Talentika Plus")}</>} sub={t("Semua modul, Tika AI lebih banyak, mentor, dan sertifikat jalur.", "All modules, more Tika AI, mentors and track certificates.")} />
+        <Hero kicker={cheapest ? t(`MULAI ${rpShort(cheapest)}/BULAN`, `FROM ${rpShort(cheapest)}/MONTH`) : "TALENTIKA PLUS"} title={<>{t("Melangkah lebih jauh", "Go further with")}<br />{t("bersama Talentika Plus", "Talentika Plus")}</>} sub={t("Asesmen lengkap, AI Talent Coach, rekomendasi peluang, dan Talent Passport lengkap.", "Full assessment, AI Talent Coach, opportunity picks and a full Talent Passport.")} />
         <div style={{ fontSize: 16, fontWeight: 700, marginTop: 18 }}>Free vs Plus</div>
         <CompareTable />
+        <DiLuarPaket />
         <div style={{ fontSize: 16, fontWeight: 700, marginTop: 18 }}>{t("Pilih paket", "Choose a plan")}</div>
         {loading && <Loading />}
         <div style={{ display: "flex", flexDirection: "column", gap: 9, marginTop: 10 }}>
@@ -305,8 +310,9 @@ function PlusActive({ celebrate = false }: { celebrate?: boolean }) {
   });
   const unlocked: [string, string][] = [
     [t("Semua 8 modul Talent Discovery", "All 8 Talent Discovery modules"), "sparkle"], [t("Tika AI hingga 200 pesan/hari", "Tika AI up to 200 messages/day"), "msg"],
-    [t("Sesi mentor 1-on-1", "1-on-1 mentor sessions"), "users"], [t("Materi tanpa batas & unduh offline", "Unlimited courses & offline downloads"), "download"],
-    [t("Sertifikat jalur terverifikasi", "Verified track certificates"), "medal"], [t("Posting di komunitas", "Post in the community"), "msg"],
+    [t("Materi tanpa batas & unduh offline", "Unlimited courses & offline downloads"), "download"], [t("Peluang tanpa batas & rekomendasi sesuai profil", "Unlimited opportunities & profile-based picks"), "target"],
+    [t("Jalur studi & karier personal", "Personal study & career paths"), "compass"], [t("Talent Passport lengkap", "Full Talent Passport"), "folder"],
+    [t("Sertifikat yang memenuhi syarat", "Eligible certificates"), "medal"], [t("Posting di komunitas", "Post in the community"), "msg"],
   ];
   const source = access?.source;
   const sourceLabel = source === "school" ? t("Lewat sekolahmu", "Through your school") : source === "trial" ? t("Masa coba", "Trial") : source === "admin" ? "Admin" : (sub as any)?.subscription_packages?.name ?? "Plus";

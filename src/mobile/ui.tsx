@@ -330,6 +330,20 @@ export function Label({ children }: { children: ReactNode }) {
   return <div style={{ fontSize: 13, fontWeight: 600, color: C.text2 }}>{children}</div>;
 }
 
+/** Fitur Plus yang terkunci untuk akun Free — ketuk untuk membuka penawaran Plus. */
+export function PlusTeaser({ title, body, onClick, style }: { title: ReactNode; body?: ReactNode; onClick: () => void; style?: CSSProperties }) {
+  return (
+    <button onClick={onClick} style={{ width: "100%", textAlign: "left", border: "1.5px dashed #C9DCF8", background: "#fff", borderRadius: 18, padding: "13px 14px", display: "flex", gap: 12, alignItems: "center", cursor: "pointer", ...style }}>
+      <span style={{ width: 38, height: 38, borderRadius: 12, background: C.tintYellow, color: C.amber, display: "flex", alignItems: "center", justifyContent: "center", flex: "none" }}><Icon name="lock" size={18} /></span>
+      <span style={{ flex: 1, minWidth: 0 }}>
+        <span style={{ display: "block", fontSize: 13.5, fontWeight: 600, color: C.text }}>{title}</span>
+        {body && <span style={{ display: "block", fontSize: 11.5, color: C.muted, marginTop: 1, lineHeight: 1.4 }}>{body}</span>}
+      </span>
+      <span style={{ fontSize: 10, fontWeight: 700, color: "#7A5200", background: C.yellow, padding: "3px 8px", borderRadius: 99, flex: "none" }}>PLUS</span>
+    </button>
+  );
+}
+
 export function Empty({ icon = "folder", title, body, action }: { icon?: ReactNode; title: ReactNode; body?: ReactNode; action?: ReactNode }) {
   return (
     <div style={{ background: "#fff", borderRadius: 20, padding: "24px 20px", boxShadow: SH.card, textAlign: "center" }}>

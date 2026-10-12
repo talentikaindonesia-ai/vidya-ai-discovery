@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { askAi, Career, db, errMsg, useApp, useCareers, useDna, useOpportunities, useSkills } from "../store";
-import { AiLabel, BackBtn, Btn, Empty, Header, Icon, ImgBox, Loading, Screen, Tabs } from "../ui";
+import { AiLabel, BackBtn, Btn, Empty, Header, Icon, ImgBox, Loading, PlusTeaser, Screen, Tabs } from "../ui";
 import { C, SH } from "../theme";
 import { AXES, AxisKey, INTEREST_TILES, oppMatch, oppTypeOf, TYPEC, TYPE_ID } from "../logic";
 import { careerImg, oppImg } from "../media";
@@ -275,7 +275,7 @@ function CareerDetail() {
 function LearningPath() {
   const { id } = useParams();
   const nav = useNavigate();
-  const { t, lang, profile, user, afterAction, toast } = useApp();
+  const { t, lang, profile, user, afterAction, toast, isPro, openPaywall } = useApp();
   const qc = useQueryClient();
   const { careers, isLoading } = useCareers();
   const { data: skills = [] } = useSkills();
@@ -303,11 +303,11 @@ function LearningPath() {
       <div style={{ padding: "0 22px" }}>
         <p style={{ margin: "10px 0 0", fontSize: 13, lineHeight: 1.55, color: C.muted }}>{t("Rencana langkah demi langkah untuk membangun skill, pengalaman, dan portofolio menuju karier impianmu: ", "A step-by-step plan to build the skills, experience, and portfolio for your future career: ")}<b style={{ color: C.text }}>{name}</b>.</p>
         <div style={{ marginTop: 18, display: "flex", flexDirection: "column" }}>
-          {levels.map((l, i) => (
+          {(isPro ? levels : levels.slice(0, 1)).map((l, i) => (
             <div key={i} style={{ display: "flex", gap: 14 }}>
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 22, flex: "none" }}>
                 <span style={{ width: 22, height: 22, borderRadius: "50%", background: l.cur ? C.blue : "#fff", border: `2.5px solid ${l.cur ? C.blue : "#CBD5E1"}`, boxShadow: "0 0 0 4px #fff", flex: "none" }} />
-                {i < levels.length - 1 && <span style={{ flex: 1, width: 2, background: C.line, margin: "2px 0" }} />}
+                {(i < levels.length - 1 && isPro) && <span style={{ flex: 1, width: 2, background: C.line, margin: "2px 0" }} />}
               </div>
               <div style={{ flex: 1, paddingBottom: 18, display: "flex", justifyContent: "space-between", gap: 10 }}>
                 <div>
@@ -321,6 +321,9 @@ function LearningPath() {
             </div>
           ))}
         </div>
+        {!isPro && levels.length > 1 && <PlusTeaser onClick={() => openPaywall("path")} style={{ marginBottom: 14 }}
+          title={t(`${levels.length - 1} langkah berikutnya menuju ${name}`, `${levels.length - 1} more steps toward ${name}`)}
+          body={t("Jalur studi & karier personal tersedia di Plus.", "Personal study & career paths are in Plus.")} />}
         <div style={{ background: C.bg, borderRadius: 18, padding: "14px 16px", display: "flex", alignItems: "center", gap: 13 }}>
           <span style={{ width: 42, height: 42, borderRadius: 13, background: "#fff", color: C.blue, display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name="cal" size={20} /></span>
           <div><div style={{ fontSize: 12, color: C.muted }}>{t("Perkiraan waktu", "Estimated time")}</div><div style={{ fontSize: 17, fontWeight: 700 }}>{c.roadmap[c.roadmap.length - 1]?.[0] ?? "—"}</div></div>

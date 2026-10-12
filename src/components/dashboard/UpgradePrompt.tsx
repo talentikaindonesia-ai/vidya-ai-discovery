@@ -91,7 +91,7 @@ export const UpgradePrompt = ({
         <div className="flex items-center justify-between mb-2">
           <Badge variant="outline" className="text-primary border-primary/30">
             <Crown className="w-3 h-3 mr-1" />
-            Premium Feature
+            Fitur Plus
           </Badge>
           <Lock className="w-5 h-5 text-primary" />
         </div>
@@ -106,7 +106,7 @@ export const UpgradePrompt = ({
           </p>
         </div>
         <Button onClick={goToSubscription} className="w-full h-12" size="lg">
-          Upgrade ke Premium
+          Upgrade ke Plus
           <ArrowRight className="w-4 h-4 ml-2" />
         </Button>
         <p className="text-xs text-center text-muted-foreground">

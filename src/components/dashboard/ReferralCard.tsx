@@ -120,7 +120,7 @@ export function ReferralCard() {
             Ajak Teman, Dapat Hadiah!
           </div>
           <div style={{ fontSize: 12.5, color: "var(--tk-gray-500)", lineHeight: 1.5 }}>
-            Kamu & temanmu dapat <strong style={{ color: "#1D4ED8" }}>1 bulan gratis</strong> saat mereka upgrade Premium
+            Kamu & temanmu dapat <strong style={{ color: "#1D4ED8" }}>1 bulan gratis</strong> saat mereka upgrade Plus
           </div>
         </div>
       </div>

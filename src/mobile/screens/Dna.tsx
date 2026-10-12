@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { canPurchase, Career, db, errMsg, useApp, useCareers, useDna, useSkills } from "../store";
-import { BackBtn, Btn, Card, Confetti, Header, Icon, Loading, LOGO, Screen, Sheet, Tabs } from "../ui";
+import { BackBtn, Btn, Card, Confetti, Header, Icon, Loading, LOGO, PlusTeaser, Screen, Sheet, Tabs } from "../ui";
 import { C, SH } from "../theme";
 import { archetypes, AXES, AxisKey, careerPicks, MODULES, rankAxes, riasecArch, riasecKeyakinan, riasecLabel } from "../logic";
 import { barisHasilRiasec, cariTipeSeri, POIN_PEMUTUS, riasecQuestions, riasecQuestionsSmp, skorDariJawaban, susunSoalPemutus, type SkorRiasec, type TipeRiasec } from "@/lib/riasec";
@@ -675,7 +675,7 @@ function TalentProfile() {
   };
 
   const pdf = () => {
-    if (!isPro) { nav("/app/pro"); return; }
+    if (!isPro) { openPaywall("profile"); return; }
     const w = window.open("", "_blank");
     if (!w) return;
     const rows = AXES.map(a => `<tr><td>${lang === "en" ? a.name : a.nameId}</td><td style="text-align:right;font-weight:700">${to5(axes[a.key])} / 5.0</td></tr>`).join("");
@@ -738,7 +738,15 @@ function TalentProfile() {
           </>}
         </>}
 
-        {tab === "arch" && (
+        {tab === "arch" && !isPro && (
+          <div style={{ marginTop: 14 }}>
+            {arch[0] && <div style={{ background: "#fff", borderRadius: 18, padding: "12px 14px", boxShadow: SH.card }}><div style={{ fontSize: 13.5, fontWeight: 600 }}>{arch[0].name}</div><div style={{ fontSize: 12, color: C.muted, lineHeight: 1.45, marginTop: 2 }}>{lang === "en" ? arch[0].descEn : arch[0].desc}</div></div>}
+            <PlusTeaser onClick={() => openPaywall("profile")} style={{ marginTop: 10 }}
+              title={t("Detail tipe kedua & ketiga + rekomendasi pengembangan", "Your 2nd & 3rd types + growth recommendations")}
+              body={t("Profil talenta lengkap dan laporan PDF ada di Plus.", "The full talent profile and PDF report are in Plus.")} />
+          </div>
+        )}
+        {tab === "arch" && isPro && (
           <div style={{ background: "#fff", borderRadius: 18, padding: "6px 14px", marginTop: 14, boxShadow: SH.card }}>
             {arch.map((a, i) => {
               const ui = AXIS_UI[a.axis] ?? AXIS_UI.technology;

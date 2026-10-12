@@ -84,7 +84,7 @@ Deno.serve(async (req) => {
     if ((count ?? 0) >= limit) {
       return json({ error: "limit", message: isPro
         ? "Batas harian tercapai. Coba lagi besok."
-        : `Kamu sudah memakai ${limit} pesan hari ini. Upgrade ke Talentika Pro untuk chat tanpa batas.` }, 429);
+        : `Kamu sudah memakai ${limit} pesan hari ini. Upgrade ke Talentika Plus untuk AI Talent Coach penuh (hingga 200 pesan/hari).` }, 429);
     }
   }
 

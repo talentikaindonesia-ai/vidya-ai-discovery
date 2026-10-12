@@ -176,7 +176,7 @@ const MembershipDashboard = () => {
         <div className="container mx-auto px-4 py-8">
           <Card className="max-w-md mx-auto text-center p-8">
             <div className="text-4xl mb-4">🔒</div>
-            <h2 className="text-2xl font-bold mb-4">Akses Premium Required</h2>
+            <h2 className="text-2xl font-bold mb-4">Khusus Talentika Plus</h2>
             <p className="text-muted-foreground mb-6">
               Berlangganan untuk mengakses fitur membership lengkap
             </p>
@@ -389,7 +389,7 @@ const MembershipDashboard = () => {
                   <Zap className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{getPlanType() === 'premium' ? 'Premium' : 'Individual'}</div>
+                  <div className="text-2xl font-bold">{getPlanType() === 'premium' ? 'Plus' : 'Free'}</div>
                   <p className="text-xs text-muted-foreground">
                     Membership aktif
                   </p>

@@ -310,7 +310,7 @@ const OpportunitiesPreview = ({ profile }: OpportunitiesPreviewProps) => {
                       <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
                         <Lock className="w-6 h-6 text-primary" />
                       </div>
-                      <p className="font-medium text-foreground mb-1">Peluang Premium</p>
+                      <p className="font-medium text-foreground mb-1">Peluang Plus</p>
                       <p className="text-xs text-muted-foreground mb-3">Upgrade untuk mengakses</p>
                       <Button size="sm" onClick={() => navigate('/subscription')}>Buka Kunci</Button>
                     </div>
@@ -376,7 +376,7 @@ const OpportunitiesPreview = ({ profile }: OpportunitiesPreviewProps) => {
           {premiumPrograms.length > 0 && (
             <div className="text-left pt-10">
               <div className="font-bold text-base mb-3" style={{ fontFamily: "var(--tk-font-display, 'Poppins', sans-serif)" }}>
-                🚀 Program Premium
+                🚀 Program Talentika
               </div>
               <div className="grid md:grid-cols-2 gap-4">
                 {premiumPrograms.map(p => {
@@ -411,7 +411,7 @@ const OpportunitiesPreview = ({ profile }: OpportunitiesPreviewProps) => {
             <p className="text-xs text-muted-foreground">
               Akses semua peluang dengan{' '}
               <button onClick={() => navigate('/subscription')} className="text-primary underline underline-offset-2 font-medium hover:text-primary/80">
-                upgrade ke Premium
+                upgrade ke Plus
               </button>
             </p>
           )}

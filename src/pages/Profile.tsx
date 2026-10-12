@@ -345,7 +345,7 @@ const Profile = () => {
                     <button onClick={() => navigate("/subscription")}
                       style={{ width: "100%", background: "linear-gradient(135deg,#E8F1FF,#FFEDE2)", borderRadius: 12, padding: "8px 12px", marginBottom: 16, border: "1.5px dashed #CBD5E1", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
                       <Diamond size={14} style={{ color: "var(--tk-blue-600)" }} />
-                      <span style={{ fontFamily: "var(--tk-font-sans)", fontWeight: 600, fontSize: 13, color: "var(--tk-blue-600)" }}>Upgrade ke Premium</span>
+                      <span style={{ fontFamily: "var(--tk-font-sans)", fontWeight: 600, fontSize: 13, color: "var(--tk-blue-600)" }}>Upgrade ke Plus</span>
                     </button>
                   )}
 
@@ -756,7 +756,7 @@ const UpgradeCTA = ({ feature, onUpgrade }: { feature: string; onUpgrade: () => 
     <div style={{ width: 64, height: 64, borderRadius: 20, background: "linear-gradient(135deg,#E8F1FF,#FFEDE2)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
       <Crown size={28} style={{ color: "#D97706" }} />
     </div>
-    <h3 style={{ fontFamily: "var(--tk-font-display)", fontWeight: 700, fontSize: 20, color: "var(--tk-ink)", margin: "0 0 8px" }}>Fitur Premium</h3>
+    <h3 style={{ fontFamily: "var(--tk-font-display)", fontWeight: 700, fontSize: 20, color: "var(--tk-ink)", margin: "0 0 8px" }}>Fitur Plus</h3>
     <p style={{ fontFamily: "var(--tk-font-sans)", fontSize: 14, color: "var(--tk-gray-500)", margin: "0 0 24px" }}>
       <strong style={{ color: "var(--tk-ink)" }}>{feature}</strong> tersedia untuk member berbayar.<br />
       Upgrade sekarang dan akses semua fitur eksklusif Talentika.

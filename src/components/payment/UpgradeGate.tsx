@@ -114,7 +114,7 @@ export function UpgradeGate({
             letterSpacing: "-0.01em",
           }}
         >
-          Fitur Premium
+          Fitur Plus
         </div>
 
         <div

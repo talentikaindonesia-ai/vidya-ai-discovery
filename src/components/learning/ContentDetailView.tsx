@@ -134,13 +134,14 @@ export const ContentDetailView = () => {
 
         setProgress(progressData);
 
-        // Free quota check: this content is NEW to the user and they already
-        // used their 3 free slots → gate it (premium check happens at render)
+        // Kuota Free: maks. 3 materi AKTIF (belum selesai) — sama dengan RLS
+        // learning_progress & aplikasi. Materi yang sudah selesai tidak dihitung.
         if (!progressData) {
           const { count } = await supabase
             .from('learning_progress')
             .select('content_id', { count: 'exact', head: true })
-            .eq('user_id', user.id);
+            .eq('user_id', user.id)
+            .or('status.is.null,status.neq.completed');
           setFreeQuotaExceeded((count ?? 0) >= 3);
         } else {
           setFreeQuotaExceeded(false);
@@ -277,7 +278,7 @@ export const ContentDetailView = () => {
           </Button>
 
           <UpgradeGate
-            feature="Kamu sudah memakai 3 konten gratis. Upgrade Premium untuk akses semua konten pembelajaran tanpa batas + sertifikat."
+            feature="Akun Free bisa aktif di 3 materi sekaligus. Selesaikan salah satu dulu, atau upgrade ke Plus untuk seluruh katalog + sertifikat."
             fromPath={`/learning/content/${contentId}`}
           >
             {/* Blurred preview of the locked content */}

@@ -341,7 +341,7 @@ export const NetworkingHub = ({ userId, userPlan }: NetworkingHubProps) => {
               <Users className="w-5 h-5" />
               <div>
                 <p className="font-medium">Akses Terbatas</p>
-                <p className="text-sm">Upgrade ke Premium untuk akses penuh networking dengan profesional & industri</p>
+                <p className="text-sm">Upgrade ke Plus untuk akses penuh networking dengan profesional & industri</p>
               </div>
             </div>
           </CardContent>
@@ -417,7 +417,7 @@ export const NetworkingHub = ({ userId, userPlan }: NetworkingHubProps) => {
                     }
                   >
                     {event.is_premium_only && userPlan !== 'premium' 
-                      ? 'Upgrade ke Premium'
+                      ? 'Upgrade ke Plus'
                       : event.max_participants && event.current_participants >= event.max_participants
                       ? 'Event Penuh'
                       : 'Daftar Event'
@@ -477,7 +477,7 @@ export const NetworkingHub = ({ userId, userPlan }: NetworkingHubProps) => {
               <p className="text-muted-foreground">
                 {userPlan === 'premium' 
                   ? 'Mulai terhubung dengan profesional di industri'
-                  : 'Upgrade ke Premium untuk fitur networking'
+                  : 'Upgrade ke Plus untuk fitur networking'
                 }
               </p>
             </Card>

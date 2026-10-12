@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { askAi, canPurchase, db, errMsg, uploadEvidence, useApp, useCareers } from "../store";
+import { askAi, canPurchase, db, errMsg, openExternal, uploadEvidence, useApp, useCareers } from "../store";
 import { AiLabel, Avatar, BackBtn, Btn, Card, ChipBtn, Empty, Header, Icon, IconBtn, Input, Label, Loading, Screen, Sheet, Tabs, TextArea, TIKA } from "../ui";
 import { C, SH, avatarColors, rpShort } from "../theme";
 import { fmtDate, timeAgo } from "../logic";
@@ -67,8 +67,8 @@ function Mentors() {
               </div>
               {(m.expertise_areas || []).length > 0 && <div style={{ marginTop: 10, display: "flex", flexWrap: "wrap", gap: 6 }}>{(m.expertise_areas || []).slice(0, 4).map((x: string) => <span key={x} style={{ fontSize: 11, color: C.blue, background: C.tintBlue, padding: "3px 9px", borderRadius: 99 }}>{x}</span>)}</div>}
               <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ flex: 1, fontSize: 12.5, fontWeight: 600, color: isPro ? C.green : C.text }}>{isPro ? t("Termasuk Plus", "Included in Plus") : m.price_per_session && canPurchase() ? `${rpShort(m.price_per_session)} / ${t("sesi", "session")}` : t("Khusus Plus", "Plus only")}</span>
-                <button onClick={() => nav(`/app/mentors/${m.id}`)} style={{ height: 36, border: "none", borderRadius: 11, background: C.blue, color: "#fff", fontSize: 12.5, fontWeight: 600, padding: "0 16px", cursor: "pointer" }}>{t("Pesan Sesi", "Book Session")}</button>
+                <span style={{ flex: 1, fontSize: 12.5, fontWeight: 600, color: C.text }}>{m.price_per_session && canPurchase() ? `${rpShort(m.price_per_session)} / ${t("sesi", "session")}` : t("Program terpisah", "Separate program")}</span>
+                <button onClick={() => nav(`/app/mentors/${m.id}`)} style={{ height: 36, border: "none", borderRadius: 11, background: C.blue, color: "#fff", fontSize: 12.5, fontWeight: 600, padding: "0 16px", cursor: "pointer" }}>{t("Lihat Jadwal", "See Schedule")}</button>
               </div>
             </div>
           );
@@ -91,6 +91,7 @@ function MentorProfile() {
   const qc = useQueryClient();
   const { t, lang, user, isPro, profile, toast, track, openPaywall } = useApp();
   const [slot, setSlot] = useState<string | null>(null);
+  const [program, setProgram] = useState(false);
   const [topic, setTopic] = useState("");
   const [busy, setBusy] = useState(false);
   const [prep, setPrep] = useState<string[] | null>(null);
@@ -125,16 +126,18 @@ function MentorProfile() {
   const slotRow = data!.slots.find((s: any) => s.id === slot);
   const first = (m.name || "").split(" ")[0];
 
-  const book = async () => {
+  // Mentoring tidak termasuk paket Free maupun Plus — dijual sebagai program terpisah.
+  // Pemesanan lewat tim Talentika (WhatsApp), sama dengan jalur mitra di web.
+  const book = () => {
     if (!slot) return;
-    if (!isPro) { openPaywall("mentor"); return; }
-    setBusy(true);
-    const { error } = await db.rpc("pesan_slot_mentor", { p_slot: slot, p_topic: topic.trim() || (profile?.career_target ? `Karier ${profile.career_target}` : "Konsultasi karier") });
-    setBusy(false);
-    if (error) { toast(errMsg(error), "error"); return; }
-    track("mentor_session_booked", { mentor_id: id, price: m.price_per_session ?? 0, is_pro: isPro });
-    toast(t("Permintaan terkirim — mentor merespons maksimal 48 jam", "Request sent — the mentor responds within 48 hours"));
-    qc.invalidateQueries({ queryKey: ["m-mentor", id] });
+    track("mentor_program_inquiry", { mentor_id: id });
+    setProgram(true);
+  };
+  const tanyaProgram = () => {
+    const msg = t(`Halo Talentika, aku ingin ikut program mentoring bersama ${m.name}${slotRow ? ` (jadwal ${fmtSlot(slotRow.starts_at)} WIB)` : ""}. Topik: ${topic.trim() || "konsultasi karier"}.`,
+      `Hi Talentika, I'd like to join the mentoring program with ${m.name}${slotRow ? ` (slot ${fmtSlot(slotRow.starts_at)} WIB)` : ""}. Topic: ${topic.trim() || "career consultation"}.`);
+    openExternal(`https://wa.me/6285148434141?text=${encodeURIComponent(msg)}`);
+    setProgram(false);
   };
   const journey: [string, string][] = Array.isArray(m.career_journey) ? m.career_journey.map((j: any) => [j[0] ?? j.year ?? "", j[1] ?? j.role ?? ""]) : [];
   const dots = [C.blue, C.purple, C.green, C.amber, C.sky];
@@ -214,9 +217,18 @@ function MentorProfile() {
       </div>
       <div style={{ position: "sticky", bottom: 0, padding: "12px 20px calc(env(safe-area-inset-bottom, 0px) + 18px)", borderTop: "1px solid #EEF2F8", background: "#fff", zIndex: 2 }}>
         {!active
-          ? <Btn h={54} disabled={!slot || busy} onClick={book}>{!isPro && <Icon name="lock" size={16} />}{slot ? t(`Pesan Sesi · ${fmtSlot(slotRow?.starts_at)}`, `Book Session · ${fmtSlot(slotRow?.starts_at)}`) : t("Pilih waktu dulu", "Pick a time first")}</Btn>
+          ? <Btn h={54} disabled={!slot || busy} onClick={book}>{slot ? t(`Ikut Program · ${fmtSlot(slotRow?.starts_at)}`, `Join Program · ${fmtSlot(slotRow?.starts_at)}`) : t("Pilih waktu dulu", "Pick a time first")}</Btn>
           : <Btn kind="blueOutline" h={54} onClick={() => nav(`/app/reflection?booking=${active.id}`)}>{t("Sesi selesai? Isi refleksi", "Session done? Write a reflection")} <Icon name="right" size={16} /></Btn>}
       </div>
+      <Sheet open={program} onClose={() => setProgram(false)} title={t("Program mentoring", "Mentoring program")}>
+        <p style={{ margin: 0, fontSize: 13.5, color: C.text3, lineHeight: 1.6 }}>
+          {t("Sesi mentor tidak termasuk paket Free maupun Plus — mentoring adalah program terpisah. Tim Talentika akan membantu memilih paket dan jadwal yang cocok.", "Mentor sessions aren't part of Free or Plus — mentoring is a separate program. The Talentika team will help you pick a package and schedule.")}
+        </p>
+        <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 10 }}>
+          <Btn onClick={tanyaProgram}><Icon name="msg" size={16} />{t("Tanya tim lewat WhatsApp", "Ask the team on WhatsApp")}</Btn>
+          <Btn kind="outline" onClick={() => nav("/app/programs")}>{t("Lihat Program Talentika", "See Talentika Programs")}</Btn>
+        </div>
+      </Sheet>
     </Screen>
   );
 }

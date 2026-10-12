@@ -126,7 +126,7 @@ export const UpgradeModal = ({ open, onClose }: UpgradeModalProps) => {
               color: "var(--tk-ink)", letterSpacing: "-.02em", margin: 0,
             }}
           >
-            Upgrade ke <span style={{ color: "var(--tk-blue-600)" }}>{sorotan?.name ?? "Premium"}</span>
+            Upgrade ke <span style={{ color: "var(--tk-blue-600)" }}>{sorotan?.name ?? "Plus"}</span>
           </h2>
         </div>
         <p style={{ color: "var(--tk-gray-500)", fontSize: 14, marginBottom: 22, lineHeight: 1.5 }}>

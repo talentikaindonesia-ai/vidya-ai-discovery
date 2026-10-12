@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { canPurchase, db, errMsg, gabungSekolah, isNative, openExternal, useApp, useDna, useTracker, webUrl } from "../store";
-import { Btn, Empty, Header, Icon, ImgBox, Input, Label, Loading, LOGO, Screen, Segmented, Sheet, Tabs, TextArea, TIKA, Toggle } from "../ui";
+import { Btn, Empty, Header, Icon, ImgBox, Input, Label, Loading, LOGO, PlusTeaser, Screen, Segmented, Sheet, Tabs, TextArea, TIKA, Toggle } from "../ui";
 import { C, SH, daysUntil, rpShort } from "../theme";
 import { AXES, AxisKey, fmtDate, oppTypeOf, rankAxes, riasecArch, riasecLabel, timeAgo } from "../logic";
 import { courseImg, IMG } from "../media";
@@ -96,7 +96,7 @@ function Store() {
           {data.bootcamps.map(b => <Tile key={b.id} icon="rocket" c={C.purple} bg={C.tintPurple} title={b.title} sub={[b.category_label, b.lesson_count ? `${b.lesson_count} ${t("pelajaran", "lessons")}` : null].filter(Boolean).join(" · ")} onClick={() => nav(`/app/programs/b-${b.slug}`)} right={pill(label(false, b.price))} />)}
           {!data.programs.length && !data.bootcamps.length && <div style={{ ...card, padding: "12px 14px", fontSize: 12.5, color: C.muted }}>{t("Belum ada program yang dibuka.", "No programs open yet.")}</div>}
           <H>{t("Mentor & sertifikat", "Mentors & certificates")}</H>
-          <Tile icon="users" c={C.purple} bg={C.tintPurple} title={t("Sesi mentor 1-on-1", "1-on-1 mentor session")} sub={isPro ? t("Termasuk langgananmu", "Included in your plan") : t("Termasuk Talentika Plus", "Included in Talentika Plus")} onClick={() => nav("/app/mentors")} right={<span style={{ color: C.faint, display: "flex" }}><Icon name="chev" size={17} /></span>} />
+          <Tile icon="users" c={C.purple} bg={C.tintPurple} title={t("Sesi mentor 1-on-1", "1-on-1 mentor session")} sub={t("Program terpisah — tidak termasuk langganan", "Separate program — not part of any plan")} onClick={() => nav("/app/mentors")} right={<span style={{ color: C.faint, display: "flex" }}><Icon name="chev" size={17} /></span>} />
           <Tile icon="medal" c={C.teal} bg={C.tintTeal} title={t("Sertifikat terverifikasi", "Verified certificate")} sub={t("Selesaikan jalur belajar · bisa dicek lewat kode QR", "Finish a learning track · verifiable by QR code")} onClick={() => nav("/app/learn")} right={<span style={{ color: C.faint, display: "flex" }}><Icon name="chev" size={17} /></span>} />
         </>}
       </div>
@@ -394,7 +394,7 @@ function Achievements() {
     [t("Pembelajar Unggul", "Top Learner"), "trophy", C.orange, data.xp >= 1000],
     [t("7 Hari Beruntun", "7-Day Streak"), "flame", C.red, data.longest >= 7],
     [t("Ngobrol dengan Mentor", "Mentor Talk"), "users", C.teal, data.mentor > 0],
-    [t("Portofolio Pro", "Portfolio Pro"), "folder", C.sky, data.portfolio >= 5],
+    [t("Portofolio Lengkap", "Full Portfolio"), "folder", C.sky, data.portfolio >= 5],
     [t("Penjelajah Global", "Global Explorer"), "globe", C.green, data.apps.some(a => oppTypeOf(a.opportunity_type, a.opportunity_title) === "Global")],
   ];
   const got = badges.filter(b => b[3]).length;
@@ -474,7 +474,7 @@ const reasonIcon = (r: string): [string, string] =>
     : /sertifikat|certificate/i.test(r) ? ["medal", C.teal] : /dna|talent/i.test(r) ? ["sparkle", C.purple] : ["star", C.blue];
 function Timeline() {
   const nav = useNavigate();
-  const { t, lang, user } = useApp();
+  const { t, lang, user, isPro, openPaywall } = useApp();
   const { data: tracker } = useTracker();
   const { data, isLoading } = useQuery({
     queryKey: ["m-timeline", user?.id], enabled: !!user,
@@ -494,7 +494,9 @@ function Timeline() {
     .sort((a, b) => +new Date(a.deadline!) - +new Date(b.deadline!)).slice(0, 5);
   const today = new Date(todayStart()).getTime(), week = today - 6 * 86400000;
   const groups: [string, any[]][] = [[t("Hari ini", "Today"), []], [t("Minggu ini", "This week"), []], [t("Sebelumnya", "Earlier"), []]];
-  (data ?? []).forEach(it => { const ts = +new Date(it.at); groups[ts >= today ? 0 : ts >= week ? 1 : 2][1].push(it); });
+  // Free: progres dasar (7 hari terakhir); riwayat lengkap = Plus
+  (data ?? []).forEach(it => { const ts = +new Date(it.at); if (!isPro && ts < week) return; groups[ts >= today ? 0 : ts >= week ? 1 : 2][1].push(it); });
+  const lamaTerkunci = !isPro && (data ?? []).some(it => +new Date(it.at) < week);
   return (
     <Screen>
       <Header title="Timeline" sub={t("Aktivitas & deadline tersimpan", "Activity & saved deadlines")} />
@@ -529,6 +531,9 @@ function Timeline() {
             </div>
           </div>
         ))}
+        {lamaTerkunci && <PlusTeaser onClick={() => openPaywall("timeline")} style={{ marginTop: 14 }}
+          title={t("Riwayat sebelum minggu ini", "History before this week")}
+          body={t("Riwayat dan progres lengkap tersedia di Plus.", "Full history and progress are in Plus.")} />}
         {!isLoading && !(data ?? []).length && <Empty icon="clock" title={t("Belum ada aktivitas", "No activity yet")} body={t("Mulai belajar, simpan peluang, atau kerjakan proyek — semuanya tercatat di sini.", "Start learning, save opportunities or build a project — it all shows up here.")} />}
       </div>
     </Screen>
