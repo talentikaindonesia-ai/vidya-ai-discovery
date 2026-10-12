@@ -12,7 +12,7 @@ interface ReferralStats {
 /**
  * ReferralCard — shown on Dashboard / Profile
  * Displays the user's referral link and referral stats.
- * "Ajak teman, kamu & temanmu dapat 1 bulan gratis!"
+ * "Ajak teman, dapat +100 XP per teman yang bergabung" (proses_referral di database).
  */
 export function ReferralCard() {
   const [stats, setStats] = useState<ReferralStats | null>(null);
@@ -120,7 +120,7 @@ export function ReferralCard() {
             Ajak Teman, Dapat Hadiah!
           </div>
           <div style={{ fontSize: 12.5, color: "var(--tk-gray-500)", lineHeight: 1.5 }}>
-            Kamu & temanmu dapat <strong style={{ color: "#1D4ED8" }}>1 bulan gratis</strong> saat mereka upgrade Plus
+            Kamu dapat <strong style={{ color: "#1D4ED8" }}>+100 XP</strong> untuk setiap teman yang bergabung lewat linkmu
           </div>
         </div>
       </div>

@@ -908,32 +908,6 @@ const Harga = ({ navigate }: { navigate: ReturnType<typeof useNavigate> }) => {
           </div>
         </div>
 
-        {/* ── Report One-time Callout ── */}
-        <div className="lp-report-callout reveal">
-          <div className="lp-report-callout-left">
-            <div className="lp-report-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
-              </svg>
-            </div>
-            <div>
-              <div style={{ fontFamily: "var(--lp-display)", fontWeight: 700, fontSize: 15, color: "#92400E", marginBottom: 2 }}>
-                📊 Laporan Asesmen Lengkap — Rp 29.000 sekali bayar
-              </div>
-              <div style={{ fontSize: 13, color: "#B45309", lineHeight: 1.5 }}>
-                Tidak ingin berlangganan? Dapatkan laporan mendalam + rekomendasi personal sekali bayar, berlaku selamanya.
-              </div>
-            </div>
-          </div>
-          <button
-            className="lp-btn lp-btn-secondary"
-            style={{ whiteSpace: "nowrap", background: "#fff", borderColor: "#FED7AA", color: "#C2410C", flexShrink: 0 }}
-            onClick={() => navigate("/assessment")}
-          >
-            Beli Laporan →
-          </button>
-        </div>
-
         {/* ── Kartu paket (dari database) ── */}
         {/* Dua paket saja: Free & Plus (grid 2 kolom bawaan .lp-pricing-grid) */}
         <div className="lp-pricing-grid">
