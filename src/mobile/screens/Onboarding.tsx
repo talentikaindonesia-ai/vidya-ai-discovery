@@ -285,8 +285,8 @@ function useEditions() {
   return [
     { id: "explorer" as Ed, label: "Talentika Explorer", range: "SMP–SMA/SMK", verb: t("Bangun", "Build"), icon: "compass", c: C.blue,
       journey: [t("Temukan", "Discover"), t("Bangun Skill", "Build Skills"), t("Buat Proyek", "Create Projects"), t("Bangun Portofolio", "Build Portfolio")] },
-    // Edisi kampus di desain bernama "Pro" — diganti agar tidak tertukar dengan paket berbayar Plus/Pro
-    { id: "pro" as Ed, label: t("Talentika Kampus", "Talentika Campus"), range: t("Kuliah & awal karier", "University & early career"), verb: t("Luncurkan", "Launch"), icon: "rocket", c: C.purple,
+    // Edisi (bukan paket berbayar): paket berbayar hanya "Plus", jadi nama "Pro" dari desain dipakai lagi
+    { id: "pro" as Ed, label: "Talentika Pro", range: t("Mahasiswa & profesional", "University students & professionals"), verb: t("Luncurkan", "Launch"), icon: "rocket", c: C.purple,
       journey: [t("Tetapkan Tujuan", "Define Goals"), t("Kembangkan Keahlian", "Develop Expertise"), t("Buktikan Skill", "Prove Skills"), t("Raih Peluang", "Access Opportunities")] },
   ];
 }

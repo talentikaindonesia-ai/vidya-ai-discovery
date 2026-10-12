@@ -64,7 +64,7 @@ function Center() {
       <div style={{ padding: `${SAFE_T} 22px 0`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <BackBtn dark onClick={() => nav("/app/home", { replace: true })} />
         <span style={{ fontSize: 11.5, fontWeight: 600, color: C.purple, background: C.tintPurple, padding: "6px 12px", borderRadius: 99 }}>
-          {t("Disesuaikan untuk ", "Adapted for ")}{pro ? t("Talentika Kampus", "Talentika Campus") : "Talentika Explorer"}
+          {t("Disesuaikan untuk ", "Adapted for ")}{pro ? "Talentika Pro" : "Talentika Explorer"}
         </span>
       </div>
       <div style={{ padding: "20px 26px 0" }}>
@@ -690,7 +690,7 @@ function TalentProfile() {
 
   const bars = rankAxes(axes).map(k => ({ k, v: axes[k] ?? 0 }));
   const cta = pro
-    ? { label: t("Cek Kesiapan Karierku", "Check My Career Readiness"), hint: t("Kampus: skill gap untuk target peranmu", "Campus: skill gaps for your target role"), go: () => nav("/app/readiness") }
+    ? { label: t("Cek Kesiapan Karierku", "Check My Career Readiness"), hint: t("Pro: skill gap untuk target peranmu", "Pro: skill gaps for your target role"), go: () => nav("/app/readiness") }
     : { label: t("Lihat Kecocokan Karier", "See Career Matches"), hint: t("Explorer: karier untuk dijelajahi, belum ada yang final", "Explorer: careers to explore, nothing is final yet"), go: () => nav("/app/discover") };
   return (
     <Screen>

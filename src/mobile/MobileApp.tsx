@@ -347,7 +347,7 @@ function SideNav() {
       </button>
       <button onClick={() => nav("/app/profile")} style={{ marginTop: 12, border: "none", background: "none", display: "flex", alignItems: "center", gap: 10, padding: "6px", borderRadius: 14, textAlign: "left" }} className="tk-nav-item">
         <Avatar name={profile?.full_name} src={profile?.avatar_url} size={36} />
-        <span style={{ minWidth: 0 }}><span style={{ display: "block", fontSize: 13, fontWeight: 600, color: C.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{(profile?.full_name || "Talentika").split(" ").slice(0, 2).join(" ")}</span><span style={{ display: "block", fontSize: 11, color: C.muted }}>{pro ? "Talentika Kampus" : "Talentika Explorer"}</span></span>
+        <span style={{ minWidth: 0 }}><span style={{ display: "block", fontSize: 13, fontWeight: 600, color: C.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{(profile?.full_name || "Talentika").split(" ").slice(0, 2).join(" ")}</span><span style={{ display: "block", fontSize: 11, color: C.muted }}>{pro ? "Talentika Pro" : "Talentika Explorer"}</span></span>
       </button>
     </aside>
   );

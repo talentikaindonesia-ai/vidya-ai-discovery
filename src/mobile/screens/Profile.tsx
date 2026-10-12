@@ -117,7 +117,7 @@ function ProfileHome() {
   ];
   const lvi = levelInfo(data?.xp?.current_xp ?? 0);
   const ed = editionOf(profile?.jenjang);
-  const roleLine = [ed === "pro" ? "Talentika Kampus" : "Talentika Explorer", profile?.school_name, profile?.kelas && `${t("Kelas", "Grade")} ${profile.kelas}`].filter(Boolean).join(" · ");
+  const roleLine = [ed === "pro" ? "Talentika Pro" : "Talentika Explorer", profile?.school_name, profile?.kelas && `${t("Kelas", "Grade")} ${profile.kelas}`].filter(Boolean).join(" · ");
   const ax = dna?.axes ?? null;
   const L = AXES.slice(0, 3), R = AXES.slice(3);
   const axisItem = (a: (typeof AXES)[number]) => (
@@ -352,7 +352,7 @@ function Portfolio() {
           <span style={{ borderRadius: "50%", border: "3px solid rgba(255,255,255,.6)", display: "inline-flex", flex: "none" }}><Avatar name={profile?.full_name} src={profile?.avatar_url} size={56} /></span>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 18, fontWeight: 700 }}>{profile?.full_name || "Talentika"}</div>
-            <div style={{ fontSize: 12, opacity: .85 }}>{[title, editionOf(profile?.jenjang) === "pro" ? "Talentika Kampus" : "Talentika Explorer"].filter(Boolean).join(" · ")}</div>
+            <div style={{ fontSize: 12, opacity: .85 }}>{[title, editionOf(profile?.jenjang) === "pro" ? "Talentika Pro" : "Talentika Explorer"].filter(Boolean).join(" · ")}</div>
             {profile?.username && <div style={{ fontSize: 11.5, marginTop: 5, background: "rgba(255,255,255,.18)", display: "inline-block", padding: "3px 10px", borderRadius: 99, maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{window.location.host}/u/{profile.username}</div>}
           </div>
         </div>

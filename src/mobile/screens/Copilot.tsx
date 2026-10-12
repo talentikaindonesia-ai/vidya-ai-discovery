@@ -88,7 +88,7 @@ export default function Copilot() {
 
   const { careers } = useCareers();
   const goal = careers.find(c => c.id === profile?.career_target);
-  const ed = editionOf(profile?.jenjang) === "pro" ? "Talentika Kampus" : "Talentika Explorer";
+  const ed = editionOf(profile?.jenjang) === "pro" ? "Talentika Pro" : "Talentika Explorer";
   const ctx: [string, string, string][] = [
     dnaName ? [dnaName, C.purple, C.tintPurple] : [t(`Talent DNA ${done}/8 modul`, `Talent DNA ${done}/8 modules`), C.purple, C.tintPurple],
     ...(goal ? [[t(`Tujuan: ${goal.name}`, `Goal: ${goal.name_en || goal.name}`), C.blue, C.tintBlue] as [string, string, string]] : []),
