@@ -14,10 +14,10 @@ import { supabase } from "@/integrations/supabase/client";
  * kanonik per siswa.
  */
 
-import { LABEL_RIASEC, kalimatKeyakinanRiasec, type TipeRiasec, type Keyakinan } from "@/lib/riasec";
+import { BOBOT_HURUF, LABEL_RIASEC, kalimatKeyakinanRiasec, type TipeRiasec, type Keyakinan } from "@/lib/riasec";
 
 export type { TipeRiasec, Keyakinan };
-export { LABEL_RIASEC };
+export { BOBOT_HURUF, LABEL_RIASEC };
 
 export interface IdentitasSiswa {
   tipeUtama: TipeRiasec;
@@ -69,13 +69,6 @@ export const JENIS_UNTUK_TUJUAN: Record<Tujuan, string[]> = {
   wirausaha: ["kompetisi", "hackathon", "grant", "program"],
   belum_yakin: [],
 };
-
-/**
- * Tiga huruf tidak berbobot sama. Huruf utama menentukan arah, huruf kedua
- * dan ketiga memperluas — bukan menggantikan. Dipakai untuk memberi skor
- * kecocokan materi & peluang.
- */
-export const BOBOT_HURUF = [1, 0.6, 0.35];
 
 /** Tipe-tipe yang relevan untuk siswa ini, terurut dari yang paling kuat. */
 export function tipeRelevan(id: IdentitasSiswa | null): TipeRiasec[] {

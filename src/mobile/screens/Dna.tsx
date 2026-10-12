@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { canPurchase, db, errMsg, useApp, useDna, useSkills } from "../store";
+import { canPurchase, Career, db, errMsg, useApp, useCareers, useDna, useSkills } from "../store";
 import { BackBtn, Btn, Card, Confetti, Header, Icon, Loading, LOGO, Screen, Sheet, Tabs } from "../ui";
 import { C, SH } from "../theme";
-import { archetypes, AXES, AxisKey, MODULES, rankAxes, riasecArch, riasecKeyakinan, riasecLabel } from "../logic";
+import { archetypes, AXES, AxisKey, careerPicks, MODULES, rankAxes, riasecArch, riasecKeyakinan, riasecLabel } from "../logic";
 import { barisHasilRiasec, cariTipeSeri, POIN_PEMUTUS, riasecQuestions, riasecQuestionsSmp, skorDariJawaban, susunSoalPemutus, type SkorRiasec, type TipeRiasec } from "@/lib/riasec";
 import { editionOf } from "../MobileApp";
 import assessHero from "../assets/v3/assess-hero.webp";
@@ -512,9 +512,10 @@ function Result() {
   const nav = useNavigate();
   const loc = useLocation() as any;
   const [celebrate, setCelebrate] = useState(!!loc.state?.celebrate);
+  const fromWeb = !!loc.state?.fromWeb;
   const { dna, isLoading } = useDna();
   if (isLoading) return <Loading />;
-  if (celebrate && dna?.axes) return <Ready onNext={() => { setCelebrate(false); nav("/app/dna/result", { replace: true }); }} />;
+  if (celebrate && dna?.axes) return <Ready fromWeb={fromWeb} onNext={() => { setCelebrate(false); nav("/app/dna/result", { replace: true }); }} />;
   return <TalentProfile />;
 }
 
@@ -544,16 +545,65 @@ function TypeBadge({ size = 54 }: { size?: number }) {
   return <span style={{ width: size, height: size, borderRadius: "50%", background: "linear-gradient(140deg,#A78BFA,#6D28D9)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", flex: "none" }}><Icon name="sparkle" size={size * 0.48} /></span>;
 }
 
-function Ready({ onNext }: { onNext: () => void }) {
-  const { t, lang } = useApp();
+/* ── Langkah setelah hasil: pilih 1 dari 3 karier ────────────────────────
+   Dari 103 siswa yang sudah tes, baru 1 yang punya target karier — padahal
+   target itulah yang menggerakkan Career Readiness, peluang & materi. Pilihan
+   diurutkan dari kecocokan kode Holland (bobot huruf sama dengan web). */
+export function CareerPicker() {
+  const nav = useNavigate();
+  const { t, lang, user, toast, track, afterAction, refreshProfile } = useApp();
+  const { riasec } = useDna();
+  const { careers } = useCareers();
+  const [busy, setBusy] = useState<string | null>(null);
+  const picks = useMemo(() => careerPicks(careers, riasec, 3), [careers, riasec]);
+  if (!picks.length) return null;
+  const pilih = async (c: Career & { fit?: number | null }, i: number) => {
+    if (busy) return;
+    setBusy(c.id);
+    const { error } = await db.from("profiles").update({ career_target: c.id }).eq("user_id", user!.id);
+    if (error) { setBusy(null); toast(errMsg(error), "error"); return; }
+    await db.from("user_goals").insert({ user_id: user!.id, horizon: "long", title: `Menjadi ${c.name}`, source: "career_target" });
+    track("recommendation_clicked", { type: "career", fit: c.fit, position: i, source: "riasec_result" });
+    await refreshProfile();
+    await afterAction(t(`Target karier: ${c.name}`, `Career target: ${c.name}`));
+    nav(`/app/careers/${c.id}`);
+  };
+  return (
+    <div style={{ width: "100%", textAlign: "left" }}>
+      <div style={{ fontSize: 16, fontWeight: 700 }}>{t("Mulai dari satu karier", "Start with one career")}</div>
+      <div style={{ fontSize: 12.5, color: C.muted, marginTop: 3, lineHeight: 1.45 }}>{t("Pilih yang paling bikin penasaran. Bukan keputusan final — bisa diganti kapan saja.", "Pick the one you're most curious about. Not a final decision — change it anytime.")}</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 9, marginTop: 11 }}>
+        {picks.map((c, i) => (
+          <button key={c.id} onClick={() => pilih(c, i)} disabled={!!busy}
+            style={{ width: "100%", minHeight: 64, border: `1.5px solid ${i === 0 ? "#C9DCF8" : "#E6EDF7"}`, background: "#fff", borderRadius: 16, display: "flex", alignItems: "center", gap: 12, padding: "10px 13px", cursor: busy ? "wait" : "pointer", textAlign: "left", boxShadow: i === 0 ? SH.card : "none" }}>
+            <span style={{ width: 42, height: 42, borderRadius: 13, background: c.bg, color: c.fg, fontSize: 14, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", flex: "none" }}>{c.initial}</span>
+            <span style={{ flex: 1, minWidth: 0 }}>
+              <span style={{ display: "block", fontSize: 14, fontWeight: 700, color: C.text }}>{lang === "en" ? c.name_en ?? c.name : c.name}</span>
+              <span style={{ display: "block", fontSize: 11.5, color: C.muted, marginTop: 2 }}>
+                {c.match.length ? t(`Cocok dengan ${c.match.map(k => riasecLabel(k, lang)).join(" + ")}`, `Fits ${c.match.map(k => riasecLabel(k, lang)).join(" + ")}`) : c.field}
+              </span>
+            </span>
+            {i === 0 && <span style={{ fontSize: 10, fontWeight: 700, color: C.blue, background: C.tintBlue, padding: "3px 8px", borderRadius: 99, flex: "none" }}>{t("Paling cocok", "Best fit")}</span>}
+            <span style={{ color: C.blue, display: "flex", flex: "none" }}>{busy === c.id ? <span style={{ fontSize: 12 }}>…</span> : <Icon name="right" size={17} />}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function Ready({ onNext, fromWeb }: { onNext: () => void; fromWeb?: boolean }) {
+  const { t, lang, profile } = useApp();
   const { type, top, name, arch, riasec, insight } = useTalent();
+  const pickCareer = !!riasec && !profile?.career_target;
   return (
     <div className="tk-screen" style={{ position: "absolute", inset: 0, overflowY: "auto", background: "linear-gradient(180deg,#fff 0%,#F3F8FF 100%)", display: "flex", flexDirection: "column", alignItems: "center", padding: `calc(env(safe-area-inset-top, 0px) + 22px) 22px ${SAFE_B}`, textAlign: "center" }}>
       <div style={{ position: "absolute", inset: "0 0 auto 0", height: 300, overflow: "hidden", pointerEvents: "none" }}><Confetti /></div>
       <img src={LOGO} alt="" style={{ width: 44, height: 44, borderRadius: 12 }} />
-      <div style={{ fontSize: 30, fontWeight: 800, lineHeight: 1.12, letterSpacing: "-.7px", marginTop: 14 }}>{t("Profil Talentamu", "Your Talent Profile")}<br /><span style={{ color: C.blue }}>{t("Sudah Siap!", "is Ready!")}</span></div>
-      <p style={{ margin: "8px 0 0", fontSize: 14, color: C.text3 }}>{t("Ini ringkasan kekuatan dan potensi utamamu.", "Here's a summary of your key strengths and potential.")}</p>
-      <img src={readyHero} alt={t("Pelajar merayakan", "Student celebrating")} style={{ width: "calc(100% + 44px)", margin: "8px -22px 0", height: "auto", display: "block", WebkitMaskImage: fade(14, 78), maskImage: fade(14, 78) }} />
+      <div style={{ fontSize: 30, fontWeight: 800, lineHeight: 1.12, letterSpacing: "-.7px", marginTop: 14 }}>{fromWeb ? <>{t("Hasil Tesmu", "Your Test Result")}<br /><span style={{ color: C.blue }}>{t("Sudah Ada di Sini!", "Is Already Here!")}</span></> : <>{t("Profil Talentamu", "Your Talent Profile")}<br /><span style={{ color: C.blue }}>{t("Sudah Siap!", "is Ready!")}</span></>}</div>
+      <p style={{ margin: "8px 0 0", fontSize: 14, color: C.text3, lineHeight: 1.5 }}>{fromWeb ? t("Diambil dari tes yang kamu kerjakan di talentika.id — tidak perlu tes ulang.", "Taken from the test you did on talentika.id — no need to retake it.") : t("Ini ringkasan kekuatan dan potensi utamamu.", "Here's a summary of your key strengths and potential.")}</p>
+      {/* Saat ada pilihan karier, gambar diperkecil supaya kartu karier pertama terlihat tanpa scroll */}
+      <img src={readyHero} alt={t("Pelajar merayakan", "Student celebrating")} style={{ width: "calc(100% + 44px)", margin: "8px -22px 0", height: pickCareer ? 130 : "auto", objectFit: "cover", objectPosition: "center 20%", display: "block", WebkitMaskImage: fade(14, 78), maskImage: fade(14, 78) }} />
       <div style={{ width: "100%", background: "#fff", borderRadius: 22, padding: 18, boxShadow: "0 14px 34px rgba(15,23,42,.10)", textAlign: "left", marginTop: -16, position: "relative" }}>
         <div style={{ display: "flex", gap: 13, alignItems: "center" }}>
           <TypeBadge />
@@ -571,11 +621,14 @@ function Ready({ onNext }: { onNext: () => void }) {
         {type && <p style={{ margin: "12px 0 0", fontSize: 13, lineHeight: 1.55, color: C.text3 }}>{lang === "en" ? type.descEn : type.desc}</p>}
         {riasec && <p style={{ margin: "8px 0 0", fontSize: 12.5, lineHeight: 1.55, color: C.blueDark, fontWeight: 500 }}>{insight}</p>}
       </div>
+      {pickCareer && <div style={{ width: "100%", marginTop: 18 }}><CareerPicker /></div>}
       <div style={{ flex: 1, minHeight: 16 }} />
-      <div style={{ fontSize: 11.5, color: C.muted, margin: "14px 0 12px", display: "flex", gap: 6, alignItems: "center" }}><span style={{ color: C.blue, display: "flex" }}><Icon name="sparkle" size={14} /></span>{t("Titik awal, bukan label tetap. Terus berkembang saat kamu belajar dan berkarya.", "A starting point, not a fixed label. It grows as you learn and build.")}</div>
-      <button onClick={onNext} style={{ width: "100%", height: 56, border: "none", borderRadius: 18, background: C.blue, color: "#fff", fontSize: 16, fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", gap: 10, cursor: "pointer", boxShadow: SH.primary, flex: "none" }}>
-        {t("Lihat Profil Lengkap", "See Your Full Profile")} <Icon name="right" size={18} />
-      </button>
+      <div style={{ fontSize: 11.5, color: C.muted, margin: "14px 0 12px", display: "flex", gap: 6, alignItems: "center", textAlign: "left" }}><span style={{ color: C.blue, display: "flex" }}><Icon name="sparkle" size={14} /></span>{t("Titik awal, bukan label tetap. Terus berkembang saat kamu belajar dan berkarya.", "A starting point, not a fixed label. It grows as you learn and build.")}</div>
+      {pickCareer
+        ? <Btn kind="blueOutline" h={52} onClick={onNext} style={{ flex: "none" }}>{t("Lihat Profil Lengkap dulu", "See my full profile first")}</Btn>
+        : <button onClick={onNext} style={{ width: "100%", height: 56, border: "none", borderRadius: 18, background: C.blue, color: "#fff", fontSize: 16, fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", gap: 10, cursor: "pointer", boxShadow: SH.primary, flex: "none" }}>
+            {t("Lihat Profil Lengkap", "See Your Full Profile")} <Icon name="right" size={18} />
+          </button>}
     </div>
   );
 }
@@ -654,6 +707,7 @@ function TalentProfile() {
         </div>
 
         {tab === "overview" && <>
+          {riasec && !profile?.career_target && <div style={{ background: "#fff", borderRadius: 20, padding: 16, marginTop: 14, boxShadow: SH.card }}><CareerPicker /></div>}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 20 }}><div style={{ fontSize: 16, fontWeight: 700 }}>{t("Kekuatan Utama", "Key Strengths")}</div><span style={{ fontSize: 12, color: C.muted }}>{t("dari 5,0", "out of 5.0")}</span></div>
           <div style={{ background: "#fff", borderRadius: 20, padding: 16, marginTop: 10, boxShadow: SH.card, display: "flex", flexDirection: "column", gap: 14 }}>
             {bars.map(b => (

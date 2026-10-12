@@ -10,6 +10,7 @@ import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { NotificationDropdown } from "@/components/dashboard/NotificationDropdown";
 import { WelcomeDashboard } from "@/components/dashboard/WelcomeDashboard";
+import { AppPromoBanner } from "@/components/dashboard/AppPromoBanner";
 import OpportunitiesPreview from "@/components/OpportunitiesPreview";
 import { BottomNavigationBar } from "@/components/dashboard/BottomNavigationBar";
 import { CoursesSection } from "@/components/dashboard/CoursesSection";
@@ -193,6 +194,8 @@ const Dashboard = () => {
         return (
           <div className="space-y-6">
             {/* Onboarding checklist — hanya untuk pengguna baru */}
+            {/* Sudah tes di web → hasilnya sudah ada di aplikasi */}
+            <AppPromoBanner userId={user?.id} profile={profile} />
             {user?.id && <OnboardingChecklist userId={user.id} profile={profile} />}
             <WelcomeDashboard user={user} profile={profile} />
             {/* Lanjutkan belajar — langkah utama */}
@@ -252,6 +255,8 @@ const Dashboard = () => {
         // Sama dengan "overview" — dijaga tetap ringkas
         return (
           <div className="space-y-6">
+            {/* Sudah tes di web → hasilnya sudah ada di aplikasi */}
+            <AppPromoBanner userId={user?.id} profile={profile} />
             {user?.id && <OnboardingChecklist userId={user.id} profile={profile} />}
             <WelcomeDashboard user={user} profile={profile} />
             <LearningPathCard />

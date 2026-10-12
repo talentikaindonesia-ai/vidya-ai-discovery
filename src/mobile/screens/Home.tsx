@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { askAi, canPurchase, db, useApp, useCareers, useDna, useOpportunities, useReadiness, useSkills, useTracker } from "../store";
+import { askAi, canPurchase, db, errMsg, useApp, useCareers, useDna, useOpportunities, useReadiness, useSkills, useTracker } from "../store";
 import { Avatar, BrandBar, Empty, Header, Icon, IconBtn, ImgBox, Loading, LOGO, Screen, SectionHead, Skeleton, TIKA as TIKA_SRC } from "../ui";
 import { C, SH, daysUntil } from "../theme";
-import { deepLink, fmtDate, notifCat, oppMatch, oppTypeOf, READINESS_META, timeAgo, TYPE_ID } from "../logic";
+import { deepLink, fmtDate, notifCat, oppMatch, oppTypeOf, READINESS_META, riasecLabel, timeAgo, TYPE_ID } from "../logic";
 import { editionOf } from "../MobileApp";
 import { careerImg, courseImg, IMG, oppImg } from "../media";
 import heroBoy from "../assets/v3/hero-boy.webp";
@@ -69,11 +69,47 @@ function useWeek() {
   });
 }
 
+/* Arah yang dituju — satu ketukan. Per 2026-10-12, 98 dari 103 siswa yang
+   sudah tes RIASEC belum punya tujuan; padahal tujuan adalah penyaring
+   peluang terkuat (oppMatch +14). */
+const OPSI_TUJUAN: [string, string, string, string][] = [
+  ["kuliah", "cap", "Lanjut kuliah", "University"], ["kerja", "brief", "Cari kerja", "A job"],
+  ["wirausaha", "rocket", "Bangun usaha", "A business"], ["belum_yakin", "compass", "Masih menjajaki", "Still exploring"],
+];
+function TujuanCard() {
+  const { t, lang, user, toast, refreshProfile, track } = useApp();
+  const [busy, setBusy] = useState<string | null>(null);
+  const pilih = async (v: string) => {
+    if (busy) return;
+    setBusy(v);
+    const { error } = await db.from("profiles").update({ tujuan: v, tujuan_diisi_pada: new Date().toISOString() } as any).eq("user_id", user!.id);
+    if (error) { setBusy(null); toast(errMsg(error), "error"); return; }
+    track("goal_selected", { tujuan: v, source: "home_card" });
+    await refreshProfile();
+    toast(t("Tersimpan — peluang kini diurutkan sesuai arahmu", "Saved — opportunities are now ranked for your direction"));
+  };
+  return (
+    <div style={{ marginTop: 14, background: "#fff", borderRadius: 20, padding: "14px 14px 12px", boxShadow: SH.card }}>
+      <div style={{ fontSize: 14.5, fontWeight: 700 }}>{t("Setelah lulus, kamu ingin…", "After school, you want to…")}</div>
+      <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{t("Satu ketukan — supaya peluang yang muncul benar-benar berguna untukmu.", "One tap — so the opportunities you see are actually useful.")}</div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 11 }}>
+        {OPSI_TUJUAN.map(([v, icon, id, en]) => (
+          <button key={v} onClick={() => pilih(v)} disabled={!!busy}
+            style={{ minHeight: 46, border: `1.5px solid ${busy === v ? C.blue : "#E6EDF7"}`, background: busy === v ? "#F3F8FF" : "#fff", borderRadius: 14, display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", cursor: busy ? "wait" : "pointer", textAlign: "left" }}>
+            <span style={{ color: C.blue, display: "flex", flex: "none" }}><Icon name={icon} size={17} /></span>
+            <span style={{ fontSize: 12.5, fontWeight: 600, color: C.text, lineHeight: 1.25 }}>{lang === "en" ? en : id}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /* ── HOME · GROWTH HUB ──────────────────────────────────────────────── */
 function HomeScreen() {
   const nav = useNavigate();
   const { t, lang, profile, isPro, gam } = useApp();
-  const { dna, isNew, isLoading: dnaLoading } = useDna();
+  const { dna, isNew, isLoading: dnaLoading, riasec } = useDna();
   const { data: rd } = useReadiness();
   const { data: home } = useHomeData();
   const { data: week } = useWeek();
@@ -103,12 +139,13 @@ function HomeScreen() {
   const step = useMemo(() => {
     if (isNew) return { text: t("Ikuti Talent Discovery untuk membuka rekomendasi yang personal.", "Take Talent Discovery to unlock personalized recommendations."), label: "Talent Discovery", to: "/app/dna", key: "dna" };
     const urgent = active.find(o => (daysUntil(o.deadline) ?? 99) <= 3 && ["saved", "preparing"].includes(o.status));
+    if (!profile?.career_target && riasec) return { text: t(`Kamu tipe ${riasecLabel(riasec.tipe_utama, "id")} — pilih 1 dari 3 karier yang cocok untuk mulai menjelajah.`, `You're ${riasecLabel(riasec.tipe_utama, "en")} — pick 1 of 3 matching careers to start exploring.`), label: t("Pilih karier pertamamu", "Pick your first career"), to: "/app/dna/result", key: "target" };
     if (!profile?.career_target) return { text: t("Pilih satu target karier supaya rekomendasi belajar & peluangmu makin tajam.", "Pick a career target so your learning and opportunity picks get sharper."), label: t("Pilih target karier", "Pick a career target"), to: "/app/discover", key: "target" };
     if (urgent) return { text: t(`${urgent.opportunity_title} tutup ${daysUntil(urgent.deadline)} hari lagi — lengkapi checklist-mu sekarang.`, `${urgent.opportunity_title} closes in ${daysUntil(urgent.deadline)} days — finish your checklist now.`), label: urgent.opportunity_title, to: `/app/opportunities/${urgent.opportunity_id}`, key: "urgent:" + urgent.opportunity_id };
     if (inprog) return { text: t(`Lanjutkan ${inprog.learning_content?.title ?? "materimu"} untuk memperkuat jalur ${target?.name ?? "karier"}-mu.`, `Continue ${inprog.learning_content?.title ?? "your course"} to strengthen your ${target?.name ?? "career"} pathway.`), label: inprog.learning_content?.title ?? t("Lanjutkan materi", "Continue course"), to: `/app/course/${inprog.content_id}`, key: "course:" + inprog.content_id };
     if (!home?.projects.length) return { text: t("Mulai satu proyek kecil — bukti nyata menaikkan Career Readiness paling cepat.", "Start a small project — real evidence raises Career Readiness fastest."), label: t("Mulai proyek pertama", "Start your first project"), to: "/app/projects", key: "project" };
     return { text: t("Cek peluang yang cocok minggu ini dan simpan satu ke Tracker.", "Check this week's matched opportunities and save one to your Tracker."), label: t("Peluang minggu ini", "This week's opportunities"), to: "/app/explore", key: "opps" };
-  }, [active, home, profile, target, t, isNew, inprog]);
+  }, [active, home, profile, target, t, isNew, inprog, riasec]);
 
   const [aiText, setAiText] = useState<string | null>(null);
   useEffect(() => {
@@ -156,6 +193,8 @@ function HomeScreen() {
           <span style={{ flex: 1, fontSize: 13, color: C.faint }}>{t("Cari karier, peluang, mentor…", "Search careers, opportunities, mentors…")}</span>
           <span style={{ color: C.text, display: "flex" }}><Icon name="sliders" size={18} /></span>
         </button>
+
+        {!dnaLoading && riasec && !profile?.tujuan && <TujuanCard />}
 
         {/* Hero: langkah berikutnya */}
         {dnaLoading ? <div style={{ marginTop: 14 }}><Skeleton h={200} r={24} /></div> : (

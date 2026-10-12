@@ -467,6 +467,13 @@ export function barisHasilRiasec(
   };
 }
 
+/**
+ * Tiga huruf tidak berbobot sama. Huruf utama menentukan arah, huruf kedua
+ * dan ketiga memperluas — bukan menggantikan. Dipakai untuk memberi skor
+ * kecocokan materi, peluang, dan karier.
+ */
+export const BOBOT_HURUF = [1, 0.6, 0.35];
+
 /* ─── Label & kalimat keyakinan ─────────────────────────────────────────────── */
 export const LABEL_RIASEC: Record<TipeRiasec, string> = {
   realistic: "Realistis",

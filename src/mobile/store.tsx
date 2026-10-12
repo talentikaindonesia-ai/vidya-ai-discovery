@@ -183,6 +183,8 @@ export function useReadiness() {
 export interface Career {
   id: string; name: string; name_en: string | null; field: string; initial: string; bg: string; fg: string; demand: string | null; salary: string | null;
   what: string; skills: string[]; tools: string[]; edu: string[]; projects: string[]; industries: string[]; roadmap: [string, string][]; axes: Record<string, number>;
+  /** Kode Holland karier, mis. "IC" — dicocokkan dengan hasil tes RIASEC siswa. */
+  riasec: string | null;
 }
 
 export function useCareers() {

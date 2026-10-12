@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { authRedirect, db, errMsg, oauthSignIn, useApp, useCareers } from "../store";
+import { authRedirect, db, errMsg, oauthSignIn, useApp, useCareers, useDna } from "../store";
 import { BackBtn, Btn, Icon, Input, Loading, LOGO, Segmented, Sheet, TIKA } from "../ui";
 import { C, SH } from "../theme";
 import { INTEREST_TILES, JENJANG_OPTS } from "../logic";
@@ -429,6 +429,7 @@ function Education() {
   const [params] = useSearchParams();
   const returning = params.get("returning") === "1";
   const { t, profile, toast, refreshProfile, track } = useApp();
+  const { riasec } = useDna();
   const ed: Ed = (params.get("ed") as Ed) || editionOf(profile?.jenjang);
   const opts = JENJANG_OPTS.filter(o => (ed === "pro" ? ["kuliah", "lulusan"] : ["smp", "sma_smk", "smk"]).includes(o.value));
   const [edu, setEdu] = useState<string>(() => profile?.jenjang && opts.some(o => o.value === profile.jenjang) ? profile.jenjang : opts[ed === "pro" ? 0 : 1]?.value ?? opts[0].value);
@@ -454,8 +455,12 @@ function Education() {
     localStorage.setItem("tk-lang", lang);
     await refreshProfile();
     track("onboarding_completed", { role: "student", education_level: edu, signup_method: null });
-    // Pengguna lama dari web sudah punya data — lewati "Kenali dirimu" yang opsional
-    nav(returning ? (age < 18 ? "/app/consent" : "/app/dna") : "/app/get-to-know", { replace: true });
+    // Pengguna lama dari web sudah punya data — lewati "Kenali dirimu" yang opsional.
+    // Yang sudah tes RIASEC di web langsung melihat hasilnya (tidak tes ulang).
+    if (!returning) nav("/app/get-to-know", { replace: true });
+    else if (age < 18) nav("/app/consent", { replace: true });
+    else if (riasec) nav("/app/dna/result", { replace: true, state: { celebrate: true, fromWeb: true } });
+    else nav("/app/dna", { replace: true });
   };
   const pro = ed === "pro";
   return (
@@ -590,6 +595,8 @@ function GetToKnow() {
 function Consent() {
   const nav = useNavigate();
   const { t, toast } = useApp();
+  const { riasec } = useDna();
+  const lanjut = () => (riasec ? nav("/app/dna/result", { replace: true, state: { celebrate: true, fromWeb: true } }) : nav("/app/dna", { replace: true }));
   const [contact, setContact] = useState("");
   const [code, setCode] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -636,8 +643,8 @@ function Consent() {
         )}
       </div>
       <div style={{ flex: 1, minHeight: 16 }} />
-      <div style={{ marginTop: 16 }}><PrimaryCta onClick={() => nav("/app/dna", { replace: true })}>{t("Lanjut ke Assessment", "Continue to Assessment")}</PrimaryCta></div>
-      {!code && <button onClick={() => nav("/app/dna", { replace: true })} style={{ marginTop: 8, border: "none", background: "none", color: C.muted, fontSize: 13, fontWeight: 500, cursor: "pointer", height: 40 }}>{t("Nanti saja", "Later")}</button>}
+      <div style={{ marginTop: 16 }}><PrimaryCta onClick={lanjut}>{riasec ? t("Lihat Hasil Tesku", "See My Test Result") : t("Lanjut ke Assessment", "Continue to Assessment")}</PrimaryCta></div>
+      {!code && <button onClick={lanjut} style={{ marginTop: 8, border: "none", background: "none", color: C.muted, fontSize: 13, fontWeight: 500, cursor: "pointer", height: 40 }}>{t("Nanti saja", "Later")}</button>}
     </div>
   );
 }

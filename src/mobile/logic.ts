@@ -1,5 +1,5 @@
 import { C } from "./theme";
-import { kalimatKeyakinanRiasec, LABEL_RIASEC, LABEL_RIASEC_EN, RIASEC_INFO, type Keyakinan, type TipeRiasec } from "@/lib/riasec";
+import { BOBOT_HURUF, kalimatKeyakinanRiasec, LABEL_RIASEC, LABEL_RIASEC_EN, RIASEC_INFO, URUTAN_RIASEC, type Keyakinan, type TipeRiasec } from "@/lib/riasec";
 
 /* Logika domain murni (tanpa IO): Talent DNA, kecocokan karier, kecocokan peluang. */
 
@@ -95,6 +95,33 @@ export function riasecArch(r: Riasec | null | undefined, lang: "id" | "en" = "id
     key: k, name: riasecLabel(k, lang), desc: RIASEC_INFO[k].description, descEn: RIASEC_DESC_EN[k],
     axis: RIASEC_AXIS[k], traits: RIASEC_INFO[k].characteristics,
   }));
+}
+
+const HURUF: Record<string, TipeRiasec> = Object.fromEntries(URUTAN_RIASEC.map(k => [k[0].toUpperCase(), k]));
+
+/**
+ * Kecocokan kode Holland siswa dengan kode karier (careers.riasec, mis. "IC").
+ * Bobot per huruf sama dengan web (BOBOT_HURUF) di kedua sisi: huruf utama
+ * siswa bertemu huruf utama karier = 1, utama ↔ kedua = 0,6, dst.
+ */
+export function riasecCareerMatch(r: Riasec | null | undefined, code?: string | null) {
+  if (!r?.tipe_utama || !code) return { score: 0, types: [] as TipeRiasec[] };
+  const mine = [r.tipe_utama, r.tipe_kedua, r.tipe_ketiga].filter(Boolean) as TipeRiasec[];
+  let score = 0; const types: TipeRiasec[] = [];
+  code.toUpperCase().split("").forEach((ch, j) => {
+    const k = HURUF[ch]; const i = k ? mine.indexOf(k) : -1;
+    if (i >= 0) { score += BOBOT_HURUF[i] * (BOBOT_HURUF[j] ?? 0.35); types.push(k); }
+  });
+  return { score, types };
+}
+
+/** 3 karier untuk dijelajahi pertama: urut kecocokan kode Holland, seri diputus Career Fit. */
+export function careerPicks<T extends { riasec?: string | null; fit?: number | null }>(careers: T[], r: Riasec | null | undefined, n = 3) {
+  return careers
+    .map(c => ({ c, m: riasecCareerMatch(r, c.riasec) }))
+    .sort((a, b) => b.m.score - a.m.score || (b.c.fit ?? 0) - (a.c.fit ?? 0))
+    .slice(0, n)
+    .map(x => ({ ...x.c, match: x.m.types }));
 }
 
 /** Kalimat keyakinan yang sama dengan web (kalimatKeyakinan). */
