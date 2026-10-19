@@ -94,7 +94,6 @@ function NativeProInfo() {
         <DiLuarPaket />
         {!isPro && <Btn kind="soft" h={46} onClick={() => setSchool(true)} style={{ marginTop: 14 }}><Icon name="school" size={17} />{t("Punya kode sekolah?", "Have a school code?")}</Btn>}
         <Btn kind="outline" h={46} onClick={async () => { invalidateSubscriptionCache(); await qc.invalidateQueries({ queryKey: ["m-access"] }); toast(t("Status akun diperbarui", "Account status refreshed")); }} style={{ marginTop: 10 }}>{t("Muat ulang status akun", "Refresh account status")}</Btn>
-        {isPro && <Btn h={48} onClick={() => nav("/app/mentors")} style={{ marginTop: 10 }}>{t("Pesan sesi mentor", "Book a mentor")}</Btn>}
       </div>
       <SchoolCodeSheet open={school} onClose={() => setSchool(false)} onDone={() => qc.invalidateQueries({ queryKey: ["m-access"] })} />
     </div>

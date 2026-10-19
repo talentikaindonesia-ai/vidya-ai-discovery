@@ -743,13 +743,14 @@ const Assessment = () => {
 
           <button
             onClick={simpanTujuanSiswa}
-            disabled={!tujuan || simpanTujuan}
+            // jenjang wajib: penentu terkuat kecocokan peluang (peluang_untukku)
+            disabled={!tujuan || !jenjang || simpanTujuan}
             style={{
               width: "100%", padding: "15px 22px", borderRadius: 14, border: "none",
-              background: tujuan ? "var(--tk-blue-600, #2563EB)" : "var(--tk-gray-200)",
-              color: tujuan ? "white" : "var(--tk-gray-400)",
+              background: tujuan && jenjang ? "var(--tk-blue-600, #2563EB)" : "var(--tk-gray-200)",
+              color: tujuan && jenjang ? "white" : "var(--tk-gray-400)",
               fontFamily: "var(--tk-font-display)", fontWeight: 800, fontSize: 15.5,
-              cursor: tujuan && !simpanTujuan ? "pointer" : "not-allowed",
+              cursor: tujuan && jenjang && !simpanTujuan ? "pointer" : "not-allowed",
             }}
           >
             {simpanTujuan ? "Menyimpan…" : "Lihat hasilku"}

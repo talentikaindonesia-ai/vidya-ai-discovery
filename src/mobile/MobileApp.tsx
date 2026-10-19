@@ -1,6 +1,6 @@
 import React, { createContext, lazy, ReactNode, Suspense, useContext, useEffect, useMemo, useState } from "react";
 import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
-import { AppProvider, handleAuthCallback, NATIVE_SCHEME, useApp } from "./store";
+import { AppProvider, handleAuthCallback, NATIVE_SCHEME, useApp, useKetersediaan } from "./store";
 import { initPush } from "./push";
 import { Avatar, GLOBAL_CSS, Icon, Loading, LOGO, TIKA } from "./ui";
 import { C, F } from "./theme";
@@ -314,6 +314,7 @@ function SideNav() {
   const { pathname } = useLocation();
   const nav = useNavigate();
   const { t, profile } = useApp();
+  const ada = useKetersediaan();
   const path = pathname.replace(/\/$/, "");
   const extra = SIDE_EXTRA.find(x => path === x.path || path.startsWith(x.path + "/"));
   const active = extra ? null : tabOf(path);
@@ -338,7 +339,7 @@ function SideNav() {
       </nav>
       <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: ".6px", color: C.faint, margin: "20px 14px 6px" }}>{t("LAINNYA", "MORE")}</div>
       <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-        {SIDE_EXTRA.map(x => item(x.path, x.path, x.icon, t(x.labelId, x.label), extra?.path === x.path))}
+        {SIDE_EXTRA.filter(x => x.path !== "/app/mentors" || ada.mentor).map(x => item(x.path, x.path, x.icon, t(x.labelId, x.label), extra?.path === x.path))}
       </div>
       <div style={{ flex: 1, minHeight: 16 }} />
       <button onClick={() => nav("/app/copilot")} style={{ border: "none", background: C.navy, borderRadius: 18, padding: 12, display: "flex", gap: 10, alignItems: "center", textAlign: "left", outline: path === "/app/copilot" ? `2px solid ${C.blue}` : "none" }}>

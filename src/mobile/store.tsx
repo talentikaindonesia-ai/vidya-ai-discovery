@@ -212,6 +212,26 @@ export interface Tracked {
   applied_at: string | null; checklist: Record<string, boolean>; deadline: string | null; opportunity_type: string | null; created_at: string;
 }
 
+/**
+ * Apakah ada isi untuk bagian yang dikelola tim (mentor tersedia, playbook
+ * aktif). Bagian yang kosong disembunyikan supaya aplikasi tidak terasa
+ * "belum jadi"; begitu tim menambah isinya lewat Admin, bagian itu muncul lagi.
+ */
+export function useKetersediaan() {
+  const q = useQuery({
+    queryKey: ["m-ketersediaan"], staleTime: 10 * 60_000,
+    queryFn: async () => {
+      const [m, p] = await Promise.all([
+        db.from("mentors").select("id", { count: "exact", head: true }).eq("is_available", true),
+        db.from("playbooks").select("id", { count: "exact", head: true }).eq("is_active", true),
+      ]);
+      return { mentor: (m.count ?? 0) > 0, playbook: (p.count ?? 0) > 0 };
+    },
+  });
+  // selama memuat: anggap ada, supaya tidak berkedip menghilang lalu muncul
+  return q.data ?? { mentor: true, playbook: true };
+}
+
 /** Skor kecocokan peluang dari server (peluang_untukku) — mesin yang sama dengan web. */
 export function useSkorPeluang() {
   const { user } = useApp();

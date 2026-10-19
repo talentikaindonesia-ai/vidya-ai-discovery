@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { askAi, db, errMsg, useApp, useCareers, useDna, useReadiness, useSkills } from "../store";
+import { askAi, db, errMsg, useApp, useCareers, useDna, useKetersediaan, useReadiness, useSkills } from "../store";
 import { AiLabel, Avatar, BackBtn, Btn, Card, Empty, Header, Icon, IconBtn, ImgBox, Input, Label, Loading, MenuList, Note, Screen, Segmented, Sheet, TabTitle, TextArea, Toggle, TIKA } from "../ui";
 import { C, SH } from "../theme";
 import { AXES, AxisKey, fmtDate } from "../logic";
@@ -80,6 +80,7 @@ function ProfileHome() {
   const nav = useNavigate();
   const qc = useQueryClient();
   const { t, lang, user, profile, gam, isPro, toast } = useApp();
+  const ada = useKetersediaan();
   const { dna, title, done } = useDna();
   const { data: rd } = useReadiness();
   const { data: skills = [] } = useSkills();
@@ -265,8 +266,8 @@ function ProfileHome() {
         <MenuList items={[
           { icon: "globe", label: t("Program Talentika", "Talentika Programs"), onClick: () => nav("/app/programs") },
           { icon: "book", label: t("Artikel", "Articles"), onClick: () => nav("/app/articles") },
-          { icon: "wallet", label: t("Store · Playbook & Program", "Store · Playbooks & Programs"), onClick: () => nav("/app/store") },
-          { icon: "users", label: "Mentor", onClick: () => nav("/app/mentors") },
+          { icon: "wallet", label: ada.playbook ? t("Store · Playbook & Program", "Store · Playbooks & Programs") : t("Store · Program", "Store · Programs"), onClick: () => nav("/app/store") },
+          ...(ada.mentor ? [{ icon: "users", label: "Mentor", onClick: () => nav("/app/mentors") }] : []),
           { icon: "msg", label: t("Komunitas", "Community"), onClick: () => nav("/app/community") },
           { icon: "cap", label: t("Jelajah Kampus", "University Explorer"), onClick: () => nav("/app/universities") },
           { icon: "cal", label: t("Kalender Deadline", "Deadline Calendar"), onClick: () => nav("/app/calendar") },

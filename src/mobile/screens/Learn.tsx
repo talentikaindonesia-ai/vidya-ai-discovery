@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { askAi, canPurchase, db, errMsg, isKuotaError, openExternal, signedUrl, uploadEvidence, useApp, useCareers, useKuota } from "../store";
+import { askAi, canPurchase, db, errMsg, isKuotaError, openExternal, signedUrl, uploadEvidence, useApp, useCareers, useKetersediaan, useKuota } from "../store";
 import { AiLabel, Avatar, BackBtn, Btn, Empty, Header, Icon, IconBtn, ImgBox, Input, Label, Loading, Screen, Sheet, TabTitle, Tabs, TextArea, TIKA } from "../ui";
 import { C, SH, rpShort } from "../theme";
 import { cekPembayaran } from "@/lib/pembayaran";
@@ -44,6 +44,7 @@ function usePathItems(pathId: string | null) {
 function LearnHome() {
   const nav = useNavigate();
   const { t, lang, user, toast, profile } = useApp();
+  const ada = useKetersediaan();
   const [params, setParams] = useSearchParams();
   const [tab, setTab] = useState<"foryou" | "paths" | "courses">("foryou");
   const [searching, setSearching] = useState(false);
@@ -219,17 +220,19 @@ function LearnHome() {
             <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 10 }}>{courses!.slice(0, 3).map(c => <CourseCard key={c.id} c={c} />)}</div>
           </>}
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 16 }}>
+          <div style={{ display: "grid", gridTemplateColumns: ada.playbook ? "1fr 1fr" : "1fr", gap: 10, marginTop: 16 }}>
             <button onClick={() => nav("/app/projects")} style={{ textAlign: "left", border: "none", background: "linear-gradient(120deg,#FFF6DB,#FFEBB0)", borderRadius: 18, padding: 14, cursor: "pointer" }}>
               <span style={{ width: 40, height: 40, borderRadius: 12, background: C.yellow, color: C.text, display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name="folder" size={20} /></span>
               <span style={{ display: "block", fontSize: 14, fontWeight: 700, color: C.text, marginTop: 10 }}>{t("Bangun Proyek", "Build a Project")}</span>
               <span style={{ display: "block", fontSize: 11, color: "#7A5200", marginTop: 2 }}>{t("Belajar sambil berkarya", "Learn by doing")}</span>
             </button>
+            {ada.playbook && (
             <button onClick={() => nav("/app/playbooks")} style={{ textAlign: "left", border: "none", background: "#fff", borderRadius: 18, padding: 14, cursor: "pointer", boxShadow: SH.card, display: "flex", flexDirection: "column" }}>
               <img src={stemCover} alt="" style={{ width: 34, height: 44, borderRadius: 6, objectFit: "cover", boxShadow: "0 3px 8px rgba(15,23,42,.18)" }} />
               <span style={{ display: "block", fontSize: 14, fontWeight: 700, color: C.text, marginTop: 6 }}>Playbooks</span>
               <span style={{ display: "block", fontSize: 11, color: C.muted, marginTop: 2 }}>{t("Panduan karier & beasiswa", "Career & scholarship guides")}</span>
             </button>
+            )}
           </div>
         </>}
 

@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { canPurchase, Career, db, errMsg, useApp, useCareers, useDna, useSkills } from "../store";
+import { canPurchase, Career, db, errMsg, useApp, useCareers, useDna, useKetersediaan, useSkills } from "../store";
 import { BackBtn, Btn, Card, Confetti, Header, Icon, Loading, LOGO, PlusTeaser, Screen, Sheet, Tabs } from "../ui";
 import { C, SH } from "../theme";
 import { archetypes, AXES, AxisKey, careerPicks, MODULES, rankAxes, riasecArch, riasecKeyakinan, riasecLabel } from "../logic";
@@ -435,7 +435,7 @@ function RiasecTest() {
         </div>
       </div>
       <div style={{ padding: `12px 22px ${SAFE_B}`, borderTop: "1px solid #F1F5FB" }}>
-        <button onClick={selesai} disabled={!tujuan || busy} style={{ width: "100%", height: 54, border: "none", borderRadius: 16, background: tujuan && !busy ? C.blue : C.disabled, color: "#fff", fontSize: 15, fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", gap: 10, cursor: tujuan && !busy ? "pointer" : "not-allowed" }}>
+        <button onClick={selesai} disabled={!tujuan || !jenjangAktif || busy} style={{ width: "100%", height: 54, border: "none", borderRadius: 16, background: tujuan && jenjangAktif && !busy ? C.blue : C.disabled, color: "#fff", fontSize: 15, fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", gap: 10, cursor: tujuan && jenjangAktif && !busy ? "pointer" : "not-allowed" }}>
           {busy ? t("Menyimpan…", "Saving…") : t("Lihat Hasilku", "See My Result")} <Icon name="right" size={18} />
         </button>
       </div>
@@ -638,6 +638,7 @@ function TalentProfile() {
   const { t, lang, isPro, profile, toast, openPaywall } = useApp();
   const { dna, done, title, axes, arch, type, name, insight, riasec, sub } = useTalent();
   const { data: skills } = useSkills();
+  const ada = useKetersediaan();
   const [tab, setTab] = useState<"overview" | "arch" | "modules">("overview");
   const pro = editionOf(profile?.jenjang) === "pro";
 
@@ -778,7 +779,7 @@ function TalentProfile() {
 
         <div style={{ display: "flex", gap: 9, marginTop: 16 }}>
           <button onClick={() => nav("/app/privacy")} style={{ flex: 1, height: 46, border: `1.5px solid ${C.line}`, background: "#fff", borderRadius: 14, fontSize: 12.5, fontWeight: 600, color: C.text, display: "flex", alignItems: "center", justifyContent: "center", gap: 7, cursor: "pointer" }}><span style={{ color: C.orange, display: "flex" }}><Icon name="users" size={16} /></span>{t("Bahas dengan orang tua", "Discuss with parent")}</button>
-          <button onClick={() => nav("/app/mentors")} style={{ flex: 1, height: 46, border: `1.5px solid ${C.line}`, background: "#fff", borderRadius: 14, fontSize: 12.5, fontWeight: 600, color: C.text, display: "flex", alignItems: "center", justifyContent: "center", gap: 7, cursor: "pointer" }}><span style={{ color: C.purple, display: "flex" }}><Icon name="msg" size={16} /></span>{t("Tanya mentor", "Ask a mentor")}</button>
+          {ada.mentor && <button onClick={() => nav("/app/mentors")} style={{ flex: 1, height: 46, border: `1.5px solid ${C.line}`, background: "#fff", borderRadius: 14, fontSize: 12.5, fontWeight: 600, color: C.text, display: "flex", alignItems: "center", justifyContent: "center", gap: 7, cursor: "pointer" }}><span style={{ color: C.purple, display: "flex" }}><Icon name="msg" size={16} /></span>{t("Tanya mentor", "Ask a mentor")}</button>}
         </div>
         <Btn onClick={cta.go} h={56} style={{ marginTop: 14 }}>{cta.label} <Icon name="right" size={18} /></Btn>
         <Btn kind="blueOutline" h={52} onClick={() => nav("/app/home")} style={{ marginTop: 10, borderColor: C.lightBlue }}><Icon name="home" size={18} />{t("Ke Beranda & pilih materi belajar", "Go to Dashboard & pick my learning")}</Btn>

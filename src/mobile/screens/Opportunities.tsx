@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { db, errMsg, openExternal, Tracked, useApp, useCareers, useDna, useKuota, useOpportunities, useSkorPeluang, useTracker } from "../store";
+import { db, errMsg, openExternal, Tracked, useApp, useCareers, useDna, useKetersediaan, useKuota, useOpportunities, useSkorPeluang, useTracker } from "../store";
 import { teksAlasan } from "@/lib/peluang";
 import { BackBtn, Btn, Empty, Header, Icon, IconBtn, ImgBox, Loading, Screen, Sheet, TabTitle, Tabs } from "../ui";
 import { C, SH, daysUntil, deadlineColor } from "../theme";
@@ -84,6 +84,7 @@ function Explore() {
   const { t, lang, user, isPro, openPaywall } = useApp();
   const { title: dnaTitleText, done } = useDna();
   const { list: ranked, isLoading, tracker } = useEnriched();
+  const ada = useKetersediaan();
   const { data: kuota } = useKuota();
   // Free: pencarian & filter dasar (urut tenggat); urutan sesuai profil = Plus
   const list = useMemo(() => (isPro ? ranked : [...ranked].sort((a, b) => (a.days ?? 9999) - (b.days ?? 9999))), [ranked, isPro]);
@@ -106,7 +107,7 @@ function Explore() {
   const tabs: { value: OppType | "all" | "mentor"; label: string }[] = [
     { value: "all", label: t("Untukmu", "For You") }, { value: "Scholarship", label: t("Beasiswa", "Scholarships") }, { value: "Competition", label: t("Kompetisi", "Competitions") },
     { value: "Internship", label: t("Magang", "Internships") }, { value: "Global", label: "Global" }, { value: "Research", label: t("Riset", "Research") }, { value: "Bootcamp", label: "Bootcamp" },
-    { value: "mentor", label: "Mentor" },
+    ...(ada.mentor ? [{ value: "mentor" as const, label: "Mentor" }] : []),
   ];
   const chip = (on: boolean, label: string, fn: () => void) => (
     <button key={label} onClick={fn} aria-pressed={on} style={{ flex: "none", height: 30, border: `1.5px solid ${on ? C.blue : C.line}`, borderRadius: 99, padding: "0 11px", fontSize: 11.5, fontWeight: 500, cursor: "pointer", background: on ? C.tintBlue : "#fff", color: on ? C.blue : C.text2 }}>{label}</button>

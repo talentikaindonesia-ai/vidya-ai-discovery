@@ -3,7 +3,7 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
-import { canPurchase, db, errMsg, gabungSekolah, isNative, openExternal, useApp, useDna, useTracker, webUrl } from "../store";
+import { canPurchase, db, errMsg, gabungSekolah, isNative, openExternal, useApp, useDna, useKetersediaan, useTracker, webUrl } from "../store";
 import { Btn, Empty, Header, Icon, ImgBox, Input, Label, Loading, LOGO, PlusTeaser, Screen, Segmented, Sheet, Tabs, TextArea, TIKA, Toggle } from "../ui";
 import { C, SH, daysUntil, rpShort } from "../theme";
 import { AXES, AxisKey, fmtDate, oppTypeOf, rankAxes, riasecArch, riasecLabel, timeAgo } from "../logic";
@@ -58,6 +58,7 @@ async function shareOrCopy(text: string, url: string, toast: (m: string) => void
 function Store() {
   const nav = useNavigate();
   const { t, user, isPro } = useApp();
+  const ada = useKetersediaan();
   const buy = canPurchase();
   const { data, isLoading } = useQuery({
     queryKey: ["m-store", user?.id], enabled: !!user, staleTime: 5 * 60_000,
@@ -87,16 +88,16 @@ function Store() {
         )}
         {isLoading && <Loading />}
         {data && <>
-          <H mt={6}>Playbook</H>
-          {data.playbooks.length ? data.playbooks.map(p => (
+          {data.playbooks.length > 0 && <H mt={6}>Playbook</H>}
+          {data.playbooks.length > 0 && data.playbooks.map(p => (
             <Tile key={p.id} icon="book" c={C.text} bg={C.tintBlue} title={p.title} sub={p.description} onClick={() => nav("/app/playbooks")} right={pill(label(p.owned, p.price), p.owned)} />
-          )) : <div style={{ ...card, padding: "12px 14px", fontSize: 12.5, color: C.muted }}>{t("Playbook sedang disiapkan tim Talentika.", "Playbooks are being prepared by the Talentika team.")}</div>}
-          <H>{t("Program", "Programs")}</H>
+          ))}
+          <H mt={data.playbooks.length ? undefined : 6}>{t("Program", "Programs")}</H>
           {data.programs.map(p => <Tile key={p.id} icon="globe" c={C.amber} bg={C.tintYellow} title={p.name} sub={p.tagline} onClick={() => nav(`/app/programs/p-${p.id}`)} right={pill(t("Lihat", "View"))} />)}
           {data.bootcamps.map(b => <Tile key={b.id} icon="rocket" c={C.purple} bg={C.tintPurple} title={b.title} sub={[b.category_label, b.lesson_count ? `${b.lesson_count} ${t("pelajaran", "lessons")}` : null].filter(Boolean).join(" · ")} onClick={() => nav(`/app/programs/b-${b.slug}`)} right={pill(label(false, b.price))} />)}
           {!data.programs.length && !data.bootcamps.length && <div style={{ ...card, padding: "12px 14px", fontSize: 12.5, color: C.muted }}>{t("Belum ada program yang dibuka.", "No programs open yet.")}</div>}
-          <H>{t("Mentor & sertifikat", "Mentors & certificates")}</H>
-          <Tile icon="users" c={C.purple} bg={C.tintPurple} title={t("Sesi mentor 1-on-1", "1-on-1 mentor session")} sub={t("Program terpisah — tidak termasuk langganan", "Separate program — not part of any plan")} onClick={() => nav("/app/mentors")} right={<span style={{ color: C.faint, display: "flex" }}><Icon name="chev" size={17} /></span>} />
+          <H>{ada.mentor ? t("Mentor & sertifikat", "Mentors & certificates") : t("Sertifikat", "Certificates")}</H>
+          {ada.mentor && <Tile icon="users" c={C.purple} bg={C.tintPurple} title={t("Sesi mentor 1-on-1", "1-on-1 mentor session")} sub={t("Program terpisah — tidak termasuk langganan", "Separate program — not part of any plan")} onClick={() => nav("/app/mentors")} right={<span style={{ color: C.faint, display: "flex" }}><Icon name="chev" size={17} /></span>} />}
           <Tile icon="medal" c={C.teal} bg={C.tintTeal} title={t("Sertifikat terverifikasi", "Verified certificate")} sub={t("Selesaikan jalur belajar · bisa dicek lewat kode QR", "Finish a learning track · verifiable by QR code")} onClick={() => nav("/app/learn")} right={<span style={{ color: C.faint, display: "flex" }}><Icon name="chev" size={17} /></span>} />
         </>}
       </div>
