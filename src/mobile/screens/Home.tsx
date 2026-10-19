@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { askAi, canPurchase, db, errMsg, useApp, useCareers, useDna, useOpportunities, useReadiness, useSkills, useTracker } from "../store";
+import { askAi, canPurchase, db, errMsg, useApp, useCareers, useDna, useOpportunities, useReadiness, useSkills, useSkorPeluang, useTracker } from "../store";
+import { teksAlasan } from "@/lib/peluang";
 import { Avatar, BrandBar, Empty, Header, Icon, IconBtn, ImgBox, Loading, LOGO, Screen, SectionHead, Skeleton, TIKA as TIKA_SRC } from "../ui";
 import { C, SH, daysUntil } from "../theme";
 import { deepLink, fmtDate, notifCat, oppMatch, oppTypeOf, READINESS_META, riasecLabel, timeAgo, TYPE_ID } from "../logic";
@@ -76,7 +77,42 @@ const OPSI_TUJUAN: [string, string, string, string][] = [
   ["kuliah", "cap", "Lanjut kuliah", "University"], ["kerja", "brief", "Cari kerja", "A job"],
   ["wirausaha", "rocket", "Bangun usaha", "A business"], ["belum_yakin", "compass", "Masih menjajaki", "Still exploring"],
 ];
+/* Jenjang — penentu terkuat kecocokan peluang (peluang_untukku: cocok +20,
+   tidak cocok −30). Per 2026-10-19, 96 dari 103 siswa yang sudah tes belum
+   mengisinya. Nilai sama dengan web: smp, sma_smk, kuliah, lulusan. */
+const OPSI_JENJANG: [string, string, string][] = [["smp", "SMP", "Junior high"], ["sma_smk", "SMA / SMK", "Senior high"], ["kuliah", "Kuliah", "University"], ["lulusan", "Sudah lulus", "Graduated"]];
+function JenjangCard() {
+  const qc = useQueryClient();
+  const { t, lang, user, toast, refreshProfile, track } = useApp();
+  const [busy, setBusy] = useState<string | null>(null);
+  const pilih = async (v: string) => {
+    if (busy) return;
+    setBusy(v);
+    const { error } = await db.from("profiles").update({ jenjang: v } as any).eq("user_id", user!.id);
+    if (error) { setBusy(null); toast(errMsg(error), "error"); return; }
+    track("jenjang_selected", { jenjang: v, source: "home_card" });
+    await refreshProfile();
+    qc.invalidateQueries({ queryKey: ["m-opp-skor"] });
+    toast(t("Tersimpan — peluang kini disaring sesuai jenjangmu", "Saved — opportunities now match your level"));
+  };
+  return (
+    <div style={{ marginTop: 14, background: "#fff", borderRadius: 20, padding: "14px 14px 12px", boxShadow: SH.card }}>
+      <div style={{ fontSize: 14.5, fontWeight: 700 }}>{t("Sekarang kamu di jenjang…", "Your current level is…")}</div>
+      <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{t("Supaya peluang yang muncul memang bisa kamu ikuti.", "So the opportunities you see are ones you can actually join.")}</div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 11 }}>
+        {OPSI_JENJANG.map(([v, id, en]) => (
+          <button key={v} onClick={() => pilih(v)} disabled={!!busy}
+            style={{ minHeight: 44, border: `1.5px solid ${busy === v ? C.blue : "#E6EDF7"}`, background: busy === v ? "#F3F8FF" : "#fff", borderRadius: 14, fontSize: 13, fontWeight: 600, color: C.text, cursor: busy ? "wait" : "pointer" }}>
+            {lang === "en" ? en : id}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function TujuanCard() {
+  const qc = useQueryClient();
   const { t, lang, user, toast, refreshProfile, track } = useApp();
   const [busy, setBusy] = useState<string | null>(null);
   const pilih = async (v: string) => {
@@ -86,6 +122,7 @@ function TujuanCard() {
     if (error) { setBusy(null); toast(errMsg(error), "error"); return; }
     track("goal_selected", { tujuan: v, source: "home_card" });
     await refreshProfile();
+    qc.invalidateQueries({ queryKey: ["m-opp-skor"] });
     toast(t("Tersimpan — peluang kini diurutkan sesuai arahmu", "Saved — opportunities are now ranked for your direction"));
   };
   return (
@@ -156,11 +193,19 @@ function HomeScreen() {
     askAi("insight", { input: step.text, lang }).then(r => { if (r.text) { setAiText(r.text); localStorage.setItem(k, r.text); } });
   }, [step.key, isNew, home, lang, step.text]);
 
+  const { data: skor } = useSkorPeluang();
   const matched = useMemo(() => {
     if (!opps?.length) return [];
     const ctx = { axes: dna?.axes, tujuan: profile?.tujuan, careerField: target?.field, careerName: target?.name, jenjang: profile?.jenjang };
-    return opps.map(o => { const type = oppTypeOf(o.opportunity_type, o.title); const m = oppMatch({ ...o, type }, ctx); return { o, type, m: m.match, why: m.why[0] }; }).sort((a, b) => b.m - a.m);
-  }, [opps, dna, profile, target]);
+    // skor server peluang_untukku (sama dengan web); oppMatch hanya cadangan.
+    // Peluang yang tidak terbuka untuk pelajar Indonesia tidak ada di skor server → tidak direkomendasikan.
+    return opps.filter(o => !skor?.size || skor.has(o.id)).map(o => {
+      const type = oppTypeOf(o.opportunity_type, o.title);
+      const sv = skor?.get(o.id);
+      if (sv) return { o, type, m: sv.skor, why: sv.alasan[0] ? teksAlasan(sv.alasan[0], lang) : t("Terbuka untuk pelajar", "Open to students") };
+      const m = oppMatch({ ...o, type }, ctx); return { o, type, m: m.match, why: m.why[0] };
+    }).sort((a, b) => b.m - a.m);
+  }, [opps, dna, profile, target, skor, lang, t]);
 
   const recs = [
     home?.recs[0] && { tag: t("Materi", "Learning"), tc: C.blue, tb: C.tintBlue, title: home.recs[0].title, sub: [home.recs[0].category_name, home.recs[0].difficulty_level].filter(Boolean).join(" · "), why: home.recs[0].reason || t("Cocok dengan minatmu", "Matches your interests"), img: courseImg(home.recs[0].thumbnail_url, home.recs[0].title), to: `/app/course/${home.recs[0].id}` },
@@ -194,7 +239,8 @@ function HomeScreen() {
           <span style={{ color: C.text, display: "flex" }}><Icon name="sliders" size={18} /></span>
         </button>
 
-        {!dnaLoading && riasec && !profile?.tujuan && <TujuanCard />}
+        {!dnaLoading && riasec && !profile?.jenjang && <JenjangCard />}
+        {!dnaLoading && riasec && profile?.jenjang && !profile?.tujuan && <TujuanCard />}
 
         {/* Hero: langkah berikutnya */}
         {dnaLoading ? <div style={{ marginTop: 14 }}><Skeleton h={200} r={24} /></div> : (

@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { db, errMsg, openExternal, Tracked, useApp, useCareers, useDna, useKuota, useOpportunities, useTracker } from "../store";
+import { db, errMsg, openExternal, Tracked, useApp, useCareers, useDna, useKuota, useOpportunities, useSkorPeluang, useTracker } from "../store";
+import { teksAlasan } from "@/lib/peluang";
 import { BackBtn, Btn, Empty, Header, Icon, IconBtn, ImgBox, Loading, Screen, Sheet, TabTitle, Tabs } from "../ui";
 import { C, SH, daysUntil, deadlineColor } from "../theme";
 import { docsFor, fmtDate, JENJANG_LABEL, OppType, oppMatch, oppTypeOf, TYPE_ID } from "../logic";
@@ -30,23 +31,28 @@ const TC: Record<OppType, [string, string]> = {
 
 /** Gabungkan baris katalog + konteks siswa → kartu peluang lengkap (OPP-02). */
 function useEnriched() {
-  const { profile } = useApp();
+  const { profile, lang } = useApp();
   const { dna } = useDna();
   const { careers } = useCareers();
   const { data: opps, isLoading } = useOpportunities();
+  const { data: skor } = useSkorPeluang();
   const { data: tracker } = useTracker();
   const target = careers.find(c => c.id === profile?.career_target);
   const list = useMemo(() => {
     const tmap = new Map((tracker ?? []).map(x => [x.opportunity_id, x]));
     return (opps ?? []).map(o => {
       const type = oppTypeOf(o.opportunity_type, o.title);
-      const m = oppMatch({ ...o, type }, { axes: dna?.axes, tujuan: profile?.tujuan, careerField: target?.field, careerName: target?.name, jenjang: (profile as any)?.jenjang });
+      // skor server (sama dengan web); oppMatch lokal hanya cadangan
+      const sv = skor?.get(o.id);
+      const m = sv ? { match: sv.skor, why: sv.alasan.map(a => teksAlasan(a, lang)) }
+        : skor?.size ? { match: 0, why: [] as string[] } // tidak terbuka untuk pelajar Indonesia
+        : oppMatch({ ...o, type }, { axes: dna?.axes, tujuan: profile?.tujuan, careerField: target?.field, careerName: target?.name, jenjang: (profile as any)?.jenjang });
       const tr = tmap.get(o.id) ?? null;
       const docs = docsFor({ requirements: o.requirements, type });
       const missing = docs.filter(d => !tr?.checklist?.[d]);
       return { ...o, type, match: m.match, why: m.why, tracked: tr, docs, missing, days: daysUntil(o.deadline) };
     }).sort((a, b) => b.match - a.match);
-  }, [opps, tracker, dna, profile, target]);
+  }, [opps, tracker, dna, profile, target, skor, lang]);
   return { list, isLoading, tracker: tracker ?? [] };
 }
 
@@ -359,7 +365,7 @@ function Detail() {
         <H>{t("Kenapa direkomendasikan", "Why it's recommended")}</H>
         {isPro ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 7, marginTop: 9 }}>
-            {o.why.map(w => <div key={w} style={{ display: "flex", gap: 9, alignItems: "center", fontSize: 12.5, color: C.text2 }}><span style={{ color: C.blue, display: "flex", flex: "none" }}><Icon name="sparkle" size={15} /></span>{w}</div>)}
+            {(o.why.length ? o.why : [t("Terbuka untuk pelajar", "Open to students")]).map(w => <div key={w} style={{ display: "flex", gap: 9, alignItems: "center", fontSize: 12.5, color: C.text2 }}><span style={{ color: C.blue, display: "flex", flex: "none" }}><Icon name="sparkle" size={15} /></span>{w}</div>)}
           </div>
         ) : (
           <button onClick={() => openPaywall("matching")} style={{ width: "100%", textAlign: "left", marginTop: 9, border: "1.5px dashed #C9DCF8", background: "#fff", borderRadius: 14, padding: "11px 13px", display: "flex", gap: 10, alignItems: "center", cursor: "pointer" }}>

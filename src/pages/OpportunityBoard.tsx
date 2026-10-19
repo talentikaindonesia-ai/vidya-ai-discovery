@@ -15,6 +15,7 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { ambilIdentitas, JENIS_UNTUK_TUJUAN, LABEL_TUJUAN, type IdentitasSiswa } from "@/hooks/useIdentitasSiswa";
 import { UpgradeGate } from "@/components/payment/UpgradeGate";
 import { useHargaMulai } from "@/hooks/usePaketLangganan";
+import { petaSkor, teksAlasan, type SkorPeluang } from "@/lib/peluang";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 type OpportunityCategory = 'beasiswa' | 'kompetisi' | 'magang' | 'lowongan_kerja' | 'konferensi';
@@ -352,6 +353,19 @@ const OpportunityBoard = () => {
   const personaSignals: PersonaSignals = { riasecType, miType, savedCats, identitas };
   const hasPersona = !!(riasecType || miType || identitas?.tujuan);
 
+  // Skor kecocokan dari server — mesin yang SAMA dengan aplikasi (peluang_untukku).
+  // Rumus lokal di atas hanya cadangan bila RPC gagal.
+  const [skorServer, setSkorServer] = useState<Map<string, SkorPeluang>>(new Map());
+  useEffect(() => {
+    (supabase.rpc as any)("peluang_untukku").then(({ data, error }: any) => { if (!error) setSkorServer(petaSkor(data)); });
+  }, [userId, identitas?.tipeUtama, identitas?.tujuan]);
+  const nilai = (o: Opportunity) => skorServer.get(o.id)?.skor ?? Math.round(finalScore(o, personaSignals) * 100);
+  const sesuaiTipe = (o: Opportunity) => skorServer.size ? !!skorServer.get(o.id)?.cocok_tipe : personaScore(o, personaSignals) > 0;
+  const alasanUntuk = (o: Opportunity) => {
+    const s = skorServer.get(o.id);
+    return s ? s.alasan.map(a => teksAlasan(a)) : reasonsFor(o, personaSignals);
+  };
+
   // ── Data loading (PRESERVED — fetches from scraped_content with scoring) ───
   const loadOpportunities = async () => {
     try {
@@ -455,9 +469,10 @@ const OpportunityBoard = () => {
   // "Untuk Anda": rank by final_score + diversity injection (2 of 10 outside persona)
   const forYouList = (() => {
     if (!hasPersona) return baseFiltered;
-    const scored = baseFiltered.slice().sort((a, b) => finalScore(b, personaSignals) - finalScore(a, personaSignals));
-    const inPersona = scored.filter(o => personaScore(o, personaSignals) > 0);
-    const outPersona = scored.filter(o => personaScore(o, personaSignals) === 0);
+    // peluang yang tidak terbuka untuk pelajar Indonesia tidak direkomendasikan
+    const scored = baseFiltered.filter(o => !skorServer.size || skorServer.has(o.id)).sort((a, b) => nilai(b) - nilai(a));
+    const inPersona = scored.filter(o => sesuaiTipe(o));
+    const outPersona = scored.filter(o => !sesuaiTipe(o));
     if (inPersona.length >= 8 && outPersona.length >= 2) {
       const merged: Opportunity[] = [];
       let pi = 0, oi = 0;
@@ -482,7 +497,7 @@ const OpportunityBoard = () => {
         return da - db;
       });
     } else if (sortBy === "match" && hasPersona) {
-      l.sort((a, b) => finalScore(b, personaSignals) - finalScore(a, personaSignals));
+      l.sort((a, b) => nilai(b) - nilai(a));
     } else {
       l.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     }
@@ -535,8 +550,8 @@ const OpportunityBoard = () => {
   };
 
   // "Rekomendasi Terbaik Minggu Ini": top 3 by full formula across all
-  const topPicks = opportunities.slice()
-    .sort((a, b) => finalScore(b, personaSignals) - finalScore(a, personaSignals))
+  const topPicks = opportunities.filter(o => !skorServer.size || skorServer.has(o.id))
+    .sort((a, b) => nilai(b) - nilai(a))
     .slice(0, 3);
 
   const totalPages = Math.max(1, Math.ceil(filteredOpportunities.length / PAGE_SIZE));
@@ -743,7 +758,7 @@ const OpportunityBoard = () => {
                         {tp.title}
                       </div>
                       <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginTop: 7 }}>
-                        {reasonsFor(tp, personaSignals).map(r => (
+                        {alasanUntuk(tp).map(r => (
                           <span key={r} style={{ fontSize: 10.5, fontWeight: 700, color: "var(--tk-blue-700)", background: "var(--tk-blue-50, #EFF6FF)", padding: "2px 8px", borderRadius: 99 }}>{r}</span>
                         ))}
                       </div>
@@ -891,7 +906,7 @@ const OpportunityBoard = () => {
                       const daysLeft = opp.deadline
                         ? Math.floor((new Date(opp.deadline).getTime() - Date.now()) / 86400000)
                         : null;
-                      const matchPct = cocokIdentitas(opp, identitas, riasecType);
+                      const matchPct = skorServer.size ? (skorServer.get(opp.id)?.cocok_tipe ? nilai(opp) : 0) : cocokIdentitas(opp, identitas, riasecType);
                       const saves = saveCounts[opp.id] ?? 0;
 
                       return (
@@ -1181,7 +1196,7 @@ const OpportunityBoard = () => {
 
                             {/* why-recommended chips (Untuk Anda mode) + fully-funded */}
                             <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
-                              {viewMode === "foryou" && hasPersona && !isFreeUser && reasonsFor(opp, personaSignals).map(r => (
+                              {viewMode === "foryou" && hasPersona && !isFreeUser && alasanUntuk(opp).map(r => (
                                 <span key={r} style={{ fontSize: 10.5, fontWeight: 700, color: "var(--tk-blue-700, #1D4ED8)", background: "var(--tk-blue-50, #EFF6FF)", padding: "2px 8px", borderRadius: 99 }}>
                                   💡 {r}
                                 </span>

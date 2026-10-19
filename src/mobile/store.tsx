@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import { Axes, careerFit, dnaTitle, MODULES, Riasec, riasecTitle } from "./logic";
+import { petaSkor, type SkorPeluang } from "@/lib/peluang";
 
 /** Klien tanpa tipe untuk tabel/RPC baru yang belum ada di types.ts hasil generate. */
 export const db = supabase as any;
@@ -209,6 +210,15 @@ export function useSkills() {
 export interface Tracked {
   id: string; opportunity_id: string; opportunity_title: string; opportunity_url: string | null; category: string | null; status: string;
   applied_at: string | null; checklist: Record<string, boolean>; deadline: string | null; opportunity_type: string | null; created_at: string;
+}
+
+/** Skor kecocokan peluang dari server (peluang_untukku) — mesin yang sama dengan web. */
+export function useSkorPeluang() {
+  const { user } = useApp();
+  return useQuery({
+    queryKey: ["m-opp-skor", user?.id], enabled: !!user, staleTime: 5 * 60_000,
+    queryFn: async () => petaSkor(((await db.rpc("peluang_untukku")).data ?? []) as SkorPeluang[]),
+  });
 }
 
 /** Kuota paket Free (kuota_saya di database — web memakai RPC yang sama). */
