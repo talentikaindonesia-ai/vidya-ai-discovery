@@ -16,7 +16,7 @@ import { inputStyle, selectStyle } from "../adminShared";
 
 const db = supabase as any;
 const MODULES: [string, string, boolean][] = [
-  ["interest", "01 · Interest Discovery", true], ["strength", "02 · Strength Discovery", true], ["aptitude", "03 · Aptitude", false], ["personality", "04 · Personality", true],
+  ["interest", "01 · Interest Discovery", true], ["strength", "02 · Strength Discovery", true], ["aptitude", "03 · Aptitude", false], ["personality", "Personality — di aplikasi diganti tes RIASEC web (soal ini tidak dipakai)", true],
   ["learning_style", "05 · Learning Style", false], ["career_interest", "06 · Career Interest", false], ["future_skills", "07 · Future Skills", false], ["values", "08 · Values", false],
 ];
 const AXES: [string, string][] = [["analytical", "Analitis"], ["creative", "Kreatif"], ["leadership", "Kepemimpinan"], ["technology", "Teknologi"], ["communication", "Komunikasi"]];
