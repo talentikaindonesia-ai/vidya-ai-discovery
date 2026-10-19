@@ -762,8 +762,8 @@ export default function TalentikaMitra() {
         <div style={{ borderTop: "1px solid rgba(255,255,255,.1)", paddingTop: 24, display: "flex", justifyContent: "space-between", fontSize: 13, color: "rgba(255,255,255,.5)" }}>
           <span>© 2026 Talentika. All rights reserved.</span>
           <span style={{ display: "flex", gap: 18 }}>
-            <button style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,.5)", fontSize: 13 }}>Kebijakan Privasi</button>
-            <button style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,.5)", fontSize: 13 }}>Syarat &amp; Ketentuan</button>
+            <a href="/privacy" style={{ color: "rgba(255,255,255,.5)", fontSize: 13, textDecoration: "none" }}>Kebijakan Privasi</a>
+            <a href="/terms" style={{ color: "rgba(255,255,255,.5)", fontSize: 13, textDecoration: "none" }}>Syarat &amp; Ketentuan</a>
           </span>
         </div>
       </footer>

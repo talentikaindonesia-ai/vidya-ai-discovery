@@ -136,17 +136,13 @@ const Footer = () => {
             </p>
             <div className="flex gap-6 text-sm">
               <a
-                href="https://wa.me/6285148434141?text=Halo%20Talentika%2C%20saya%20ingin%20menanyakan%20Kebijakan%20Privasi"
-                target="_blank"
-                rel="noopener noreferrer"
+                href="/privacy"
                 className="text-white/60 hover:text-white transition-colors"
               >
                 Kebijakan Privasi
               </a>
               <a
-                href="https://wa.me/6285148434141?text=Halo%20Talentika%2C%20saya%20ingin%20menanyakan%20Syarat%20%26%20Ketentuan"
-                target="_blank"
-                rel="noopener noreferrer"
+                href="/terms"
                 className="text-white/60 hover:text-white transition-colors"
               >
                 Syarat & Ketentuan

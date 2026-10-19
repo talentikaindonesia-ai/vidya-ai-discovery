@@ -239,7 +239,8 @@ function PrivacyData() {
   ];
   return (
     <Screen>
-      <Header title={t("Privasi & Data", "Privacy & Data")} sub={t("Datamu, kendalimu (UU PDP)", "Your data, your control (PDP Law)")} />
+      <Header title={t("Privasi & Data", "Privacy & Data")} sub={t("Datamu, kendalimu (UU PDP)", "Your data, your control (PDP Law)")}
+        right={<button onClick={() => openExternal(webUrl("/privacy"))} style={{ border: "none", background: "none", color: C.blue, fontSize: 12.5, fontWeight: 600, cursor: "pointer" }}>{t("Kebijakan", "Policy")}</button>} />
       <div style={{ padding: "14px 20px 0" }}>
         <H mt={4}>{t("Riwayat persetujuan", "Consent history")}</H>
         <div style={{ ...card, padding: "4px 16px", marginTop: 10 }}>
@@ -969,6 +970,8 @@ function Settings() {
           <Tile icon="users" c={C.purple} bg={C.tintPurple} title={t("Keluarga & Sekolah", "Family & School")} onClick={() => nav("/app/privacy")} right={<span style={{ color: C.faint, display: "flex" }}><Icon name="chev" size={17} /></span>} />
           <Tile icon="bell" c={C.amber} bg={C.tintYellow} title={t("Pusat notifikasi", "Notification center")} onClick={() => nav("/app/notifications")} right={<span style={{ color: C.faint, display: "flex" }}><Icon name="chev" size={17} /></span>} />
           <Tile icon="info" c={C.teal} bg={C.tintTeal} title={t("Bantuan & tentang Talentika", "Help & about")} onClick={() => openExternal(webUrl("/tentang-kami"))} right={<span style={{ color: C.faint, display: "flex" }}><Icon name="chev" size={17} /></span>} />
+          <Tile icon="shield" c={C.muted} bg={C.soft} title={t("Kebijakan Privasi", "Privacy Policy")} onClick={() => openExternal(webUrl("/privacy"))} right={<span style={{ color: C.faint, display: "flex" }}><Icon name="link" size={16} /></span>} />
+          <Tile icon="file" c={C.muted} bg={C.soft} title={t("Syarat & Ketentuan", "Terms of Service")} onClick={() => openExternal(webUrl("/terms"))} right={<span style={{ color: C.faint, display: "flex" }}><Icon name="link" size={16} /></span>} />
         </div>
         <div style={{ textAlign: "center", fontSize: 11, color: C.faint, marginTop: 16 }}>Talentika Mobile · v1.1</div>
       </div>

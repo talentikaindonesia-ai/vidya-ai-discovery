@@ -44,6 +44,7 @@ const Settings              = lazy(() => import("./pages/Settings"));
 const Articles              = lazy(() => import("./pages/Articles"));
 const TalentikaForSchools   = lazy(() => import("./pages/TalentikaForSchools"));
 const TentangKami           = lazy(() => import("./pages/TentangKami"));
+const Legal                 = lazy(() => import("./pages/Legal"));
 const TalentikaMitra        = lazy(() => import("./pages/TalentikaMitra"));
 const SchoolDashboard       = lazy(() => import("./pages/SchoolDashboard"));
 const FocusAction           = lazy(() => import("./pages/FocusAction"));
@@ -168,6 +169,10 @@ const App = () => {
             <Route path="/talentika-junior/rewards" element={user ? <TalentikaJuniorRewards /> : <Navigate to="/auth" />} />
             <Route path="/for-schools" element={<TalentikaForSchools />} />
             <Route path="/tentang-kami" element={<TentangKami />} />
+            <Route path="/privacy" element={<Legal jenis="privasi" />} />
+            <Route path="/kebijakan-privasi" element={<Legal jenis="privasi" />} />
+            <Route path="/terms" element={<Legal jenis="syarat" />} />
+            <Route path="/syarat-ketentuan" element={<Legal jenis="syarat" />} />
             <Route path="/mitra" element={<TalentikaMitra />} />
             <Route path="/school-dashboard" element={user ? <SchoolDashboard /> : <Navigate to="/auth" />} />
             <Route path="/focus" element={user ? <FocusAction /> : <Navigate to="/auth" />} />

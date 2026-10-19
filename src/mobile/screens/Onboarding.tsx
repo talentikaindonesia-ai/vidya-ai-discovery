@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { authRedirect, db, errMsg, oauthSignIn, useApp, useCareers, useDna } from "../store";
+import { authRedirect, db, errMsg, oauthSignIn, openExternal, useApp, useCareers, useDna, webUrl } from "../store";
 import { BackBtn, Btn, Icon, Input, Loading, LOGO, Segmented, Sheet, TIKA } from "../ui";
 import { C, SH } from "../theme";
 import { INTEREST_TILES, JENJANG_OPTS } from "../logic";
@@ -250,7 +250,7 @@ function SignUp() {
         <button type="button" onClick={() => setPhoneSheet(true)} style={{ border: "none", background: "none", color: C.muted, fontWeight: 500, cursor: "pointer", padding: 0, fontSize: 12.5 }}>{t("Pakai nomor HP", "Use phone number")}</button>
       </div>
       <div style={{ textAlign: "center", fontSize: 11.5, color: C.faint, marginTop: 10 }}>
-        {t("Dengan melanjutkan, kamu setuju dengan ", "By continuing you agree to the ")}<a href="/tentang-kami" style={{ color: C.blue }}>{t("Syarat & Kebijakan Privasi", "Terms & Privacy Policy")}</a>
+        {t("Dengan melanjutkan, kamu setuju dengan ", "By continuing you agree to the ")}<a href="/terms" onClick={e => { e.preventDefault(); openExternal(webUrl("/terms")); }} style={{ color: C.blue }}>{t("Syarat & Ketentuan", "Terms")}</a>{t(" dan ", " and ")}<a href="/privacy" onClick={e => { e.preventDefault(); openExternal(webUrl("/privacy")); }} style={{ color: C.blue }}>{t("Kebijakan Privasi", "Privacy Policy")}</a>
       </div>
 
       <Sheet open={phoneSheet} onClose={() => setPhoneSheet(false)} title={t("Masuk dengan nomor HP", "Sign in with phone")}>

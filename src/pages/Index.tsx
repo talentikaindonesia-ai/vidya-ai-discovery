@@ -1386,8 +1386,8 @@ const Footer = ({ navigate }: { navigate: ReturnType<typeof useNavigate> }) => (
     <div className="lp-foot-bottom">
       <span>© 2026 Talentika. All rights reserved.</span>
       <div className="lp-foot-links">
-        <a href="https://wa.me/6285148434141?text=Halo%20Talentika%2C%20saya%20ingin%20menanyakan%20Kebijakan%20Privasi" target="_blank" rel="noopener noreferrer">Kebijakan Privasi</a>
-        <a href="https://wa.me/6285148434141?text=Halo%20Talentika%2C%20saya%20ingin%20menanyakan%20Syarat%20%26%20Ketentuan" target="_blank" rel="noopener noreferrer">Syarat & Ketentuan</a>
+        <a href="/privacy">Kebijakan Privasi</a>
+        <a href="/terms">Syarat & Ketentuan</a>
         <a href="mailto:Discover@Talentika.id">Cookie</a>
       </div>
     </div>
