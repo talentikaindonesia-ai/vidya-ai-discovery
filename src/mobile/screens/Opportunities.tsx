@@ -232,6 +232,34 @@ function Explore() {
 
 const ACTION_WORDS: [RegExp, string][] = [[/esai|essay|motivasi|motivation/i, "esai"], [/cv|resume/i, "cv"], [/proposal/i, "proposal"], [/abstrak|abstract|riset|research/i, "riset"], [/portofolio|portfolio/i, "portofolio"], [/video|pitch/i, "pitch"]];
 
+/* Umpan balik rekomendasi — dipakai tim kurasi (Admin → Funnel Siswa) untuk
+   menemukan peluang yang salah jenjang/kode RIASEC. Sama dengan web. */
+function RelevanFeedback({ oppId, skor }: { oppId: string; skor: number }) {
+  const { t, user, toast, track } = useApp();
+  const qc = useQueryClient();
+  const { data: cur } = useQuery({
+    queryKey: ["m-ubp", oppId, user?.id], enabled: !!user,
+    queryFn: async () => ((await db.from("umpan_balik_peluang").select("relevan").eq("user_id", user!.id).eq("opportunity_id", oppId).maybeSingle()).data?.relevan ?? null) as boolean | null,
+  });
+  const kirim = async (relevan: boolean) => {
+    const { error } = await db.from("umpan_balik_peluang").upsert({ user_id: user!.id, opportunity_id: oppId, relevan, skor, dibuat_pada: new Date().toISOString() }, { onConflict: "user_id,opportunity_id" });
+    if (error) { toast(errMsg(error), "error"); return; }
+    track("opportunity_feedback", { opp_id: oppId, relevan, match: skor });
+    qc.setQueryData(["m-ubp", oppId, user?.id], relevan);
+    toast(relevan ? t("Terima kasih! Kami tampilkan lebih banyak yang seperti ini.", "Thanks! We'll show more like this.") : t("Terima kasih — masukanmu membantu kami memperbaiki rekomendasi.", "Thanks — your feedback helps us improve picks."));
+  };
+  const btn = (on: boolean): React.CSSProperties => ({ flex: 1, height: 38, borderRadius: 12, border: `1.5px solid ${on ? C.blue : C.line}`, background: on ? C.tintBlue : "#fff", color: on ? C.blue : C.text2, fontSize: 12.5, fontWeight: 600, cursor: "pointer" });
+  return (
+    <div style={{ marginTop: 10, background: C.soft, borderRadius: 14, padding: "10px 12px" }}>
+      <div style={{ fontSize: 12, color: C.text2 }}>{t("Apakah peluang ini relevan untukmu?", "Is this opportunity relevant to you?")}</div>
+      <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+        <button onClick={() => kirim(true)} aria-pressed={cur === true} style={btn(cur === true)}>👍 {t("Relevan", "Relevant")}</button>
+        <button onClick={() => kirim(false)} aria-pressed={cur === false} style={btn(cur === false)}>👎 {t("Tidak relevan", "Not relevant")}</button>
+      </div>
+    </div>
+  );
+}
+
 /* ── OPPORTUNITY DETAIL ─────────────────────────────────────────────── */
 function Detail() {
   const { id = "" } = useParams();
@@ -374,6 +402,8 @@ function Detail() {
             <span style={{ fontSize: 10, fontWeight: 700, color: "#7A5200", background: C.yellow, padding: "3px 8px", borderRadius: 99 }}>PLUS</span>
           </button>
         )}
+
+        <RelevanFeedback oppId={o.id} skor={o.match} />
 
         {elig.length > 0 && <>
           <H>{t("Cek kelayakan", "Eligibility check")}</H>

@@ -34,7 +34,16 @@ interface Opportunity {
   sponsor_cta: string | null; sponsor_until: string | null;
   created_at: string;
   source_tier: number | null; last_verified_at: string | null; report_count: number | null;
+  /** Dipakai mesin pencocokan peluang_untukku() — web & aplikasi */
+  jenjang_target: string[] | null; riasec: string | null; wilayah_peserta: string | null;
 }
+
+const JENJANG_OPTS: [string, string][] = [["smp", "SMP"], ["sma_smk", "SMA/SMK"], ["kuliah", "Kuliah"], ["lulusan", "Lulusan"]];
+const RIASEC_OPTS: [string, string][] = [["R", "Realistis"], ["I", "Investigatif"], ["A", "Artistik"], ["S", "Sosial"], ["E", "Enterprising"], ["C", "Konvensional"]];
+const chipStyle = (on: boolean): React.CSSProperties => ({
+  padding: "6px 12px", borderRadius: 99, fontSize: 12.5, fontWeight: 600, cursor: "pointer",
+  border: `1.5px solid ${on ? "#2563EB" : "#E2E8F0"}`, background: on ? "#EFF6FF" : "#fff", color: on ? "#1D4ED8" : "#334155",
+});
 
 const TIER_OPTS = [
   { v: 1, label: "Tier 1 — Sumber Resmi", color: "#059669" },
@@ -234,6 +243,9 @@ export default function OpportunitiesCMS() {
       sponsor_until: editItem.sponsor_until || null,
       source_tier: editItem.source_tier ?? 2,
       last_verified_at: new Date().toISOString(),
+      jenjang_target: editItem.jenjang_target ?? [],
+      riasec: (editItem.riasec || "").toUpperCase().slice(0, 3) || null,
+      wilayah_peserta: editItem.wilayah_peserta || null,
     };
     if (modal === "create") {
       const { error } = await supabase.from("scraped_content").insert(payload);
@@ -461,6 +473,40 @@ export default function OpportunitiesCMS() {
             </Field>
             <Field label="Deskripsi">
               <textarea value={editItem.description ?? ""} onChange={e => setEditItem(p => ({ ...p, description: e.target.value }))} placeholder="Deskripsi singkat tentang peluang ini" style={{ ...textareaStyle, minHeight: 100 }} />
+            </Field>
+            {/* ── Kecocokan siswa (mesin peluang_untukku: web & aplikasi) ── */}
+            <Field label="Jenjang sasaran (kosong = semua jenjang)">
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                {JENJANG_OPTS.map(([v, l]) => {
+                  const on = (editItem.jenjang_target ?? []).includes(v);
+                  return <button type="button" key={v} style={chipStyle(on)} onClick={() => setEditItem(p => {
+                    const cur = p.jenjang_target ?? [];
+                    return { ...p, jenjang_target: on ? cur.filter(x => x !== v) : [...cur, v] };
+                  })}>{l}</button>;
+                })}
+              </div>
+            </Field>
+            <Field label="Kode RIASEC — klik berurutan dari yang paling cocok (maks. 3; kosong = umum)">
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+                {RIASEC_OPTS.map(([h, l]) => {
+                  const kode = (editItem.riasec ?? "").toUpperCase();
+                  const pos = kode.indexOf(h);
+                  return <button type="button" key={h} style={chipStyle(pos >= 0)} onClick={() => setEditItem(p => {
+                    const k = (p.riasec ?? "").toUpperCase();
+                    const baru = k.includes(h) ? k.replace(h, "") : (k + h).slice(0, 3);
+                    return { ...p, riasec: baru || null };
+                  })}>{pos >= 0 ? `${pos + 1}. ` : ""}{h} · {l}</button>;
+                })}
+                <span style={{ fontSize: 12.5, color: "#64748B", marginLeft: 4 }}>Kode: <b>{(editItem.riasec ?? "").toUpperCase() || "umum"}</b></span>
+              </div>
+            </Field>
+            <Field label="Terbuka untuk pelajar Indonesia?" half>
+              <select value={editItem.wilayah_peserta ?? ""} onChange={e => setEditItem(p => ({ ...p, wilayah_peserta: e.target.value || null }))} style={selectStyle}>
+                <option value="">Belum diketahui</option>
+                <option value="indonesia">🇮🇩 Khusus pelajar Indonesia</option>
+                <option value="internasional">🌐 Internasional (termasuk Indonesia)</option>
+                <option value="terbatas">⛔ Tidak terbuka untuk Indonesia (tidak direkomendasikan)</option>
+              </select>
             </Field>
             <Field label="Wilayah (menentukan filter 🇮🇩 di papan siswa)" half>
               <select value={wilayah} onChange={e => setWilayah(e.target.value)} style={inputStyle}>

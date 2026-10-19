@@ -27,6 +27,16 @@ const KPI: [string, string, string][] = [
   ["notif_7", "Notifikasi 7 hari", "dibuat oleh sistem"],
 ];
 
+type Kesenjangan = {
+  baris: { huruf: string; tipe: string; siswa: number; peluang: number; relevan: number; tidak_relevan: number; per_jenjang: Record<string, { siswa: number; peluang: number }> }[];
+  umum: number; tanpa_jenjang_siswa: number; total_peluang: number; total_siswa: number;
+  umpan_balik: { relevan: number; tidak_relevan: number; paling_tidak_relevan: { judul: string; tidak: number }[] };
+};
+const LABEL_TIPE: Record<string, string> = { realistic: "Realistis", investigative: "Investigatif", artistic: "Artistik", social: "Sosial", enterprising: "Enterprising", conventional: "Konvensional" };
+const JENJANG_KOL: [string, string][] = [["smp", "SMP"], ["sma_smk", "SMA/SMK"], ["kuliah", "Kuliah"], ["lulusan", "Lulusan"]];
+/** Target minimum kurasi: 5 peluang per tipe per jenjang. */
+const TARGET = 5;
+
 const card: React.CSSProperties = { background: "#fff", border: "1px solid #E2E8F0", borderRadius: 16, padding: "16px 18px" };
 const pct = (a: number, b: number) => (b > 0 ? Math.round((a / b) * 100) : 0);
 
@@ -35,6 +45,10 @@ export default function FunnelCMS() {
   const [data, setData] = useState<Funnel | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [gap, setGap] = useState<Kesenjangan | null>(null);
+  useEffect(() => {
+    (supabase.rpc as any)("admin_kesenjangan_peluang").then(({ data, error }: any) => { if (!error) setGap(data as Kesenjangan); });
+  }, []);
 
   useEffect(() => {
     let aktif = true;
@@ -111,6 +125,51 @@ export default function FunnelCMS() {
             </div>
           )}
         </div>
+
+        {gap && (
+          <div style={card}>
+            <div style={{ fontSize: 15, fontWeight: 800, color: "#0F172A" }}>Kesenjangan katalog peluang</div>
+            <div style={{ fontSize: 12.5, color: "#64748B", marginTop: 2 }}>
+              Peluang terbuka per tipe RIASEC (2 huruf pertama kode peluang) dibanding jumlah siswa bertipe itu. Sel kuning = di bawah {TARGET} peluang — prioritas kurasi.
+            </div>
+            <div style={{ overflowX: "auto", marginTop: 12 }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, minWidth: 620 }}>
+                <thead>
+                  <tr style={{ color: "#64748B", fontSize: 11.5, textAlign: "left" }}>
+                    <th style={{ padding: "6px 8px" }}>Tipe</th><th style={{ padding: "6px 8px" }}>Siswa</th><th style={{ padding: "6px 8px" }}>Peluang</th>
+                    {JENJANG_KOL.map(([, l]) => <th key={l} style={{ padding: "6px 8px" }}>{l}</th>)}
+                    <th style={{ padding: "6px 8px" }}>👍 / 👎</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {gap.baris.map(b => (
+                    <tr key={b.huruf} style={{ borderTop: "1px solid #F1F5F9" }}>
+                      <td style={{ padding: "8px", fontWeight: 700 }}>{b.huruf} · {LABEL_TIPE[b.tipe]}</td>
+                      <td style={{ padding: "8px" }}>{b.siswa}</td>
+                      <td style={{ padding: "8px", fontWeight: 700, background: b.peluang < TARGET ? "#FEF3C7" : undefined, color: b.peluang < TARGET ? "#92400E" : "#0F172A" }}>{b.peluang}</td>
+                      {JENJANG_KOL.map(([k]) => {
+                        const c = b.per_jenjang?.[k] ?? { siswa: 0, peluang: 0 };
+                        const kurang = c.peluang < TARGET;
+                        return <td key={k} style={{ padding: "8px", background: kurang ? "#FFFBEB" : undefined, color: kurang ? "#B45309" : "#334155" }}>{c.peluang}<span style={{ color: "#94A3B8", fontSize: 11 }}> · {c.siswa} siswa</span></td>;
+                      })}
+                      <td style={{ padding: "8px", color: "#64748B" }}>{b.relevan} / {b.tidak_relevan}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginTop: 10, fontSize: 12.5, color: "#64748B" }}>
+              <span>Peluang tanpa kode RIASEC (umum): <b style={{ color: "#0F172A" }}>{gap.umum}</b></span>
+              <span>Siswa belum isi jenjang: <b style={{ color: gap.tanpa_jenjang_siswa ? "#B45309" : "#0F172A" }}>{gap.tanpa_jenjang_siswa}</b> dari {gap.total_siswa}</span>
+              <span>Umpan balik: <b style={{ color: "#0F172A" }}>{gap.umpan_balik.relevan}</b> relevan · <b style={{ color: "#0F172A" }}>{gap.umpan_balik.tidak_relevan}</b> tidak relevan</span>
+            </div>
+            {gap.umpan_balik.paling_tidak_relevan.length > 0 && (
+              <div style={{ marginTop: 10, fontSize: 12.5, color: "#334155" }}>
+                <b>Paling sering ditandai tidak relevan:</b> {gap.umpan_balik.paling_tidak_relevan.map(x => `${x.judul} (${x.tidak})`).join(" · ")} — periksa jenjang & kode RIASEC-nya di menu Peluang.
+              </div>
+            )}
+          </div>
+        )}
 
         <div style={card}>
           <div style={{ fontSize: 15, fontWeight: 800, color: "#0F172A" }}>Pendaftar per minggu</div>

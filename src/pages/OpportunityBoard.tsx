@@ -359,6 +359,22 @@ const OpportunityBoard = () => {
   useEffect(() => {
     (supabase.rpc as any)("peluang_untukku").then(({ data, error }: any) => { if (!error) setSkorServer(petaSkor(data)); });
   }, [userId, identitas?.tipeUtama, identitas?.tujuan]);
+  // Umpan balik "Relevan / Tidak relevan" — tabel yang sama dengan aplikasi
+  const [umpan, setUmpan] = useState<Record<string, boolean>>({});
+  useEffect(() => {
+    if (!userId) return;
+    (supabase.from("umpan_balik_peluang" as any) as any).select("opportunity_id,relevan").eq("user_id", userId)
+      .then(({ data }: any) => setUmpan(Object.fromEntries((data ?? []).map((r: any) => [r.opportunity_id, r.relevan]))));
+  }, [userId]);
+  const kirimUmpan = async (o: Opportunity, relevan: boolean) => {
+    if (!userId) return;
+    const { error } = await (supabase.from("umpan_balik_peluang" as any) as any).upsert(
+      { user_id: userId, opportunity_id: o.id, relevan, skor: skorServer.get(o.id)?.skor ?? null, dibuat_pada: new Date().toISOString() },
+      { onConflict: "user_id,opportunity_id" });
+    if (error) { toast.error("Gagal menyimpan masukan"); return; }
+    setUmpan(u => ({ ...u, [o.id]: relevan }));
+    toast.success(relevan ? "Terima kasih! Kami tampilkan lebih banyak yang seperti ini." : "Terima kasih — masukanmu membantu memperbaiki rekomendasi.");
+  };
   const nilai = (o: Opportunity) => skorServer.get(o.id)?.skor ?? Math.round(finalScore(o, personaSignals) * 100);
   const sesuaiTipe = (o: Opportunity) => skorServer.size ? !!skorServer.get(o.id)?.cocok_tipe : personaScore(o, personaSignals) > 0;
   const alasanUntuk = (o: Opportunity) => {
@@ -1201,6 +1217,17 @@ const OpportunityBoard = () => {
                                   💡 {r}
                                 </span>
                               ))}
+                              {viewMode === "foryou" && userId && (
+                                <span style={{ display: "inline-flex", gap: 4, marginLeft: "auto" }} onClick={e => e.stopPropagation()}>
+                                  {([true, false] as const).map(v => (
+                                    <button key={String(v)} title={v ? "Relevan" : "Tidak relevan"} aria-pressed={umpan[opp.id] === v}
+                                      onClick={e => { e.stopPropagation(); kirimUmpan(opp, v); }}
+                                      style={{ fontSize: 11, padding: "2px 8px", borderRadius: 99, cursor: "pointer", border: `1px solid ${umpan[opp.id] === v ? "#2563EB" : "#E2E8F0"}`, background: umpan[opp.id] === v ? "#EFF6FF" : "#fff" }}>
+                                      {v ? "👍" : "👎"}
+                                    </button>
+                                  ))}
+                                </span>
+                              )}
                               {viewMode === "explore" && (opp.tags || []).includes("beasiswa-penuh") && (
                                 <span style={{ fontSize: 10.5, fontWeight: 700, color: "#B45309", background: "#FFFBEB", padding: "2px 8px", borderRadius: 99 }}>
                                   💰 Fully Funded
