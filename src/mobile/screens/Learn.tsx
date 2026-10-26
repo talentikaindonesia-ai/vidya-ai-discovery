@@ -7,6 +7,7 @@ import { AiLabel, Avatar, BackBtn, Btn, Empty, Header, Icon, IconBtn, ImgBox, In
 import { C, SH, rpShort } from "../theme";
 import { cekPembayaran } from "@/lib/pembayaran";
 import { careerImg, courseImg, IMG } from "../media";
+import { RoadmapShelf } from "./Roadmap";
 import stemCover from "../assets/stem-cover-portrait.webp";
 
 export default function Learn({ screen }: { screen: "learn" | "course" | "projects" | "project" | "playbooks" }) {
@@ -219,6 +220,8 @@ function LearnHome() {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 20 }}><div style={{ fontSize: 17, fontWeight: 700 }}>{t("Rekomendasi Materi", "Recommended Courses")}</div><button onClick={() => setTab("courses")} style={{ border: "none", background: "none", fontSize: 12.5, fontWeight: 600, color: C.blue, cursor: "pointer" }}>{t("Lihat Semua", "See All")}</button></div>
             <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 10 }}>{courses!.slice(0, 3).map(c => <CourseCard key={c.id} c={c} />)}</div>
           </>}
+
+          <RoadmapShelf limit={3} style={{ marginTop: 20 }} />
 
           <div style={{ display: "grid", gridTemplateColumns: ada.playbook ? "1fr 1fr" : "1fr", gap: 10, marginTop: 16 }}>
             <button onClick={() => nav("/app/projects")} style={{ textAlign: "left", border: "none", background: "linear-gradient(120deg,#FFF6DB,#FFEBB0)", borderRadius: 18, padding: 14, cursor: "pointer" }}>

@@ -8,6 +8,7 @@ import { C, SH, daysUntil } from "../theme";
 import { deepLink, fmtDate, notifCat, oppMatch, oppTypeOf, READINESS_META, riasecLabel, timeAgo, TYPE_ID } from "../logic";
 import { editionOf } from "../MobileApp";
 import { careerImg, courseImg, IMG, oppImg } from "../media";
+import { RoadmapShelf } from "./Roadmap";
 import heroBoy from "../assets/v3/hero-boy.webp";
 
 export default function Home({ screen }: { screen: "home" | "notif" | "readiness" | "recap" }) {
@@ -257,6 +258,8 @@ function HomeScreen() {
             </div>
           </div>
         )}
+
+        <RoadmapShelf limit={1} title={t("Roadmap pilihan untukmu", "A roadmap picked for you")} style={{ marginTop: 16 }} />
 
         {/* Aksi cepat */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 9, marginTop: 16 }}>

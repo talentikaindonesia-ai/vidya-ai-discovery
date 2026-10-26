@@ -5,6 +5,7 @@ import { askAi, Career, db, errMsg, useApp, useCareers, useDna, useOpportunities
 import { AiLabel, BackBtn, Btn, Empty, Header, Icon, ImgBox, Loading, PlusTeaser, Screen, Tabs } from "../ui";
 import { C, SH } from "../theme";
 import { AXES, AxisKey, INTEREST_TILES, oppMatch, oppTypeOf, TYPEC, TYPE_ID } from "../logic";
+import { RoadmapShelf } from "./Roadmap";
 import { careerImg, oppImg } from "../media";
 
 export default function Discover({ screen }: { screen: "discover" | "detail" | "path" | "compare" | "sim" | "unis" }) {
@@ -237,6 +238,7 @@ function CareerDetail() {
         </div>
 
         {related.length > 0 && <>
+          <RoadmapShelf careerId={c.id} title={t("Roadmap dari praktisi", "Roadmaps from practitioners")} style={{ marginTop: 20 }} />
           <div style={{ fontSize: 16, fontWeight: 700, marginTop: 20 }}>{t("Peluang terkait", "Related opportunities")}</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 9, marginTop: 10 }}>
             {related.map(({ o, type, m }) => (

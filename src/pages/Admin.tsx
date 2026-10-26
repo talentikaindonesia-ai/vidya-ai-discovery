@@ -6,7 +6,7 @@ import {
   LayoutDashboard, BookOpen, Tag, Trophy, FileText,
   Briefcase, Users, CreditCard, ChevronRight,
   Loader2, ArrowLeft, LogOut, School, GraduationCap, Activity, CalendarDays,
-  Compass, BookMarked, ShieldCheck, Smartphone, Sparkles, Filter,
+  Compass, BookMarked, ShieldCheck, Smartphone, Sparkles, Filter, Map as MapIcon,
 } from "lucide-react";
 import { Category, NavSection } from "@/components/admin/adminShared";
 import ErrorBoundary from "@/components/ErrorBoundary";
@@ -34,6 +34,7 @@ const PlaybooksCMS      = lazy(() => import("@/components/admin/sections/Playboo
 const ReviewQueueCMS    = lazy(() => import("@/components/admin/sections/ReviewQueueCMS"));
 const MobileAppCMS      = lazy(() => import("@/components/admin/sections/MobileAppCMS"));
 const FunnelCMS         = lazy(() => import("@/components/admin/sections/FunnelCMS"));
+const RoadmapsCMS       = lazy(() => import("@/components/admin/sections/RoadmapsCMS"));
 const AiKuratorCMS      = lazy(() => import("@/components/admin/sections/AiKuratorCMS"));
 
 // ─── Design constants ─────────────────────────────────────────────────────────
@@ -60,6 +61,7 @@ const NAV_ITEMS: { id: NavSection; label: string; icon: React.ElementType }[] = 
   { id: "school_inquiries", label: "Permintaan Sekolah", icon: School },
   { id: "mentors",       label: "Mentor",            icon: GraduationCap },
   { id: "careers",       label: "Karier & Kampus",   icon: Compass },
+  { id: "roadmaps",      label: "Roadmap Mentor",    icon: MapIcon },
   { id: "playbooks",     label: "Playbook",          icon: BookMarked },
   { id: "review",        label: "Verifikasi & Moderasi", icon: ShieldCheck },
   { id: "mobile_app",    label: "Aplikasi Mobile",   icon: Smartphone },
@@ -68,7 +70,7 @@ const NAV_ITEMS: { id: NavSection; label: string; icon: React.ElementType }[] = 
 ];
 
 const PAGE_TITLES: Record<NavSection, string> = {
-  overview: "Overview", funnel: "Funnel Siswa", content: "Learning Content", paths: "Jalur Belajar", categories: "Kategori",
+  overview: "Overview", funnel: "Funnel Siswa", roadmaps: "Roadmap Mentor", content: "Learning Content", paths: "Jalur Belajar", categories: "Kategori",
   challenges: "Tantangan", articles: "Artikel", opportunities: "Peluang",
   premium_programs: "Program Premium", bootcamps: "Bootcamp", school_inquiries: "Permintaan Sekolah",
   users: "Pengguna", schools: "Sekolah", mentors: "Mentor", payments: "Pembayaran",
@@ -210,6 +212,7 @@ const Admin = () => {
               {section === "careers"       && "Katalog karier (Career Fit, Compare, Simulator) dan kampus untuk aplikasi mobile"}
               {section === "playbooks"     && "Playbook Store — harga, sampul, dan PDF privat yang dibuka pembeli"}
               {section === "review"        && "Verifikasi prestasi siswa dan tinjau laporan konten komunitas"}
+              {section === "roadmaps"      && "Roadmap terstruktur dari praktisi — disorot ke siswa yang cocok di aplikasi"}
               {section === "funnel"        && "Perjalanan siswa dari daftar sampai bayar Plus, per kohort pendaftaran"}
               {section === "mobile_app"    && "Bank soal Talent DNA, bobot Career Readiness, pengaturan AI, dan analitik aplikasi"}
             </p>
@@ -219,6 +222,7 @@ const Admin = () => {
           <Suspense fallback={<SectionFallback />}>
             {section === "overview"      && <Overview onNav={setSection} />}
             {section === "funnel"        && <FunnelCMS />}
+            {section === "roadmaps"      && <RoadmapsCMS />}
             {section === "content"       && <LearningContentCMS categories={categories} />}
             {section === "paths"         && <LearningPathBuilder />}
             {section === "categories"    && <CategoriesCMS onReload={loadCategories} />}

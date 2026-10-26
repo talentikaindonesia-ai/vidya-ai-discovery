@@ -17,6 +17,7 @@ const Me = lazy(() => import("./screens/Profile"));
 const Pro = lazy(() => import("./screens/Pro"));
 const Roles = lazy(() => import("./screens/Roles"));
 const More = lazy(() => import("./screens/More"));
+const Roadmap = lazy(() => import("./screens/Roadmap"));
 
 const TABS = [
   { id: "home", path: "/app/home", label: "Home", labelId: "Beranda", icon: "home" },
@@ -156,6 +157,7 @@ function Shell() {
           {/* Discover */}
           <Route path="discover" element={A(<Discover screen="discover" />)} />
           <Route path="careers/:id" element={A(<Discover screen="detail" />)} />
+          <Route path="roadmap/:slug" element={A(<Roadmap />)} />
           <Route path="careers/:id/path" element={A(<Discover screen="path" />)} />
           <Route path="compare" element={A(<Discover screen="compare" />)} />
           <Route path="simulator" element={A(<Discover screen="sim" />)} />
@@ -249,6 +251,7 @@ function PaywallSheet() {
     path: ["Jalur studi & karier personal adalah fitur Plus", "Personal study & career paths are a Plus feature", "Langkah demi langkah dari sekarang sampai kariermu — disesuaikan dengan profilmu.", "Step by step from now to your career — tailored to your profile."],
     profile: ["Profil talenta lengkap adalah fitur Plus", "The full talent profile is a Plus feature", "Detail ketiga tipe RIASEC-mu, laporan PDF, dan rekomendasi pengembangan.", "Details of all three of your RIASEC types, a PDF report and growth recommendations."],
     timeline: ["Riwayat progres lengkap adalah fitur Plus", "Full progress history is a Plus feature", "Lihat seluruh perjalananmu: XP, materi, peluang, dan pencapaian dari waktu ke waktu.", "See your whole journey: XP, courses, opportunities and achievements over time."],
+    roadmap: ["Roadmap lengkap ada di Talentika Plus", "Full roadmaps are in Talentika Plus", "Semua langkah dari praktisi, centang progresmu, dan panduan PDF-nya.", "Every step from the practitioner, progress tracking and the PDF guide."],
     parent: ["Ringkasan lengkap untuk orang tua ada di Plus", "The full parent summary is in Plus", "Daftar prestasi dan peluang yang sedang diikuti anak, dengan izin anak.", "Your child's achievements and opportunities in progress, with their permission."],
     offline: ["Unduh materi untuk offline", "Download lessons offline", "Plus bisa belajar tanpa internet dan menghemat kuota.", "Plus lets you learn without internet and saves data."],
     course: ["Akun gratis bisa aktif di 3 materi", "Free accounts can have 3 active courses", "Selesaikan salah satu dulu, atau buka materi tanpa batas dengan Plus.", "Finish one first, or unlock unlimited courses with Plus."],
@@ -293,7 +296,7 @@ function useViewportWidth() {
 /** Tab mana yang menaungi sebuah rute (untuk menyorot menu samping). */
 function tabOf(path: string): string | null {
   if (TAB_ROOTS[path]) return TAB_ROOTS[path];
-  if (/^\/app\/(course|playbooks)/.test(path)) return "learn";
+  if (/^\/app\/(course|playbooks|roadmap)/.test(path)) return "learn";
   if (/^\/app\/(projects\/|challenge)/.test(path)) return "projects";
   if (/^\/app\/(opportunities|calendar)/.test(path)) return "explore";
   if (/^\/app\/(portfolio|public|privacy|settings|achievements|pro|plus|checkout|paid|store|referral|data|timeline|talent-card|mentor-apply)/.test(path)) return "profile";
