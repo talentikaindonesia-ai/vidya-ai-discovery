@@ -39,3 +39,9 @@ export function teksAlasan(kode: string, lang: "id" | "en" = "id"): string {
 export function petaSkor(rows: SkorPeluang[] | null | undefined): Map<string, SkorPeluang> {
   return new Map((rows ?? []).map(r => [r.id, r]));
 }
+
+/** Alasan roadmap: sama dengan peluang + "karier:<nama>" (target karier siswa). */
+export function teksAlasanRoadmap(kode: string, lang: "id" | "en" = "id"): string {
+  if (kode.startsWith("karier:")) { const k = kode.slice(7); return lang === "en" ? `For your ${k} target` : `Untuk target ${k}-mu`; }
+  return teksAlasan(kode, lang);
+}

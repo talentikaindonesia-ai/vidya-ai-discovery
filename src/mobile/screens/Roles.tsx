@@ -6,6 +6,7 @@ import { Avatar, Btn, Card, ChipBtn, Empty, Icon, Input, Label, Loading, Note, P
 import { C, SH, avatarColors, daysUntil, deadlineColor } from "../theme";
 import { AXES, dnaTitle, fmtDate, rankAxes, riasecTitle } from "../logic";
 import authSchool from "../assets/auth-school.webp";
+import { RoadmapSaya } from "./RoadmapMentor";
 import { keluar } from "../push";
 
 export default function Roles({ screen }: { screen: "parent" | "mentor" | "school" }) {
@@ -245,6 +246,7 @@ function MentorDash() {
             <Btn full={false} h={44} disabled={!slotAt} onClick={addSlot}><Icon name="plus" size={18} /></Btn>
           </div>
         </div>
+        <RoadmapSaya mentorId={st.mentor_id} />
         <Note>{t("Ringkasan & pembayaran honor dikelola di web pada V1.", "Payout summaries are handled on the web in V1.")}</Note>
       </div>
     </Screen>

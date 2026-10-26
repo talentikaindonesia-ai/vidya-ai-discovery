@@ -46,7 +46,9 @@ const chip = (on: boolean): React.CSSProperties => ({
 const slugify = (s: string) => s.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60);
 
 export default function RoadmapsCMS() {
-  const [rows, setRows] = useState<(Roadmap & { n: number; pengikut: number; penulis: string })[]>([]);
+  type Funnel = { dilihat: number; dimulai: number; separuh: number; selesai: number; relevan: number; tidak_relevan: number };
+  const [rows, setRows] = useState<(Roadmap & { n: number; pengikut: number; penulis: string; f?: Funnel })[]>([]);
+  const [filter, setFilter] = useState<"semua" | Status>("semua");
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState<Roadmap | null>(null);
   const [langkah, setLangkah] = useState<Langkah[]>([]);
@@ -59,17 +61,19 @@ export default function RoadmapsCMS() {
 
   const load = async () => {
     setLoading(true);
-    const [{ data, error }, { data: ls }, { data: pg }] = await Promise.all([
+    const [{ data, error }, { data: ls }, { data: pg }, { data: fn }] = await Promise.all([
       db.from("roadmaps").select("*, mentors(name)").order("sort").order("diperbarui_pada", { ascending: false }),
       db.from("roadmap_langkah").select("id, roadmap_id"),
       db.from("roadmap_progres").select("user_id, langkah_id"),
+      db.rpc("admin_funnel_roadmap"),
     ]);
+    const fOf = new Map<string, Funnel>(((fn ?? []) as any[]).map(x => [x.roadmap_id, x]));
     if (error) toast.error(error.message);
     const rmOf = new Map<string, string>(((ls ?? []) as any[]).map(l => [l.id, l.roadmap_id]));
     const nOf = new Map<string, number>(); ((ls ?? []) as any[]).forEach(l => nOf.set(l.roadmap_id, (nOf.get(l.roadmap_id) ?? 0) + 1));
     const ikut = new Map<string, Set<string>>();
     ((pg ?? []) as any[]).forEach(p => { const r = rmOf.get(p.langkah_id); if (!r) return; if (!ikut.has(r)) ikut.set(r, new Set()); ikut.get(r)!.add(p.user_id); });
-    setRows(((data ?? []) as any[]).map(r => ({ ...r, n: nOf.get(r.id) ?? 0, pengikut: ikut.get(r.id)?.size ?? 0, penulis: r.mentors?.name ?? r.penulis_nama ?? "—" })));
+    setRows(((data ?? []) as any[]).map(r => ({ ...r, n: nOf.get(r.id) ?? 0, pengikut: ikut.get(r.id)?.size ?? 0, penulis: r.mentors?.name ?? r.penulis_nama ?? "—", f: fOf.get(r.id) })));
     setLoading(false);
   };
   useEffect(() => {
@@ -169,16 +173,34 @@ export default function RoadmapsCMS() {
             Belum ada roadmap. Mulai dengan roadmap dari praktisi untuk karier yang paling banyak dipilih siswa.
           </div>
         ) : (
+          <>
+          {rows.some(r => r.status === "tinjau") && (
+            <div style={{ background: "#FFFBEB", border: "1px solid #FDE68A", borderRadius: 12, padding: "10px 14px", fontSize: 13, color: "#92400E", marginBottom: 12 }}>
+              <b>{rows.filter(r => r.status === "tinjau").length} roadmap menunggu tinjauan</b> — buka, periksa isinya (tanpa kontak pribadi/tautan pembayaran), lalu ubah status ke Terbit.
+            </div>
+          )}
+          <div style={{ display: "flex", gap: 6, marginBottom: 10, flexWrap: "wrap" }}>
+            {(["semua", "tinjau", "draf", "terbit"] as const).map(k => (
+              <button key={k} onClick={() => setFilter(k)} style={chip(filter === k)}>
+                {k === "semua" ? "Semua" : STATUS[k][0]} ({k === "semua" ? rows.length : rows.filter(r => r.status === k).length})
+              </button>
+            ))}
+          </div>
           <div style={{ background: "#fff", border: "1px solid #E2E8F0", borderRadius: 16, overflow: "hidden" }}>
-            {rows.map((r, i) => {
+            {rows.filter(r => filter === "semua" || r.status === filter).map((r, i) => {
               const [l, bg, c] = STATUS[r.status];
               return (
                 <div key={r.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderTop: i ? "1px solid #F1F5F9" : "none" }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontWeight: 700, fontSize: 14, color: "#0F172A" }}>{r.judul}</div>
                     <div style={{ fontSize: 12, color: "#64748B", marginTop: 2 }}>
-                      {r.penulis} · {r.n} langkah · {r.pengikut} siswa memulai{r.career_id ? ` · karier ${r.career_id}` : ""}{r.riasec ? ` · ${r.riasec}` : ""}{r.jenjang_target?.length ? ` · ${r.jenjang_target.join(", ")}` : ""}
+                      {r.penulis} · {r.n} langkah{r.career_id ? ` · karier ${r.career_id}` : ""}{r.riasec ? ` · ${r.riasec}` : ""}{r.jenjang_target?.length ? ` · ${r.jenjang_target.join(", ")}` : ""}
                     </div>
+                    {r.f && r.status === "terbit" && (
+                      <div style={{ fontSize: 12, color: "#334155", marginTop: 4 }}>
+                        Funnel: <b>{r.f.dilihat}</b> dilihat → <b>{r.f.dimulai}</b> mulai → <b>{r.f.separuh}</b> ≥50% → <b>{r.f.selesai}</b> selesai · 👍 {r.f.relevan} / 👎 {r.f.tidak_relevan}
+                      </div>
+                    )}
                   </div>
                   <Pill bg={bg} color={c}>{l}</Pill>
                   <button onClick={() => buka(r)} title="Ubah" style={{ border: "none", background: "none", cursor: "pointer", color: "#2563EB" }}><Pencil size={16} /></button>
@@ -187,6 +209,7 @@ export default function RoadmapsCMS() {
               );
             })}
           </div>
+          </>
         )}
 
       {form && (

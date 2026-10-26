@@ -12,6 +12,7 @@ import { NotificationDropdown } from "@/components/dashboard/NotificationDropdow
 import { WelcomeDashboard } from "@/components/dashboard/WelcomeDashboard";
 import { AppPromoBanner } from "@/components/dashboard/AppPromoBanner";
 import { PilihJenjangCard } from "@/components/dashboard/PilihJenjangCard";
+import { RoadmapPilihanCard } from "@/pages/RoadmapWeb";
 import OpportunitiesPreview from "@/components/OpportunitiesPreview";
 import { BottomNavigationBar } from "@/components/dashboard/BottomNavigationBar";
 import { CoursesSection } from "@/components/dashboard/CoursesSection";
@@ -198,6 +199,7 @@ const Dashboard = () => {
             {/* Sudah tes di web → hasilnya sudah ada di aplikasi */}
             <AppPromoBanner userId={user?.id} profile={profile} />
             <PilihJenjangCard userId={user?.id} profile={profile} />
+            <RoadmapPilihanCard />
             {user?.id && <OnboardingChecklist userId={user.id} profile={profile} />}
             <WelcomeDashboard user={user} profile={profile} />
             {/* Lanjutkan belajar — langkah utama */}
@@ -260,6 +262,7 @@ const Dashboard = () => {
             {/* Sudah tes di web → hasilnya sudah ada di aplikasi */}
             <AppPromoBanner userId={user?.id} profile={profile} />
             <PilihJenjangCard userId={user?.id} profile={profile} />
+            <RoadmapPilihanCard />
             {user?.id && <OnboardingChecklist userId={user.id} profile={profile} />}
             <WelcomeDashboard user={user} profile={profile} />
             <LearningPathCard />

@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { db, errMsg, isKuotaError, openExternal, useApp } from "../store";
 import { Avatar, Empty, Header, Icon, ImgBox, Loading, PlusTeaser, Screen } from "../ui";
 import { C, SH } from "../theme";
-import { teksAlasan } from "@/lib/peluang";
+import { teksAlasanRoadmap } from "@/lib/peluang";
 
 /* Roadmap dari praktisi (MVP 2026-10-26). Data & gating Free/Plus di server:
    roadmap_untukku() untuk daftar, roadmap_detail() untuk isi, tandai_langkah()
@@ -26,10 +26,7 @@ export function useRoadmaps(careerId?: string | null, limit = 10) {
   });
 }
 
-const alasanRoadmap = (a: string, lang: "id" | "en") => {
-  if (a.startsWith("karier:")) { const k = a.slice(7); return lang === "en" ? `For your ${k} target` : `Untuk target ${k}-mu`; }
-  return teksAlasan(a, lang);
-};
+const alasanRoadmap = teksAlasanRoadmap;
 
 /** Kartu roadmap — dipakai di detail karier, Beranda, dan tab Belajar. */
 export function RoadmapCard({ r, compact = false }: { r: RoadmapRingkas; compact?: boolean }) {
@@ -91,7 +88,22 @@ export default function RoadmapDetail() {
     queryKey: ["m-roadmap", slug, user?.id], enabled: !!slug,
     queryFn: async () => (await db.rpc("roadmap_detail", { p_slug: slug })).data as any,
   });
-  React.useEffect(() => { if (r?.id) track("roadmap_viewed", { roadmap: r.slug, plus: r.plus }); }, [r?.id]); // eslint-disable-line
+  React.useEffect(() => {
+    if (!r?.id) return;
+    track("roadmap_viewed", { roadmap: r.slug, plus: r.plus });
+    if (user && r.status === "terbit") db.rpc("catat_lihat_roadmap", { p_roadmap: r.id }).then(() => {}); // funnel Admin
+  }, [r?.id]); // eslint-disable-line
+  const { data: umpan } = useQuery({
+    queryKey: ["m-roadmap-umpan", r?.id, user?.id], enabled: !!user && !!r?.id,
+    queryFn: async () => ((await db.from("roadmap_umpan_balik").select("relevan").eq("user_id", user!.id).eq("roadmap_id", r.id).maybeSingle()).data?.relevan ?? null) as boolean | null,
+  });
+  const kirimUmpan = async (relevan: boolean) => {
+    if (!user || !r?.id) return;
+    const { error } = await db.from("roadmap_umpan_balik").upsert({ user_id: user.id, roadmap_id: r.id, relevan, dibuat_pada: new Date().toISOString() }, { onConflict: "user_id,roadmap_id" });
+    if (error) { toast(errMsg(error), "error"); return; }
+    qc.setQueryData(["m-roadmap-umpan", r.id, user.id], relevan);
+    toast(t("Terima kasih atas masukanmu!", "Thanks for your feedback!"));
+  };
 
   if (isLoading) return <Loading />;
   if (!r) return <Screen><Header title="Roadmap" /><div style={{ padding: 20 }}><Empty icon="compass" title={t("Roadmap tidak ditemukan", "Roadmap not found")} /></div></Screen>;
@@ -192,6 +204,19 @@ export default function RoadmapDetail() {
           <button onClick={pdf} style={{ width: "100%", marginTop: 10, height: 46, border: `1.5px solid ${C.line}`, borderRadius: 14, background: "#fff", color: C.text, fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, cursor: "pointer" }}>
             <Icon name="download" size={16} /> {t("Unduh panduan PDF", "Download PDF guide")}
           </button>
+        )}
+        {user && r.status === "terbit" && (
+          <div style={{ marginTop: 16, background: C.soft, borderRadius: 14, padding: "10px 12px" }}>
+            <div style={{ fontSize: 12, color: C.text2 }}>{t("Apakah roadmap ini relevan untukmu?", "Is this roadmap relevant to you?")}</div>
+            <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+              {([true, false] as const).map(v => (
+                <button key={String(v)} onClick={() => kirimUmpan(v)} aria-pressed={umpan === v}
+                  style={{ flex: 1, height: 38, borderRadius: 12, border: `1.5px solid ${umpan === v ? C.blue : C.line}`, background: umpan === v ? C.tintBlue : "#fff", color: umpan === v ? C.blue : C.text2, fontSize: 12.5, fontWeight: 600, cursor: "pointer" }}>
+                  {v ? `👍 ${t("Relevan", "Relevant")}` : `👎 ${t("Tidak relevan", "Not relevant")}`}
+                </button>
+              ))}
+            </div>
+          </div>
         )}
         <p style={{ margin: "16px 0 0", fontSize: 11.5, color: C.faint, lineHeight: 1.5, textAlign: "center" }}>
           {t("Roadmap ini berisi pengalaman dan pandangan pribadi penulis — gunakan sebagai panduan, bukan satu-satunya jalan.", "This roadmap reflects the author's own experience and views — use it as a guide, not the only path.")}
