@@ -56,7 +56,7 @@ function BottomNav() {
         padding: "8px 6px calc(env(safe-area-inset-bottom, 0px) + 14px)" }}>
         {TABS.map(tb => {
           const on = tb.id === active;
-          const label = tb.id === "explore" && pro ? t("Karier", "Careers") : t(tb.labelId, tb.label);
+          const label = tb.id === "explore" && pro ? t("Peluang", "Opportunity") : t(tb.labelId, tb.label);
           const icon = tb.id === "explore" && pro ? "brief" : tb.icon;
           return (
             <button key={tb.id} onClick={() => nav(tb.path, { replace: true })} aria-current={on ? "page" : undefined}
@@ -337,7 +337,7 @@ function SideNav() {
       </button>
       <nav aria-label={t("Menu utama", "Main menu")} style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 4 }}>
         {TABS.map(tb => {
-          const label = tb.id === "explore" && pro ? t("Karier", "Careers") : t(tb.labelId, tb.label);
+          const label = tb.id === "explore" && pro ? t("Peluang", "Opportunity") : t(tb.labelId, tb.label);
           return item(tb.id, tb.path, tb.id === "explore" && pro ? "brief" : tb.icon, label, tb.id === active);
         })}
       </nav>
