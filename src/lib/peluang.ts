@@ -7,6 +7,10 @@
  * menampilkan teks yang sama.
  */
 import { LABEL_RIASEC, LABEL_RIASEC_EN, type TipeRiasec } from "./riasec";
+import gambarDefault from "@/assets/peluang-default.webp";
+
+/** Sampul sementara untuk peluang yang belum punya poster dari CMS. Tidak disimpan ke database. */
+export const GAMBAR_PELUANG_DEFAULT = gambarDefault;
 
 export interface SkorPeluang { id: string; skor: number; alasan: string[]; cocok_tipe: boolean }
 

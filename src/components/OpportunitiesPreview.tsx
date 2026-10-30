@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { GAMBAR_PELUANG_DEFAULT } from "@/lib/peluang";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -224,24 +225,12 @@ const OpportunitiesPreview = ({ profile }: OpportunitiesPreviewProps) => {
               <Card key={opp.id} className="group hover:shadow-card transition-all duration-300 hover:-translate-y-1 bg-card border-primary/10 relative overflow-hidden">
                 {/* Image / Gradient */}
                 <div className={`relative h-36 overflow-hidden ${isBlurred ? 'blur-sm' : ''}`}>
-                  {opp.poster_url ? (
-                    <img
-                      src={opp.poster_url}
-                      alt={opp.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className={`w-full h-full bg-gradient-to-br ${meta.gradient} flex items-center justify-center relative`}>
-                      <div className="absolute inset-0 opacity-10"
-                        style={{ backgroundImage: 'radial-gradient(circle at 25% 50%, white 1px, transparent 1px), radial-gradient(circle at 75% 20%, white 1px, transparent 1px)', backgroundSize: '28px 28px' }}
-                      />
-                      <div className="text-center relative z-10">
-                        {meta.icon}
-                        <p className="text-white/70 text-xs mt-1">{opp.source_website}</p>
-                      </div>
-                    </div>
-                  )}
+                  <img
+                    src={opp.poster_url || GAMBAR_PELUANG_DEFAULT}
+                    alt={opp.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    loading="lazy"
+                  />
 
                   {/* Badges */}
                   <div className="absolute top-2 left-2 flex gap-1">

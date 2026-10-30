@@ -15,7 +15,7 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { ambilIdentitas, JENIS_UNTUK_TUJUAN, LABEL_TUJUAN, type IdentitasSiswa } from "@/hooks/useIdentitasSiswa";
 import { UpgradeGate } from "@/components/payment/UpgradeGate";
 import { useHargaMulai } from "@/hooks/usePaketLangganan";
-import { petaSkor, teksAlasan, type SkorPeluang } from "@/lib/peluang";
+import { GAMBAR_PELUANG_DEFAULT, petaSkor, teksAlasan, type SkorPeluang } from "@/lib/peluang";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 type OpportunityCategory = 'beasiswa' | 'kompetisi' | 'magang' | 'lowongan_kerja' | 'konferensi';
@@ -955,9 +955,7 @@ const OpportunityBoard = () => {
                           <div
                             style={{
                               height: 104,
-                              background: opp.poster_url
-                                ? `linear-gradient(rgba(15,23,42,.35), rgba(15,23,42,.45)), url(${opp.poster_url}) center/cover no-repeat`
-                                : `linear-gradient(135deg, ${gradFrom}, ${gradTo})`,
+                              background: `linear-gradient(rgba(15,23,42,.35), rgba(15,23,42,.45)), url(${opp.poster_url || GAMBAR_PELUANG_DEFAULT}) center/cover no-repeat`,
                               padding: "14px 16px",
                               display: "flex",
                               flexDirection: "column",

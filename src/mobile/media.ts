@@ -17,6 +17,7 @@ import rIntern from "./assets/v3/r-intern.webp";
 import aiHero from "./assets/v3/ai-hero.webp";
 import pathHiker from "./assets/v3/path-hiker.webp";
 import type { OppType } from "./logic";
+import { GAMBAR_PELUANG_DEFAULT } from "@/lib/peluang";
 
 export const IMG = { kAi, kEnv, kDesign, kEntre, cRobot, cTurbines, cHiker, oppComp, oppIntern, oppScholar, rChallenge, rIntern, aiHero, pathHiker };
 
@@ -36,17 +37,9 @@ export function careerImg(field?: string | null, seed = "") {
   return pick(seed || f, [kAi, kEnv, kDesign, kEntre]);
 }
 
-/** Peluang: poster asli bila ada, selain itu ilustrasi per jenis. */
-export function oppImg(type: OppType, poster?: string | null, seed = "") {
-  if (poster && /^https?:\/\//.test(poster)) return poster;
-  switch (type) {
-    case "Scholarship": return oppScholar;
-    case "Competition": return oppComp;
-    case "Internship": return oppIntern;
-    case "Research": return rChallenge;
-    case "Bootcamp": return rIntern;
-    default: return pick(seed, [cHiker, oppComp, rChallenge]);
-  }
+/** Peluang: poster asli bila ada, selain itu sampul Talentika. */
+export function oppImg(_type: OppType, poster?: string | null, _seed = "") {
+  return poster && /^https?:\/\//.test(poster) ? poster : GAMBAR_PELUANG_DEFAULT;
 }
 
 /** Materi belajar: thumbnail asli bila ada, selain itu ilustrasi stabil per judul. */
