@@ -70,7 +70,7 @@ function Welcome() {
   const { user, profile, authReady, t } = useApp();
   if (authReady && user && profile) return <Navigate to={homeFor(profile)} replace />;
   return (
-    <div style={{ position: "absolute", inset: 0, overflow: "hidden", background: "linear-gradient(180deg,#FFFFFF 0%,#F3F8FF 60%,#EAF3FF 100%)", display: "flex", flexDirection: "column" }}>
+    <div className="tk-onb-screen" style={{ position: "absolute", inset: 0, overflow: "hidden", background: "linear-gradient(180deg,#FFFFFF 0%,#F3F8FF 60%,#EAF3FF 100%)", display: "flex", flexDirection: "column" }}>
       <div style={{ padding: `${SAFE_T} 24px 0` }}><Brand onSkip={() => nav("/app/welcome")} skipLabel={t("Lewati", "Skip")} /></div>
       <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", justifyContent: "center", padding: "12px 24px 0" }}>
         <div style={{ position: "relative", animation: "tkIn .4s ease both" }}>
@@ -114,7 +114,7 @@ function Intro() {
   const sl = slides[i];
   const next = () => (i < 3 ? setI(i + 1) : nav("/app/signup"));
   return (
-    <div style={{ position: "absolute", inset: 0, overflow: "hidden", background: "linear-gradient(180deg,#FFFFFF 0%,#F3F8FF 55%,#EAF3FF 100%)", display: "flex", flexDirection: "column" }}>
+    <div className="tk-onb-screen" style={{ position: "absolute", inset: 0, overflow: "hidden", background: "linear-gradient(180deg,#FFFFFF 0%,#F3F8FF 55%,#EAF3FF 100%)", display: "flex", flexDirection: "column" }}>
       <div style={{ padding: `${SAFE_T} 24px 0` }}><Brand size={42} onSkip={() => nav("/app/signup")} skipLabel={t("Lewati", "Skip")} /></div>
       <div style={{ padding: "16px 24px 0", display: "flex", gap: 7 }}>
         {slides.map((_, k) => <span key={k} style={{ width: k === i ? 24 : 9, height: 9, borderRadius: 99, background: k === i ? C.blue : "#C9DCF8", transition: "all .25s" }} />)}
@@ -124,7 +124,7 @@ function Intro() {
         <div style={{ fontSize: 35, fontWeight: 800, lineHeight: 1.08, letterSpacing: "-1px", color: "#0B1B4D" }}>{sl.h1}<br /><span style={{ color: C.blue }}>{sl.h2}</span></div>
         <p style={{ margin: "10px 0 0", fontSize: 14.5, lineHeight: 1.55, color: C.text3 }}>{sl.d}</p>
       </div>
-      <div style={{ position: "relative", flex: 1, minHeight: 0, marginTop: 4 }}>
+      <div className="tk-onb-img" style={{ position: "relative", flex: 1, minHeight: 0, marginTop: 4 }}>
         <span role="img" aria-label={sl.alt} style={{ position: "absolute", inset: 0, backgroundImage: `url('${sl.img}')`, backgroundSize: "contain", backgroundPosition: "center top", backgroundRepeat: "no-repeat",
           WebkitMaskImage: fade(8, 92), maskImage: fade(8, 92) }} />
       </div>
@@ -192,7 +192,7 @@ function SignUp() {
 
   const social: React.CSSProperties = { height: 52, borderRadius: 16, fontSize: 14.5, fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", gap: 10, cursor: "pointer", width: "100%" };
   return (
-    <form onSubmit={submit} style={{ position: "absolute", inset: 0, overflowY: "auto", background: "#fff", padding: `${SAFE_T} 24px ${SAFE_B}`, display: "flex", flexDirection: "column" }}>
+    <form onSubmit={submit} className="tk-onb-screen tk-onb-pad" style={{ position: "absolute", inset: 0, overflowY: "auto", background: "#fff", padding: `${SAFE_T} 24px ${SAFE_B}`, display: "flex", flexDirection: "column" }}>
       <BackBtn dark />
       <div style={{ fontSize: 30, fontWeight: 800, lineHeight: 1.12, letterSpacing: "-.7px", marginTop: 22 }}>
         {isLogin ? <>{t("Masuk ke", "Sign in to")}<br /><span style={{ color: C.blue }}>Talentika</span></> : <>{t("Buat", "Create your")}<br /><span style={{ color: C.blue }}>{t("akunmu", "account")}</span></>}
@@ -350,7 +350,7 @@ function StagePick() {
     { id: "school" as const, label: t("Sekolah / Guru BK", "School / Counselor"), icon: "school", c: C.sky, bg: C.tintSky },
   ];
   return (
-    <div style={{ position: "absolute", inset: 0, overflowY: "auto", background: C.bg, padding: `${SAFE_T} 22px ${SAFE_B}`, display: "flex", flexDirection: "column" }}>
+    <div className="tk-onb-screen tk-onb-pad" style={{ position: "absolute", inset: 0, overflowY: "auto", background: C.bg, padding: `${SAFE_T} 22px ${SAFE_B}`, display: "flex", flexDirection: "column" }}>
       <div style={{ fontSize: 28, fontWeight: 800, lineHeight: 1.12, letterSpacing: "-.6px", marginTop: 6 }}>{t("Kamu sekarang", "Which stage")}<br /><span style={{ color: C.blue }}>{t("di tahap mana?", "are you in?")}</span></div>
       <p style={{ margin: "8px 0 0", fontSize: 14, lineHeight: 1.55, color: C.text3 }}>{t("Talentika menyesuaikan pengalaman dengan usia dan tujuanmu.", "Talentika adapts the experience to your age and goals.")}</p>
       <div style={{ display: "flex", flexDirection: "column", gap: 11, marginTop: 20 }}>
@@ -464,7 +464,7 @@ function Education() {
   };
   const pro = ed === "pro";
   return (
-    <div style={{ position: "absolute", inset: 0, background: "#fff", display: "flex", flexDirection: "column" }}>
+    <div className="tk-onb-screen" style={{ position: "absolute", inset: 0, background: "#fff", display: "flex", flexDirection: "column" }}>
       <StepHead step={1} total={4} onBack={() => nav(-1)} title={t("Kenali dirimu", "Get to know yourself")} />
       <div style={{ flex: 1, overflowY: "auto", padding: "22px 22px 10px" }}>
         <div style={{ fontSize: 23, fontWeight: 700, lineHeight: 1.25, letterSpacing: "-.3px" }}>{returning ? t("Selamat datang di aplikasi Talentika!", "Welcome to the Talentika app!") : t("Ceritakan tentang dirimu", "Tell us about yourself")}</div>
@@ -534,7 +534,7 @@ function GetToKnow() {
   const back = () => (step > 0 ? setStep(step - 1) : nav(-1));
   const L = (id: string, en: string) => (lang === "en" ? en : id);
   return (
-    <div style={{ position: "absolute", inset: 0, background: "#fff", display: "flex", flexDirection: "column" }}>
+    <div className="tk-onb-screen" style={{ position: "absolute", inset: 0, background: "#fff", display: "flex", flexDirection: "column" }}>
       <StepHead step={step + 2} total={4} onBack={back} title={t("Kenali dirimu", "Get to know yourself")} />
       <div key={step} style={{ flex: 1, overflowY: "auto", padding: "22px 22px 10px", animation: "tkIn .25s ease both" }}>
         {step === 0 && <>
@@ -616,7 +616,7 @@ function Consent() {
     toast(t("Pesan undangan disalin", "Invitation copied"));
   };
   return (
-    <div style={{ position: "absolute", inset: 0, overflowY: "auto", background: C.bg, padding: `${SAFE_T} 22px ${SAFE_B}`, display: "flex", flexDirection: "column" }}>
+    <div className="tk-onb-screen tk-onb-pad" style={{ position: "absolute", inset: 0, overflowY: "auto", background: C.bg, padding: `${SAFE_T} 22px ${SAFE_B}`, display: "flex", flexDirection: "column" }}>
       <BackBtn />
       <div style={{ fontSize: 28, fontWeight: 800, lineHeight: 1.12, letterSpacing: "-.6px", marginTop: 20 }}>{t("Ajak", "Invite your")}<br /><span style={{ color: C.blue }}>{t("orang tuamu", "guardian")}</span></div>
       <p style={{ margin: "8px 0 0", fontSize: 14, lineHeight: 1.55, color: C.text3 }}>

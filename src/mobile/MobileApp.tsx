@@ -279,10 +279,14 @@ function PaywallSheet() {
  * HP (<768px): layar penuh, navigasi bawah; di bawah 375px tampilan diskalakan
  *   proporsional supaya desain 375–390pt tetap utuh di HP kecil.
  * Tablet & desktop (≥768px): menu samping + kolom konten di tengah (lihat
- *   .tk-side di GLOBAL_CSS). Onboarding & dashboard peran tetap berbingkai. */
+ *   .tk-side di GLOBAL_CSS). Dashboard peran tetap berbingkai.
+ * Onboarding: layar penuh di semua ukuran, kolom isi maks 560px (.tk-onb-screen),
+ *   ditambah panel merek di kiri mulai 1024px. */
 const WIDE = 768;
 const LayoutCtx = createContext<{ side: boolean; vw: number }>({ side: false, vw: 390 });
-const NO_SIDE = ["/app", "/app/welcome", "/app/signup", "/app/start", "/app/role", "/app/profile-setup", "/app/get-to-know", "/app/consent", "/app/parent", "/app/school", "/app/mentor-dashboard"];
+const PANEL_ONB = 1024;
+const ONB_PATHS = ["/app", "/app/welcome", "/app/signup", "/app/start", "/app/role", "/app/profile-setup", "/app/get-to-know", "/app/consent"];
+const NO_SIDE = [...ONB_PATHS, "/app/parent", "/app/school", "/app/mentor-dashboard"];
 
 function useViewportWidth() {
   const [w, setW] = useState(() => (typeof window === "undefined" ? 390 : window.innerWidth));
@@ -378,6 +382,34 @@ function useLook() {
   return { filter, cls };
 }
 
+/** Panel merek onboarding di layar lebar. */
+function OnbPanel() {
+  const { t } = useApp();
+  const poin: [string, string][] = [
+    ["sparkle", t("Tes minat untuk mengenali dirimu", "An interest test to know yourself")],
+    ["target", t("Beasiswa, kompetisi, dan magang yang sesuai", "Scholarships, competitions, and internships that fit")],
+    ["compass", t("Jalur belajar dan karier yang personal", "A personal learning and career path")],
+  ];
+  return (
+    <aside style={{ width: "clamp(380px, 38vw, 560px)", flex: "none", background: "linear-gradient(150deg,#0066FF,#00A3E0)", color: "#fff", display: "flex", flexDirection: "column", padding: "36px 44px", overflow: "hidden" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
+        <img src={LOGO} alt="" style={{ width: 42, height: 42, borderRadius: 12, background: "#fff", flex: "none" }} />
+        <span style={{ fontSize: 19, fontWeight: 700 }}>Talentika</span>
+      </div>
+      <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", justifyContent: "center" }}>
+        <div style={{ fontSize: 34, fontWeight: 800, lineHeight: 1.12, letterSpacing: "-.8px" }}>{t("Temukan potensi terbaikmu", "Discover your full potential")}</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 20 }}>
+          {poin.map(([ikon, teks]) => (
+            <div key={ikon} style={{ display: "flex", alignItems: "center", gap: 11, fontSize: 14.5, lineHeight: 1.4 }}>
+              <span style={{ width: 34, height: 34, borderRadius: 11, background: "rgba(255,255,255,.18)", display: "flex", alignItems: "center", justifyContent: "center", flex: "none" }}><Icon name={ikon} size={18} /></span>{teks}
+            </div>
+          ))}
+        </div>
+      </div>
+    </aside>
+  );
+}
+
 function Frame() {
   const vw = useViewportWidth();
   const { profile } = useApp();
@@ -388,10 +420,16 @@ function Frame() {
   const side = wide && !NO_SIDE.includes(path) && !dnaQuestion && !["parent", "school_admin"].includes(profile?.role ?? "");
   const ctx = useMemo(() => ({ side, vw }), [side, vw]);
   const look = useLook();
+  const onb = ONB_PATHS.includes(path);
   return (
     <LayoutCtx.Provider value={ctx}>
       <div className={look.cls} style={{ minHeight: "100dvh", background: "#EAF4FF", filter: look.filter }}>
-      {side ? (
+      {onb ? (
+        <div style={{ display: "flex", height: "100dvh", background: "#fff" }}>
+          {vw >= PANEL_ONB && <OnbPanel />}
+          <main style={{ flex: 1, minWidth: 0, position: "relative", overflow: "hidden" }}><Shell /></main>
+        </div>
+      ) : side ? (
         <div className="tk-side" style={{ display: "flex", height: "100dvh", maxWidth: 1440, margin: "0 auto", background: C.bg, boxShadow: "0 0 0 1px rgba(15,23,42,.05), 0 30px 70px rgba(15,23,42,.08)" }}>
           <SideNav />
           <main style={{ flex: 1, minWidth: 0, position: "relative", overflow: "hidden" }}><Shell /></main>

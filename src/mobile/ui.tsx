@@ -459,6 +459,8 @@ export const GLOBAL_CSS = `
 .tk-app :focus-visible{outline:2.5px solid #0066FF;outline-offset:2px}
 @media (prefers-reduced-motion: reduce){.tk-app *{animation:none!important;transition:none!important}}
 @media (pointer:coarse){.tk-app input,.tk-app textarea,.tk-app select{font-size:16px!important}}
+@media (min-width:600px){.tk-onb-screen{padding-left:max(0px,calc((100% - 560px) / 2))!important;padding-right:max(0px,calc((100% - 560px) / 2))!important}.tk-onb-pad{padding-left:max(22px,calc((100% - 516px) / 2))!important;padding-right:max(22px,calc((100% - 516px) / 2))!important}.tk-onb-img>span{background-position:center!important}}
+@media (max-height:620px){.tk-onb-screen{overflow-y:auto!important}.tk-onb-screen>*{flex-shrink:0!important}.tk-onb-screen>div[style*="flex: 1"]{flex-basis:auto!important;overflow:visible!important}.tk-onb-img{min-height:220px!important}}
 .tk-side .tk-screen{padding-left:max(0px,calc((100% - 760px) / 2));padding-right:max(0px,calc((100% - 760px) / 2))}
 .tk-side .tk-screen.tk-tabpad{padding-bottom:48px!important}
 .tk-side .tk-sheet{border-radius:26px 26px 0 0}
