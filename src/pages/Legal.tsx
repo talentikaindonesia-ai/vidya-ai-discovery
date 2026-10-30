@@ -14,7 +14,7 @@ import SEO from "@/components/SEO";
  * penyedia yang dipakai. Kalau salah satunya berubah, ubah juga halaman ini.
  */
 
-const BERLAKU = "19 Oktober 2026";
+const BERLAKU = "30 Oktober 2026";
 const EMAIL = "support@talentika.id";
 const WA = "https://wa.me/6285148434141";
 const ALAMAT = "Jalan Kuningan Mulia Lot 9 B, Kota Adm. Jakarta Selatan, DKI Jakarta";
@@ -123,14 +123,15 @@ const SYARAT: Bagian[] = [
       "Free (gratis): asesmen dasar dan satu profil hasil, maksimal 3 materi atau kursus aktif, maksimal 5 peluang dibuka per bulan, Talent Passport dasar dengan maksimal 3 proyek, progres dasar, dan akses komunitas dasar.",
       "Plus: asesmen lengkap, seluruh katalog belajar yang termasuk paket, AI Talent Coach, rekomendasi peluang sesuai profil, jalur studi dan karier personal, Talent Passport lengkap, progres terperinci, dan sertifikat yang memenuhi syarat. Rincian lengkap ada di halaman langganan.",
     ],
-    "Harga Plus yang berlaku adalah harga yang tercantum di halaman langganan saat kamu membeli. Perubahan harga tidak memengaruhi periode yang sudah dibayar.",
+    "Harga Plus saat ini Rp49.000 per bulan atau Rp499.000 per tahun. Harga yang berlaku adalah harga yang tercantum saat kamu membeli. Perubahan harga tidak memengaruhi periode yang sudah dibayar.",
+    "Kelas premium tidak termasuk Plus dan dibeli per kelas saat tersedia. Pembelian sekali bayar tetap menjadi milikmu walau langgananmu berakhir.",
     "Tidak termasuk dalam paket mana pun: mentoring langsung, sertifikasi berbayar pihak ketiga, program Global Immersion, dan biaya pendaftaran peluang. Layanan tersebut dijual atau dikenakan terpisah.",
     "Siswa di sekolah mitra yang terverifikasi dapat memperoleh akses Plus melalui sekolahnya selama keanggotaan sekolah aktif.",
   ] },
   { judul: "5. Pembayaran, pembatalan, dan pengembalian dana", isi: [
     [
       "Pembayaran diproses oleh penyedia pembayaran resmi (Mayar). Pengguna di bawah 18 tahun memerlukan persetujuan orang tua atau wali untuk membeli.",
-      "Plus dibayar per periode (bulanan atau tahunan). Kami tidak menyimpan data kartu atau dompet digitalmu.",
+      "Plus dibayar per periode (bulanan atau tahunan) dan tidak diperpanjang otomatis. Untuk melanjutkan, bayar periode berikutnya sebelum masa aktif habis. Kami tidak menyimpan data kartu atau dompet digitalmu.",
       "Kamu dapat membatalkan langganan kapan saja di halaman Talentika Plus. Akses Plus tetap berjalan sampai akhir periode yang sudah dibayar, lalu akunmu kembali ke paket Free tanpa kehilangan data.",
       `Jika terjadi tagihan ganda atau kesalahan sistem, hubungi ${EMAIL} dengan bukti pembayaran. Dana yang terbukti salah tagih akan kami kembalikan. Di luar itu, pembayaran untuk periode yang sudah berjalan tidak dapat dikembalikan, kecuali diwajibkan oleh hukum.`,
     ],

@@ -200,6 +200,7 @@ function Shell() {
           <Route path="mentor-apply" element={A(<More screen="mentorApply" />)} />
           <Route path="talent-card" element={A(<More screen="talentCard" />)} />
           <Route path="plus" element={A(<Pro screen="pro" />)} />
+          <Route path="purchases" element={A(<More screen="purchases" />)} />
           {/* Pro (J5) */}
           <Route path="pro" element={A(<Pro screen="pro" />)} />
           <Route path="checkout" element={A(<Pro screen="checkout" />)} />

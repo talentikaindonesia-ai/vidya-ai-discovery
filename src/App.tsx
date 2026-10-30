@@ -45,6 +45,7 @@ const Articles              = lazy(() => import("./pages/Articles"));
 const TalentikaForSchools   = lazy(() => import("./pages/TalentikaForSchools"));
 const TentangKami           = lazy(() => import("./pages/TentangKami"));
 const Legal                 = lazy(() => import("./pages/Legal"));
+const Pembelian             = lazy(() => import("./pages/Pembelian"));
 const RoadmapWeb            = lazy(() => import("./pages/RoadmapWeb"));
 const TalentikaMitra        = lazy(() => import("./pages/TalentikaMitra"));
 const SchoolDashboard       = lazy(() => import("./pages/SchoolDashboard"));
@@ -156,6 +157,7 @@ const App = () => {
             <Route path="/explore" element={user ? <QuizExplore /> : <Navigate to="/auth" />} />
             <Route path="/dashboard-gamified" element={user ? <DashboardGamified /> : <Navigate to="/auth" />} />
             <Route path="/subscription" element={user ? <Subscription /> : <Navigate to="/auth" />} />
+            <Route path="/purchases" element={user ? <Pembelian /> : <Navigate to="/auth" />} />
             <Route path="/profile" element={user ? <Profile /> : <Navigate to="/auth" />} />
             <Route path="/settings" element={user ? <Settings /> : <Navigate to="/auth" />} />
             <Route path="/admin" element={user ? <Admin /> : <Navigate to="/auth" />} />

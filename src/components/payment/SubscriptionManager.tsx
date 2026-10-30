@@ -692,7 +692,10 @@ export const SubscriptionManager = ({
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle>Riwayat Transaksi</CardTitle>
-                  <CardDescription>Daftar semua transaksi pembayaran Anda</CardDescription>
+                  <CardDescription>
+                    Daftar semua transaksi pembayaran Anda ·{" "}
+                    <a href="/purchases" className="text-primary underline">Lihat pembelian saya</a>
+                  </CardDescription>
                 </div>
                 <Button variant="ghost" size="sm" onClick={loadTransactions}>
                   <RefreshCw className="w-4 h-4" />

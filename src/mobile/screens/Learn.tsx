@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { kunciCheckout } from "@/lib/pembayaran";
 import { askAi, canPurchase, db, errMsg, isKuotaError, openExternal, signedUrl, uploadEvidence, useApp, useCareers, useKetersediaan, useKuota } from "../store";
 import { AiLabel, Avatar, BackBtn, Btn, Empty, Header, Icon, IconBtn, ImgBox, Input, Label, Loading, Screen, Sheet, TabTitle, Tabs, TextArea, TIKA } from "../ui";
 import { C, SH, rpShort } from "../theme";
@@ -103,7 +104,7 @@ function LearnHome() {
     <button onClick={() => nav(`/app/course/${c.id}`)} style={{ textAlign: "left", border: "none", background: "#fff", borderRadius: 18, padding: 10, display: "flex", gap: 12, alignItems: "center", cursor: "pointer", boxShadow: SH.card }}>
       <ImgBox src={courseImg(c.thumbnail_url, c.title)} w={92} h={84} r={14} />
       <span style={{ flex: 1, minWidth: 0 }}>
-        <span style={{ fontSize: 10, fontWeight: 700, color: c.is_premium ? C.amber : C.blue, background: c.is_premium ? C.tintYellow : C.tintBlue, padding: "2px 8px", borderRadius: 6, textTransform: "uppercase" }}>{c.is_premium ? "Plus" : (c.category_name || c.content_type || t("Materi", "Course"))}</span>
+        <span style={{ fontSize: 10, fontWeight: 700, color: c.is_premium ? C.amber : C.blue, background: c.is_premium ? C.tintYellow : C.tintBlue, padding: "2px 8px", borderRadius: 6, textTransform: "uppercase" }}>{c.is_premium ? "Premium" : (c.category_name || c.content_type || t("Materi", "Course"))}</span>
         <span style={{ display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", fontSize: 14, fontWeight: 700, color: C.text, marginTop: 5, lineHeight: 1.3 } as any}>{c.title}</span>
         {c.reason && <span style={{ display: "block", fontSize: 11, lineHeight: 1.4, color: C.muted, marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{c.reason}</span>}
         <span style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 10.5, color: C.muted, marginTop: 5 }}>
@@ -317,15 +318,16 @@ function Course() {
     queryKey: ["m-course", id, user?.id], enabled: !!user,
     queryFn: async () => {
       try {
-        const [{ data: c, error }, { data: p }, { data: st }, { data: q }, { data: r }] = await Promise.all([
+        const [{ data: c, error }, { data: p }, { data: st }, { data: q }, { data: r }, { data: terbuka }] = await Promise.all([
           db.from("learning_content").select("id,title,description,content_type,content_url,duration_minutes,learning_objectives,tags,is_premium,thumbnail_url,difficulty_level").eq("id", id).maybeSingle(),
           db.from("learning_progress").select("*").eq("user_id", user!.id).eq("content_id", id).maybeSingle(),
           db.from("course_stage_progress").select("stage").eq("user_id", user!.id).eq("content_id", id),
           db.rpc("get_content_quiz", { p_content_id: id }),
           db.from("learning_reflections").select("body,ai_feedback").eq("user_id", user!.id).eq("content_id", id).order("created_at", { ascending: false }).limit(1),
+          db.rpc("kelas_terbuka"),
         ]);
         if (error) throw error;
-        return { c, p, stages: new Set((st ?? []).map((s: any) => s.stage)), quiz: (q ?? []) as any[], refl: r?.[0] ?? null };
+        return { c, p, stages: new Set((st ?? []).map((s: any) => s.stage)), quiz: (q ?? []) as any[], refl: r?.[0] ?? null, terkunci: !!c?.is_premium && !(terbuka ?? []).includes(id) };
       } catch (e) {
         const off = readOffline()[id];
         if (off) return { ...off, stages: new Set(off.stages ?? []), p: null, refl: null, offline: true };
@@ -338,6 +340,8 @@ function Course() {
   if (isLoading) return <Loading />;
   const c = data?.c;
   if (!c) return <Screen><Header title={t("Materi", "Course")} /><div style={{ padding: 20 }}><Empty title={t("Materi tidak ditemukan", "Course not found")} /></div></Screen>;
+  // Kelas premium tidak termasuk Plus: hanya terbuka untuk pembeli kelas & siswa sekolah mitra.
+  if ((data as any).terkunci) return <Screen><Header title={t("Kelas premium", "Premium class")} /><div style={{ padding: 20 }}><Empty icon="star" title={c.title} body={t("Kelas ini dijual terpisah dan tidak termasuk Plus. Penjualannya segera dibuka.", "This class is sold separately and isn't included in Plus. Sales open soon.")} /></div></Screen>;
   const done = data!.stages as Set<string>;
   const ci = STAGES.indexOf(stage);
   const lessons: string[] = (c.learning_objectives?.length ? c.learning_objectives : [c.description?.split(". ")[0]]).filter(Boolean);
@@ -438,7 +442,7 @@ function Course() {
           <span>{lessons.length} {t("poin belajar", "learning points")}</span>
           {c.duration_minutes && <span>{c.duration_minutes} {t("menit", "min")}</span>}
           {lv && <span>{lv}</span>}
-          {c.is_premium && <span style={{ color: C.amber, fontWeight: 600 }}>Plus</span>}
+          {c.is_premium && <span style={{ color: C.amber, fontWeight: 600 }}>Premium</span>}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 12 }}>
           <div style={{ flex: 1, height: 8, borderRadius: 99, background: C.line }}><div style={{ width: `${pct}%`, height: "100%", borderRadius: 99, background: C.blue, transition: "width .4s" }} /></div>
@@ -1022,7 +1026,7 @@ function Playbooks() {
   };
   const pay = async () => {
     setBusy(true);
-    const { data: r, error } = await (supabase as any).functions.invoke("create-mayar-payment", { body: { kind: "playbook", playbookId: buy.id, phone } });
+    const { data: r, error } = await (supabase as any).functions.invoke("create-mayar-payment", { body: { kind: "playbook", playbookId: buy.id, phone, idempotencyKey: kunciCheckout(`playbook:${buy.id}`) } });
     setBusy(false);
     if (error || !r?.invoice_url) { let m = r?.error; try { m = (await (error as any)?.context?.json?.())?.error ?? m; } catch { /* */ } toast(m ?? t("Gagal membuat pembayaran", "Couldn't create payment"), "error"); return; }
     qc.invalidateQueries({ queryKey: ["m-playbooks"] });

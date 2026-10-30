@@ -8,13 +8,15 @@ import { Btn, Empty, Header, Icon, ImgBox, Input, Label, Loading, LOGO, PlusTeas
 import { C, SH, daysUntil, rpShort } from "../theme";
 import { AXES, AxisKey, fmtDate, oppTypeOf, rankAxes, riasecArch, riasecLabel, timeAgo } from "../logic";
 import { courseImg, IMG } from "../media";
+import { bacaPembelian, cekPembayaran, LABEL_SUMBER, STATUS_ORDER } from "@/lib/pembayaran";
 import { initPush, keluar } from "../push";
 
-export type MoreScreen = "store" | "referral" | "data" | "challenges" | "achievements" | "timeline" | "articles" | "article" | "programs" | "program" | "mentorApply" | "talentCard" | "settings";
+export type MoreScreen = "store" | "referral" | "data" | "challenges" | "achievements" | "timeline" | "articles" | "article" | "programs" | "program" | "mentorApply" | "talentCard" | "settings" | "purchases";
 
 export default function More({ screen }: { screen: MoreScreen }) {
   switch (screen) {
     case "store": return <Store />;
+    case "purchases": return <Purchases />;
     case "referral": return <Referral />;
     case "data": return <PrivacyData />;
     case "challenges": return <Challenges />;
@@ -195,6 +197,59 @@ function Referral() {
         <div style={{ marginTop: 10, display: "flex", gap: 8, alignItems: "flex-start", fontSize: 11.5, color: C.muted, lineHeight: 1.5 }}><Icon name="shield" size={14} />{t("Hanya terlihat oleh teman sekelas, dengan nama depan saja. Tidak ada peringkat publik untuk pelajar.", "Visible only to your classmates, first names only. No public ranking for students.")}</div>
       </div>
       <SchoolCodeSheet open={schoolSheet} onClose={() => setSchoolSheet(false)} onDone={() => qc.invalidateQueries({ queryKey: ["m-leaderboard"] })} />
+    </Screen>
+  );
+}
+
+/* ── PEMBELIAN SAYA ─────────────────────────────────────────────────── */
+function Purchases() {
+  const { t, lang, user } = useApp();
+  const [params] = useSearchParams();
+  const ref = params.get("ref");
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["m-purchases", user?.id, ref], enabled: !!user,
+    queryFn: async () => { if (ref) await cekPembayaran(ref); return bacaPembelian(); },
+  });
+  const card = { background: "#fff", borderRadius: 18, boxShadow: SH.card, padding: "4px 14px", marginTop: 10 } as const;
+  const rupiah = (n: number) => `Rp${n.toLocaleString("id-ID")}`;
+  if (isLoading) return <Loading />;
+  return (
+    <Screen>
+      <Header title={t("Pembelian saya", "My purchases")} />
+      <div style={{ padding: "14px 20px 28px" }}>
+        {isError && <Empty title={t("Gagal memuat pembelian", "Couldn't load purchases")} />}
+        {data && (
+          <>
+            <H mt={4}>{t("Yang kamu miliki", "What you own")}</H>
+            <div style={card}>
+              {!data.hak.length && <div style={{ padding: "12px 0", fontSize: 13, color: C.muted }}>{t("Belum ada pembelian aktif.", "No active purchases yet.")}</div>}
+              {data.hak.map((h, i) => (
+                <div key={`${h.kode}-${i}`} style={{ display: "flex", justifyContent: "space-between", gap: 12, padding: "11px 0", borderBottom: i < data.hak.length - 1 ? "1px solid #F1F5FB" : "none" }}>
+                  <span style={{ minWidth: 0 }}><span style={{ display: "block", fontSize: 13.5, fontWeight: 600 }}>{h.nama}</span><span style={{ fontSize: 11.5, color: C.muted }}>{LABEL_SUMBER[h.sumber] ?? h.sumber}</span></span>
+                  <span style={{ flexShrink: 0, fontSize: 11.5, color: C.muted, textAlign: "right" }}>{h.berakhir ? `${t("Sampai", "Until")} ${fmtDate(h.berakhir, lang)}` : t("Permanen", "Permanent")}</span>
+                </div>
+              ))}
+            </div>
+            <H>{t("Riwayat pembelian", "Purchase history")}</H>
+            <div style={card}>
+              {!data.orders.length && <div style={{ padding: "12px 0", fontSize: 13, color: C.muted }}>{t("Belum ada riwayat pembelian.", "No purchase history yet.")}</div>}
+              {data.orders.map((o, i) => (
+                <div key={o.id} style={{ padding: "11px 0", borderBottom: i < data.orders.length - 1 ? "1px solid #F1F5FB" : "none" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+                    <span style={{ fontSize: 13.5, fontWeight: 600, minWidth: 0 }}>{o.item.join(", ") || t("Pembelian", "Purchase")}</span>
+                    <span style={{ flexShrink: 0, fontSize: 13, fontWeight: 700 }}>{rupiah(o.total)}</span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginTop: 3, fontSize: 11.5, color: C.muted }}>
+                    <span>{o.nomor} · {fmtDate(o.dibuat, lang)}</span>
+                    <span style={{ flexShrink: 0 }}>{STATUS_ORDER[o.status]?.label ?? o.status}</span>
+                  </div>
+                  {o.lanjut_url && <Btn h={38} onClick={() => openExternal(o.lanjut_url!)} style={{ marginTop: 8, fontSize: 13 }}>{t("Lanjutkan pembayaran", "Continue payment")}</Btn>}
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
     </Screen>
   );
 }

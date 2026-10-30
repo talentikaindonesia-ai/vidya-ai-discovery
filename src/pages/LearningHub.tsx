@@ -362,6 +362,10 @@ const LearningHub = () => {
     category_name: string; is_premium: boolean; created_at: string; reason: string;
   }[]>([]);
   const sub = useSubscription();
+  const [kelasTerbuka, setKelasTerbuka] = useState<string[]>([]);
+  useEffect(() => {
+    (supabase as any).rpc("kelas_terbuka").then(({ data }: { data: string[] | null }) => setKelasTerbuka(data ?? []));
+  }, []);
   // Course catalog: every active learning path, browsable regardless of RIASEC match
   const [paths, setPaths] = useState<{
     id: string; name: string; description: string | null; difficulty_level: string | null;
@@ -439,9 +443,9 @@ const LearningHub = () => {
 
   const handleStart = async (content: DBContent) => {
     if (!userId) return;
-    // Server-truth premium check (covers paid, trial, school members, admin)
-    if (content.is_premium && !sub.loading && sub.isFree) {
-      toast.error("Kursus ini termasuk Talentika Plus. Upgrade sekarang!", { action: { label: "Upgrade", onClick: () => navigate("/subscription?from=%2Flearning") } });
+    // Kelas premium tidak termasuk Plus: hanya pembeli kelas, siswa sekolah mitra, dan admin.
+    if (content.is_premium && !kelasTerbuka.includes(content.id)) {
+      toast.info("Kelas premium dijual terpisah dan tidak termasuk Plus. Penjualannya segera dibuka.");
       return;
     }
     setEnrolling(content.id);
@@ -671,7 +675,7 @@ const LearningHub = () => {
               ? "Membuka..."
               : done ? <><CheckCircle size={14} /> Ulangi Kursus</>
               : started ? <><Play size={14} /> Lanjutkan</>
-              : c.is_premium ? <><Lock size={14} /> Mulai — Plus</>
+              : c.is_premium && !kelasTerbuka.includes(c.id) ? <><Lock size={14} /> Kelas premium</>
               : <><Play size={14} /> Mulai Kursus</>
             }
           </button>

@@ -54,7 +54,7 @@ export function usePaketLangganan() {
   return { paket, loading };
 }
 
-/** "Rp99rb" — harga bulanan paket berbayar termurah, atau null saat belum termuat. */
+/** "Rp49rb" — harga bulanan paket berbayar termurah, atau null saat belum termuat. */
 export function useHargaMulai(): string | null {
   const { paket } = usePaketLangganan();
   const termurah = paket.filter(p => p.price_monthly > 0).map(p => p.price_monthly).sort((a, b) => a - b)[0];

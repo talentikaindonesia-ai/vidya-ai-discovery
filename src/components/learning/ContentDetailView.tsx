@@ -75,6 +75,7 @@ export const ContentDetailView = () => {
   // Free tier: first 3 contents (by started progress) are the free allocation.
   // New content beyond that shows the premium gate. Already-started stays open.
   const [freeQuotaExceeded, setFreeQuotaExceeded] = useState(false);
+  const [kelasTerkunci, setKelasTerkunci] = useState(false);
   const sub = useSubscription();
   const [activeTab, setActiveTab] = useState("overview");
   const [activeSection, setActiveSection] = useState("courses");
@@ -121,6 +122,12 @@ export const ContentDetailView = () => {
       if (contentError) throw contentError;
 
       setContent(contentData);
+
+      // Kelas premium tidak termasuk Plus: hanya pembeli kelas, siswa sekolah mitra, dan admin.
+      if (contentData.is_premium) {
+        const { data: terbuka } = await (supabase as any).rpc("kelas_terbuka");
+        setKelasTerkunci(!((terbuka ?? []) as string[]).includes(contentData.id));
+      }
 
       // Load user progress if authenticated
       const { data: { user } } = await supabase.auth.getUser();
@@ -263,8 +270,29 @@ export const ContentDetailView = () => {
     );
   }
 
+  if (kelasTerkunci) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-6 max-w-3xl">
+          <Button
+            variant="ghost"
+            onClick={() => navigate('/learning')}
+            className="flex items-center gap-2 mb-6"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Kembali ke Learning Hub
+          </Button>
+          <h1 className="text-2xl font-bold mb-2">{content?.title}</h1>
+          <p className="text-muted-foreground">
+            Kelas ini dijual terpisah dan tidak termasuk Talentika Plus. Penjualannya segera dibuka.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   // ── Premium gate: free users get 3 contents; new content beyond that is locked ──
-  if (freeQuotaExceeded && !sub.loading && sub.isFree && !isAdmin) {
+  if (freeQuotaExceeded && !content?.is_premium && !sub.loading && sub.isFree && !isAdmin) {
     return (
       <div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-6 max-w-3xl">

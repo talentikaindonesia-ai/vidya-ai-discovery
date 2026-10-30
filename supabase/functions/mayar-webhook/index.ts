@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 /**
  * mayar-webhook — mengaktifkan langganan (atau pendaftaran bootcamp, bila
@@ -37,6 +37,12 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
  *    bersamaan tidak memperpanjang masa aktif dua kali;
  *  • transaksi hanya bisa dibuat/diubah server (policy INSERT klien & RPC
  *    update_transaction_status dicabut) — dulu harga bisa dipalsukan.
+ *
+ * 2026-10-30 (PRD Monetization):
+ *  • webhook_events: notifikasi yang sudah selesai diproses tidak diproses lagi;
+ *  • aktivasi pindah ke RPC aktifkan_order — langganan, hak akses, voucher,
+ *    order, dan status transaksi berhasil atau gagal bersama dalam satu transaksi
+ *    database, dan aman dipanggil berulang.
  */
 
 const corsHeaders = {
@@ -47,9 +53,14 @@ const corsHeaders = {
 const STATUS_LUNAS = new Set(["paid", "success", "settled", "settlement", "completed"]);
 const STATUS_GAGAL = new Set(["closed", "expired", "cancelled", "canceled", "failed"]);
 
-// profiles.subscription_type hanya menerima individual | premium | school.
-function tipeProfil(planType: string): string {
-  return planType === "school" ? "school" : "premium";
+interface KonteksEvent {
+  id?: string;
+  belumFinal?: boolean;
+}
+
+async function sidikJari(teks: string) {
+  const hash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(teks));
+  return [...new Uint8Array(hash)].map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
 function balas(teks: string, status = 200) {
@@ -59,15 +70,29 @@ function balas(teks: string, status = 200) {
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-  try {
-    let payload: any;
-    try { payload = JSON.parse(await req.text()); }
-    catch { return balas("Bad Request", 400); }
+  const supabase = createClient(
+    Deno.env.get("SUPABASE_URL") ?? "",
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+  );
+  const ctx: KonteksEvent = {};
+  const res = await tangani(req, supabase, ctx);
+  if (ctx.id && !ctx.belumFinal) {
+    const berhasil = res.status < 400;
+    await supabase.from("webhook_events").update({
+      status: berhasil ? "processed" : "failed",
+      processed_at: berhasil ? new Date().toISOString() : null,
+      error: berhasil ? null : `HTTP ${res.status}`,
+    }).eq("id", ctx.id);
+  }
+  return res;
+});
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-    );
+async function tangani(req: Request, supabase: SupabaseClient, ctx: KonteksEvent): Promise<Response> {
+  try {
+    const teks = await req.text();
+    let payload: any;
+    try { payload = JSON.parse(teks); }
+    catch { return balas("Bad Request", 400); }
 
     let tx: any = null;
 
@@ -104,6 +129,27 @@ serve(async (req) => {
       const mayarPaymentId: string | undefined = data?.id;
       const referenceNo: string | undefined = data?.referenceNo;
       if (!mayarPaymentId && !referenceNo) return balas("OK"); // ping uji dari Mayar
+
+      // ── Dedup: event yang sudah selesai tidak diproses dua kali ────────
+      const eventId = mayarPaymentId
+        ? `${payload?.event ?? "payment"}:${mayarPaymentId}:${String(data?.status ?? "")}`
+        : await sidikJari(teks);
+      const { data: baru, error: evErr } = await supabase.from("webhook_events").upsert({
+        provider: "mayar",
+        event_id: eventId,
+        event_type: payload?.event ?? null,
+        provider_payment_id: mayarPaymentId ?? referenceNo ?? null,
+      }, { onConflict: "provider,event_id", ignoreDuplicates: true }).select("id");
+      if (evErr) {
+        console.error("Gagal mencatat webhook_events:", evErr.message);
+      } else if (baru?.length) {
+        ctx.id = baru[0].id;
+      } else {
+        const { data: ada } = await supabase.from("webhook_events").select("id, status")
+          .eq("provider", "mayar").eq("event_id", eventId).maybeSingle();
+        if (ada?.status === "processed") return balas("OK — event sudah diproses");
+        ctx.id = ada?.id;
+      }
 
       // ── Temukan transaksi ──────────────────────────────────────────────
       if (mayarPaymentId) {
@@ -154,6 +200,7 @@ serve(async (req) => {
         });
       }
       console.log(`Transaksi ${tx.id}: Mayar berkata "${statusMayar}" — belum lunas, tidak diaktifkan.`);
+      ctx.belumFinal = !STATUS_GAGAL.has(statusMayar);
       return balas("OK");
     }
 
@@ -172,6 +219,9 @@ serve(async (req) => {
       await supabase.from("payment_transactions").update({
         notes: JSON.stringify({ ...notes, ditahan: alasan, ditahan_pada: new Date().toISOString() }),
       }).eq("id", tx.id);
+      if (notes.orderId) {
+        await supabase.from("orders").update({ status: "held", hold_reason: alasan }).eq("id", notes.orderId);
+      }
       return balas("OK — ditahan untuk tinjauan admin");
     };
 
@@ -185,116 +235,29 @@ serve(async (req) => {
       return await tahan(`nominal kurang: dibayar ${dibayar}, harga ${harga}`);
     }
 
-    // ── Klaim atomik (compare-and-swap pada notes) ───────────────────────
-    // Notifikasi Mayar dan cek ulang pengguna bisa tiba bersamaan; hanya
-    // proses yang berhasil mengganti notes asli yang boleh mengaktifkan,
-    // sehingga masa aktif tidak diperpanjang dua kali.
-    const { data: klaim } = await supabase.from("payment_transactions")
-      .update({ notes: JSON.stringify({ ...notes, diaktifkan_pada: new Date().toISOString(), dibayar_menurut_mayar: dibayar }) })
-      .eq("id", tx.id).eq("notes", tx.notes).select("id");
-    if (!klaim?.length) return balas("OK — sedang/sudah diproses");
-    // Aktivasi gagal → kembalikan notes agar notifikasi ulang Mayar bisa memproses lagi
-    const gagalAktivasi = async (pesan: string) => {
-      console.error(pesan);
-      await supabase.from("payment_transactions").update({ notes: tx.notes }).eq("id", tx.id);
-      return balas("Gagal aktivasi", 500);
-    };
+    // Transaksi tanpa order hanya mungkin berasal dari sebelum 2026-10-30.
+    if (!notes.orderId) return await tahan("transaksi lama tanpa order");
 
-    // ── Program bootcamp: cukup catat pendaftaran ────────────────────────
-    if (notes.kind === "bootcamp") {
-      if (!notes.bootcampId) return await tahan("transaksi bootcamp tanpa bootcampId");
-      const { error: enErr } = await supabase.from("bootcamp_enrollments").upsert({
-        user_id: tx.user_id,
-        bootcamp_id: notes.bootcampId,
-        transaction_id: tx.id,
-        amount_paid: dibayar,
-        source: "purchase",
-      }, { onConflict: "user_id,bootcamp_id", ignoreDuplicates: true });
-      if (enErr) return await gagalAktivasi("Gagal mencatat pendaftaran bootcamp: " + enErr.message);
-      const { error: stErr } = await tandaiLunas();
-      if (stErr) console.error("Akses aktif, tapi status transaksi gagal ditandai:", stErr.message);
-      console.log(`Bootcamp aktif: user ${tx.user_id}, bootcamp ${notes.bootcampId}`);
-      return balas("OK");
+    // ── Aktivasi ─────────────────────────────────────────────────────────
+    // Satu transaksi database dengan kunci baris order: notifikasi Mayar dan cek
+    // ulang pengguna yang tiba bersamaan tidak memperpanjang masa aktif dua kali.
+    const { data: hasil, error: aktifErr } = await supabase.rpc("aktifkan_order", {
+      p_order_id: notes.orderId,
+      p_dibayar: Math.round(dibayar),
+    });
+    if (aktifErr) {
+      console.error(`Aktivasi order ${notes.orderId} gagal:`, aktifErr.message);
+      return balas("Gagal aktivasi", 500); // Mayar akan mengirim ulang
     }
 
-    // ── Playbook (aplikasi mobile): catat kepemilikan ────────────────────
-    if (notes.kind === "playbook") {
-      if (!notes.playbookId) return await tahan("transaksi playbook tanpa playbookId");
-      const { error: pbErr } = await supabase.from("playbook_purchases").upsert({
-        user_id: tx.user_id,
-        playbook_id: notes.playbookId,
-        transaction_id: tx.id,
-      }, { onConflict: "user_id,playbook_id", ignoreDuplicates: true });
-      if (pbErr) return await gagalAktivasi("Gagal mencatat pembelian playbook: " + pbErr.message);
-      const { error: stErr } = await tandaiLunas();
-      if (stErr) console.error("Akses aktif, tapi status transaksi gagal ditandai:", stErr.message);
-      console.log(`Playbook aktif: user ${tx.user_id}, playbook ${notes.playbookId}`);
-      return balas("OK");
-    }
+    await supabase.from("payment_transactions").update({
+      notes: JSON.stringify({ ...notes, diaktifkan_pada: new Date().toISOString(), dibayar_menurut_mayar: dibayar }),
+    }).eq("id", tx.id);
 
-    const { data: plan } = await supabase
-      .from("subscription_packages").select("*").eq("id", notes.planId).maybeSingle();
-    if (!plan) return await gagalAktivasi("Paket tidak ditemukan: " + notes.planId);
-
-    // ── Masa aktif: perpanjang dari sisa masa aktif ──────────────────────
-    const siklus = notes.billingCycle === "yearly" ? "yearly" : "monthly";
-    const { data: prof } = await supabase
-      .from("profiles").select("subscription_status, subscription_end_date")
-      .eq("user_id", tx.user_id).maybeSingle();
-    const sekarang = new Date();
-    const akhirLama = prof?.subscription_end_date ? new Date(prof.subscription_end_date) : null;
-    const mulai = prof?.subscription_status === "active" && akhirLama && akhirLama > sekarang ? akhirLama : sekarang;
-    const berakhir = new Date(mulai);
-    if (siklus === "yearly") berakhir.setFullYear(berakhir.getFullYear() + 1);
-    else berakhir.setMonth(berakhir.getMonth() + 1);
-
-    // ── user_subscriptions (tanpa ON CONFLICT — tak bergantung unique index) ─
-    const baris = {
-      user_id: tx.user_id,
-      package_id: plan.id,
-      status: "active",
-      billing_cycle: siklus,
-      amount_paid: dibayar,
-      starts_at: sekarang.toISOString(),
-      expires_at: berakhir.toISOString(),
-      auto_renew: false,
-    };
-    const { data: ada } = await supabase
-      .from("user_subscriptions").select("id").eq("user_id", tx.user_id)
-      .order("created_at", { ascending: false }).limit(1).maybeSingle();
-    const { error: subErr } = ada
-      ? await supabase.from("user_subscriptions").update(baris).eq("id", ada.id)
-      : await supabase.from("user_subscriptions").insert(baris);
-    if (subErr) return await gagalAktivasi("Gagal menulis user_subscriptions: " + subErr.message);
-
-    // ── Profil — inilah yang dibaca is_premium() ─────────────────────────
-    const { error: profErr } = await supabase.from("profiles").update({
-      subscription_status: "active",
-      subscription_type: tipeProfil(plan.type),
-      subscription_end_date: berakhir.toISOString(),
-    }).eq("user_id", tx.user_id);
-    if (profErr) return await gagalAktivasi("Gagal mengaktifkan profil: " + profErr.message);
-
-    const { error: stErr } = await tandaiLunas();
-    if (stErr) console.error("Akses aktif, tapi status transaksi gagal ditandai:", stErr.message);
-
-    // ── Catat pemakaian voucher ──────────────────────────────────────────
-    if (notes.voucherId) {
-      const { error: vuErr } = await supabase.from("voucher_usage")
-        .insert({ voucher_id: notes.voucherId, user_id: tx.user_id });
-      if (vuErr) console.warn("Gagal mencatat voucher_usage:", vuErr.message);
-      const { data: v } = await supabase.from("voucher_codes")
-        .select("current_uses").eq("id", notes.voucherId).maybeSingle();
-      if (v) {
-        await supabase.from("voucher_codes")
-          .update({ current_uses: (v.current_uses ?? 0) + 1 }).eq("id", notes.voucherId);
-      }
-    }
-
-    console.log(`Langganan aktif: user ${tx.user_id}, ${plan.name} ${siklus}, berakhir ${berakhir.toISOString()}`);
+    console.log(`Order ${notes.orderId} ${hasil?.status}: user ${tx.user_id}, berakhir ${hasil?.berakhir ?? "-"}`);
     return balas("OK");
   } catch (error) {
     console.error("mayar-webhook error:", error);
     return balas("Internal server error", 500);
   }
-});
+}

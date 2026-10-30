@@ -13,6 +13,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { formatCurrency } from "@/lib/utils";
+import { kunciCheckout } from "@/lib/pembayaran";
 
 interface PaymentGatewayProps {
   planId: string;
@@ -108,6 +109,7 @@ export const PaymentGateway = ({
           billingCycle,
           voucherId,
           phone: phone.trim(),
+          idempotencyKey: kunciCheckout(`sub:${planId}:${billingCycle}:${voucherId ?? ""}`),
         },
       });
 

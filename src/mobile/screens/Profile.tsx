@@ -280,6 +280,7 @@ function ProfileHome() {
           { icon: "globe", label: t("Profil Talenta Publik", "Public Talent Profile"), onClick: () => profile?.username ? nav("/app/public") : setUSheet(true) },
           data?.mentor ? { icon: "compass", label: t("Mode Mentor", "Mentor mode"), onClick: () => nav("/app/mentor-dashboard") } : { icon: "users", label: t("Jadi Mentor / Mitra", "Become a Mentor / Partner"), onClick: () => nav("/app/mentor-apply") },
           { icon: "school", label: t("Keluarga & Sekolah", "Family & School"), onClick: () => nav("/app/privacy") },
+          { icon: "wallet", label: t("Pembelian saya", "My purchases"), onClick: () => nav("/app/purchases") },
           { icon: "shield", label: t("Privasi & Data", "Privacy & Data"), onClick: () => nav("/app/data") },
           { icon: "gear", label: t("Pengaturan", "Settings"), onClick: () => nav("/app/settings") },
           { icon: "logout", label: t("Keluar", "Sign out"), danger: true, onClick: async () => { await keluar(); nav("/app", { replace: true }); } },

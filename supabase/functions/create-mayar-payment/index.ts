@@ -23,6 +23,13 @@ import { createClient, type SupabaseClient, type User } from "https://esm.sh/@su
  *  • notes menyimpan `dihitung_server: true` + rincian harga, dan
  *    mayar-webhook menolak mengaktifkan transaksi yang tidak punya penanda
  *    itu (transaksi lama dengan nominal kiriman browser).
+ *
+ * 2026-10-30 (PRD Monetization):
+ *  • setiap checkout membuat order + order_items: harga, nama, dan hak akses
+ *    dibekukan saat itu, jadi perubahan harga tidak mengubah order lama;
+ *  • idempotencyKey: klik ganda / muat ulang mengembalikan link yang sama;
+ *  • { kind: "product", sku } untuk Starter Kit dan kelas premium;
+ *  • paket sekolah tidak bisa dibeli di sini — lewat kontrak.
  */
 
 const corsHeaders = {
@@ -31,7 +38,9 @@ const corsHeaders = {
 };
 
 interface PaymentRequest {
-  kind?: "subscription" | "bootcamp" | "playbook";
+  kind?: "subscription" | "bootcamp" | "playbook" | "product";
+  sku?: string;
+  idempotencyKey?: string;
   bootcampId?: string;
   playbookId?: string;
   returnTo?: "web" | "app";
@@ -60,7 +69,7 @@ interface LinkArgs {
   supabase: SupabaseClient;
   user: User;
   phone?: string;
-  transactionType: "subscription" | "course";
+  transactionType: "subscription" | "course" | "kit";
   harga: number;
   notes: Record<string, unknown>;
   nama: string;
@@ -139,6 +148,106 @@ async function buatLinkMayar(a: LinkArgs) {
   return { invoice_url: payment.link, invoice_id: payment.id, transaction_id: transactionId };
 }
 
+class GalatCheckout extends Error {
+  constructor(public code: string, pesan: string, public status = 400) { super(pesan); }
+}
+
+interface ItemOrder {
+  item_kind: "subscription" | "one_time" | "class" | "bootcamp" | "playbook";
+  product_id?: string | null;
+  product_price_id?: string | null;
+  item_ref?: string | null;
+  sku: string;
+  name: string;
+  billing_interval?: "month" | "year" | null;
+  feature_codes: string[];
+  unit_price: number;
+}
+
+interface CheckoutArgs extends LinkArgs {
+  idempotencyKey?: string;
+  subtotal: number;
+  diskon?: number;
+  voucherId?: string | null;
+  item: ItemOrder;
+}
+
+const POLA_KUNCI = /^[\w:-]{8,120}$/;
+// Order tanpa link yang lebih muda dari ini dianggap masih diproses permintaan lain.
+const BATAS_PROSES_MS = 60_000;
+
+/** Order + link pembayaran. Permintaan berulang dengan kunci sama mendapat link yang sama. */
+async function checkout(a: CheckoutArgs) {
+  const { supabase, user } = a;
+  const kunci = a.idempotencyKey && POLA_KUNCI.test(a.idempotencyKey) ? a.idempotencyKey : crypto.randomUUID();
+
+  const { data: lama } = await supabase
+    .from("orders")
+    .select("id, status, total, checkout_url, transaction_id, provider_payment_id, created_at, order_number, order_items(sku)")
+    .eq("user_id", user.id)
+    .eq("idempotency_key", kunci)
+    .maybeSingle();
+
+  if (lama) {
+    const samaIsi = lama.total === a.harga && (lama.order_items as { sku: string }[])?.[0]?.sku === a.item.sku;
+    if (lama.status === "pending" && samaIsi && lama.checkout_url) {
+      return {
+        invoice_url: lama.checkout_url,
+        invoice_id: lama.provider_payment_id,
+        transaction_id: lama.transaction_id,
+        order_id: lama.id,
+        order_number: lama.order_number,
+        dipakai_ulang: true,
+      };
+    }
+    if (lama.status === "pending" && samaIsi && Date.now() - new Date(lama.created_at).getTime() < BATAS_PROSES_MS) {
+      throw new GalatCheckout("CHECKOUT_DIPROSES", "Pembayaran sedang disiapkan. Coba lagi sebentar.", 409);
+    }
+    // Sesi lama sudah selesai atau isinya berbeda: kuncinya dilepas untuk checkout baru.
+    await supabase.from("orders").update({ idempotency_key: `${kunci}:lama:${lama.id}` }).eq("id", lama.id);
+  }
+
+  const { data: order, error: orderErr } = await supabase
+    .from("orders")
+    .insert({
+      user_id: user.id,
+      subtotal: a.subtotal,
+      discount: a.diskon ?? 0,
+      total: a.harga,
+      voucher_id: a.voucherId ?? null,
+      idempotency_key: kunci,
+    })
+    .select("id, order_number")
+    .single();
+  if (orderErr?.code === "23505") {
+    throw new GalatCheckout("CHECKOUT_DIPROSES", "Pembayaran sedang disiapkan. Coba lagi sebentar.", 409);
+  }
+  if (orderErr || !order) throw new Error("Gagal membuat order: " + (orderErr?.message ?? "unknown"));
+
+  const { error: itemErr } = await supabase.from("order_items").insert({ ...a.item, order_id: order.id });
+  if (itemErr) {
+    await supabase.from("orders").update({ status: "failed", hold_reason: itemErr.message }).eq("id", order.id);
+    throw new Error("Gagal membuat rincian order: " + itemErr.message);
+  }
+
+  try {
+    const link = await buatLinkMayar({ ...a, notes: { ...a.notes, orderId: order.id } });
+    const { error: simpanErr } = await supabase.from("orders").update({
+      transaction_id: link.transaction_id,
+      provider_payment_id: link.invoice_id,
+      checkout_url: link.invoice_url,
+    }).eq("id", order.id);
+    if (simpanErr) console.error("Link dibuat, order gagal diperbarui:", simpanErr.message);
+    return { ...link, order_id: order.id, order_number: order.order_number };
+  } catch (e) {
+    await supabase.from("orders").update({
+      status: "failed",
+      hold_reason: e instanceof Error ? e.message : String(e),
+    }).eq("id", order.id);
+    throw e;
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -182,8 +291,18 @@ serve(async (req) => {
         .maybeSingle();
       if (sudah) throw new Error("Kamu sudah terdaftar di program ini.");
 
-      const link = await buatLinkMayar({
+      const link = await checkout({
         supabase, user, phone: body.phone,
+        idempotencyKey: body.idempotencyKey,
+        subtotal: harga,
+        item: {
+          item_kind: "bootcamp",
+          item_ref: bc.id,
+          sku: `BOOTCAMP_${bc.id}`,
+          name: bc.title,
+          feature_codes: [`bootcamp:${bc.id}`],
+          unit_price: harga,
+        },
         transactionType: "course",
         harga,
         notes: { kind: "bootcamp", bootcampId: bc.id, harga_asli: harga, diskon: 0, harga_final: harga },
@@ -209,8 +328,18 @@ serve(async (req) => {
         .eq("user_id", userId).eq("playbook_id", pb.id).maybeSingle();
       if (sudah) throw new Error("Kamu sudah memiliki playbook ini.");
 
-      const link = await buatLinkMayar({
+      const link = await checkout({
         supabase, user, phone: body.phone,
+        idempotencyKey: body.idempotencyKey,
+        subtotal: harga,
+        item: {
+          item_kind: "playbook",
+          item_ref: pb.id,
+          sku: `PLAYBOOK_${pb.id}`,
+          name: pb.title,
+          feature_codes: [`playbook:${pb.id}`],
+          unit_price: harga,
+        },
         transactionType: "course",
         harga,
         notes: { kind: "playbook", playbookId: pb.id, harga_asli: harga, diskon: 0, harga_final: harga },
@@ -219,6 +348,62 @@ serve(async (req) => {
         redirectPath: tx => `/app/playbooks?payment=success&ref=${tx}`,
       });
       return balas({ success: true, ...link, amount: harga, harga_asli: harga, diskon: 0 });
+    }
+
+    // ── Produk katalog: Starter Kit & kelas premium ──────────────────────
+    if (body.kind === "product") {
+      const { data: produk } = await supabase
+        .from("products")
+        .select("id, sku, name, product_type, feature_codes, content_id, is_active, product_prices(id, amount, valid_to)")
+        .eq("sku", body.sku ?? "")
+        .maybeSingle();
+      if (!produk?.is_active || produk.product_type === "subscription") {
+        throw new GalatCheckout("PRODUK_TIDAK_TERSEDIA", "Produk ini belum tersedia.", 404);
+      }
+      const hargaAktif = (produk.product_prices as { id: string; amount: number; valid_to: string | null }[])
+        .find(h => h.valid_to === null);
+      if (!hargaAktif || hargaAktif.amount < NOMINAL_MINIMUM) {
+        throw new GalatCheckout("PRODUK_TIDAK_TERSEDIA", "Harga produk ini belum diatur.", 404);
+      }
+
+      const sekarang = new Date().toISOString();
+      const { data: milik } = await supabase
+        .from("entitlements")
+        .select("feature_code")
+        .eq("user_id", userId)
+        .in("feature_code", produk.feature_codes)
+        .is("revoked_at", null)
+        .or(`expires_at.is.null,expires_at.gt.${sekarang}`);
+      const dimiliki = new Set((milik ?? []).map(m => m.feature_code));
+      if (produk.feature_codes.every((k: string) => dimiliki.has(k))) {
+        throw new GalatCheckout("SUDAH_DIMILIKI", "Kamu sudah memiliki produk ini.", 409);
+      }
+
+      const kelas = produk.product_type === "class";
+      const link = await checkout({
+        supabase, user, phone: body.phone,
+        idempotencyKey: body.idempotencyKey,
+        subtotal: hargaAktif.amount,
+        item: {
+          item_kind: kelas ? "class" : "one_time",
+          product_id: produk.id,
+          product_price_id: hargaAktif.id,
+          item_ref: produk.content_id,
+          sku: produk.sku,
+          name: produk.name,
+          feature_codes: produk.feature_codes,
+          unit_price: hargaAktif.amount,
+        },
+        transactionType: kelas ? "course" : "kit",
+        harga: hargaAktif.amount,
+        notes: { kind: "product", sku: produk.sku, harga_asli: hargaAktif.amount, diskon: 0, harga_final: hargaAktif.amount },
+        nama: produk.name,
+        deskripsi: ref => `${produk.name} | Ref: ${ref}`,
+        redirectPath: tx => body.returnTo === "app"
+          ? `/app/purchases?payment=success&ref=${tx}`
+          : `/purchases?payment=success&ref=${tx}`,
+      });
+      return balas({ success: true, ...link, amount: hargaAktif.amount, harga_asli: hargaAktif.amount, diskon: 0 });
     }
 
     // ── Langganan ────────────────────────────────────────────────────────
@@ -238,6 +423,9 @@ serve(async (req) => {
 
     if (planError || !plan) throw new Error("Paket tidak ditemukan atau tidak aktif.");
     if (plan.type === "free") throw new Error("Paket gratis tidak memerlukan pembayaran.");
+    if (plan.type === "school") {
+      throw new GalatCheckout("PAKET_KONTRAK", "Paket sekolah diatur lewat kontrak. Hubungi tim Talentika.");
+    }
 
     const hargaAsli = Math.round(Number(billingCycle === "yearly" ? plan.price_yearly : plan.price_monthly) || 0);
     if (hargaAsli <= 0) throw new Error("Harga paket belum diatur.");
@@ -285,8 +473,33 @@ serve(async (req) => {
       throw new Error("Nominal setelah diskon terlalu kecil untuk diproses. Hubungi admin untuk aktivasi manual.");
     }
 
-    const link = await buatLinkMayar({
+    const intervalTagih = billingCycle === "yearly" ? "year" : "month";
+    const { data: produkPaket } = await supabase
+      .from("products")
+      .select("id, sku, name, feature_codes, product_prices(id, valid_to)")
+      .eq("package_id", plan.id)
+      .eq("billing_interval", intervalTagih)
+      .maybeSingle();
+    const hargaProduk = (produkPaket?.product_prices as { id: string; valid_to: string | null }[] | undefined)
+      ?.find(h => h.valid_to === null);
+
+    const link = await checkout({
       supabase, user, phone: body.phone,
+      idempotencyKey: body.idempotencyKey,
+      subtotal: hargaAsli,
+      diskon,
+      voucherId: voucherDipakai,
+      item: {
+        item_kind: "subscription",
+        product_id: produkPaket?.id ?? null,
+        product_price_id: hargaProduk?.id ?? null,
+        item_ref: plan.id,
+        sku: produkPaket?.sku ?? `PACKAGE_${plan.id}_${intervalTagih}`,
+        name: produkPaket?.name ?? `${plan.name} ${billingCycle === "monthly" ? "Bulanan" : "Tahunan"}`,
+        billing_interval: intervalTagih,
+        feature_codes: produkPaket?.feature_codes ?? ["plus_access"],
+        unit_price: hargaAsli,
+      },
       transactionType: "subscription",
       harga: hargaFinal,
       notes: {
@@ -308,6 +521,9 @@ serve(async (req) => {
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     console.error("create-mayar-payment error:", message);
-    return balas({ success: false, error: message }, 400);
+    if (error instanceof GalatCheckout) {
+      return balas({ success: false, error: message, code: error.code }, error.status);
+    }
+    return balas({ success: false, error: message, code: "CHECKOUT_GAGAL" }, 400);
   }
 });

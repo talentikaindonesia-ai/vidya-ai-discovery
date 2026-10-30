@@ -13,6 +13,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { kunciCheckout } from "@/lib/pembayaran";
 import { toast } from "sonner";
 import SEO from "@/components/SEO";
 import { cekPembayaran } from "@/lib/pembayaran";
@@ -198,7 +199,7 @@ export default function BootcampDetail() {
     setPaying(true);
     try {
       const { data: res, error } = await supabase.functions.invoke("create-mayar-payment", {
-        body: { kind: "bootcamp", bootcampId: b.id, phone: phone.trim() },
+        body: { kind: "bootcamp", bootcampId: b.id, phone: phone.trim(), idempotencyKey: kunciCheckout(`bootcamp:${b.id}`) },
       });
       if (error) {
         let msg = "Gagal membuat link pembayaran.";

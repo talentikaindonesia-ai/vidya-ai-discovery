@@ -7,7 +7,7 @@ import { invalidateSubscriptionCache } from "@/hooks/useSubscription";
 import { canPurchase, db, errMsg, openExternal, useApp } from "../store";
 import { BackBtn, Btn, Confetti, Header, Icon, Input, Loading, Sheet, TextArea } from "../ui";
 import { C, SH, rp, rpShort } from "../theme";
-import { cekPembayaran } from "@/lib/pembayaran";
+import { cekPembayaran, kunciCheckout } from "@/lib/pembayaran";
 import { fmtDate } from "../logic";
 import { SchoolCodeSheet } from "./More";
 import { DI_LUAR_PAKET, MATRIKS_PAKET } from "@/lib/paket";
@@ -184,7 +184,7 @@ function Checkout() {
     setVoucher({ id: v.id, label: `${v.name ?? c} · ${t("diskon", "discount")} ${label}` });
   };
   const create = async () => {
-    const { data, error } = await supabase.functions.invoke("create-mayar-payment", { body: { planId: plan.id, billingCycle: plan.cycle, paymentMethod: method, phone: phone.trim(), voucherId: voucher?.id, returnTo: "app" } });
+    const { data, error } = await supabase.functions.invoke("create-mayar-payment", { body: { planId: plan.id, billingCycle: plan.cycle, paymentMethod: method, phone: phone.trim(), voucherId: voucher?.id, returnTo: "app", idempotencyKey: kunciCheckout(`sub:${plan.id}:${plan.cycle}:${voucher?.id ?? ""}`) } });
     if (error || !data?.invoice_url) { let m = data?.error; try { m = (await (error as any)?.context?.json?.())?.error ?? m; } catch { /* */ } toast(m ?? t("Gagal membuat pembayaran", "Couldn't create payment"), "error"); return null; }
     sessionStorage.setItem("mayar_tx_id", data.transaction_id);
     track("purchase_started", { plan: `${plan.id}:${plan.cycle}`, platform: (window as any).Capacitor?.getPlatform?.() ?? "web" });
@@ -309,7 +309,7 @@ function PlusActive({ celebrate = false }: { celebrate?: boolean }) {
   });
   const unlocked: [string, string][] = [
     [t("Semua 8 modul Talent Discovery", "All 8 Talent Discovery modules"), "sparkle"], [t("Tika AI hingga 200 pesan/hari", "Tika AI up to 200 messages/day"), "msg"],
-    [t("Materi tanpa batas & unduh offline", "Unlimited courses & offline downloads"), "download"], [t("Peluang tanpa batas & rekomendasi sesuai profil", "Unlimited opportunities & profile-based picks"), "target"],
+    [t("Katalog materi Plus & unduh offline", "Plus course catalog & offline downloads"), "download"], [t("Peluang tanpa batas & rekomendasi sesuai profil", "Unlimited opportunities & profile-based picks"), "target"],
     [t("Jalur studi & karier personal", "Personal study & career paths"), "compass"], [t("Talent Passport lengkap", "Full Talent Passport"), "folder"],
     [t("Sertifikat yang memenuhi syarat", "Eligible certificates"), "medal"], [t("Posting di komunitas", "Post in the community"), "msg"],
   ];
@@ -350,6 +350,7 @@ function PlusActive({ celebrate = false }: { celebrate?: boolean }) {
             <div key={a} style={{ display: "flex", justifyContent: "space-between", gap: 10, padding: "11px 0", borderBottom: i < 2 ? "1px solid #F1F5FB" : "none" }}><span style={{ color: C.muted }}>{a}</span><b style={{ fontWeight: 600, textAlign: "right" }}>{b}</b></div>
           ))}
         </div>
+        <Btn kind="ghost" h={40} onClick={() => nav("/app/purchases")} style={{ marginTop: 8, fontSize: 13 }}>{t("Pembelian saya", "My purchases")}</Btn>
         <div style={{ display: "flex", gap: 9, marginTop: 10 }}>
           <Btn kind="outline" h={44} onClick={async () => { invalidateSubscriptionCache(); await qc.invalidateQueries({ queryKey: ["m-access"] }); qc.invalidateQueries({ queryKey: ["m-my-sub"] }); toast(t("Status diperbarui", "Status refreshed")); }} style={{ flex: 1, width: "auto", fontSize: 13 }}>{t("Pulihkan", "Restore")}</Btn>
           {source === "paid" && !cancelled && <Btn kind="ghost" h={44} onClick={() => setCancelOpen(true)} style={{ flex: 1, width: "auto", fontSize: 13, color: C.red }}>{t("Batalkan paket", "Cancel plan")}</Btn>}
