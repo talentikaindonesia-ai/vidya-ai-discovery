@@ -104,19 +104,22 @@ function NativeProInfo() {
 function PlusScreen() {
   const nav = useNavigate();
   const qc = useQueryClient();
-  const { t, lang, isPro, track, toast } = useApp();
+  const { t, lang, isPro, track, toast, access } = useApp();
   const { plans, loading } = usePlans();
+  const [params] = useSearchParams();
+  const perpanjang = params.get("renew") === "1";
   const [sel, setSel] = useState<string | null>(null);
   const [school, setSchool] = useState(false);
-  useEffect(() => { track("paywall_viewed", { entry_point: "pro_screen", plan: null, platform: (window as any).Capacitor?.getPlatform?.() ?? "web" }); }, []); // eslint-disable-line
-  if (isPro) return <PlusActive />;
+  useEffect(() => { track("paywall_viewed", { entry_point: perpanjang ? "renew" : "pro_screen", plan: null, platform: (window as any).Capacitor?.getPlatform?.() ?? "web" }); }, []); // eslint-disable-line
+  if (isPro && !perpanjang) return <PlusActive />;
   const chosen = plans.find(p => p.key === sel) ?? plans.find(p => p.popular) ?? plans[0];
   const cheapest = plans.length ? Math.min(...plans.map(p => Math.round(p.price / p.months))) : null;
   const restore = async () => { invalidateSubscriptionCache(); await qc.invalidateQueries({ queryKey: ["m-access"] }); const { data } = await db.rpc("my_access"); toast(data?.is_premium ? t("Langganan ditemukan & dipulihkan", "Subscription found & restored") : t("Belum ada langganan aktif di akun ini", "No active subscription on this account")); };
   return (
     <div className="tk-screen" style={{ position: "absolute", inset: 0, overflow: "auto", background: C.bg, paddingBottom: 0 }}>
-      <Header title="Talentika Plus" sub={t("Buka potensi penuhmu", "Unlock your full potential")} />
+      <Header title="Talentika Plus" sub={perpanjang ? t("Perpanjang langganan", "Renew your plan") : t("Buka potensi penuhmu", "Unlock your full potential")} />
       <div style={{ padding: "14px 20px 20px" }}>
+        {perpanjang && isPro && <div style={{ background: C.tintBlue, borderRadius: 16, padding: "12px 14px", marginBottom: 12, fontSize: 12.5, color: C.text2, lineHeight: 1.55 }}>{(access as any)?.state === "grace" ? t("Masa aktifmu sudah habis, jadi periode baru dimulai saat pembayaran dikonfirmasi.", "Your plan has ended, so the new period starts once payment is confirmed.") : t("Masa aktif baru ditambahkan setelah masa aktifmu sekarang habis, jadi tidak ada hari yang hilang.", "The new period starts when your current one ends, so you don't lose any days.")}</div>}
         <Hero kicker={cheapest ? t(`MULAI ${rpShort(cheapest)}/BULAN`, `FROM ${rpShort(cheapest)}/MONTH`) : "TALENTIKA PLUS"} title={<>{t("Melangkah lebih jauh", "Go further with")}<br />{t("bersama Talentika Plus", "Talentika Plus")}</>} sub={t("Asesmen lengkap, AI Talent Coach, rekomendasi peluang, dan Talent Passport lengkap.", "Full assessment, AI Talent Coach, opportunity picks and a full Talent Passport.")} />
         <div style={{ fontSize: 16, fontWeight: 700, marginTop: 18 }}>Free vs Plus</div>
         <CompareTable />
@@ -159,7 +162,7 @@ const METHODS = [
 function Checkout() {
   const nav = useNavigate();
   const [params] = useSearchParams();
-  const { t, lang, profile, toast, track } = useApp();
+  const { t, lang, profile, toast, track, access } = useApp();
   const { plans, loading } = usePlans();
   const plan = plans.find(p => p.id === params.get("plan") && p.cycle === params.get("cycle"));
   const [method, setMethod] = useState("gopay");
@@ -187,6 +190,7 @@ function Checkout() {
     const { data, error } = await supabase.functions.invoke("create-mayar-payment", { body: { planId: plan.id, billingCycle: plan.cycle, paymentMethod: method, phone: phone.trim(), voucherId: voucher?.id, returnTo: "app", idempotencyKey: kunciCheckout(`sub:${plan.id}:${plan.cycle}:${voucher?.id ?? ""}`) } });
     if (error || !data?.invoice_url) { let m = data?.error; try { m = (await (error as any)?.context?.json?.())?.error ?? m; } catch { /* */ } toast(m ?? t("Gagal membuat pembayaran", "Couldn't create payment"), "error"); return null; }
     sessionStorage.setItem("mayar_tx_id", data.transaction_id);
+    try { sessionStorage.setItem("tk_akhir_sebelum", String(access?.is_premium ? access.expires_at ?? "" : "")); } catch { /* */ }
     track("purchase_started", { plan: `${plan.id}:${plan.cycle}`, platform: (window as any).Capacitor?.getPlatform?.() ?? "web" });
     return data.invoice_url as string;
   };
@@ -274,7 +278,11 @@ function Paid() {
       invalidateSubscriptionCache();
       const { data } = await db.rpc("my_access");
       if (stop) return;
-      if (data?.is_premium) { setState("ok"); qc.invalidateQueries({ queryKey: ["m-access"] }); track("purchase_completed", { plan: null, platform: (window as any).Capacitor?.getPlatform?.() ?? "web" }); return; }
+      let sebelum = "";
+      try { sebelum = sessionStorage.getItem("tk_akhir_sebelum") ?? ""; } catch { /* */ }
+      // Perpanjangan: sukses bila tanggal berakhir sudah bergeser, bukan sekadar masih premium
+      const bergeser = !sebelum || (data?.expires_at && +new Date(data.expires_at) > +new Date(sebelum));
+      if (data?.is_premium && bergeser) { try { sessionStorage.removeItem("tk_akhir_sebelum"); } catch { /* */ } setState("ok"); qc.invalidateQueries({ queryKey: ["m-access"] }); track("purchase_completed", { plan: null, platform: (window as any).Capacitor?.getPlatform?.() ?? "web" }); return; }
       if (++n > 40) { setState("timeout"); return; }
       setTimeout(tick, 3000);
     };
@@ -316,6 +324,10 @@ function PlusActive({ celebrate = false }: { celebrate?: boolean }) {
   const source = access?.source;
   const sourceLabel = source === "school" ? t("Lewat sekolahmu", "Through your school") : source === "trial" ? t("Masa coba", "Trial") : source === "admin" ? "Admin" : (sub as any)?.subscription_packages?.name ?? "Plus";
   const cancelled = sub?.status === "cancelled";
+  const acc = access as (typeof access & { state?: string | null; grace_until?: string | null }) | null;
+  const grace = acc?.state === "grace";
+  const sisaHari = acc?.expires_at ? Math.ceil((+new Date(acc.expires_at) - Date.now()) / 86_400_000) : null;
+  const bolehPerpanjang = source === "paid" && (grace || cancelled || (sisaHari !== null && sisaHari <= 30));
   const doCancel = async () => {
     setBusy(true);
     const { data, error } = await db.rpc("batalkan_langganan", { p_alasan: why.trim() || null });
@@ -346,14 +358,21 @@ function PlusActive({ celebrate = false }: { celebrate?: boolean }) {
         <Btn h={52} onClick={() => nav("/app/home", { replace: celebrate })} style={{ marginTop: 14 }}>{t("Jelajahi Plus", "Explore Plus")}</Btn>
         <div style={{ fontSize: 16, fontWeight: 700, marginTop: 20 }}>{t("Kelola langganan", "Manage subscription")}</div>
         <div style={{ background: "#fff", borderRadius: 18, boxShadow: SH.card, padding: "4px 14px", marginTop: 10, fontSize: 13 }}>
-          {[[t("Paket", "Plan"), sourceLabel], [t("Status", "Status"), cancelled ? t("Dibatalkan · tidak diperpanjang", "Cancelled · won't renew") : t("Aktif", "Active")], [t("Berlaku sampai", "Valid until"), access?.expires_at ? fmtDate(access.expires_at, lang) : "—"]].map(([a, b], i) => (
+          {[[t("Paket", "Plan"), sourceLabel], [t("Status", "Status"), grace ? t("Masa tenggang", "Grace period") : cancelled ? t("Dibatalkan · tidak diperpanjang", "Cancelled · won't renew") : t("Aktif", "Active")], [t("Berlaku sampai", "Valid until"), access?.expires_at ? fmtDate(access.expires_at, lang) : "—"]].map(([a, b], i) => (
             <div key={a} style={{ display: "flex", justifyContent: "space-between", gap: 10, padding: "11px 0", borderBottom: i < 2 ? "1px solid #F1F5FB" : "none" }}><span style={{ color: C.muted }}>{a}</span><b style={{ fontWeight: 600, textAlign: "right" }}>{b}</b></div>
           ))}
         </div>
+        {grace && acc?.grace_until && (
+          <div style={{ marginTop: 10, background: C.tintYellow, borderRadius: 16, padding: "12px 14px", fontSize: 12.5, color: "#7A5200", lineHeight: 1.55 }}>
+            {t(`Masa aktif sudah berakhir. Akses Plus masih jalan sampai ${fmtDate(acc.grace_until, lang)} (masa tenggang 3 hari). Perpanjang sebelum tanggal itu agar tidak terputus.`, `Your plan has ended. Plus access continues until ${fmtDate(acc.grace_until, lang)} (3-day grace period). Renew before then to keep it.`)}
+          </div>
+        )}
+        {bolehPerpanjang && canPurchase() && <Btn h={46} onClick={() => nav("/app/pro?renew=1")} style={{ marginTop: 10 }}>{t("Perpanjang Plus", "Renew Plus")}</Btn>}
+        {source === "paid" && !grace && !cancelled && sisaHari !== null && sisaHari > 30 && <div style={{ marginTop: 8, fontSize: 11.5, color: C.muted, textAlign: "center" }}>{t("Perpanjangan tidak otomatis. Tombol perpanjang muncul 30 hari sebelum berakhir.", "Renewal isn't automatic. The renew button appears 30 days before your plan ends.")}</div>}
         <Btn kind="ghost" h={40} onClick={() => nav("/app/purchases")} style={{ marginTop: 8, fontSize: 13 }}>{t("Pembelian saya", "My purchases")}</Btn>
         <div style={{ display: "flex", gap: 9, marginTop: 10 }}>
           <Btn kind="outline" h={44} onClick={async () => { invalidateSubscriptionCache(); await qc.invalidateQueries({ queryKey: ["m-access"] }); qc.invalidateQueries({ queryKey: ["m-my-sub"] }); toast(t("Status diperbarui", "Status refreshed")); }} style={{ flex: 1, width: "auto", fontSize: 13 }}>{t("Pulihkan", "Restore")}</Btn>
-          {source === "paid" && !cancelled && <Btn kind="ghost" h={44} onClick={() => setCancelOpen(true)} style={{ flex: 1, width: "auto", fontSize: 13, color: C.red }}>{t("Batalkan paket", "Cancel plan")}</Btn>}
+          {source === "paid" && !cancelled && !grace && <Btn kind="ghost" h={44} onClick={() => setCancelOpen(true)} style={{ flex: 1, width: "auto", fontSize: 13, color: C.red }}>{t("Batalkan paket", "Cancel plan")}</Btn>}
         </div>
         {source === "school" && <div style={{ marginTop: 10, fontSize: 11.5, color: C.muted, textAlign: "center" }}>{t("Akses Plus diberikan sekolahmu selama kamu terdaftar di sana.", "Plus access is provided by your school while you're enrolled there.")}</div>}
       </div>

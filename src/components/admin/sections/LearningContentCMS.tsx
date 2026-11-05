@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { isiUrlPremium, isiUrlPremiumSatu } from "@/lib/materiPremium";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Search, Plus, Edit2, Trash2, Eye, Loader2, Save, FileQuestion, X, Copy, Upload, Image as ImageIcon, ListChecks } from "lucide-react";
@@ -52,7 +53,7 @@ export default function LearningContentCMS({ categories }: { categories: Categor
         .order("priority_score", { ascending: false }),
       (supabase.rpc as any)("admin_content_stats"),
     ]);
-    setItems(data ?? []);
+    setItems(await isiUrlPremium((data ?? []) as any[]));
     if (Array.isArray(statsRes.data)) {
       setStats(new Map(statsRes.data.map((s: any) => [s.content_id, s])));
     }

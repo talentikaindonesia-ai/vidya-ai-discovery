@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { isiUrlPremium, isiUrlPremiumSatu } from "@/lib/materiPremium";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -243,7 +244,7 @@ export const PersonalizedLearningHub = ({
         .select(`
           content_id,
           learning_content (
-            id, title, content_url
+            id, title, content_url, is_premium
           )
         `)
         .eq('path_id', path.id)
@@ -276,7 +277,7 @@ export const PersonalizedLearningHub = ({
         toast.success(`Learning path "${path.name}" dimulai!`);
         
         // Redirect to content if it has URL
-        const learningContent = content.learning_content as any;
+        const learningContent = await isiUrlPremiumSatu(content.learning_content as any) as any;
         if (learningContent?.content_url) {
           window.open(learningContent.content_url, '_blank');
         }

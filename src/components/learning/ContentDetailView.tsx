@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { isiUrlPremium, isiUrlPremiumSatu } from "@/lib/materiPremium";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -121,7 +122,7 @@ export const ContentDetailView = () => {
 
       if (contentError) throw contentError;
 
-      setContent(contentData);
+      setContent(await isiUrlPremiumSatu(contentData));
 
       // Kelas premium tidak termasuk Plus: hanya pembeli kelas, siswa sekolah mitra, dan admin.
       if (contentData.is_premium) {

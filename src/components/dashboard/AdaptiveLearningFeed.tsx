@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { isiUrlPremium, isiUrlPremiumSatu } from "@/lib/materiPremium";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -208,7 +209,7 @@ export const AdaptiveLearningFeed = ({
         }
       });
 
-      setContent(sortedContent);
+      setContent(await isiUrlPremium(sortedContent));
     } catch (error) {
       console.error('Error loading adaptive content:', error);
     } finally {

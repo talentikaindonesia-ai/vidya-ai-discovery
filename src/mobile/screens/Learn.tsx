@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { isiUrlPremium, isiUrlPremiumSatu } from "@/lib/materiPremium";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { kunciCheckout } from "@/lib/pembayaran";
@@ -327,6 +328,7 @@ function Course() {
           db.rpc("kelas_terbuka"),
         ]);
         if (error) throw error;
+        if (c?.is_premium && !c.content_url) Object.assign(c, await isiUrlPremiumSatu(c));
         return { c, p, stages: new Set((st ?? []).map((s: any) => s.stage)), quiz: (q ?? []) as any[], refl: r?.[0] ?? null, terkunci: !!c?.is_premium && !(terbuka ?? []).includes(id) };
       } catch (e) {
         const off = readOffline()[id];

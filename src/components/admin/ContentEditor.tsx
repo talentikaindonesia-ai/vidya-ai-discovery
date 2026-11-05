@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { isiUrlPremium, isiUrlPremiumSatu } from "@/lib/materiPremium";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -103,13 +104,14 @@ export const ContentEditor = () => {
   const loadContent = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      const { data: baris, error } = await supabase
         .from('learning_content')
         .select('*')
         .eq('id', contentId)
         .single();
 
       if (error) throw error;
+      const data = await isiUrlPremiumSatu(baris) as typeof baris;
 
       setFormData({
         id: data.id,

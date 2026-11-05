@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Search, Plus, Edit2, Trash2, Loader2, Save } from "lucide-react";
 import { inputStyle, selectStyle, textareaStyle, Pill, Toggle, Modal, Confirm, Field } from "../adminShared";
 import SumberResmiPanel from "./SumberResmiPanel";
+import KurasiPeluangPanel from "./KurasiPeluangPanel";
 import UnggahGambar from "../UnggahGambar";
 
 /* Agregator pihak ke-3 yang pernah mengisi papan ini. Daftar yang sama
@@ -131,7 +132,7 @@ export default function OpportunitiesCMS() {
   const [tagInput, setTagInput]   = useState("");
   const [page, setPage]           = useState(0);
   const [quality, setQuality]     = useState<"all" | "reported" | "expired" | "indonesia" | "manual" | "inactive">("all");
-  const [view, setView]           = useState<"peluang" | "sumber">("peluang");
+  const [view, setView]           = useState<"peluang" | "kurasi" | "sumber">("peluang");
   const PAGE = 15;
 
   const load = useCallback(async () => {
@@ -308,6 +309,7 @@ export default function OpportunitiesCMS() {
       <div style={{ display: "flex", gap: 8, marginBottom: 16, borderBottom: "1px solid #E2E8F0" }}>
         {([
           { id: "peluang", label: "Peluang" },
+          { id: "kurasi",  label: "Antrean Kurasi" },
           { id: "sumber",  label: "Sumber Resmi" },
         ] as const).map(t => (
           <button key={t.id} onClick={() => setView(t.id)}
@@ -323,7 +325,8 @@ export default function OpportunitiesCMS() {
         ))}
       </div>
 
-      {view === "sumber" ? <SumberResmiPanel onKurasi={kurasiDariSumber} /> : (
+      {view === "kurasi" ? <KurasiPeluangPanel bidang={OPP_FIELDS.map(f => [f, `${fieldCfg(f).emoji} ${fieldCfg(f).label}`] as [string, string])} /> :
+       view === "sumber" ? <SumberResmiPanel onKurasi={kurasiDariSumber} /> : (
       <>
       {/* Quality stats */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12, marginBottom: 16 }}>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { isiUrlPremium, isiUrlPremiumSatu } from "@/lib/materiPremium";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -117,7 +118,7 @@ export const LearningContentManager = () => {
       if (contentRes.error) throw contentRes.error;
 
       setCategories(categoriesRes.data || []);
-      setContent(contentRes.data || []);
+      setContent(await isiUrlPremium((contentRes.data || []) as any[]));
     } catch (error: any) {
       toast.error("Gagal memuat data: " + error.message);
     } finally {

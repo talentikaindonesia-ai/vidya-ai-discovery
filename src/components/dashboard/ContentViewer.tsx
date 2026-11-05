@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { isiUrlPremium, isiUrlPremiumSatu } from "@/lib/materiPremium";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -94,7 +95,7 @@ export const ContentViewer = () => {
         throw progressError;
       }
 
-      setContent(contentData);
+      setContent(await isiUrlPremiumSatu(contentData));
       setProgress(progressData || null);
       setIsStarted(!!progressData);
     } catch (error: any) {

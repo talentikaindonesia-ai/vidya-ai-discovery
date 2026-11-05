@@ -12,6 +12,10 @@ export interface SubscriptionState {
   status: string | null;
   expiresAt: string | null;
   daysLeft: number | null;
+  /** active | grace | trial | paused | cancelled | expired | none (status_plus di DB) */
+  state: string | null;
+  /** Akhir masa tenggang 3 hari bila state = grace */
+  graceUntil: string | null;
   loading: boolean;
 }
 
@@ -25,6 +29,8 @@ const DEFAULT: SubscriptionState = {
   status: null,
   expiresAt: null,
   daysLeft: null,
+  state: null,
+  graceUntil: null,
   loading: true,
 };
 
@@ -66,6 +72,8 @@ export function useSubscription(): SubscriptionState {
         source: string | null;
         expires_at: string | null;
         type: string | null;
+        state?: string | null;
+        grace_until?: string | null;
       };
 
       const exp = acc.expires_at ?? null;
@@ -84,6 +92,8 @@ export function useSubscription(): SubscriptionState {
         status: acc.is_premium ? "active" : "inactive",
         expiresAt: exp,
         daysLeft,
+        state: acc.state ?? null,
+        graceUntil: acc.grace_until ?? null,
         loading: false,
       };
 

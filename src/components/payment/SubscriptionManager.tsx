@@ -338,6 +338,11 @@ export const SubscriptionManager = ({
     const isExpiringSoon = !isPaused && days <= 7 && days !== Infinity;
     const isExpired = !isPaused && days < 0;
     const isCancelled = currentSubscription.status === "cancelled";
+    // Masa tenggang 3 hari setelah berakhir (perpanjangan manual) — sama dengan tenggang_plus() di database
+    const tenggangSampai = currentSubscription.expires_at
+      ? new Date(new Date(currentSubscription.expires_at).getTime() + 3 * 86_400_000)
+      : null;
+    const isGrace = isExpired && !isCancelled && !!tenggangSampai && tenggangSampai.getTime() > Date.now();
     const pkg = currentSubscription.subscription_packages;
     const hariDibekukan = isPaused && currentSubscription.expires_at
       ? Math.max(0, Math.ceil(
@@ -361,11 +366,12 @@ export const SubscriptionManager = ({
               className={
                 isPaused ? "bg-blue-100 text-blue-700" :
                 isCancelled ? "bg-red-100 text-red-700" :
+                isGrace ? "bg-amber-100 text-amber-800" :
                 isExpired ? "bg-gray-100 text-gray-600" :
                 "bg-green-100 text-green-700"
               }
             >
-              {isPaused ? "Dijeda" : isCancelled ? "Dibatalkan" : isExpired ? "Kedaluwarsa" : "Aktif"}
+              {isPaused ? "Dijeda" : isCancelled ? "Dibatalkan" : isGrace ? "Masa tenggang" : isExpired ? "Kedaluwarsa" : "Aktif"}
             </Badge>
           </div>
         </CardHeader>
@@ -430,6 +436,16 @@ export const SubscriptionManager = ({
             </div>
           )}
 
+          {isGrace && tenggangSampai && (
+            <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-50 border border-amber-200 text-sm text-amber-800">
+              <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+              <span>
+                Masa aktif sudah berakhir. Akses Plus masih jalan sampai <strong>{formatDate(tenggangSampai.toISOString())}</strong> (masa tenggang 3 hari).
+                Perpanjangan tidak otomatis, jadi perpanjang sebelum tanggal itu agar akses tidak terputus.
+              </span>
+            </div>
+          )}
+
           {/* Action buttons */}
           <div className="flex flex-wrap gap-2 pt-1">
             {/* Renew / Upgrade */}
@@ -442,7 +458,7 @@ export const SubscriptionManager = ({
                 }}
               >
                 <RefreshCw className="w-4 h-4 mr-2" />
-                {isCancelled || isExpired ? "Berlangganan Ulang" : "Perpanjang Sekarang"}
+                {isCancelled || (isExpired && !isGrace) ? "Berlangganan Ulang" : "Perpanjang Sekarang"}
               </Button>
             )}
 
