@@ -13,8 +13,8 @@ const QUICK_LINKS = [
 
 const SERVICE_LINKS = [
   { label: "Tes Minat & Bakat",  href: "/assessment" },
-  { label: "Eksplorasi Karir",   href: "/opportunities" },
-  { label: "Learning Hub",       href: "/learning-hub" },
+  { label: "Beasiswa & Kompetisi", href: "/peluang" },
+  { label: "Learning Hub",       href: "/learning" },
   { label: "Komunitas Belajar",  href: "/community" },
   { label: "Portfolio Builder",  href: "/portfolio" },
 ];

@@ -115,6 +115,7 @@ const Header = () => {
     { label: "Fitur",        href: "#fitur" },
     { label: "Tentang Kami", href: "/tentang-kami" },
     { label: "Harga",        href: "#harga" },
+    { label: "Beasiswa",     href: "/peluang" },
     { label: "Artikel",      href: "/articles" },
   ];
 

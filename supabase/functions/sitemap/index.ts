@@ -7,6 +7,7 @@ const DOMAIN = 'https://talentika.id'
 const STATIC_PAGES = [
   { loc: '/',                 changefreq: 'weekly',  priority: '1.0' },
   { loc: '/articles',         changefreq: 'daily',   priority: '0.9' },
+  { loc: '/peluang',          changefreq: 'daily',   priority: '0.9' },
   { loc: '/for-schools',      changefreq: 'monthly', priority: '0.8' },
   { loc: '/roadmap',          changefreq: 'weekly',  priority: '0.7' },
   { loc: '/tentang-kami',     changefreq: 'monthly', priority: '0.6' },
@@ -20,6 +21,15 @@ const esc = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;')
 const tgl = (v: string | null | undefined, cadangan: string) => (v || cadangan).split('T')[0]
 
+// Harus sama dengan slugPeluang() di src/lib/peluangPublik.ts
+function slugPeluang(judul: string, id: string): string {
+  const s = (judul || 'peluang')
+    .normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+    .slice(0, 70).replace(/-+$/, '')
+  return `${s || 'peluang'}--${id}`
+}
+
 Deno.serve(async () => {
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL') ?? '',
@@ -27,10 +37,13 @@ Deno.serve(async () => {
   )
   const now = new Date().toISOString().split('T')[0]
 
-  const [{ data: articles }, { data: roadmaps }, { data: bootcamps }] = await Promise.all([
+  const [{ data: articles }, { data: roadmaps }, { data: bootcamps }, { data: peluang }] = await Promise.all([
     supabase.from('articles').select('slug, created_at, updated_at').eq('is_published', true).order('created_at', { ascending: false }),
     supabase.from('roadmaps').select('slug, dibuat_pada, diperbarui_pada').eq('status', 'terbit'),
     supabase.from('bootcamps').select('slug, created_at, updated_at').eq('is_published', true),
+    // Hanya peluang yang tenggatnya sudah dipastikan admin (sama dengan bolehDiindeks())
+    supabase.from('scraped_content').select('id, title, updated_at, created_at')
+      .eq('is_active', true).or('deadline.not.is.null,tanpa_tenggat.eq.true').limit(2000),
   ])
 
   const url = (loc: string, lastmod: string, changefreq: string, priority: string) => `
@@ -51,6 +64,9 @@ Deno.serve(async () => {
   }
   for (const r of roadmaps ?? []) {
     if (r.slug) urls.push(url(`/roadmap/${encodeURIComponent(r.slug)}`, tgl(r.diperbarui_pada ?? r.dibuat_pada, now), 'monthly', '0.7'))
+  }
+  for (const p of peluang ?? []) {
+    urls.push(url(`/peluang/${slugPeluang(p.title, p.id)}`, tgl(p.updated_at ?? p.created_at, now), 'weekly', '0.7'))
   }
   for (const b of bootcamps ?? []) {
     if (b.slug) urls.push(url(`/bootcamp/${encodeURIComponent(b.slug)}`, tgl(b.updated_at ?? b.created_at, now), 'weekly', '0.7'))

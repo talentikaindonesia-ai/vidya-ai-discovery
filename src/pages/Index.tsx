@@ -86,6 +86,7 @@ const Nav = ({ navigate }: { navigate: ReturnType<typeof useNavigate> }) => {
     { label: "Fitur",        href: "#fitur" },
     { label: "Tentang Kami", href: "/tentang-kami" },
     { label: "Harga",        href: "#harga" },
+    { label: "Beasiswa",     href: "/peluang" },
     { label: "Artikel",      href: "/articles" },
     { label: "Mitra",        href: "/mitra" },
   ];
@@ -1343,8 +1344,8 @@ const Footer = ({ navigate }: { navigate: ReturnType<typeof useNavigate> }) => (
         <ul>
           {[
             { label: "Tes Minat & Bakat",   href: "/assessment" },
-            { label: "Eksplorasi Karir",     href: "/opportunities" },
-            { label: "Learning Hub",         href: "/learning-hub" },
+            { label: "Beasiswa & Kompetisi", href: "/peluang" },
+            { label: "Learning Hub",         href: "/learning" },
             { label: "Komunitas Belajar",    href: "/community" },
             { label: "Portfolio Builder",    href: "/portfolio" },
           ].map(({ label, href }) => (

@@ -16,6 +16,17 @@
       "destination": "https://doogbcrodipaeahgbjuj.supabase.co/functions/v1/article-og?slug=:slug"
     },
     {
+      "source": "/peluang/:slug",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(facebookexternalhit|Facebot|Twitterbot|WhatsApp|LinkedInBot|TelegramBot|Slackbot|Discordbot|Pinterestbot|vkShare|Line/).*"
+        }
+      ],
+      "destination": "https://doogbcrodipaeahgbjuj.supabase.co/functions/v1/peluang-og?slug=:slug"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

@@ -24,10 +24,10 @@ import {
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
-// Kembali ke halaman program setelah login. Pola dibatasi ketat supaya
+// Kembali ke halaman program/peluang setelah login. Pola dibatasi ketat supaya
 // ?redirect= tidak bisa dipakai untuk mengarahkan ke situs lain.
 const jalurKembali = (r: string | null) =>
-  r && /^\/bootcamp\/[a-z0-9]+(-[a-z0-9]+)*$/.test(r) ? r : null;
+  r && (/^\/bootcamp\/[a-z0-9]+(-[a-z0-9]+)*$/.test(r) || /^\/peluang\/[a-z0-9-]+$/.test(r)) ? r : null;
 
 const recordReferral = async (code: string, newUserId: string) => {
   const { data: refRow } = await supabase
