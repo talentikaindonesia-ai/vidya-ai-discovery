@@ -51,3 +51,7 @@ $$;
 
 revoke all on function public.antrean_kurasi_peluang() from public, anon;
 grant execute on function public.antrean_kurasi_peluang() to authenticated;
+
+-- Fungsi trigger tidak perlu bisa dipanggil langsung
+revoke all on function public.pisahkan_url_premium(), public.hapus_materi_premium() from public, anon, authenticated;
+alter function public.tenggang_plus() set search_path to 'public';
