@@ -179,6 +179,7 @@ export default function Legal({ jenis }: { jenis: "privasi" | "syarat" }) {
         description={privasi
           ? "Bagaimana Talentika mengumpulkan, memakai, dan melindungi data pribadi pelajar sesuai UU PDP."
           : "Syarat dan ketentuan pemakaian talentika.id dan aplikasi Talentika, termasuk paket Free dan Plus."}
+        canonical={`https://talentika.id/${privasi ? "kebijakan-privasi" : "syarat-ketentuan"}`}
       />
       <Header />
       <main style={{ maxWidth: 760, margin: "0 auto", padding: "104px 16px 56px", color: "#0F172A", fontFamily: "var(--tk-font-sans, 'Inter', sans-serif)" }}>

@@ -531,13 +531,11 @@ const Articles = () => {
           title={selectedArticle.seo_title || selectedArticle.title}
           description={selectedArticle.seo_description || selectedArticle.excerpt}
           keywords={[...(selectedArticle.tags || []), selectedArticle.category, "talentika", "artikel karir"].join(", ")}
-          image={selectedArticle.featured_image_url || "https://talentika.id/logo.png"}
-          imageWidth={selectedArticle.featured_image_url ? 1200 : 512}
-          imageHeight={selectedArticle.featured_image_url ? 630 : 512}
+          image={selectedArticle.featured_image_url || "https://talentika.id/og-talentika.jpg"}
           type="article"
           canonical={`https://talentika.id/articles/${selectedArticle.slug}`}
           publishedTime={selectedArticle.published_at || selectedArticle.created_at}
-          modifiedTime={selectedArticle.created_at}
+          modifiedTime={(selectedArticle as any).updated_at || selectedArticle.published_at || selectedArticle.created_at}
           author="Tim Talentika"
           structuredData={{
             "@context": "https://schema.org",
@@ -548,11 +546,11 @@ const Articles = () => {
               "@type": "ImageObject",
               "url": selectedArticle.featured_image_url,
               "width": 1200, "height": 630
-            } : "https://talentika.id/logo.png",
+            } : { "@type": "ImageObject", "url": "https://talentika.id/og-talentika.jpg", "width": 1200, "height": 630 },
             "author": { "@type": "Organization", "name": "Tim Talentika", "url": "https://talentika.id" },
             "publisher": { "@type": "Organization", "name": "Talentika", "logo": { "@type": "ImageObject", "url": "https://talentika.id/logo.png" } },
             "datePublished": selectedArticle.published_at || selectedArticle.created_at,
-            "dateModified": selectedArticle.created_at,
+            "dateModified": (selectedArticle as any).updated_at || selectedArticle.published_at || selectedArticle.created_at,
             "mainEntityOfPage": { "@type": "WebPage", "@id": `https://talentika.id/articles/${selectedArticle.slug}` },
             "inLanguage": "id-ID",
             "keywords": (selectedArticle.tags || []).join(", "),

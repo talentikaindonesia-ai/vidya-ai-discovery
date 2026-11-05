@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 
 const DOMAIN = 'https://talentika.id';
-const DEFAULT_OG_IMAGE = `${DOMAIN}/logo.png`;
+const DEFAULT_OG_IMAGE = `${DOMAIN}/og-talentika.jpg`;
 
 const ROUTE_LABELS: Record<string, string> = {
   articles: "Artikel", dashboard: "Dashboard", learning: "Learning Hub",
@@ -52,12 +52,12 @@ interface SEOProps {
 }
 
 const SEO = ({
-  title = "Talentika - Temukan Minat & Bakat Mu | Eksplorasi Karir",
-  description = "Platform terlengkap untuk menemukan minat, bakat, dan potensi diri. Tes psikometri RIASEC, Holland Test, panduan karir, beasiswa, kompetisi & magang untuk generasi muda Indonesia.",
-  keywords = "tes minat bakat, eksplorasi karir, psikometri online, holland test indonesia, RIASEC test, MBTI indonesia, pelajar, mahasiswa, talent discovery, beasiswa indonesia, magang",
+  title = "Talentika — Tes Minat Bakat RIASEC Gratis & Jalur Karier Pelajar",
+  description = "Tes minat bakat RIASEC gratis, jalur karier, beasiswa, kompetisi, dan magang untuk pelajar SMP, SMA/SMK, dan mahasiswa Indonesia.",
+  keywords = "tes minat bakat, tes RIASEC, holland test indonesia, pilih jurusan kuliah, eksplorasi karier, beasiswa pelajar, kompetisi pelajar, magang",
   image = DEFAULT_OG_IMAGE,
-  imageWidth = 512,
-  imageHeight = 512,
+  imageWidth = 1200,
+  imageHeight = 630,
   type = "website",
   canonical,
   noindex = false,
@@ -70,6 +70,8 @@ const SEO = ({
   const currentUrl = `${DOMAIN}${location.pathname}`;
   const canonicalUrl = canonical || currentUrl;
   const fullTitle = title.includes("Talentika") ? title : `${title} — Talentika`;
+  // Gambar relatif ("/x.png") jadi absolut — perayap media sosial butuh URL penuh
+  const imageUrl = /^https?:\/\//.test(image) ? image : `${DOMAIN}${image.startsWith("/") ? "" : "/"}${image}`;
 
   useEffect(() => {
     document.title = fullTitle;
@@ -93,7 +95,7 @@ const SEO = ({
     // ── Open Graph ────────────────────────────────────────────────────
     setMeta('og:title',       fullTitle,           'property');
     setMeta('og:description', description,          'property');
-    setMeta('og:image',       image,                'property');
+    setMeta('og:image',       imageUrl,             'property');
     setMeta('og:image:width', String(imageWidth),   'property');
     setMeta('og:image:height',String(imageHeight),  'property');
     setMeta('og:image:alt',   fullTitle,            'property');
@@ -116,7 +118,7 @@ const SEO = ({
     setMeta('twitter:creator',     '@talentikaid');
     setMeta('twitter:title',       fullTitle);
     setMeta('twitter:description', description);
-    setMeta('twitter:image',       image);
+    setMeta('twitter:image',       imageUrl);
     setMeta('twitter:image:alt',   fullTitle);
 
     // ── Canonical ─────────────────────────────────────────────────────
@@ -143,6 +145,9 @@ const SEO = ({
     ensureHreflang('x-default', canonicalUrl);
 
     // ── Page-specific structured data ─────────────────────────────────
+    // Data terstruktur halaman sebelumnya tidak boleh tertinggal saat pindah halaman (SPA)
+    if (!structuredData) document.querySelector('script[type="application/ld+json"][data-dynamic="page"]')?.remove();
+    if (location.pathname === '/') document.querySelector('script[type="application/ld+json"][data-dynamic="breadcrumb"]')?.remove();
     if (structuredData) {
       let script = document.querySelector('script[type="application/ld+json"][data-dynamic="page"]');
       if (!script) {
@@ -165,7 +170,7 @@ const SEO = ({
       }
       bcScript.textContent = JSON.stringify(buildBreadcrumb(location.pathname));
     }
-  }, [fullTitle, description, keywords, image, imageWidth, imageHeight, type, currentUrl, canonicalUrl, noindex, structuredData, publishedTime, modifiedTime, author, location.pathname]);
+  }, [fullTitle, description, keywords, imageUrl, imageWidth, imageHeight, type, currentUrl, canonicalUrl, noindex, structuredData, publishedTime, modifiedTime, author, location.pathname]);
 
   return null;
 };

@@ -2,76 +2,62 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const DOMAIN = 'https://talentika.id'
 
+// Hanya halaman yang bisa dibuka TANPA login. Halaman yang butuh login dialihkan
+// ke /auth (noindex), jadi tidak boleh masuk sitemap.
 const STATIC_PAGES = [
-  { loc: '/',                 changefreq: 'weekly',  priority: '1.0', lastmod: '2026-06-01' },
+  { loc: '/',                 changefreq: 'weekly',  priority: '1.0' },
   { loc: '/articles',         changefreq: 'daily',   priority: '0.9' },
-  { loc: '/assessment',       changefreq: 'monthly', priority: '0.9', lastmod: '2026-05-01' },
-  { loc: '/opportunities',    changefreq: 'daily',   priority: '0.8' },
-  { loc: '/for-schools',      changefreq: 'weekly',  priority: '0.8', lastmod: '2026-05-01' },
-  { loc: '/talentika-junior', changefreq: 'weekly',  priority: '0.8', lastmod: '2026-05-01' },
-  { loc: '/tentang-kami',     changefreq: 'monthly', priority: '0.7', lastmod: '2026-04-01' },
-  { loc: '/subscription',     changefreq: 'monthly', priority: '0.7' },
-  { loc: '/community',        changefreq: 'daily',   priority: '0.6' },
-  { loc: '/learning',         changefreq: 'weekly',  priority: '0.6' },
-  { loc: '/mitra',            changefreq: 'monthly', priority: '0.5', lastmod: '2026-04-01' },
+  { loc: '/for-schools',      changefreq: 'monthly', priority: '0.8' },
+  { loc: '/roadmap',          changefreq: 'weekly',  priority: '0.7' },
+  { loc: '/tentang-kami',     changefreq: 'monthly', priority: '0.6' },
+  { loc: '/mitra',            changefreq: 'monthly', priority: '0.6' },
+  { loc: '/talentika-junior', changefreq: 'monthly', priority: '0.5' },
+  { loc: '/kebijakan-privasi', changefreq: 'yearly', priority: '0.3' },
+  { loc: '/syarat-ketentuan', changefreq: 'yearly',  priority: '0.3' },
 ]
 
-function xmlEscape(str: string): string {
-  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
-}
+const esc = (s: string) =>
+  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;')
+const tgl = (v: string | null | undefined, cadangan: string) => (v || cadangan).split('T')[0]
 
 Deno.serve(async () => {
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL') ?? '',
     Deno.env.get('SUPABASE_ANON_KEY') ?? '',
   )
+  const now = new Date().toISOString().split('T')[0]
 
-  const today = new Date().toISOString().split('T')[0]
+  const [{ data: articles }, { data: roadmaps }, { data: bootcamps }] = await Promise.all([
+    supabase.from('articles').select('slug, created_at, updated_at').eq('is_published', true).order('created_at', { ascending: false }),
+    supabase.from('roadmaps').select('slug, dibuat_pada, diperbarui_pada').eq('status', 'terbit'),
+    supabase.from('bootcamps').select('slug, created_at, updated_at').eq('is_published', true),
+  ])
 
-  // Fetch published articles with image data
-  const { data: articles } = await supabase
-    .from('articles')
-    .select('slug, title, excerpt, featured_image_url, category, created_at, updated_at, published_at')
-    .eq('is_published', true)
-    .order('published_at', { ascending: false })
-
-  const urls: string[] = []
-
-  // ── Static pages ──────────────────────────────────────────────────────────
-  for (const page of STATIC_PAGES) {
-    const lastmod = page.lastmod ?? today
-    urls.push(`  <url>
-    <loc>${DOMAIN}${page.loc}</loc>
+  const url = (loc: string, lastmod: string, changefreq: string, priority: string) => `
+  <url>
+    <loc>${esc(DOMAIN + loc)}</loc>
     <lastmod>${lastmod}</lastmod>
-    <changefreq>${page.changefreq}</changefreq>
-    <priority>${page.priority}</priority>
-  </url>`)
+    <changefreq>${changefreq}</changefreq>
+    <priority>${priority}</priority>
+  </url>`
+
+  // Beranda & daftar artikel ikut berubah saat artikel baru terbit
+  const artikelTerbaru = tgl(articles?.[0]?.updated_at ?? articles?.[0]?.created_at, now)
+  const urls: string[] = STATIC_PAGES.map(p =>
+    url(p.loc, p.loc === '/' || p.loc === '/articles' ? artikelTerbaru : now, p.changefreq, p.priority))
+
+  for (const a of articles ?? []) {
+    if (a.slug) urls.push(url(`/articles/${encodeURIComponent(a.slug)}`, tgl(a.updated_at ?? a.created_at, now), 'monthly', '0.8'))
   }
-
-  // ── Dynamic article pages ─────────────────────────────────────────────────
-  for (const article of articles || []) {
-    const lastmod = ((article.updated_at || article.published_at || article.created_at) as string).split('T')[0]
-    const imageBlock = article.featured_image_url
-      ? `\n    <image:image>
-      <image:loc>${xmlEscape(article.featured_image_url)}</image:loc>
-      <image:title>${xmlEscape(article.title)}</image:title>
-      <image:caption>${xmlEscape((article.excerpt || '').slice(0, 200))}</image:caption>
-    </image:image>`
-      : ''
-
-    urls.push(`  <url>
-    <loc>${DOMAIN}/articles/${article.slug}</loc>
-    <lastmod>${lastmod}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>${imageBlock}
-  </url>`)
+  for (const r of roadmaps ?? []) {
+    if (r.slug) urls.push(url(`/roadmap/${encodeURIComponent(r.slug)}`, tgl(r.diperbarui_pada ?? r.dibuat_pada, now), 'monthly', '0.7'))
+  }
+  for (const b of bootcamps ?? []) {
+    if (b.slug) urls.push(url(`/bootcamp/${encodeURIComponent(b.slug)}`, tgl(b.updated_at ?? b.created_at, now), 'weekly', '0.7'))
   }
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset
-  xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-  xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
-  xmlns:xhtml="http://www.w3.org/1999/xhtml">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls.join('\n')}
 </urlset>`
 

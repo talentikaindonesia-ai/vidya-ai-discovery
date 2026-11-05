@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
+import SEO from "@/components/SEO";
 
 /* ── Design tokens ───────────────────────────────────────────────── */
 const C = {
@@ -225,6 +226,7 @@ export default function TalentikaMitra() {
 
   return (
     <div style={{ fontFamily: sans, background: "#F5F7FF", color: C.ink }}>
+      <SEO title="Jadi Mentor & Mitra Talentika" description="Bagikan pengalamanmu sebagai mentor atau mitra Talentika dan bantu pelajar Indonesia menemukan jalur karier yang tepat." />
       <Header />
 
       {/* ══════════ HERO ══════════ */}

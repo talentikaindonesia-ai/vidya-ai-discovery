@@ -1540,6 +1540,20 @@ const Articles = ({ navigate }: { navigate: ReturnType<typeof useNavigate> }) =>
   );
 };
 
+/* FAQ untuk mesin pencari — hanya di beranda (dulu di index.html sehingga ikut ke semua halaman).
+   Jawaban harus sesuai kondisi produk sebenarnya. */
+const FAQ_BERANDA = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: [
+    ["Apa itu Talentika?", "Talentika adalah platform untuk pelajar dan mahasiswa Indonesia untuk mengenali minat dan bakat lewat tes RIASEC (Holland), lalu menyusun jalur belajar dan karier serta menemukan beasiswa, kompetisi, dan magang yang sesuai."],
+    ["Apakah tes minat bakat di Talentika gratis?", "Ya. Tes minat bakat RIASEC dan hasil dasarnya gratis. Talentika Plus (mulai Rp49.000 per bulan) membuka asesmen lengkap, rekomendasi peluang tanpa batas, dan jalur karier personal."],
+    ["Untuk siapa Talentika ditujukan?", "Untuk pelajar SMP, SMA/SMK, dan mahasiswa yang ingin mengenali potensi diri, memilih jurusan kuliah, atau mencari beasiswa dan peluang pengembangan diri. Sekolah juga bisa bergabung sebagai mitra."],
+    ["Apa itu tes RIASEC atau Holland Test?", "RIASEC adalah teori minat karier dari John Holland: Realistic, Investigative, Artistic, Social, Enterprising, dan Conventional. Hasilnya berupa kode tiga huruf yang membantu mencocokkan minatmu dengan jurusan dan karier."],
+    ["Bagaimana Talentika memilih beasiswa dan kompetisi?", "Peluang dikurasi tim Talentika dari situs resmi penyelenggara, lalu dicocokkan dengan jenjang dan kode minatmu. Selalu cek syarat dan tenggat terbaru di situs resmi sebelum mendaftar."],
+  ].map(([q, a]) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: a } })),
+};
+
 /* ─── Main Index ─── */
 const Index = () => {
   const navigate = useNavigate();
@@ -1569,10 +1583,11 @@ const Index = () => {
   return (
     <>
       <SEO
-        title="Talentika - Temukan Minat & Bakat Mu | Eksplorasi Karir & Potensi Diri"
-        description="Platform terlengkap untuk menemukan minat, bakat, dan potensi diri. Tes psikometri RIASEC, Holland Test, panduan karir, beasiswa & kompetisi untuk pelajar dan mahasiswa Indonesia."
-        keywords="tes minat bakat, eksplorasi karir, psikometri online, holland test indonesia, RIASEC test, pelajar, mahasiswa, talent discovery, beasiswa indonesia, magang indonesia, kompetisi pelajar"
+        title="Talentika — Tes Minat Bakat RIASEC Gratis & Jalur Karier Pelajar"
+        description="Tes minat bakat RIASEC gratis, jalur karier, beasiswa, kompetisi, dan magang untuk pelajar SMP, SMA/SMK, dan mahasiswa Indonesia."
+        keywords="tes minat bakat, tes RIASEC, holland test indonesia, pilih jurusan kuliah, eksplorasi karier, beasiswa pelajar, kompetisi pelajar, magang"
         canonical="https://talentika.id/"
+        structuredData={FAQ_BERANDA}
       />
       <WelcomePopup />
       <WhatsAppButton />

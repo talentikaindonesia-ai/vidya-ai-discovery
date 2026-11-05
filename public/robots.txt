@@ -1,57 +1,44 @@
-User-agent: *
-Allow: /
-Allow: /articles
-Allow: /articles/
-Allow: /assessment
-Allow: /tentang-kami
-Allow: /talentika-junior
-Allow: /for-schools
-Allow: /opportunities
-Allow: /community
-Allow: /learning
-Allow: /subscription
+# Talentika — https://talentika.id
+#
+# Catatan: perayap hanya mengikuti SATU grup User-agent yang paling cocok.
+# Jangan menambah grup khusus Googlebot/Bingbot tanpa menyalin semua Disallow
+# di bawah, karena grup itu akan menggantikan grup "*" sepenuhnya.
 
-# Private / authenticated routes — exclude from index
+User-agent: *
+# Halaman yang butuh login (pengunjung tanpa login dialihkan ke /auth)
 Disallow: /auth
 Disallow: /admin
 Disallow: /dashboard
 Disallow: /dashboard-gamified
+Disallow: /onboarding
+Disallow: /assessment
+Disallow: /multiple-intelligence
+Disallow: /mentors
+Disallow: /discovery
+Disallow: /learning
+Disallow: /portfolio
+Disallow: /opportunities
+Disallow: /community
+Disallow: /explore
+Disallow: /subscription
+Disallow: /purchases
 Disallow: /profile
 Disallow: /settings
-Disallow: /onboarding
-Disallow: /discovery
-Disallow: /portfolio
-Disallow: /explore
 Disallow: /membership
-Disallow: /talentika-junior/dashboard
-Disallow: /talentika-junior/discovery
-Disallow: /talentika-junior/learning
-Disallow: /talentika-junior/games
-Disallow: /talentika-junior/rewards
+Disallow: /school-dashboard
+Disallow: /focus
+Disallow: /progress
+Disallow: /join/
+Disallow: /talentika-junior/
+# Aplikasi (Capacitor) yang juga tersaji di web — bukan halaman konten
+Disallow: /app
+# Profil publik siswa (banyak di bawah umur) tidak untuk mesin pencari.
+# /sertifikat/ sengaja TIDAK diblok: header X-Robots-Tag noindex (vercel.json) harus bisa terbaca.
+Disallow: /u/
 
 Sitemap: https://talentika.id/sitemap.xml
 
-User-agent: Googlebot
-Allow: /
-Crawl-delay: 1
-
-User-agent: Bingbot
-Allow: /
-Crawl-delay: 2
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
-
-User-agent: LinkedInBot
-Allow: /
-
-User-agent: WhatsApp
-Allow: /
-
-# Block AI training crawlers (optional — remove if you want AI indexing)
+# Perayap pelatihan AI (opsional — hapus bila ingin konten dipakai melatih model)
 User-agent: GPTBot
 Disallow: /
 
@@ -59,6 +46,9 @@ User-agent: Google-Extended
 Disallow: /
 
 User-agent: anthropic-ai
+Disallow: /
+
+User-agent: ClaudeBot
 Disallow: /
 
 User-agent: CCBot

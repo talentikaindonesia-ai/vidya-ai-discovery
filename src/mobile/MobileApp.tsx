@@ -111,7 +111,13 @@ function Shell() {
   const fit = !side && vw < 375 ? Math.max(0.86, vw / 375) : 1;
   const zoom = +(fit * ({ Kecil: 0.92, Normal: 1, Besar: 1.1 }[textSize] ?? 1)).toFixed(3);
   const loc = useLocation();
-  useEffect(() => { document.title = "Talentika"; }, []);
+  useEffect(() => {
+    document.title = "Talentika";
+    // Cangkang aplikasi (/app/*) bukan halaman konten untuk mesin pencari
+    let m = document.querySelector('meta[name="robots"]');
+    if (!m) { m = document.createElement("meta"); m.setAttribute("name", "robots"); document.head.appendChild(m); }
+    m.setAttribute("content", "noindex,nofollow");
+  }, []);
   // Android: tombol/gestur back sistem mengikuti riwayat aplikasi (PRD §10)
   useEffect(() => {
     if (!(window as any).Capacitor?.isNativePlatform?.()) return;
