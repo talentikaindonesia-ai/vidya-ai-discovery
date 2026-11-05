@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { ambilKembali } from "@/lib/kembaliLogin";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -50,6 +51,9 @@ const Dashboard = () => {
       if (!session) {
         navigate("/auth");
       } else {
+        // Login Google dari halaman peluang/bootcamp: kembali ke sana
+        const kembali = ambilKembali();
+        if (kembali) { navigate(kembali, { replace: true }); return; }
         loadUserData(session.user.id);
       }
     });

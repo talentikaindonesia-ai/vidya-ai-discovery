@@ -13,6 +13,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import SEO from "@/components/SEO";
+import { jalurKembali, simpanKembali } from "@/lib/kembaliLogin";
 import { toast } from "sonner";
 import {
   Loader2, Eye, EyeOff, Mail, Lock, User,
@@ -24,10 +25,6 @@ import {
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
-// Kembali ke halaman program/peluang setelah login. Pola dibatasi ketat supaya
-// ?redirect= tidak bisa dipakai untuk mengarahkan ke situs lain.
-const jalurKembali = (r: string | null) =>
-  r && (/^\/bootcamp\/[a-z0-9]+(-[a-z0-9]+)*$/.test(r) || /^\/peluang\/[a-z0-9-]+$/.test(r)) ? r : null;
 
 const recordReferral = async (code: string, newUserId: string) => {
   const { data: refRow } = await supabase
@@ -708,6 +705,7 @@ function IndividualAuth({
 
   const handleGoogle = async () => {
     setLoading(true); setError("");
+    simpanKembali(redirectTo); // dipakai /dashboard setelah kembali dari Google
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
