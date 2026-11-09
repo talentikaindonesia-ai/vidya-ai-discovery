@@ -76,7 +76,7 @@ const PRIVASI: Bagian[] = [
     "Sebagian data disimpan atau diproses di luar Indonesia (misalnya server database di Singapura dan penyedia AI di Amerika Serikat). Kami memilih penyedia yang menerapkan standar keamanan yang memadai dan hanya mengirimkan data yang diperlukan untuk fungsi tersebut.",
   ] },
   { judul: "8. Berapa lama data disimpan", isi: [
-    "Data disimpan selama akunmu aktif. Kamu dapat menghapus akun kapan saja di aplikasi melalui Profil → Privasi & Data → Hapus akun. Setelah itu, akun dan data pribadi yang terkait dengannya dihapus paling lambat 30 hari. Catatan transaksi pembayaran dapat tetap disimpan selama diwajibkan oleh peraturan perpajakan atau hukum lain.",
+    "Data disimpan selama akunmu aktif. Kamu dapat menghapus akun kapan saja di aplikasi melalui Profil → Privasi & Data → Hapus akun (panduan lengkap: talentika.id/hapus-akun). Setelah itu, akun dan data pribadi yang terkait dengannya dihapus paling lambat 30 hari. Catatan transaksi pembayaran dapat tetap disimpan selama diwajibkan oleh peraturan perpajakan atau hukum lain.",
   ] },
   { judul: "9. Hak kamu", isi: [
     [

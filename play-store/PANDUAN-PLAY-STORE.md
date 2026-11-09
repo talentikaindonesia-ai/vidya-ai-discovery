@@ -97,7 +97,7 @@ Talentika — temukan potensi terbaikmu.
 | Iklan | Tidak berisi iklan |
 | Rating konten (IARC) | Kategori pendidikan/referensi. Jawab **Ya** untuk interaksi pengguna (komunitas) dan konten buatan AI (Tika AI); tidak ada kekerasan, judi, atau konten seksual |
 | Target audiens | lihat **Keputusan usia** di bawah |
-| Penghapusan akun | Di aplikasi: Profil → Privasi & Data → Hapus akun. URL web: https://talentika.id/app/privacy (login lalu hapus akun) |
+| Penghapusan akun | Di aplikasi: Profil → Privasi & Data → Hapus akun. **URL web: https://talentika.id/hapus-akun** (halaman publik: cara hapus di aplikasi, lewat web, atau email; data yang dihapus & disimpan) |
 | Aplikasi pemerintah / keuangan / kesehatan | Tidak |
 
 **Keamanan data** (berdasarkan kode aplikasi per November 2026):

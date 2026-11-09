@@ -48,6 +48,7 @@ const Legal                 = lazy(() => import("./pages/Legal"));
 const Pembelian             = lazy(() => import("./pages/Pembelian"));
 const RoadmapWeb            = lazy(() => import("./pages/RoadmapWeb"));
 const TalentikaMitra        = lazy(() => import("./pages/TalentikaMitra"));
+const HapusAkun             = lazy(() => import("./pages/HapusAkun"));
 const DaftarPeluang         = lazy(() => import("./pages/PeluangPublik").then(m => ({ default: m.DaftarPeluang })));
 const DetailPeluang         = lazy(() => import("./pages/PeluangPublik").then(m => ({ default: m.DetailPeluang })));
 const SchoolDashboard       = lazy(() => import("./pages/SchoolDashboard"));
@@ -181,6 +182,7 @@ const App = () => {
             <Route path="/terms" element={<Legal jenis="syarat" />} />
             <Route path="/syarat-ketentuan" element={<Legal jenis="syarat" />} />
             <Route path="/mitra" element={<TalentikaMitra />} />
+            <Route path="/hapus-akun" element={<HapusAkun />} />
             <Route path="/peluang" element={<DaftarPeluang />} />
             <Route path="/peluang/:slug" element={<DetailPeluang />} />
             <Route path="/school-dashboard" element={user ? <SchoolDashboard /> : <Navigate to="/auth" />} />
