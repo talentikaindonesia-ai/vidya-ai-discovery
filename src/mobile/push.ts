@@ -16,8 +16,11 @@ let listenersReady = false;
 /** Daftarkan perangkat. `ask` = boleh memunculkan dialog izin sistem. */
 export async function initPush(userId: string, ask: boolean): Promise<"granted" | "denied" | "prompt" | "unsupported"> {
   if (!isNative()) return "unsupported";
-  const { PushNotifications } = await import("@capacitor/push-notifications");
   const platform = (window as any).Capacitor.getPlatform() as "android" | "ios";
+  // Android tanpa google-services.json: register() membuat aplikasi crash (Firebase belum
+  // diinisialisasi). Workflow build mengisi VITE_FCM_ANDROID=1 hanya bila Firebase terpasang.
+  if (platform === "android" && import.meta.env.VITE_FCM_ANDROID !== "1") return "unsupported";
+  const { PushNotifications } = await import("@capacitor/push-notifications");
 
   if (!listenersReady) {
     listenersReady = true;

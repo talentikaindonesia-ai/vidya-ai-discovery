@@ -34,6 +34,8 @@ const config: CapacitorConfig = {
     },
   },
   android: {
+    // Android 15+ (target API 35/36) memaksa edge-to-edge: tanpa ini header tertutup status bar
+    adjustMarginsForEdgeToEdge: "auto",
     // Rilis ditandatangani lewat android/keystore.properties (tidak di-commit)
     buildOptions: {
       keystorePath: "talentika-release.keystore",

@@ -4,8 +4,10 @@ import { inject } from '@vercel/analytics'
 import App from './App.tsx'
 import './index.css'
 
-// Vercel Analytics — tracks page views + web vitals automatically
-inject();
+// Vercel Analytics — tracks page views + web vitals automatically.
+// Tidak di aplikasi native (Capacitor): origin-nya https://localhost sehingga tidak
+// berfungsi, dan formulir Keamanan Data Play Store cukup mencakup app_events milik sendiri.
+if (!(window as any).Capacitor?.isNativePlatform?.()) inject();
 
 class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean; error: Error | null }> {
   constructor(props: { children: ReactNode }) {

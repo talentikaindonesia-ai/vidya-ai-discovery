@@ -137,7 +137,7 @@ function Reports() {
     const { error } = await db.from("content_reports").update({ status: action }).in("id", group.map(g => g.id));
     setBusy(null);
     if (error) { toast.error(error.message); return; }
-    toast.success(action === "actioned" ? "Postingan dihapus" : "Laporan diabaikan");
+    toast.success(action === "actioned" ? (first.target_type === "post" ? "Postingan dihapus" : "Ditandai sudah ditindaklanjuti") : "Laporan diabaikan");
     load();
   };
 
@@ -163,7 +163,9 @@ function Reports() {
                   {status === "done" && <span style={{ marginLeft: "auto", fontWeight: 700 }}>{r.status === "actioned" ? "Dihapus" : r.status === "dismissed" ? "Diabaikan" : r.status}</span>}
                 </div>
                 <div style={{ marginTop: 8, background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 10, padding: "10px 12px", fontSize: 13.5, color: "#0F172A", lineHeight: 1.55, whiteSpace: "pre-wrap" }}>
-                  {post ? <><b>{names.get(post.user_id) ?? "Penulis"}</b> · {post.category}<br />{post.content}</> : <i style={{ color: "#94A3B8" }}>Konten sudah tidak ada</i>}
+                  {r.target_type === "ai_message"
+                    ? <><b>Jawaban Tika AI</b> (salinan saat dilaporkan)<br />{r.cuplikan || <i style={{ color: "#94A3B8" }}>Tanpa salinan</i>}</>
+                    : post ? <><b>{names.get(post.user_id) ?? "Penulis"}</b> · {post.category}<br />{post.content}</> : <i style={{ color: "#94A3B8" }}>Konten sudah tidak ada</i>}
                 </div>
                 {status === "open" && (
                   <div style={{ display: "flex", gap: 8, marginTop: 10 }}>

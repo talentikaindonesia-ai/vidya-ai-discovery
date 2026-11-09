@@ -1,7 +1,8 @@
 ext {
     minSdkVersion = 28  // PRD §10: Android 9 (API 28)+
-    compileSdkVersion = 35
-    targetSdkVersion = 35
+    // Google Play: aplikasi baru & pembaruan wajib menargetkan Android 16 (API 36) sejak 31 Agustus 2026
+    compileSdkVersion = 36
+    targetSdkVersion = 36
     androidxActivityVersion = '1.9.2'
     androidxAppCompatVersion = '1.7.0'
     androidxCoordinatorLayoutVersion = '1.2.0'

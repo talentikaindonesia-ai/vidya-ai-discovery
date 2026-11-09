@@ -20,6 +20,18 @@ export default function Copilot() {
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
   const [editing, setEditing] = useState<number | null>(null);
+  const [dilaporkan, setDilaporkan] = useState<Set<number>>(new Set());
+  // Kebijakan konten AI Google Play: jawaban AI harus bisa dilaporkan dari dalam aplikasi
+  const laporkan = async (m: Msg, i: number) => {
+    if (!window.confirm(t("Laporkan jawaban ini sebagai tidak pantas, berbahaya, atau keliru?", "Report this answer as inappropriate, harmful, or wrong?"))) return;
+    const { error } = await db.from("content_reports").insert({
+      reporter_id: user!.id, target_type: "ai_message", target_id: m.id ?? crypto.randomUUID(),
+      reason: "Jawaban Tika AI dilaporkan dari aplikasi", cuplikan: (m.content || "").slice(0, 4000),
+    });
+    if (error) { toast(t("Gagal mengirim laporan. Coba lagi.", "Couldn't send the report. Try again."), "error"); return; }
+    setDilaporkan(s => new Set(s).add(i));
+    toast(t("Terima kasih, laporan terkirim. Tim kami akan meninjaunya.", "Thanks, report sent. Our team will review it."));
+  };
   const scroller = useRef<HTMLDivElement>(null);
   const sentInitial = useRef(false);
   const first = (profile?.full_name || "").split(" ")[0];
@@ -121,6 +133,12 @@ export default function Copilot() {
               <div style={{ background: "#fff", borderRadius: "6px 18px 18px 18px", padding: "12px 14px", fontSize: 13, lineHeight: 1.55, color: C.text, boxShadow: "0 2px 10px rgba(15,23,42,.05)", whiteSpace: "pre-wrap" }}>
                 {m.content || <span style={{ color: C.faint, letterSpacing: 2 }}>●●●</span>}
               </div>
+            )}
+            {m.content && !m.pending && (
+              <button onClick={() => laporkan(m, i)} disabled={dilaporkan.has(i)} aria-label={t("Laporkan jawaban AI", "Report AI answer")}
+                style={{ alignSelf: "flex-start", border: "none", background: "none", padding: "0 4px", color: C.faint, fontSize: 11, fontWeight: 600, cursor: dilaporkan.has(i) ? "default" : "pointer", display: "flex", alignItems: "center", gap: 4 }}>
+                <span aria-hidden style={{ fontSize: 12 }}>⚑</span>{dilaporkan.has(i) ? t("Dilaporkan", "Reported") : t("Laporkan", "Report")}
+              </button>
             )}
             {m.card && (
               <div style={{ background: C.navy, borderRadius: 18, padding: "13px 14px", color: "#fff" }}>
