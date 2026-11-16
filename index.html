@@ -133,6 +133,40 @@
 
   <body>
     <div id="root"></div>
+    <script>
+      // Pemulihan layar kosong: bila cache service worker berisi skrip yang rusak
+      // (mis. HTML tersimpan sebagai .js saat deploy), skrip modul gagal dimuat dan
+      // halaman kosong selamanya. Hapus SW + cache lalu muat ulang SEKALI per sesi.
+      (function () {
+        var KEY = "tk-pulih-cache";
+        function pulihkan() {
+          if (window.__tkBoot) return;
+          try { if (sessionStorage.getItem(KEY)) return; sessionStorage.setItem(KEY, "1"); } catch (e) { return; }
+          var tugas = [];
+          if (navigator.serviceWorker && navigator.serviceWorker.getRegistrations) {
+            tugas.push(navigator.serviceWorker.getRegistrations().then(function (rs) {
+              return Promise.all(rs.map(function (r) { return r.unregister(); }));
+            }));
+          }
+          if (window.caches && caches.keys) {
+            tugas.push(caches.keys().then(function (ks) {
+              return Promise.all(ks.map(function (k) { return caches.delete(k); }));
+            }));
+          }
+          Promise.all(tugas).catch(function () {}).then(function () { location.reload(); });
+        }
+        window.addEventListener("error", function (ev) {
+          var t = ev && ev.target;
+          if (t && t.tagName === "SCRIPT" && t.type === "module") pulihkan();
+        }, true);
+        window.addEventListener("load", function () {
+          setTimeout(function () {
+            var root = document.getElementById("root");
+            if (navigator.serviceWorker && navigator.serviceWorker.controller && root && !root.firstChild) pulihkan();
+          }, 8000);
+        });
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

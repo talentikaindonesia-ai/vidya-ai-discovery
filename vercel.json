@@ -27,7 +27,7 @@
       "destination": "https://doogbcrodipaeahgbjuj.supabase.co/functions/v1/peluang-og?slug=:slug"
     },
     {
-      "source": "/(.*)",
+      "source": "/((?!assets/).*)",
       "destination": "/index.html"
     }
   ],

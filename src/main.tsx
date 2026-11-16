@@ -46,6 +46,9 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
   }
 }
 
+// Tanda untuk skrip pemulihan di index.html: bundel utama berhasil berjalan.
+(window as unknown as { __tkBoot?: boolean }).__tkBoot = true
+
 createRoot(document.getElementById("root")!).render(
   <ErrorBoundary>
     <App />
