@@ -54,6 +54,7 @@ export const PersonalizedFeed = ({ userInterests = [], assessmentData, limit = 2
         .select('*')
         .eq('is_active', true)
         .or(`deadline.is.null,deadline.gt.${now}`)
+        .or('wilayah_peserta.is.null,wilayah_peserta.neq.terbatas')
         .order('created_at', { ascending: false })
         .limit(limit);
 

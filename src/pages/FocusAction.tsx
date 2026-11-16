@@ -146,6 +146,7 @@ const FocusAction = () => {
       supabase.from("scraped_content")
         .select("id, title, organizer, category, location, deadline, url")
         .eq("is_active", true)
+        .or("wilayah_peserta.is.null,wilayah_peserta.neq.terbatas")
         .in("category", cfg.oppCategories)
         .order("created_at", { ascending: false })
         .limit(8),

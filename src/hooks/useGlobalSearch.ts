@@ -67,6 +67,7 @@ export function useGlobalSearch(query: string) {
             .from("scraped_content")
             .select("id, title, description, category, url, tags")
             .eq("is_active", true)
+            .or("wilayah_peserta.is.null,wilayah_peserta.neq.terbatas")
             .textSearch("search_vec", ftsQuery, { type: "websearch", config: "indonesian" })
             .limit(4),
 
@@ -81,7 +82,7 @@ export function useGlobalSearch(query: string) {
         // Fallback: if FTS fails (column not yet available), retry with ilike
         const [artData, oppData, lrnData] = await Promise.all([
           artErr ? supabase.from("articles").select("id, title, excerpt, category, slug").eq("is_published", true).or(`title.ilike.${like},excerpt.ilike.${like}`).limit(4).then(r => r.data) : Promise.resolve(articles),
-          oppErr ? supabase.from("scraped_content").select("id, title, description, category, url, tags").eq("is_active", true).or(`title.ilike.${like},description.ilike.${like}`).limit(4).then(r => r.data) : Promise.resolve(opps),
+          oppErr ? supabase.from("scraped_content").select("id, title, description, category, url, tags").eq("is_active", true).or("wilayah_peserta.is.null,wilayah_peserta.neq.terbatas").or(`title.ilike.${like},description.ilike.${like}`).limit(4).then(r => r.data) : Promise.resolve(opps),
           lrnErr ? supabase.from("learning_content").select("id, title, description, content_type").eq("is_active", true).or(`title.ilike.${like},description.ilike.${like}`).limit(3).then(r => r.data) : Promise.resolve(learning),
         ]);
 

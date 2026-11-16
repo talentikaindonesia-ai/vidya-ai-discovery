@@ -279,9 +279,10 @@ export function useOpportunities() {
     queryFn: async () => {
       const now = new Date().toISOString();
       const { data } = await db.from("scraped_content")
-        .select("id,title,organizer,description,url,deadline,location,opportunity_type,opportunity_field,requirements,prize_info,poster_url,registration_start_date,registration_end_date,quality_score,source_website,created_at,tags,eligibility,jenjang_target,benefits,cost,mode")
-        .eq("is_active", true).or(`deadline.is.null,deadline.gt.${now}`).order("deadline", { ascending: true, nullsFirst: false }).limit(200);
-      return (data ?? []) as OppRow[];
+        .select("id,title,organizer,description,url,deadline,location,opportunity_type,opportunity_field,requirements,prize_info,poster_url,registration_start_date,registration_end_date,quality_score,source_website,created_at,tags,eligibility,jenjang_target,benefits,cost,mode,wilayah_peserta")
+        .eq("is_active", true).or(`deadline.is.null,deadline.gt.${now}`).order("deadline", { ascending: true, nullsFirst: false }).limit(500);
+      // 'terbatas' = tidak terbuka untuk pelajar Indonesia (disaring di klien: .neq() ikut membuang NULL)
+      return ((data ?? []) as (OppRow & { wilayah_peserta?: string | null })[]).filter(o => o.wilayah_peserta !== "terbatas");
     },
   });
 }

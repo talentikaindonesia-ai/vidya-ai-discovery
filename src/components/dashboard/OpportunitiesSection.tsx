@@ -276,6 +276,7 @@ export const OpportunitiesSection = () => {
       .from("scraped_content")
       .select("id, title, organizer, location, category, tags, source_website, is_sponsored, sponsor_badge, sponsor_cta")
       .eq("is_active", true)
+      .or("wilayah_peserta.is.null,wilayah_peserta.neq.terbatas")
       .order("created_at", { ascending: false })
       .limit(60)
       .then(({ data }) => {

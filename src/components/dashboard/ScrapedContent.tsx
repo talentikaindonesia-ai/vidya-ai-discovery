@@ -37,6 +37,7 @@ export const ScrapedContent = ({ category }: ScrapedContentProps) => {
         .from('scraped_content')
         .select('*')
         .eq('is_active', true)
+        .or('wilayah_peserta.is.null,wilayah_peserta.neq.terbatas')
         .order('created_at', { ascending: false })
         .limit(10);
 

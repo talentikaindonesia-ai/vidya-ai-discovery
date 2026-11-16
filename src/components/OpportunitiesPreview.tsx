@@ -104,7 +104,7 @@ const OpportunitiesPreview = ({ profile }: OpportunitiesPreviewProps) => {
       const [{ data, error }, { count }] = await Promise.all([
         supabase
           .from('scraped_content')
-          .select('id, title, description, category, organizer, location, url, deadline, poster_url, source_website, created_at, tags')
+          .select('id, title, description, category, organizer, location, url, deadline, poster_url, source_website, created_at, tags, wilayah_peserta')
           .eq('is_active', true)
           .or(`deadline.is.null,deadline.gt.${now}`)
           .order('created_at', { ascending: false })
@@ -113,14 +113,17 @@ const OpportunitiesPreview = ({ profile }: OpportunitiesPreviewProps) => {
           .from('scraped_content')
           .select('*', { count: 'exact', head: true })
           .eq('is_active', true)
-          .or(`deadline.is.null,deadline.gt.${now}`),
+          .or(`deadline.is.null,deadline.gt.${now}`)
+          .or('wilayah_peserta.is.null,wilayah_peserta.neq.terbatas'),
       ]);
 
       if (error) throw error;
       if (count !== null) setTotalCount(count);
 
       // Score and sort: Indonesia → SEA → recent
-      const scored = (data || []).map(item => {
+      const scored = (data || [])
+        .filter(item => (item as { wilayah_peserta?: string | null }).wilayah_peserta !== 'terbatas')
+        .map(item => {
         const { score: regionScore } = getRegionScore(item.location || '', item.tags || []);
         const recency = (Date.now() - new Date(item.created_at).getTime()) / 86400000 <= 7 ? 1 : 0;
         return { ...item, _score: regionScore * 3 + recency };

@@ -62,6 +62,8 @@ export function DaftarPeluang() {
 
   useEffect(() => {
     db.from("scraped_content").select(KOLOM_PUBLIK).eq("is_active", true)
+      // 'terbatas' = tidak terbuka untuk pelajar Indonesia (NULL tetap ikut tampil)
+      .or("wilayah_peserta.is.null,wilayah_peserta.neq.terbatas")
       .order("deadline", { ascending: true, nullsFirst: false }).order("created_at", { ascending: false }).limit(500)
       .then(({ data }: { data: Ringkas[] | null }) => setRows(data ?? []));
   }, []);

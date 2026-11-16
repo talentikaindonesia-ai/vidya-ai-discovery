@@ -389,17 +389,21 @@ const OpportunityBoard = () => {
       const now = new Date().toISOString();
       const { data, error } = await supabase
         .from('scraped_content')
-        .select('id, title, organizer, category, location, description, url, deadline, poster_url, source_website, created_at, tags, source_tier, last_verified_at, opportunity_field, quality_score')
+        .select('id, title, organizer, category, location, description, url, deadline, poster_url, source_website, created_at, tags, source_tier, last_verified_at, opportunity_field, quality_score, wilayah_peserta')
         .eq('is_active', true)
         .or(`deadline.is.null,deadline.gt.${now}`)
         .order('created_at', { ascending: false })
-        .limit(200);
+        .limit(500);
 
       if (error) { toast.error('Gagal memuat peluang'); return; }
 
       const validCategories: OpportunityCategory[] = ['beasiswa', 'kompetisi', 'magang', 'lowongan_kerja', 'konferensi'];
 
-      const scored: Opportunity[] = (data || []).map(item => {
+      // 'terbatas' = tidak terbuka untuk pelajar Indonesia; disaring di klien karena
+      // .neq() di PostgREST ikut membuang baris yang wilayah_peserta-nya NULL.
+      const terbuka = (data || []).filter(item => (item as { wilayah_peserta?: string | null }).wilayah_peserta !== 'terbatas');
+
+      const scored: Opportunity[] = terbuka.map(item => {
         const { score: regionScore } = getRegionScore(item.location || '', item.tags || []);
         const recency = getRecencyBoost(item.created_at);
         const deadlineBoost = item.deadline ? 1 : 0;

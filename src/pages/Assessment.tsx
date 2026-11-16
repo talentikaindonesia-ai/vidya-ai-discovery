@@ -124,6 +124,7 @@ const Assessment = () => {
           .from("scraped_content")
           .select("id, title, description, tags, deadline, url, poster_url")
           .eq("is_active", true)
+          .or("wilayah_peserta.is.null,wilayah_peserta.neq.terbatas")
           .or(orFilter)
           .limit(3);
 
@@ -132,6 +133,7 @@ const Assessment = () => {
             .from("scraped_content")
             .select("id, title, description, tags, deadline, url, poster_url")
             .eq("is_active", true)
+            .or("wilayah_peserta.is.null,wilayah_peserta.neq.terbatas")
             .limit(3);
           data = fallback.data;
         }
