@@ -108,10 +108,12 @@ export const PersonalizedFeed = ({ userInterests = [], assessmentData, limit = 2
               'conventional': ['administration', 'management', 'finance', 'keuangan'],
             };
             const typeKeywords = personalityKeywords[personality_type.toLowerCase()] || [];
+            // Kata utuh, bukan potongan ("art" ≠ st·art, "stem" ≠ sy·stem)
+            const kata = (teks: string, k: string) => new RegExp(`(^|[^a-z0-9])${k}([^a-z0-9]|$)`).test(teks.toLowerCase());
             const personalityMatch = typeKeywords.some(keyword =>
-              item.title.toLowerCase().includes(keyword) ||
-              (item.description || '').toLowerCase().includes(keyword) ||
-              (item.tags || []).some((tag: string) => tag.toLowerCase().includes(keyword))
+              kata(item.title, keyword) ||
+              kata(item.description || '', keyword) ||
+              (item.tags || []).some((tag: string) => kata(tag, keyword))
             );
             if (personalityMatch) relevanceScore += 1;
           }

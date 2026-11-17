@@ -165,7 +165,8 @@ const miMatchPct = (opp: { title: string; description: string; tags: string[] },
   const kw = MI_OPP_KW[miType] || [];
   const hay = `${opp.title} ${opp.description} ${(opp.tags || []).join(" ")}`.toLowerCase();
   let hits = 0;
-  kw.forEach(k => { if (hay.includes(k)) hits++; });
+  // Kata utuh (hasWord), bukan potongan: "art" ≠ st·art, "band" ≠ band·ung, "sport" ≠ pass·port
+  kw.forEach(k => { if (hasWord(hay, k)) hits++; });
   return hits === 0 ? 0 : Math.min(90, 55 + hits * 12);
 };
 

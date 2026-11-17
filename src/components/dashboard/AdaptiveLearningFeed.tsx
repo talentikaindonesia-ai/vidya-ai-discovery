@@ -161,10 +161,12 @@ export const AdaptiveLearningFeed = ({
             };
 
             const typeKeywords = personalityKeywords[personality_type.toLowerCase()] || [];
+            // Kata utuh, bukan potongan ("art" ≠ st·art, "data" ≠ up·date)
+            const kata = (teks: string, k: string) => new RegExp(`(^|[^a-z0-9])${k}([^a-z0-9]|$)`).test(teks.toLowerCase());
             const personalityMatch = typeKeywords.some(keyword =>
-              item.title.toLowerCase().includes(keyword) ||
-              item.description.toLowerCase().includes(keyword) ||
-              item.tags.some(tag => tag.toLowerCase().includes(keyword))
+              kata(item.title, keyword) ||
+              kata(item.description, keyword) ||
+              item.tags.some(tag => kata(tag, keyword))
             );
             if (personalityMatch) relevanceScore += 2;
           }

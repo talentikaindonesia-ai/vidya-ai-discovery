@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { authRedirect, db, errMsg, oauthSignIn, openExternal, useApp, useCareers, useDna, webUrl } from "../store";
+import { authRedirect, db, errMsg, isNative, oauthSignIn, openExternal, useApp, useCareers, useDna, webUrl } from "../store";
 import { BackBtn, Btn, Icon, Input, Loading, LOGO, Segmented, Sheet, TIKA } from "../ui";
 import { C, SH } from "../theme";
 import { INTEREST_TILES, JENJANG_OPTS } from "../logic";
@@ -443,7 +443,11 @@ function Education() {
   const save = async () => {
     const age = parseInt(usia, 10);
     if (name.trim().length < 2) { toast(t("Isi namamu dulu", "Please enter your name"), "error"); return; }
-    if (!(age >= 8 && age <= 90)) { toast(t("Usia belum valid", "Age isn't valid"), "error"); return; }
+    // Aplikasi Android/iOS: minimal 13 tahun, supaya tidak masuk Kebijakan Keluarga Google Play
+    // (target audiens 13+). Web tetap 8+ karena Talentika Junior menyasar usia 8–15.
+    const usiaMin = isNative() ? 13 : 8;
+    if (age >= 8 && age < usiaMin) { toast(t("Aplikasi ini untuk usia 13 tahun ke atas. Kamu tetap bisa memakai Talentika lewat talentika.id.", "This app is for ages 13 and up. You can still use Talentika at talentika.id."), "error"); return; }
+    if (!(age >= usiaMin && age <= 90)) { toast(t("Usia belum valid", "Age isn't valid"), "error"); return; }
     setBusy(true);
     const jenjang = edu === "smk" ? "sma_smk" : edu;
     const { error } = await db.from("profiles").update({
