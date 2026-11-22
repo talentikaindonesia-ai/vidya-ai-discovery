@@ -1,5 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { teksAlasan, type SkorPeluang } from "@/lib/peluang";
+import { urlPeluang } from "@/lib/peluangPublik";
 import {
   Wrench, Microscope, Palette, Users, Briefcase, Calculator,
   ArrowRight, ChevronLeft, ExternalLink, Sparkles, RefreshCw,
@@ -61,13 +64,14 @@ const Assessment = () => {
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [autoAdvancing, setAutoAdvancing] = useState(false);
   const [relatedOpportunities, setRelatedOpportunities] = useState<any[]>([]);
-  const [loadingOpps, setLoadingOpps] = useState(false);
+  // Mulai true: pencatatan result_viewed menunggu kedua rekomendasi selesai dimuat
+  const [loadingOpps, setLoadingOpps] = useState(true);
   const [savingRecs, setSavingRecs] = useState(false);
   const [recsSaved, setRecsSaved] = useState<number | null>(null);
   const [showCert, setShowCert] = useState(false);
   const [certUser, setCertUser] = useState<{ id: string; name: string } | null>(null);
   const [recCourses, setRecCourses] = useState<any[]>([]);
-  const [loadingCourses, setLoadingCourses] = useState(false);
+  const [loadingCourses, setLoadingCourses] = useState(true);
 
   /* Isi awal jenjang dari profil (mis. sudah diisi saat Onboarding), supaya
      tombol Simpan di layar "tujuan" tidak menimpanya jadi null kalau
@@ -102,12 +106,38 @@ const Assessment = () => {
     conventional:  ["akuntansi", "keuangan", "administrasi", "hukum", "audit"],
   };
 
+  /** Catat event funnel ke app_events (tabel yang sama dengan aplikasi). */
+  const catat = (event: string, props: Record<string, unknown> = {}) => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) (supabase as any).from("app_events").insert({ user_id: user.id, event, props, platform: "web" }).then(() => {});
+    });
+  };
+
   // Fetch relevant opportunities once results are ready
   useEffect(() => {
     if (phase !== "results") return;
     const fetchOpportunities = async () => {
       setLoadingOpps(true);
       try {
+        /* Mesin pencocokan yang sama dengan /opportunities & aplikasi:
+           peluang_untukku() (RIASEC × jenjang × tujuan × wilayah × tenggat).
+           Hasil tes, tujuan, dan jenjang sudah tersimpan sebelum fase
+           "results", jadi skornya sudah memakai hasil yang baru ini. */
+        const { data: skor } = await (supabase.rpc as any)("peluang_untukku");
+        const top = ((skor ?? []) as SkorPeluang[]).slice(0, 3);
+        if (top.length > 0) {
+          const { data: detail } = await supabase
+            .from("scraped_content")
+            .select("id, title, organizer, description, category, opportunity_type, deadline, url, poster_url")
+            .in("id", top.map(t => t.id));
+          const peta = new Map((detail ?? []).map((d: any) => [d.id, d]));
+          const urut = top
+            .filter(t => peta.has(t.id))
+            .map(t => ({ ...(peta.get(t.id) as any), skor: t.skor, alasan: t.alasan }));
+          if (urut.length > 0) { setRelatedOpportunities(urut); return; }
+        }
+
+        // Cadangan bila RPC gagal: pencocokan kata kunci judul (cara lama).
         // Kata kunci diambil dari huruf utama DAN kedua — siswa dengan margin
         // tipis tidak lagi kehilangan separuh minatnya di rekomendasi.
         const ident = hitungIdentitas(scores);
@@ -200,6 +230,70 @@ const Assessment = () => {
     fetchCourses();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase]);
+
+  /* Catat sekali per hasil: berapa siswa yang melihat hasil, dan berapa yang
+     lanjut ke langkah pertama (next_step_clicked). Dari 183 siswa yang tes,
+     baru 4 yang menyimpan peluang — angka ini yang ingin dinaikkan. */
+  const hasilDicatat = useRef(false);
+  useEffect(() => {
+    if (phase !== "results" || loadingOpps || loadingCourses || hasilDicatat.current) return;
+    hasilDicatat.current = true;
+    catat("result_viewed", {
+      tipe: hitungIdentitas(scores).utama,
+      peluang: relatedOpportunities.length,
+      skor_teratas: relatedOpportunities[0]?.skor ?? null,
+      materi: recCourses.length,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, loadingOpps, loadingCourses]);
+
+  /** Simpan persis peluang yang sedang ditampilkan (bukan pilihan lain dari
+      server), supaya yang siswa lihat = yang masuk ke daftar simpanannya.
+      Peluang tersimpan otomatis mendapat pengingat H-7, H-3, H-1. */
+  const simpanPeluangCocok = async (sumber: "langkah" | "daftar") => {
+    if (savingRecs || relatedOpportunities.length === 0) return;
+    setSavingRecs(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { toast.error("Masuk dulu untuk menyimpan peluang"); return; }
+      const ids = relatedOpportunities.map(o => String(o.id));
+      const { data: sudah } = await supabase
+        .from("saved_opportunities").select("opportunity_id")
+        .eq("user_id", user.id).in("opportunity_id", ids);
+      const ada = new Set((sudah ?? []).map((r: any) => r.opportunity_id));
+      const baru = relatedOpportunities.filter(o => !ada.has(String(o.id)));
+      if (baru.length > 0) {
+        const { error } = await (supabase as any).from("saved_opportunities").insert(baru.map(o => ({
+          user_id: user.id,
+          opportunity_id: String(o.id),
+          opportunity_title: o.title,
+          opportunity_url: o.url,
+          category: o.category ?? o.opportunity_type ?? null,
+          opportunity_type: o.opportunity_type ?? null,
+          deadline: o.deadline ?? null,
+          status: "saved",
+        })));
+        if (error) { toast.error("Gagal menyimpan peluang: " + error.message); return; }
+      }
+      setRecsSaved(relatedOpportunities.length);
+      catat("next_step_clicked", { step: "save_opps", sumber, disimpan: baru.length, skor_teratas: relatedOpportunities[0]?.skor ?? null });
+      toast.success(baru.length > 0
+        ? `🔖 ${baru.length} peluang tersimpan — kami ingatkan sebelum tenggatnya`
+        : "Peluang ini sudah ada di simpananmu 👍");
+    } finally {
+      setSavingRecs(false);
+    }
+  };
+
+  const bukaPeluang = (opp: any, posisi: number) => {
+    catat("next_step_clicked", { step: "open_opp", posisi, skor: opp.skor ?? null });
+    navigate(urlPeluang(opp.title, String(opp.id)));
+  };
+
+  const mulaiMateri = (id: string) => {
+    catat("next_step_clicked", { step: "start_course" });
+    navigate(`/learning/content/${id}`);
+  };
 
   // ── Helpers ────────────────────────────────────────────────────────────────
   // peringkatRiasec & hitungIdentitas: src/lib/riasec.ts (sama dengan app mobile)
@@ -338,6 +432,13 @@ const Assessment = () => {
     setSkorDasar({});
     setJawabanDasar({});
     setPakaiPemutus(false);
+    // Hasil baru → rekomendasi & pencatatan funnel baru
+    setRelatedOpportunities([]);
+    setRecCourses([]);
+    setRecsSaved(null);
+    setLoadingOpps(true);
+    setLoadingCourses(true);
+    hasilDicatat.current = false;
   };
 
   // ── Shared page wrapper ───────────────────────────────────────────────────
@@ -1170,57 +1271,109 @@ const Assessment = () => {
           </div>
         </div>
 
-        {/* ── SATU LANGKAH BERIKUTNYA ──────────────────────────────────────
-            Momen paling bersemangat siswa adalah tepat setelah hasil keluar.
-            Dulu di sini langsung disodorkan banyak pilihan sekaligus, dan
-            hampir tidak ada yang lanjut belajar (98 tes → 10 mulai belajar).
-            Sekarang: satu kartu, satu tombol, satu langkah. */}
-        {!loadingCourses && recCourses.length > 0 && (
-          <div
-            style={{
-              background: `linear-gradient(135deg, ${personalityData.accent}, var(--tk-blue-600))`,
-              borderRadius: 24,
-              padding: isMobile ? "24px 20px" : "32px 36px",
-              marginBottom: 24,
-              color: "white",
-              boxShadow: "0 12px 32px -12px rgba(0,0,0,.35)",
-            }}
-          >
-            <div style={{ fontSize: 12.5, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", opacity: .85, marginBottom: 8 }}>
-              Langkah berikutnya untukmu
-            </div>
-            <h3 style={{ fontFamily: "var(--tk-font-display)", fontWeight: 800, fontSize: isMobile ? 20 : 24, lineHeight: 1.3, margin: "0 0 10px" }}>
-              {recCourses[0].title}
-            </h3>
-            <p style={{ fontSize: 14, lineHeight: 1.6, opacity: .92, margin: "0 0 20px", maxWidth: "52ch" }}>
-              {/* Durasi hanya ditampilkan bila benar-benar singkat. Nilai
-                  duration_minutes saat ini masih placeholder (semua kelipatan
-                  15, sampai 300 menit) — menuliskan "Cukup 90 menit" justru
-                  membuat siswa mundur. Tampilkan hanya jika meyakinkan. */}
-              {recCourses[0].duration_minutes && recCourses[0].duration_minutes <= 30
-                ? `Cukup ${recCourses[0].duration_minutes} menit. `
-                : ""}
-              Materi ini dipilih khusus untuk tipe {personalityData.name}. Selesaikan satu ini dulu — sisanya bisa nanti.
-            </p>
-            <button
-              onClick={() => navigate(`/learning/content/${recCourses[0].id}`)}
+        {/* ── LANGKAH PERTAMAMU ────────────────────────────────────────────
+            Dari 183 siswa yang tes, baru 4 yang menyimpan peluang dan sedikit
+            yang mulai belajar. Dua langkah konkret, berurutan, masing-masing
+            satu tombol — bukan deretan pilihan. Langkah 1 memakai peluang
+            yang sama dengan daftar di bawah (peluang_untukku). */}
+        {!loadingCourses && !loadingOpps && (relatedOpportunities.length > 0 || recCourses.length > 0) && (() => {
+          const langkah: { kunci: string; judul: string; sub: string; selesai: boolean; tombol: string; aksi: () => void; sibuk?: boolean }[] = [];
+          if (relatedOpportunities.length > 0) {
+            const n = relatedOpportunities.length;
+            const atas = relatedOpportunities[0];
+            langkah.push({
+              kunci: "peluang",
+              judul: `Simpan ${n} peluang paling cocok untukmu`,
+              sub: `Teratas: ${atas.title}${atas.skor ? ` · ${atas.skor}% cocok` : ""}. Kami ingatkan H-7, H-3, dan H-1 sebelum tenggatnya.`,
+              selesai: recsSaved != null,
+              tombol: recsSaved != null ? "Lihat simpanan" : savingRecs ? "Menyimpan…" : "Simpan",
+              aksi: recsSaved != null ? () => navigate("/opportunities") : () => simpanPeluangCocok("langkah"),
+              sibuk: savingRecs,
+            });
+          }
+          if (recCourses.length > 0) {
+            const c = recCourses[0];
+            langkah.push({
+              kunci: "materi",
+              judul: `Mulai materi: ${c.title}`,
+              sub: `${c.duration_minutes && c.duration_minutes <= 30 ? `Cukup ${c.duration_minutes} menit. ` : ""}Dipilih untuk tipe ${personalityData.name} — selesaikan satu ini dulu untuk mulai mengumpulkan XP menuju sertifikat.`,
+              selesai: false,
+              tombol: "Mulai →",
+              aksi: () => mulaiMateri(c.id),
+            });
+          }
+          const aktif = langkah.findIndex(l => !l.selesai);
+          return (
+            <div
               style={{
-                display: "inline-flex", alignItems: "center", gap: 9,
-                padding: isMobile ? "14px 28px" : "15px 36px",
-                borderRadius: 14, border: "none", background: "white",
-                color: personalityData.accent, cursor: "pointer",
-                fontFamily: "var(--tk-font-display)", fontWeight: 800,
-                fontSize: isMobile ? 15 : 16,
-                boxShadow: "0 4px 14px rgba(0,0,0,.18)",
+                background: `linear-gradient(135deg, ${personalityData.accent}, var(--tk-blue-600))`,
+                borderRadius: 24,
+                padding: isMobile ? "22px 16px" : "30px 32px",
+                marginBottom: 24,
+                color: "white",
+                boxShadow: "0 12px 32px -12px rgba(0,0,0,.35)",
               }}
             >
-              Mulai Sekarang →
-            </button>
-            <div style={{ fontSize: 12.5, opacity: .8, marginTop: 14 }}>
-              Selesaikan materi pertamamu untuk mulai mengumpulkan XP menuju sertifikat 🎓
+              <div style={{ fontSize: 12.5, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", opacity: .85, marginBottom: 6 }}>
+                Langkah pertamamu
+              </div>
+              <h3 style={{ fontFamily: "var(--tk-font-display)", fontWeight: 800, fontSize: isMobile ? 20 : 24, lineHeight: 1.3, margin: "0 0 16px" }}>
+                {langkah.length > 1 ? `${langkah.length} langkah kecil, mulai sekarang` : "Satu langkah kecil, mulai sekarang"}
+              </h3>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {langkah.map((l, i) => {
+                  const utama = i === aktif;
+                  return (
+                    <div
+                      key={l.kunci}
+                      style={{
+                        display: "flex", alignItems: isMobile ? "flex-start" : "center", gap: 12,
+                        flexDirection: isMobile ? "column" : "row",
+                        background: utama ? "rgba(255,255,255,.16)" : "rgba(255,255,255,.08)",
+                        border: `1px solid rgba(255,255,255,${utama ? .35 : .15})`,
+                        borderRadius: 16, padding: isMobile ? "14px" : "14px 16px",
+                      }}
+                    >
+                      <div style={{ display: "flex", gap: 12, alignItems: "flex-start", flex: 1, minWidth: 0 }}>
+                        <span style={{
+                          width: 28, height: 28, borderRadius: "50%", flex: "none",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          background: l.selesai ? "white" : "rgba(255,255,255,.22)",
+                          color: l.selesai ? personalityData.accent : "white",
+                          fontFamily: "var(--tk-font-display)", fontWeight: 800, fontSize: 14,
+                        }}>
+                          {l.selesai ? "✓" : i + 1}
+                        </span>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontFamily: "var(--tk-font-display)", fontWeight: 700, fontSize: 15, lineHeight: 1.35, textDecoration: l.selesai ? "line-through" : "none", opacity: l.selesai ? .8 : 1 }}>
+                            {l.judul}
+                          </div>
+                          <div style={{ fontSize: 12.5, lineHeight: 1.5, opacity: .85, marginTop: 3 }}>{l.sub}</div>
+                        </div>
+                      </div>
+                      <button
+                        onClick={l.aksi}
+                        disabled={l.sibuk}
+                        style={{
+                          flex: "none", alignSelf: isMobile ? "stretch" : "center",
+                          padding: "11px 22px", borderRadius: 12,
+                          border: utama ? "none" : "1.5px solid rgba(255,255,255,.6)",
+                          background: utama ? "white" : "transparent",
+                          color: utama ? personalityData.accent : "white",
+                          cursor: l.sibuk ? "wait" : "pointer",
+                          fontFamily: "var(--tk-font-display)", fontWeight: 800, fontSize: 14,
+                          boxShadow: utama ? "0 4px 14px rgba(0,0,0,.18)" : "none",
+                        }}
+                      >
+                        {l.tombol}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* Career recommendations */}
         <div
@@ -1511,7 +1664,7 @@ const Assessment = () => {
           ) : relatedOpportunities.length > 0 ? (
             <>
               <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3,1fr)", gap: 14, marginBottom: 18 }}>
-                {relatedOpportunities.map(opp => (
+                {relatedOpportunities.map((opp, posisi) => (
                   <div
                     key={opp.id}
                     style={{
@@ -1532,6 +1685,16 @@ const Assessment = () => {
                         marginBottom: 4,
                       }}
                     />
+                    {opp.skor != null && (
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
+                        <span style={{ fontSize: 11, fontWeight: 800, color: personalityData.accent, background: "white", border: `1px solid ${personalityData.accent}`, padding: "2px 8px", borderRadius: 99 }}>
+                          {opp.skor}% cocok
+                        </span>
+                        {(opp.alasan as string[] | undefined)?.[0] && (
+                          <span style={{ fontSize: 11, color: "var(--tk-gray-500)" }}>{teksAlasan(opp.alasan[0])}</span>
+                        )}
+                      </div>
+                    )}
                     <p
                       style={{
                         fontFamily: "var(--tk-font-display)",
@@ -1567,9 +1730,9 @@ const Assessment = () => {
                         📅 {new Date(opp.deadline).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}
                       </p>
                     )}
-                    {opp.url && (
+                    {opp.title && (
                       <button
-                        onClick={() => window.open(opp.url, "_blank", "noopener,noreferrer")}
+                        onClick={() => bukaPeluang(opp, posisi)}
                         style={{
                           display: "inline-flex",
                           alignItems: "center",
@@ -1585,7 +1748,7 @@ const Assessment = () => {
                           marginTop: 4,
                         }}
                       >
-                        <ExternalLink size={11} /> Lihat detail →
+                        Lihat detail →
                       </button>
                     )}
                   </div>
@@ -1594,19 +1757,11 @@ const Assessment = () => {
               <div style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center", alignItems: "center" }}>
                 {recsSaved != null ? (
                   <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "9px 20px", borderRadius: 12, background: "var(--tk-mint,#ECFDF5)", color: "var(--tk-green-dark,#059669)", fontFamily: "var(--tk-font-display)", fontWeight: 700, fontSize: 13 }}>
-                    ✓ {recsSaved} peluang tersimpan — cek di halaman Peluang
+                    ✓ Tersimpan — pengingat tenggat aktif
                   </span>
                 ) : (
                   <button
-                    onClick={async () => {
-                      setSavingRecs(true);
-                      const { data, error } = await (supabase.rpc as any)("save_recommended_opportunities", { p_limit: 3 });
-                      setSavingRecs(false);
-                      if (error) { toast.error(error.message); return; }
-                      const n = (data as any)?.saved ?? 0;
-                      setRecsSaved(n);
-                      toast.success(n > 0 ? `🔖 ${n} peluang terbaik tersimpan untukmu!` : "Semua peluang cocok sudah tersimpan 👍");
-                    }}
+                    onClick={() => simpanPeluangCocok("daftar")}
                     disabled={savingRecs}
                     style={{
                       display: "inline-flex", alignItems: "center", gap: 7, padding: "10px 22px", borderRadius: 12,
@@ -1615,7 +1770,7 @@ const Assessment = () => {
                       boxShadow: "0 4px 14px rgba(37,99,235,.3)",
                     }}
                   >
-                    🔖 {savingRecs ? "Menyimpan…" : "Simpan 3 Peluang Teratas Untukku"}
+                    🔖 {savingRecs ? "Menyimpan…" : `Simpan ${relatedOpportunities.length} Peluang Ini`}
                   </button>
                 )}
                 <button
