@@ -152,11 +152,16 @@ async function tangani(req: Request, supabase: SupabaseClient, ctx: KonteksEvent
       }
 
       // ── Temukan transaksi ──────────────────────────────────────────────
-      if (mayarPaymentId) {
+      // Kita menyimpan ID link pembayaran Mayar (respons /payment/create →
+      // data.id). Di notifikasi, data.id adalah ID *transaksi* di dalam link
+      // itu, sedangkan ID link-nya ada di data.productId / paymentLinkId.
+      const idLink = [data?.productId, data?.paymentLinkId, payload?.paymentLinkId, mayarPaymentId]
+        .filter((v): v is string => typeof v === "string" && v.length > 0);
+      for (const id of new Set(idLink)) {
         const { data: byId } = await supabase
           .from("payment_transactions").select("*")
-          .eq("external_transaction_id", mayarPaymentId).maybeSingle();
-        tx = byId;
+          .eq("external_transaction_id", id).maybeSingle();
+        if (byId) { tx = byId; break; }
       }
       if (!tx && referenceNo) {
         const { data: byRef } = await supabase
