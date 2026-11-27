@@ -4,7 +4,7 @@
     "target": {
       "namespace": "android_app",
       "package_name": "id.talentika.app",
-      "sha256_cert_fingerprints": ["GANTI_DENGAN_SHA256_KUNCI_APP_SIGNING_DARI_PLAY_CONSOLE"]
+      "sha256_cert_fingerprints": ["F9:A2:8A:88:61:BA:50:66:42:2C:08:A0:1B:D7:5D:62:85:61:57:A7:86:71:B0:F4:5D:D6:5B:45:94:6E:EF:21"]
     }
   }
 ]
