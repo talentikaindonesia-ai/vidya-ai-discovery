@@ -306,7 +306,7 @@ const Profile = () => {
         </div>
 
         {/* Main */}
-        <main className="flex-1 overflow-auto pb-20 md:pb-6" style={{ padding: isMobile ? "16px 16px 80px" : "28px 28px 60px" }}>
+        <main className="flex-1 min-w-0 overflow-auto pb-20 md:pb-6" style={{ padding: isMobile ? "16px 16px 80px" : "28px 28px 60px" }}>
           <div style={{ maxWidth: 1140, margin: "0 auto" }}>
 
             {/* ── Page title ── */}

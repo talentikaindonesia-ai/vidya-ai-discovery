@@ -348,10 +348,15 @@ All colors MUST be HSL.
   @media (max-width: 768px) {
     html {
       font-size: 14px; /* Slightly smaller base font for mobile */
+      /* Safari iOS mengabaikan overflow-x di body saja; tanpa ini seluruh
+         halaman bisa digeser ke samping kalau ada satu elemen yang kelebaran */
+      overflow-x: hidden;
+      overflow-x: clip;
     }
-    
+
     body {
       overflow-x: hidden;
+      overflow-x: clip;
       -webkit-overflow-scrolling: touch;
     }
 
@@ -395,6 +400,12 @@ All colors MUST be HSL.
 
   .mobile-no-scroll {
     @apply overflow-x-hidden;
+  }
+
+  /* Pembungkus halaman Belajar: padding lega di desktop, rapat di HP */
+  .tk-hub-wrap { padding: 28px 28px 0; }
+  @media (max-width: 767px) {
+    .tk-hub-wrap { padding: 16px 16px 0; }
   }
 
   /* Ensure content doesn't overflow on small screens */

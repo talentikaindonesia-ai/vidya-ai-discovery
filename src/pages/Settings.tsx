@@ -1113,7 +1113,7 @@ const Settings = () => {
 
         {/* Page content */}
         <main
-          className="flex-1 overflow-auto pb-20 md:pb-6 tk-page-in"
+          className="flex-1 min-w-0 overflow-auto pb-20 md:pb-6 tk-page-in"
           style={{ padding: isMobile ? "16px 12px 80px" : "28px 28px 60px" }}
         >
           {/* Page title */}

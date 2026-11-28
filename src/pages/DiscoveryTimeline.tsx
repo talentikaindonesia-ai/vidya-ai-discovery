@@ -434,8 +434,8 @@ const DiscoveryTimeline = () => {
 
         {/* Page content */}
         <main
-          className="flex-1 overflow-auto pb-20 md:pb-6 tk-page-in"
-          style={{ padding: "0 28px 60px" }}
+          className="flex-1 min-w-0 overflow-auto pb-20 md:pb-6 tk-page-in"
+          style={{ padding: "0 clamp(12px, 4vw, 28px) 60px" }}
         >
           <div className="max-w-full mx-auto pt-2">
 

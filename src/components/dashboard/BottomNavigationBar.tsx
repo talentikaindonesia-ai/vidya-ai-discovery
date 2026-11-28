@@ -19,21 +19,28 @@ export function BottomNavigationBar({ activeSection, onSectionChange }: BottomNa
   const navigate = useNavigate();
   const location = useLocation();
 
-  const getCurrentActiveSection = () => {
-    if (activeSection) return activeSection;
+  /* Tab aktif ditentukan dari URL, bukan dari nama bagian yang dikirim halaman.
+     Dulu Beranda mengirim "overview", LearningHub "learning", dst. — tidak ada
+     yang cocok dengan id tab, sehingga tidak satu pun tab menyala. */
+  const getCurrentActiveSection = (): string | null => {
     const path = location.pathname;
-    if (path === "/dashboard")     return "home";
-    if (path === "/learning")      return "courses";
-    if (path === "/assessment")    return "assessment";
-    if (path === "/opportunities") return "opportunities";
-    if (path === "/profile")       return "profile";
-    return "home";
+    if (path.startsWith("/learning") || path.startsWith("/courses")) return "courses";
+    if (path.startsWith("/assessment"))    return "assessment";
+    if (path.startsWith("/opportunities")) return "opportunities";
+    if (path.startsWith("/profile") || path.startsWith("/settings") || path.startsWith("/subscription")) return "profile";
+    if (path.startsWith("/dashboard")) {
+      // Di dalam Dashboard, bagian lain (Progress, Pencapaian) bukan Beranda
+      const sub = activeSection ?? "overview";
+      return sub === "overview" || sub === "home" ? "home" : sub === "courses" ? "courses" : null;
+    }
+    return null;
   };
 
   const handleSectionChange = (sectionId: string, route: string) => {
     navigate(route);
+    // Kembali ke Beranda dari bagian lain di Dashboard (mis. Progress)
     if (onSectionChange && route === "/dashboard") {
-      onSectionChange(sectionId);
+      onSectionChange("overview");
     }
   };
 
@@ -86,7 +93,7 @@ export function BottomNavigationBar({ activeSection, onSectionChange }: BottomNa
                 </div>
                 <span style={{
                   fontSize: 10,
-                  fontWeight: 700,
+                  fontWeight: isActive ? 700 : 500,
                   color: isActive ? "var(--tk-blue-700)" : "var(--tk-gray-500)",
                   fontFamily: "var(--tk-font-display)",
                   lineHeight: 1,

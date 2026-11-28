@@ -113,7 +113,7 @@ const Progress = () => {
           onSignOut={handleSignOut} collapsed={sidebarCollapsed} onCollapsedChange={setSidebarCollapsed} />
         <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
           <DashboardHeader user={user} profile={profile} onSignOut={handleSignOut} />
-          <main style={{ flex: 1, padding: isMobile ? "20px 16px 80px" : "28px 32px 60px", maxWidth: 1100, width: "100%", margin: "0 auto", boxSizing: "border-box" }}>
+          <main style={{ flex: 1, minWidth: 0, padding: isMobile ? "20px 16px 80px" : "28px 32px 60px", maxWidth: 1100, width: "100%", margin: "0 auto", boxSizing: "border-box" }}>
 
             {/* Hero */}
             <div style={{ borderRadius: 20, background: "linear-gradient(135deg, var(--tk-blue-50), var(--tk-blue-100))", border: "1.5px solid var(--tk-blue-200)", padding: isMobile ? "20px" : "28px 32px", marginBottom: 28 }}>

@@ -711,13 +711,14 @@ const LearningHub = () => {
       <div style={{ display: "flex", minHeight: "100vh", background: "#F8FAFC" }}>
         <DashboardSidebar activeSection={activeSection} setActiveSection={setActiveSection} onSignOut={handleSignOut} />
 
-        <main className="tk-page-in" style={{ flex: 1, overflowY: "auto", paddingBottom: 80 }}>
-          <div style={{ maxWidth: 1600, margin: "0 auto", padding: "28px 28px 0" }}>
+        {/* minWidth 0: tanpa ini area utama melebar mengikuti slider kartu, layar HP jadi bisa digeser ke samping */}
+        <main className="tk-page-in" style={{ flex: 1, minWidth: 0, overflowX: "hidden", overflowY: "auto", paddingBottom: 80 }}>
+          <div className="tk-hub-wrap" style={{ maxWidth: 1600, margin: "0 auto" }}>
 
             {/* ── Page header ───────────────────────────────────────────── */}
             <div style={{ marginBottom: 20, display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
               <div>
-                <h1 style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 800, fontSize: 30, color: "#0B1D3A", margin: 0 }}>Belajar</h1>
+                <h1 style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 800, fontSize: "clamp(24px, 6vw, 30px)", color: "#0B1D3A", margin: 0 }}>Belajar</h1>
                 <p style={{ fontSize: 15, color: "#6B7280", margin: "6px 0 0" }}>
                   Alur belajar, rekomendasi, dan seluruh katalog Talentika dalam satu tempat.
                 </p>
@@ -731,7 +732,7 @@ const LearningHub = () => {
               </div>
 
               {/* Stats pills */}
-              <div style={{ display: "flex", gap: 10 }}>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                 {[
                   { label: "Kursus Tersedia", val: allContent.length, bg: "#EFF6FF", c: "#1D4ED8" },
                   { label: "Sedang Dipelajari", val: inProgressContent.length, bg: "#FFEDE2", c: "#FF6A00" },
@@ -793,7 +794,7 @@ const LearningHub = () => {
             <div style={{ marginBottom: 28 }}>
               <div style={{
                 borderRadius: 20, background: "linear-gradient(120deg,#0B1D3A 0%,#1D4ED8 70%,#2563EB 100%)",
-                color: "#fff", padding: "26px 28px", marginBottom: 18, position: "relative", overflow: "hidden",
+                color: "#fff", padding: "clamp(18px, 5vw, 26px) clamp(16px, 5vw, 28px)", marginBottom: 18, position: "relative", overflow: "hidden",
                 display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap",
               }}>
                 {/* Dekorasi — pola titik + dua bola cahaya, murni CSS */}
@@ -810,7 +811,7 @@ const LearningHub = () => {
                 <div style={{ width: 54, height: 54, borderRadius: 16, background: "rgba(255,255,255,.18)", boxShadow: "0 0 0 1px rgba(255,255,255,.15) inset", display: "grid", placeItems: "center", flex: "0 0 auto", position: "relative" }}>
                   <Target size={26} />
                 </div>
-                <div style={{ flex: 1, minWidth: 220, position: "relative" }}>
+                <div style={{ flex: "1 1 220px", minWidth: 0, position: "relative" }}>
                   <div style={{ fontFamily: "monospace", fontSize: 11, letterSpacing: ".16em", textTransform: "uppercase", opacity: .75, marginBottom: 4 }}>Alur Belajar</div>
                   <h2 style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 800, color: "#fff", fontSize: 22, margin: "0 0 4px" }}>Rekomendasi Alur Belajar Untukmu</h2>
                   <p style={{ margin: 0, fontSize: 14, color: "rgba(255,255,255,.85)", maxWidth: "62ch" }}>

@@ -637,11 +637,11 @@ const OpportunityBoard = () => {
               }}
             >
               <h1
-                className="inline-flex items-center gap-3"
+                className="inline-flex items-center gap-2 md:gap-3 flex-wrap justify-center"
                 style={{
                   fontFamily: "var(--tk-font-display, 'Poppins', sans-serif)",
                   fontWeight: 800,
-                  fontSize: 32,
+                  fontSize: "clamp(22px, 6.4vw, 32px)",
                   color: "var(--tk-ink, #0F172A)",
                   letterSpacing: "-.02em",
                   margin: 0,
@@ -711,7 +711,7 @@ const OpportunityBoard = () => {
                 ]).map(m => (
                   <button key={m.id} onClick={() => { setViewMode(m.id); setPage(1); }}
                     style={{
-                      padding: "9px 20px", border: "none", borderRadius: 10, cursor: "pointer",
+                      padding: isMobile ? "9px 14px" : "9px 20px", border: "none", borderRadius: 10, cursor: "pointer", whiteSpace: "nowrap",
                       fontFamily: "var(--tk-font-display, 'Poppins', sans-serif)", fontWeight: 700, fontSize: 13.5,
                       background: viewMode === m.id ? "var(--tk-blue-600, #2563EB)" : "transparent",
                       color: viewMode === m.id ? "#fff" : "var(--tk-gray-600, #4B5563)",
@@ -724,7 +724,7 @@ const OpportunityBoard = () => {
             </div>
             {/* Region filter chips */}
             <div className="flex justify-center" style={{ marginBottom: 14 }}>
-              <div style={{ display: "flex", gap: 6 }}>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "center" }}>
                 {([
                   { id: "all" as const, label: "🌏 Semua Wilayah" },
                   { id: "idsea" as const, label: "🇮🇩 Indonesia & SEA" },

@@ -224,7 +224,8 @@ export const WelcomeDashboard = ({ user, profile }: WelcomeDashboardProps) => {
       style={{
         paddingTop: 8,
         display: "grid",
-        gridTemplateColumns: isMobile ? "1fr" : "1fr 360px",
+        // minmax(0,1fr): kolom "1fr" biasa ikut melebar mengikuti isi terlebar → banner terpotong di HP
+        gridTemplateColumns: isMobile ? "minmax(0, 1fr)" : "minmax(0, 1fr) 360px",
         gap: 20,
         alignItems: "start",
       }}
@@ -239,15 +240,15 @@ export const WelcomeDashboard = ({ user, profile }: WelcomeDashboardProps) => {
             borderRadius: "var(--tk-radius-lg)",
             background: "linear-gradient(135deg, #2563EB 0%, #1D4ED8 60%, #1E3A8A 100%)",
             color: "white",
-            padding: "28px 32px",
-            minHeight: 140,
+            padding: isMobile ? "22px 20px" : "28px 32px",
+            minHeight: isMobile ? 120 : 140,
           }}
         >
-          <div style={{ flex: 1, position: "relative", zIndex: 1 }}>
+          <div style={{ flex: 1, minWidth: 0, position: "relative", zIndex: 1 }}>
             <h2 style={{
               fontFamily: "var(--tk-font-display)",
               fontWeight: 700,
-              fontSize: 26,
+              fontSize: isMobile ? 22 : 26,
               color: "white",
               marginBottom: 6,
               letterSpacing: "-.02em",

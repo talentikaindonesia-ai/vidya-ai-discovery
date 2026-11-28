@@ -201,7 +201,7 @@ const FocusAction = () => {
         />
         <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
           <DashboardHeader user={user} profile={profile} onSignOut={handleSignOut} />
-          <main style={{ flex: 1, padding: isMobile ? "20px 16px 80px" : "28px 32px 60px", maxWidth: 1100, width: "100%", margin: "0 auto", boxSizing: "border-box" }}>
+          <main style={{ flex: 1, minWidth: 0, padding: isMobile ? "20px 16px 80px" : "28px 32px 60px", maxWidth: 1100, width: "100%", margin: "0 auto", boxSizing: "border-box" }}>
 
             {!riasecType ? (
               <NoAssessmentState navigate={navigate} />
